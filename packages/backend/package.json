@@ -1,0 +1,21 @@
+{
+  "name": "@packages/backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "convex dev",
+    "codegen": "convex codegen",
+    "setup": "convex dev --until-success"
+  },
+  "private": true,
+  "dependencies": {
+    "@clerk/backend": "^2.6.2",
+    "convex": "^1.25.4",
+    "svix": "^1.70.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
