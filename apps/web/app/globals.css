@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -17,8 +21,29 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+    color: #171717;
+    background: #ffffff;
+}
+
+/* Ensure text is visible and not affected by custom variables */
+.text-gray-900 {
+    color: #111827 !important;
+}
+
+.text-gray-800 {
+    color: #1f2937 !important;
+}
+
+.text-gray-700 {
+    color: #374151 !important;
+}
+
+.text-gray-600 {
+    color: #4b5563 !important;
+}
+
+.text-white {
+    color: #ffffff !important;
 }
 
 * {
