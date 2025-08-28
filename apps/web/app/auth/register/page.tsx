@@ -5,14 +5,32 @@ import {useState} from "react";
 export default function RegisterPage() {
     const [currentStep, setCurrentStep] = useState(1);
     const [userType, setUserType] = useState('');
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [formData, setFormData] = useState({
-        organizationName: '',
+        // Basic user info from schema
         email: '',
+        firstName: '',
+        lastName: '',
+        role: '',
+        organizationName: '',
+        organizationType: '',
+        phoneNumber: '',
+        address: '',
+        city: '',
+        country: '',
+        profileImage: '',
+
+        // Authentication
         password: '',
         confirmPassword: '',
-        location: '',
+
+        // Role-specific fields
+        verifierSpecialty: [] as string[], // For verifiers
+
+        // Additional fields
         website: '',
-        description: ''
+        description: '',
+        location: '' // For backward compatibility
     });
 
     const steps = [
@@ -24,19 +42,19 @@ export default function RegisterPage() {
 
     const userTypes = [
         {
-            id: 'creator',
+            id: 'project_creator',
             title: 'Project Creator',
             description: 'Develop and manage carbon credit projects',
             features: [
                 'Register and manage carbon projects',
                 'Submit progress reports and updates',
-                'Access verification tools',
-                'Generate carbon credits'
+                'Set carbon credit pricing',
+                'Monitor project verification'
             ],
             icon: '🌱'
         },
         {
-            id: 'buyer',
+            id: 'credit_buyer',
             title: 'Credit Buyer',
             description: 'Purchase carbon credits for offsetting',
             features: [
@@ -61,8 +79,93 @@ export default function RegisterPage() {
         }
     ];
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, steps.length));
-    const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+    const verifierSpecialties = [
+        'solar',
+        'reforestation',
+        'wind',
+        'biogas',
+        'waste_management',
+        'mangrove_restoration'
+    ];
+
+    const organizationTypes = [
+        'Corporation',
+        'Non-Profit',
+        'Government Agency',
+        'Educational Institution',
+        'Individual',
+        'Startup',
+        'Other'
+    ];
+
+    // Validation function
+    const validateStep = (step: number): boolean => {
+        const newErrors: { [key: string]: string } = {};
+
+        if (step === 1) {
+            if (!userType) {
+                newErrors.userType = 'Please select an account type';
+            }
+        }
+
+        if (step === 2) {
+            if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+            if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+            if (!formData.email.trim()) {
+                newErrors.email = 'Email is required';
+            } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+                newErrors.email = 'Please enter a valid email';
+            }
+            if (!formData.phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
+            if (!formData.password) {
+                newErrors.password = 'Password is required';
+            } else if (formData.password.length < 8) {
+                newErrors.password = 'Password must be at least 8 characters';
+            }
+            if (formData.password !== formData.confirmPassword) {
+                newErrors.confirmPassword = 'Passwords do not match';
+            }
+            if (!formData.address.trim()) newErrors.address = 'Address is required';
+            if (!formData.city.trim()) newErrors.city = 'City is required';
+            if (!formData.country.trim()) newErrors.country = 'Country is required';
+
+            // Role-specific validation
+            if (userType !== 'credit_buyer' && !formData.organizationName.trim()) {
+                newErrors.organizationName = 'Organization name is required for this account type';
+            }
+            if (userType === 'verifier' && formData.verifierSpecialty.length === 0) {
+                newErrors.verifierSpecialty = 'Please select at least one specialty area';
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const nextStep = () => {
+        if (validateStep(currentStep)) {
+            setCurrentStep(prev => Math.min(prev + 1, steps.length));
+            setErrors({}); // Clear errors when moving to next step
+        }
+    };
+
+    const prevStep = () => {
+        setCurrentStep(prev => Math.max(prev - 1, 1));
+        setErrors({}); // Clear errors when moving to previous step
+    };
+
+    const handleSubmit = async () => {
+        if (!validateStep(currentStep)) return;
+
+        try {
+            // Here you would integrate with Clerk and Convex
+            // For now, just show success
+            alert('Registration completed! Please check your email for verification.');
+        } catch (error) {
+            console.error('Registration error:', error);
+            alert('Registration failed. Please try again.');
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 py-12">
@@ -113,11 +216,15 @@ export default function RegisterPage() {
                                 {userTypes.map(type => (
                                     <div
                                         key={type.id}
-                                        onClick={() => setUserType(type.id)}
+                                        onClick={() => {
+                                            setUserType(type.id);
+                                            setFormData({...formData, role: type.id});
+                                            if (errors.userType) setErrors({...errors, userType: ''});
+                                        }}
                                         className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
                                             userType === type.id
                                                 ? 'border-blue-600 bg-blue-50'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                                : errors.userType ? 'border-red-300' : 'border-gray-200 hover:border-gray-300'
                                         }`}
                                     >
                                         <div className="text-center mb-4">
@@ -136,6 +243,9 @@ export default function RegisterPage() {
                                     </div>
                                 ))}
                             </div>
+                            {errors.userType && (
+                                <p className="text-red-600 text-sm mt-2">{errors.userType}</p>
+                            )}
                         </div>
                     )}
 
@@ -145,20 +255,32 @@ export default function RegisterPage() {
                             <h2 className="text-2xl font-semibold mb-6">Basic Information</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">Organization Name *</label>
-                                        <input
-                                            type="text"
-                                            value={formData.organizationName}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                organizationName: e.target.value
-                                            })}
-                                            className="w-full p-3 border rounded"
-                                            placeholder="Your organization name"
-                                            required
-                                        />
+                                    {/* Personal Information */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">First Name *</label>
+                                            <input
+                                                type="text"
+                                                value={formData.firstName}
+                                                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                                                className="w-full p-3 border rounded"
+                                                placeholder="John"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Last Name *</label>
+                                            <input
+                                                type="text"
+                                                value={formData.lastName}
+                                                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                                                className="w-full p-3 border rounded"
+                                                placeholder="Doe"
+                                                required
+                                            />
+                                        </div>
                                     </div>
+                                    
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Email Address *</label>
                                         <input
@@ -170,6 +292,19 @@ export default function RegisterPage() {
                                             required
                                         />
                                     </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Phone Number *</label>
+                                        <input
+                                            type="tel"
+                                            value={formData.phoneNumber}
+                                            onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                                            className="w-full p-3 border rounded"
+                                            placeholder="+1 (555) 123-4567"
+                                            required
+                                        />
+                                    </div>
+
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Password *</label>
                                         <input
@@ -181,6 +316,7 @@ export default function RegisterPage() {
                                             required
                                         />
                                     </div>
+
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Confirm Password *</label>
                                         <input
@@ -196,18 +332,81 @@ export default function RegisterPage() {
                                         />
                                     </div>
                                 </div>
+
                                 <div className="space-y-4">
+                                    {/* Organization Information */}
                                     <div>
-                                        <label className="block text-sm font-medium mb-2">Location *</label>
+                                        <label className="block text-sm font-medium mb-2">
+                                            Organization Name {userType !== 'credit_buyer' ? '*' : ''}
+                                        </label>
                                         <input
                                             type="text"
-                                            value={formData.location}
-                                            onChange={(e) => setFormData({...formData, location: e.target.value})}
+                                            value={formData.organizationName}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                organizationName: e.target.value
+                                            })}
                                             className="w-full p-3 border rounded"
-                                            placeholder="City, Country"
+                                            placeholder="Your organization name"
+                                            required={userType !== 'credit_buyer'}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Organization Type</label>
+                                        <select
+                                            value={formData.organizationType}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                organizationType: e.target.value
+                                            })}
+                                            className="w-full p-3 border rounded"
+                                        >
+                                            <option value="">Select organization type</option>
+                                            {organizationTypes.map(type => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Address Information */}
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">Address *</label>
+                                        <input
+                                            type="text"
+                                            value={formData.address}
+                                            onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                            className="w-full p-3 border rounded"
+                                            placeholder="Street address"
                                             required
                                         />
                                     </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">City *</label>
+                                            <input
+                                                type="text"
+                                                value={formData.city}
+                                                onChange={(e) => setFormData({...formData, city: e.target.value})}
+                                                className="w-full p-3 border rounded"
+                                                placeholder="City"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Country *</label>
+                                            <input
+                                                type="text"
+                                                value={formData.country}
+                                                onChange={(e) => setFormData({...formData, country: e.target.value})}
+                                                className="w-full p-3 border rounded"
+                                                placeholder="Country"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div>
                                         <label className="block text-sm font-medium mb-2">Website</label>
                                         <input
@@ -218,15 +417,58 @@ export default function RegisterPage() {
                                             placeholder="https://yourwebsite.com"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-2">Description</label>
-                                        <textarea
-                                            value={formData.description}
-                                            onChange={(e) => setFormData({...formData, description: e.target.value})}
-                                            className="w-full h-32 p-3 border rounded"
-                                            placeholder="Tell us about your organization and goals..."
-                                        ></textarea>
+                                </div>
+                            </div>
+
+                            {/* Role-specific fields */}
+                            {userType === 'verifier' && (
+                                <div className="mt-6 pt-6 border-t">
+                                    <h3 className="text-lg font-semibold mb-4">Verifier Specialties</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {verifierSpecialties.map(specialty => (
+                                            <label key={specialty} className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.verifierSpecialty.includes(specialty)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setFormData({
+                                                                ...formData,
+                                                                verifierSpecialty: [...formData.verifierSpecialty, specialty]
+                                                            });
+                                                        } else {
+                                                            setFormData({
+                                                                ...formData,
+                                                                verifierSpecialty: formData.verifierSpecialty.filter(s => s !== specialty)
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="rounded"
+                                                />
+                                                <span
+                                                    className="text-sm capitalize">{specialty.replace('_', ' ')}</span>
+                                            </label>
+                                        ))}
                                     </div>
+                                    <p className="text-sm text-gray-600 mt-2">
+                                        Select the project types you have expertise in verifying
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="mt-6 pt-6 border-t">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Description</label>
+                                    <textarea
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                        className="w-full h-32 p-3 border rounded"
+                                        placeholder={
+                                            userType === 'project_creator' ? "Describe your organization and your experience with environmental projects..." :
+                                                userType === 'verifier' ? "Describe your qualifications and experience in environmental verification..." :
+                                                    "Tell us about your organization and sustainability goals..."
+                                        }
+                                    ></textarea>
                                 </div>
                             </div>
                         </div>
@@ -302,7 +544,9 @@ export default function RegisterPage() {
                                                 className="font-medium">Organization:</span> {formData.organizationName}
                                             </p>
                                             <p><span className="font-medium">Email:</span> {formData.email}</p>
-                                            <p><span className="font-medium">Location:</span> {formData.location}</p>
+                                            <p><span
+                                                className="font-medium">Location:</span> {formData.city}, {formData.country}
+                                            </p>
                                             {formData.website &&
                                                 <p><span className="font-medium">Website:</span> {formData.website}</p>}
                                         </div>
@@ -342,7 +586,7 @@ export default function RegisterPage() {
                             Previous
                         </button>
                         <button
-                            onClick={currentStep === steps.length ? () => alert('Registration completed!') : nextStep}
+                            onClick={currentStep === steps.length ? handleSubmit : nextStep}
                             disabled={currentStep === 1 && !userType}
                             className="px-6 py-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
                         >
