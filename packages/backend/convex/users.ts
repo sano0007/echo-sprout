@@ -58,7 +58,6 @@ export const updateUserDetails = mutation({
       throw new Error("No updates provided");
     }
 
-      // Validate email uniqueness if email is being updated
       if (updates.email && updates.email !== user.email) {
           const existingUser = await ctx.db
               .query("users")
@@ -82,7 +81,6 @@ export const deleteUser = internalMutation({
         throw new Error(`User with clerkId ${clerkId} not found`);
     }
 
-        // Soft delete by marking as inactive instead of hard delete
         await ctx.db.patch(user._id, {
             isActive: false,
             lastLoginAt: new Date().toISOString()
@@ -125,7 +123,6 @@ export const getAllUsers = query({
   },
 });
 
-// New queries specific to EcoSprout
 export const getUsersByRole = query({
     args: {
         role: v.union(
@@ -165,7 +162,6 @@ export const getVerifiers = query({
             );
         }
 
-        // Manual pagination since we need to filter after collection
         const startIndex = paginationOpts.numItems * (paginationOpts.cursor ? parseInt(paginationOpts.cursor) : 0);
         const endIndex = startIndex + paginationOpts.numItems;
         const paginatedResults = filteredVerifiers.slice(startIndex, endIndex);
@@ -216,7 +212,6 @@ export const searchUsers = query({
                 .collect();
         }
 
-        // Client-side filtering for text search
         const searchTermLower = searchTerm.toLowerCase();
         const filteredUsers = allUsers.filter(user =>
             user.firstName.toLowerCase().includes(searchTermLower) ||
@@ -225,7 +220,6 @@ export const searchUsers = query({
             (user.organizationName && user.organizationName.toLowerCase().includes(searchTermLower))
         );
 
-        // Manual pagination
         const startIndex = paginationOpts.numItems * (paginationOpts.cursor ? parseInt(paginationOpts.cursor) : 0);
         const endIndex = startIndex + paginationOpts.numItems;
         const paginatedResults = filteredUsers.slice(startIndex, endIndex);
@@ -238,14 +232,12 @@ export const searchUsers = query({
     },
 });
 
-// Admin functions
 export const toggleUserVerification = mutation({
     args: {
         userId: v.id("users"),
         isVerified: v.boolean()
     },
     handler: async (ctx, {userId, isVerified}) => {
-        // Check if current user is admin
         const currentUser = await UserService.getCurrentUser(ctx);
         if (!currentUser || currentUser.role !== "admin") {
             throw new Error("Unauthorized: Admin access required");
@@ -267,7 +259,6 @@ export const updateUserRole = mutation({
         verifierSpecialty: v.optional(v.array(v.string()))
     },
     handler: async (ctx, {userId, newRole, verifierSpecialty}) => {
-        // Check if current user is admin
         const currentUser = await UserService.getCurrentUser(ctx);
         if (!currentUser || currentUser.role !== "admin") {
             throw new Error("Unauthorized: Admin access required");

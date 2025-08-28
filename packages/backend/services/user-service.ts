@@ -12,7 +12,6 @@ export class UserService {
             .unique();
     }
 
-    // Keep backward compatibility
     public static async getUserByTokenIdentifier(
         ctx: QueryCtx,
         tokenIdentifier: string,
@@ -38,7 +37,6 @@ export class UserService {
     }
 
     public static async createUserFromClerk(ctx: MutationCtx, data: UserJSON) {
-        // Extract required fields from Clerk data
         const primaryEmail = data.email_addresses?.find(email => email.email_address)?.email_address;
         if (!primaryEmail) {
             throw new Error("No email address found in Clerk data");
@@ -49,7 +47,7 @@ export class UserService {
             email: primaryEmail,
             firstName: data.first_name || "Unknown",
             lastName: data.last_name || "User",
-            role: "credit_buyer" as const, // Default role
+            role: "credit_buyer" as const,
             phoneNumber: data.phone_numbers?.[0]?.phone_number || "",
             address: "",
             city: "",
@@ -88,12 +86,10 @@ export class UserService {
             updateAttributes.profileImage = data.image_url;
         }
 
-        // Update phone number if available
         if (data.phone_numbers?.[0]?.phone_number && data.phone_numbers[0].phone_number !== user.phoneNumber) {
             updateAttributes.phoneNumber = data.phone_numbers[0].phone_number;
         }
 
-        // Update last login time
         updateAttributes.lastLoginAt = new Date().toISOString();
 
         if (Object.keys(updateAttributes).length > 0) {
