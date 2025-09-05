@@ -1,70 +1,54 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
-
-interface Project {
-  id: number;
-  name: string;
-  type: string;
-  location: string;
-  price: number;
-  credits: number;
-  image: string;
-  creator: string;
-  rating: number;
-}
+import ReactPaginate from 'react-paginate';
+import { useMarketplaceStore } from '@/store/marketplace-store';
+import _ from 'lodash';
 
 export default function Marketplace() {
-  const [filters, setFilters] = useState({
-    priceRange: '',
-    location: '',
-    projectType: '',
-    sortBy: 'newest',
-  });
+  const {
+    projects,
+    filters,
+    loading,
+    error,
+    totalCount,
+    currentPage,
+    totalPages,
+    setFilters,
+    setPage,
+    fetchProjects,
+    resetFilters,
+  } = useMarketplaceStore();
+  const [query, setQuery] = useState<string>('');
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  // Fetch projects on component mount
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const params = new URLSearchParams();
-        if (filters.priceRange) params.append('priceRange', filters.priceRange);
-        if (filters.location) params.append('location', filters.location);
-        if (filters.projectType)
-          params.append('projectType', filters.projectType);
-        if (filters.sortBy) params.append('sortBy', filters.sortBy);
-
-        const response = await fetch(
-          `/api/marketplace/projects?${params.toString()}`
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch projects');
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-          setProjects(data.data);
-        } else {
-          throw new Error(data.error || 'Failed to fetch projects');
-        }
-      } catch (err) {
-        console.error('Error fetching projects:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProjects();
-  }, [filters]);
+  }, [fetchProjects]);
+
+  // Stable debounced search function using useMemo
+  const debouncedSearch = useMemo(
+    () =>
+      _.debounce((searchValue: string) => {
+        setFilters({ searchQuery: searchValue });
+      }, 1000),
+    [setFilters]
+  );
+
+  // Handle search input change
+  const handleSearchChange = (value: string) => {
+    setQuery(value);
+    debouncedSearch(value);
+  };
+
+  // Handle page change with scroll to top
+  const handlePageChange = (event: { selected: number }) => {
+    const newPage = event.selected + 1;
+    setPage(newPage);
+    // Smooth scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -72,12 +56,45 @@ export default function Marketplace() {
 
       {/* Filters */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Filter Projects</h2>
+          <button
+            onClick={() => {
+              resetFilters();
+              setQuery('');
+            }}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            Clear All Filters
+          </button>
+        </div>
+
+        {/* Search projects by name */}
+        <div className="mb-4 relative">
+          <input
+            type="text"
+            placeholder="Search projects ..."
+            value={query}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-full p-3 pr-20 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {query && (
+            <button
+              onClick={() => {
+                setQuery('');
+                debouncedSearch('');
+              }}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-red-600 text-sm font-medium"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
         <div className="grid grid-cols-4 gap-4">
           <select
             value={filters.priceRange}
-            onChange={(e) =>
-              setFilters({ ...filters, priceRange: e.target.value })
-            }
+            onChange={(e) => setFilters({ priceRange: e.target.value })}
             className="p-3 border rounded bg-white"
           >
             <option value="">Price Range</option>
@@ -88,9 +105,7 @@ export default function Marketplace() {
 
           <select
             value={filters.location}
-            onChange={(e) =>
-              setFilters({ ...filters, location: e.target.value })
-            }
+            onChange={(e) => setFilters({ location: e.target.value })}
             className="p-3 border rounded bg-white"
           >
             <option value="">All Locations</option>
@@ -102,9 +117,7 @@ export default function Marketplace() {
 
           <select
             value={filters.projectType}
-            onChange={(e) =>
-              setFilters({ ...filters, projectType: e.target.value })
-            }
+            onChange={(e) => setFilters({ projectType: e.target.value })}
             className="p-3 border rounded bg-white"
           >
             <option value="">Project Type</option>
@@ -116,7 +129,7 @@ export default function Marketplace() {
 
           <select
             value={filters.sortBy}
-            onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+            onChange={(e) => setFilters({ sortBy: e.target.value })}
             className="p-3 border rounded bg-white"
           >
             <option value="newest">Newest</option>
@@ -127,6 +140,21 @@ export default function Marketplace() {
           </select>
         </div>
       </div>
+
+      {/* Results Info */}
+      {!loading && !error && (
+        <div className="mb-6 flex justify-between items-center text-gray-600">
+          <p>
+            Showing {projects.length} of {totalCount} project
+            {totalCount !== 1 ? 's' : ''}
+            {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
+          </p>
+          <div className="text-sm">
+            {totalCount > 0 &&
+              `${(currentPage - 1) * (filters.limit || 6) + 1}-${Math.min(currentPage * (filters.limit || 6), totalCount)} of ${totalCount}`}
+          </div>
+        </div>
+      )}
 
       {/* Project Grid */}
       {loading ? (
@@ -207,6 +235,30 @@ export default function Marketplace() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && !error && totalPages > 1 && (
+        <div className="mt-8 flex justify-center">
+          <ReactPaginate
+            pageCount={totalPages}
+            pageRangeDisplayed={3}
+            marginPagesDisplayed={1}
+            onPageChange={handlePageChange}
+            forcePage={currentPage - 1}
+            containerClassName="flex items-center gap-2"
+            pageClassName="px-3 py-2 rounded-md border border-gray-300 hover:bg-gray-50 cursor-pointer"
+            pageLinkClassName="block w-full h-full text-center"
+            activeClassName="bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+            previousLabel="← Previous"
+            nextLabel="Next →"
+            previousClassName="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            nextClassName="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabledClassName="opacity-50 cursor-not-allowed"
+            breakLabel="..."
+            breakClassName="px-3 py-2"
+          />
         </div>
       )}
     </div>

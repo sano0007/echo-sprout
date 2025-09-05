@@ -1,7 +1,7 @@
 import type {
   MarketplaceFilters,
   MarketplaceProject,
-} from '../types/marketplace-types.ts';
+} from '@echo-sprout/types';
 
 export class MarketplaceService {
   // TODO: Replace with actual database query when projects are populated
@@ -55,12 +55,89 @@ export class MarketplaceService {
         creator: 'BioEnergy GmbH',
         rating: 4.5,
       },
+      {
+        id: 5,
+        name: 'Ocean Wave Energy',
+        type: 'Wave Energy',
+        location: 'Portugal',
+        price: 22,
+        credits: 800,
+        image:
+          'https://yale-threesixty.transforms.svdcdn.com/production/Winter-testing_two-Pelamis-machines_16x9.jpg?w=1500&h=1500&q=80&auto=format&fit=clip&dm=1740244467&s=65e94fe0fdf49745558c22df7c481250',
+        creator: 'Atlantic Energy Co',
+        rating: 4.7,
+      },
+      {
+        id: 6,
+        name: 'Geothermal Power Station',
+        type: 'Geothermal',
+        location: 'Iceland',
+        price: 16,
+        credits: 900,
+        image:
+          'https://media.sciencephoto.com/image/t1360094/800wm/T1360094.jpg',
+        creator: 'Nordic Geo Power',
+        rating: 4.9,
+      },
+      {
+        id: 7,
+        name: 'Urban Solar Rooftops',
+        type: 'Solar Energy',
+        location: 'Australia',
+        price: 14,
+        credits: 600,
+        image: 'https://cdn.buttercms.com/KnfoiWaHTXa5MtTphP9r',
+        creator: 'Aussie Solar Grid',
+        rating: 4.4,
+      },
+      {
+        id: 8,
+        name: 'Mangrove Restoration',
+        type: 'Reforestation',
+        location: 'Philippines',
+        price: 13,
+        credits: 450,
+        image:
+          'https://images.takeshape.io/86ce9525-f5f2-4e97-81ba-54e8ce933da7/dev/36a7f527-78fd-4875-80a9-08ff49980cca/Young%20mangrove%20forest%20at%20seaside%20dreamstime.jpeg?auto=compress%2Cformat&w=1440',
+        creator: 'Coastal Restoration Inc',
+        rating: 4.6,
+      },
+      {
+        id: 9,
+        name: 'Hydroelectric Micro Plant',
+        type: 'Hydro Energy',
+        location: 'Switzerland',
+        price: 20,
+        credits: 700,
+        image:
+          'https://upload.wikimedia.org/wikipedia/commons/6/6d/Nw_vietnam_hydro.jpg',
+        creator: 'Alpine Hydro Systems',
+        rating: 4.8,
+      },
+      {
+        id: 10,
+        name: 'Waste to Energy Facility',
+        type: 'Waste Management',
+        location: 'Netherlands',
+        price: 17,
+        credits: 550,
+        image:
+          'https://pinellas.gov/wp-content/uploads/2022/07/CIP-Project-Photo-JS_Raw.Photo_CROPPED_4.jpg',
+        creator: 'Clean Energy NL',
+        rating: 4.3,
+      },
     ];
   }
 
-  static async getMarketplaceProjects(
-    filters: MarketplaceFilters
-  ): Promise<MarketplaceProject[]> {
+  static async getMarketplaceProjects(filters: MarketplaceFilters): Promise<{
+    projects: MarketplaceProject[];
+    totalCount: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }> {
     // TODO: Replace with actual database query
     // const projects = await ctx.db
     //   .query('projects')
@@ -87,7 +164,25 @@ export class MarketplaceService {
     // Apply sorting
     filteredProjects = this.applySorting(filteredProjects, filters.sortBy);
 
-    return filteredProjects;
+    // Apply pagination
+    const page = filters.page || 1;
+    const limit = filters.limit || 6; // 6 projects per page for better grid layout
+    const totalCount = filteredProjects.length;
+    const totalPages = Math.ceil(totalCount / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+
+    const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
+
+    return {
+      projects: paginatedProjects,
+      totalCount,
+      page,
+      limit,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    };
   }
 
   // apply all filters based on provided filter criteria
@@ -110,6 +205,18 @@ export class MarketplaceService {
     if (filters.projectType) {
       filtered = filtered.filter((project) =>
         project.type.toLowerCase().includes(filters.projectType!.toLowerCase())
+      );
+    }
+
+    if (filters.searchQuery) {
+      filtered = filtered.filter(
+        (project) =>
+          project.name
+            .toLowerCase()
+            .includes(filters.searchQuery!.toLowerCase()) ||
+          project.creator
+            .toLowerCase()
+            .includes(filters.searchQuery!.toLowerCase())
       );
     }
 
