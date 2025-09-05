@@ -1,0 +1,5 @@
+# Run Prettier formatting
+bun run format
+
+# Run linting
+bun run lint

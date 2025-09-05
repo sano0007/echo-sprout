@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function Marketplace() {
   const [filters, setFilters] = useState({
@@ -125,9 +126,11 @@ export default function Marketplace() {
             key={project.id}
             className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
           >
-            <img
+            <Image
               src={project.image}
               alt={project.name}
+              width={300}
+              height={200}
               className="w-full h-48 object-cover bg-gray-200"
             />
             <div className="p-6">

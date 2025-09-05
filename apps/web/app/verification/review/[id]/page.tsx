@@ -4,7 +4,6 @@ import { useState } from 'react';
 
 export default function ProjectReview() {
   const [activeSection, setActiveSection] = useState('overview');
-  const [annotations, setAnnotations] = useState([]);
 
   const project = {
     id: 1,

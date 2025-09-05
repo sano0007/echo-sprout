@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 export default function ProjectDetail() {
   const project = {
     id: 1,
@@ -44,17 +46,21 @@ export default function ProjectDetail() {
         <div className="lg:col-span-2">
           {/* Image Gallery */}
           <div className="mb-6">
-            <img
+            <Image
               src={project.images[0]}
               alt={project.name}
+              width={600}
+              height={400}
               className="w-full h-96 object-cover rounded-lg bg-gray-200 mb-4"
             />
             <div className="grid grid-cols-3 gap-2">
               {project.images.slice(1).map((img, index) => (
-                <img
+                <Image
                   key={index}
                   src={img}
                   alt={`${project.name} ${index + 2}`}
+                  width={300}
+                  height={200}
                   className="h-24 object-cover rounded bg-gray-200"
                 />
               ))}

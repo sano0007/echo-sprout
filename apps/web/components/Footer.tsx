@@ -59,7 +59,7 @@ export default function Footer() {
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
               Connecting project developers, verifiers, and buyers in the
-              world's most transparent carbon credit marketplace. Building a
+              world&apos;s most transparent carbon credit marketplace. Building a
               sustainable future, one credit at a time.
             </p>
 

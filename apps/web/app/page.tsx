@@ -13,7 +13,7 @@ export default function Home() {
               Building a Sustainable Future
             </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-              The world's most transparent carbon credit marketplace connecting
+              The world&apos;s most transparent carbon credit marketplace connecting
               project developers, verifiers, and buyers in the fight against
               climate change.
             </p>
