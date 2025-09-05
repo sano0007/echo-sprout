@@ -31,6 +31,7 @@ export const handleClerkWebhook = httpAction(
 
       case 'user.deleted': {
         const tokenIdentifier = event.data.id!;
+        // @ts-ignore
         await ctx.runMutation(internal.users.deleteUser, { tokenIdentifier });
         break;
       }

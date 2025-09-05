@@ -41,11 +41,15 @@ interface UserProfiles {
 }
 
 // Type guards
-const isCreatorProfile = (profile: CreatorProfile | BuyerProfile): profile is CreatorProfile => {
+const isCreatorProfile = (
+  profile: CreatorProfile | BuyerProfile
+): profile is CreatorProfile => {
   return 'website' in profile;
 };
 
-const isBuyerProfile = (profile: CreatorProfile | BuyerProfile): profile is BuyerProfile => {
+const isBuyerProfile = (
+  profile: CreatorProfile | BuyerProfile
+): profile is BuyerProfile => {
   return 'company' in profile;
 };
 
@@ -110,11 +114,12 @@ export default function ProfilePage() {
               </p>
             </div>
             <div className="text-right">
-              {isCreatorProfile(currentProfile) && currentProfile.stats.verified && (
-                <span className="bg-green-500 px-3 py-1 rounded-full text-sm">
-                  ✓ Verified
-                </span>
-              )}
+              {isCreatorProfile(currentProfile) &&
+                currentProfile.stats.verified && (
+                  <span className="bg-green-500 px-3 py-1 rounded-full text-sm">
+                    ✓ Verified
+                  </span>
+                )}
             </div>
           </div>
         </div>
@@ -253,7 +258,8 @@ export default function ProfilePage() {
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold mb-4">Statistics</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      {userType === 'creator' && isCreatorProfile(currentProfile) ? (
+                      {userType === 'creator' &&
+                      isCreatorProfile(currentProfile) ? (
                         <>
                           <div className="bg-blue-50 p-4 rounded text-center">
                             <p className="text-2xl font-bold text-blue-600">
@@ -280,7 +286,8 @@ export default function ProfilePage() {
                             </p>
                           </div>
                         </>
-                      ) : userType === 'buyer' && isBuyerProfile(currentProfile) ? (
+                      ) : userType === 'buyer' &&
+                        isBuyerProfile(currentProfile) ? (
                         <>
                           <div className="bg-blue-50 p-4 rounded text-center">
                             <p className="text-2xl font-bold text-blue-600">
