@@ -10,6 +10,7 @@ registration to verification and trading. Built as a modern web application usin
 technologies.
 
 ### Key Stakeholders
+
 - **Project Creators** - Register and manage carbon credit projects
 - **Verifiers** - Review and validate projects against international standards
 - **Buyers** - Purchase carbon credits and track environmental impact
@@ -25,28 +26,33 @@ This is a monorepo built with Turbo containing:
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - **Bun** (recommended) or Node.js 18+
 - **Git**
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd echo-sprout
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp apps/web/.env.example apps/web/.env.local
    ```
 
 4. **Run the development server**
+
    ```bash
    cd apps/web
    bun dev
@@ -73,30 +79,35 @@ echo-sprout/
 ## ✨ Features Overview
 
 ### 🏗️ Project Management
+
 - Multi-step project registration wizard
 - Real-time progress tracking
 - Document management system
 - Milestone and reporting tools
 
 ### 🛒 Marketplace
+
 - Credit browsing and filtering
 - Secure transaction processing
 - Impact metrics and certificates
 - Price tracking and analytics
 
 ### ✅ Verification System
+
 - Professional verifier dashboard
 - Standards compliance (VCS, Gold Standard, CCBS)
 - Review workflows and feedback
 - Automated validation tools
 
 ### 📊 Monitoring & Analytics
+
 - Real-time project monitoring
 - Environmental impact visualization
 - CO₂ offset calculations
 - Progress reporting dashboards
 
 ### 🎓 Educational Hub
+
 - Structured learning modules
 - Implementation guides
 - Community blog and forums
@@ -114,6 +125,7 @@ echo-sprout/
 ## 📚 Documentation
 
 For detailed documentation about the web application, including:
+
 - Complete feature documentation
 - API reference
 - Development guidelines
@@ -135,6 +147,7 @@ For detailed documentation about the web application, including:
 ## 🌍 Environmental Impact
 
 EcoSprout aims to accelerate climate action by:
+
 - Making carbon credit markets more transparent and accessible
 - Supporting project developers with better tools and resources
 - Enabling buyers to make informed decisions about carbon offsets
