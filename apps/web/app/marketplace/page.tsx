@@ -70,7 +70,7 @@ export default function Marketplace() {
             onChange={(e) =>
               setFilters({ ...filters, priceRange: e.target.value })
             }
-            className="p-3 border rounded"
+            className="p-3 border rounded bg-white"
           >
             <option value="">Price Range</option>
             <option value="0-10">$0 - $10</option>
@@ -83,7 +83,7 @@ export default function Marketplace() {
             onChange={(e) =>
               setFilters({ ...filters, location: e.target.value })
             }
-            className="p-3 border rounded"
+            className="p-3 border rounded bg-white"
           >
             <option value="">All Locations</option>
             <option value="brazil">Brazil</option>
@@ -97,7 +97,7 @@ export default function Marketplace() {
             onChange={(e) =>
               setFilters({ ...filters, projectType: e.target.value })
             }
-            className="p-3 border rounded"
+            className="p-3 border rounded bg-white"
           >
             <option value="">Project Type</option>
             <option value="reforestation">Reforestation</option>
@@ -109,7 +109,7 @@ export default function Marketplace() {
           <select
             value={filters.sortBy}
             onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
-            className="p-3 border rounded"
+            className="p-3 border rounded bg-white"
           >
             <option value="newest">Newest</option>
             <option value="price-low">Price: Low to High</option>
