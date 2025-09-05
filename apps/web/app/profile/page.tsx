@@ -2,11 +2,58 @@
 
 import { useState } from 'react';
 
+interface CreatorStats {
+  totalProjects: number;
+  activeProjects: number;
+  creditsGenerated: number;
+  verified: boolean;
+}
+
+interface BuyerStats {
+  creditsPurchased: number;
+  totalSpent: number;
+  projectsSupported: number;
+  co2Offset: number;
+}
+
+interface BaseUserProfile {
+  name: string;
+  email: string;
+  userType: string;
+  joinDate: string;
+  location: string;
+  description: string;
+}
+
+interface CreatorProfile extends BaseUserProfile {
+  website: string;
+  stats: CreatorStats;
+}
+
+interface BuyerProfile extends BaseUserProfile {
+  company: string;
+  stats: BuyerStats;
+}
+
+interface UserProfiles {
+  creator: CreatorProfile;
+  buyer: BuyerProfile;
+}
+
+// Type guards
+const isCreatorProfile = (profile: CreatorProfile | BuyerProfile): profile is CreatorProfile => {
+  return 'website' in profile;
+};
+
+const isBuyerProfile = (profile: CreatorProfile | BuyerProfile): profile is BuyerProfile => {
+  return 'company' in profile;
+};
+
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('profile');
-  const [userType, setUserType] = useState('creator'); // creator, buyer, verifier, admin
+  const [userType, setUserType] = useState<keyof UserProfiles>('creator');
 
-  const userProfiles = {
+  const userProfiles: UserProfiles = {
     creator: {
       name: 'Green Solutions Inc',
       email: 'contact@greensolutions.com',
@@ -63,7 +110,7 @@ export default function ProfilePage() {
               </p>
             </div>
             <div className="text-right">
-              {currentProfile.stats.verified && (
+              {isCreatorProfile(currentProfile) && currentProfile.stats.verified && (
                 <span className="bg-green-500 px-3 py-1 rounded-full text-sm">
                   ✓ Verified
                 </span>
@@ -143,7 +190,7 @@ export default function ProfilePage() {
                           className="w-full p-3 border rounded"
                         />
                       </div>
-                      {currentProfile.website && (
+                      {isCreatorProfile(currentProfile) && (
                         <div>
                           <label className="block text-sm font-medium mb-2">
                             Website
@@ -206,7 +253,7 @@ export default function ProfilePage() {
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold mb-4">Statistics</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      {userType === 'creator' ? (
+                      {userType === 'creator' && isCreatorProfile(currentProfile) ? (
                         <>
                           <div className="bg-blue-50 p-4 rounded text-center">
                             <p className="text-2xl font-bold text-blue-600">
@@ -226,18 +273,18 @@ export default function ProfilePage() {
                           </div>
                           <div className="bg-purple-50 p-4 rounded text-center col-span-2">
                             <p className="text-2xl font-bold text-purple-600">
-                              {currentProfile.stats.creditsGenerated?.toLocaleString()}
+                              {currentProfile.stats.creditsGenerated.toLocaleString()}
                             </p>
                             <p className="text-sm text-gray-600">
                               Credits Generated
                             </p>
                           </div>
                         </>
-                      ) : (
+                      ) : userType === 'buyer' && isBuyerProfile(currentProfile) ? (
                         <>
                           <div className="bg-blue-50 p-4 rounded text-center">
                             <p className="text-2xl font-bold text-blue-600">
-                              {currentProfile.stats.creditsPurchased?.toLocaleString()}
+                              {currentProfile.stats.creditsPurchased.toLocaleString()}
                             </p>
                             <p className="text-sm text-gray-600">
                               Credits Purchased
@@ -246,7 +293,7 @@ export default function ProfilePage() {
                           <div className="bg-green-50 p-4 rounded text-center">
                             <p className="text-2xl font-bold text-green-600">
                               $
-                              {currentProfile.stats.totalSpent?.toLocaleString()}
+                              {currentProfile.stats.totalSpent.toLocaleString()}
                             </p>
                             <p className="text-sm text-gray-600">
                               Total Invested
@@ -262,14 +309,14 @@ export default function ProfilePage() {
                           </div>
                           <div className="bg-orange-50 p-4 rounded text-center">
                             <p className="text-2xl font-bold text-orange-600">
-                              {currentProfile.stats.co2Offset?.toLocaleString()}
+                              {currentProfile.stats.co2Offset.toLocaleString()}
                             </p>
                             <p className="text-sm text-gray-600">
                               CO₂ Offset (tons)
                             </p>
                           </div>
                         </>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -313,7 +360,23 @@ export default function ProfilePage() {
                         date: '2024-01-10',
                         type: 'info',
                       },
-                    ]
+                    ].map((activity, index) => (
+                      <div
+                        key={index}
+                        className={`p-4 rounded border-l-4 ${
+                          activity.type === 'success'
+                            ? 'border-green-500 bg-green-50'
+                            : activity.type === 'warning'
+                              ? 'border-yellow-500 bg-yellow-50'
+                              : 'border-blue-500 bg-blue-50'
+                        }`}
+                      >
+                        <p className="font-medium">{activity.action}</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {new Date(activity.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))
                   : [
                       {
                         action:

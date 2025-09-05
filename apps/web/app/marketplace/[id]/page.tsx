@@ -47,7 +47,7 @@ export default function ProjectDetail() {
           {/* Image Gallery */}
           <div className="mb-6">
             <Image
-              src={project.images[0]}
+              src={project.images[0] as string}
               alt={project.name}
               width={600}
               height={400}

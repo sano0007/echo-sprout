@@ -285,7 +285,7 @@ export default function ProjectReview() {
                                   min="1"
                                   max="10"
                                   placeholder="Score"
-                                  defaultValue={item.score}
+                                  defaultValue={item.score || ''}
                                   className="w-16 border rounded px-2 py-1 text-sm"
                                 />
                               </div>
