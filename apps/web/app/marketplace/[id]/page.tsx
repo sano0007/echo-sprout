@@ -188,16 +188,12 @@ export default function ProjectDetail() {
                 min="1"
                 max={project.credits}
                 defaultValue="1"
-                className="w-full p-3 border rounded"
+                className="w-full p-3 border rounded bg-white"
               />
             </div>
 
             <button className="w-full bg-blue-600 text-white py-3 px-4 rounded mb-3 hover:bg-blue-700">
               Buy Now
-            </button>
-
-            <button className="w-full bg-gray-300 text-gray-700 py-3 px-4 rounded hover:bg-gray-400">
-              Add to Cart
             </button>
 
             {/* Creator Info */}
