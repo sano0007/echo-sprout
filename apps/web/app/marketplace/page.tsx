@@ -21,6 +21,12 @@ export default function Marketplace() {
     resetFilters,
   } = useMarketplaceStore();
   const [query, setQuery] = useState<string>('');
+  const [showCreditModal, setShowCreditModal] = useState<boolean>(false);
+  const [dollarAmount, setDollarAmount] = useState<number>(100);
+  const [creditAmount, setCreditAmount] = useState<number>(1);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+
+  const creditPrice = 100; // $100 per credit
 
   // Fetch projects on component mount
   useEffect(() => {
@@ -50,9 +56,55 @@ export default function Marketplace() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Handle dollar amount change
+  const handleDollarChange = (value: number) => {
+    setDollarAmount(value);
+    setCreditAmount(Math.round((value / creditPrice) * 100) / 100);
+  };
+
+  // Handle credit amount change
+  const handleCreditChange = (value: number) => {
+    setCreditAmount(value);
+    setDollarAmount(Math.round(value * creditPrice * 100) / 100);
+  };
+
+  // Create Stripe checkout session
+  const handlePurchase = async () => {
+    setIsProcessing(true);
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: dollarAmount,
+          credits: creditAmount,
+        }),
+      });
+
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8">Carbon Credit Marketplace</h1>
+      <div className={'flex justify-between items-center mb-4'}>
+        <h1 className="text-3xl font-bold">Carbon Credit Marketplace</h1>
+        <button
+          onClick={() => setShowCreditModal(true)}
+          className="bg-blue-600 text-white py-3 px-4 rounded hover:bg-blue-700"
+        >
+          Buy Credits
+        </button>
+      </div>
 
       {/* Filters */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -235,6 +287,104 @@ export default function Marketplace() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Credit Purchase Modal */}
+      {showCreditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Buy Carbon Credits</h2>
+              <button
+                onClick={() => setShowCreditModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <p className="text-sm text-gray-600 mb-1">
+                  Current Credit Price
+                </p>
+                <p className="text-2xl font-bold text-green-600">
+                  ${creditPrice}
+                </p>
+                <p className="text-sm text-gray-500">per credit</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Dollar Amount ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={dollarAmount}
+                    onChange={(e) =>
+                      handleDollarChange(Number(e.target.value) || 0)
+                    }
+                    min="1"
+                    step="0.01"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    placeholder="Enter dollar amount"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Credits
+                  </label>
+                  <input
+                    type="number"
+                    value={creditAmount}
+                    onChange={(e) =>
+                      handleCreditChange(Number(e.target.value) || 0)
+                    }
+                    min="0.01"
+                    step="0.01"
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    placeholder="Enter credit amount"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg mt-4">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Total Purchase:</span>
+                  <span className="text-xl font-bold text-blue-600">
+                    ${dollarAmount.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-sm text-gray-600">
+                    Credits to receive:
+                  </span>
+                  <span className="text-sm font-medium">
+                    {creditAmount.toFixed(2)} credits
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCreditModal(false)}
+                className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePurchase}
+                disabled={isProcessing || dollarAmount <= 0}
+                className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? 'Processing...' : 'Buy Now'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
