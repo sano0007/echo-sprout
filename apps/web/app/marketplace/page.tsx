@@ -15,16 +15,17 @@ export default function Marketplace() {
     totalCount,
     currentPage,
     totalPages,
+    isProcessing,
     setFilters,
     setPage,
     fetchProjects,
     resetFilters,
+    purchaseToken,
   } = useMarketplaceStore();
   const [query, setQuery] = useState<string>('');
   const [showCreditModal, setShowCreditModal] = useState<boolean>(false);
   const [dollarAmount, setDollarAmount] = useState<number>(100);
   const [creditAmount, setCreditAmount] = useState<number>(1);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const creditPrice = 100; // $100 per credit
 
@@ -68,31 +69,6 @@ export default function Marketplace() {
     setDollarAmount(Math.round(value * creditPrice * 100) / 100);
   };
 
-  // Create Stripe checkout session
-  const handlePurchase = async () => {
-    setIsProcessing(true);
-    try {
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: dollarAmount,
-          credits: creditAmount,
-        }),
-      });
-
-      const { url } = await response.json();
-      if (url) {
-        window.location.href = url;
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -377,7 +353,7 @@ export default function Marketplace() {
                 Cancel
               </button>
               <button
-                onClick={handlePurchase}
+                onClick={() => purchaseToken(dollarAmount, creditAmount)}
                 disabled={isProcessing || dollarAmount <= 0}
                 className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
