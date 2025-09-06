@@ -185,7 +185,9 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
     } catch (error) {
       console.error('Error creating checkout session:', error);
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to create checkout session';
+        error instanceof Error
+          ? error.message
+          : 'Failed to create checkout session';
       set({ error: errorMessage });
     } finally {
       set({ isProcessing: false });

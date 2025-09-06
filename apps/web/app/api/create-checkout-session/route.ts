@@ -46,14 +46,14 @@ export async function POST(request: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/marketplace?payment=cancelled`,
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       url: session.url,
-      sessionId: session.id 
+      sessionId: session.id,
     });
   } catch (error) {
     console.error('Error creating checkout session:', error);
-    
+
     return NextResponse.json(
       {
         success: false,

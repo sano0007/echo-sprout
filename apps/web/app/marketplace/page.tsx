@@ -69,7 +69,6 @@ export default function Marketplace() {
     setDollarAmount(Math.round(value * creditPrice * 100) / 100);
   };
 
-
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className={'flex justify-between items-center mb-4'}>
