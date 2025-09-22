@@ -107,9 +107,15 @@ export default function CommunityForum() {
             Connect with the carbon credit community
           </p>
         </div>
-        <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-          New Topic
-        </button>
+          <div className="flex space-x-2">
+              <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                  My Topic
+              </button>
+              <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                  New Topic
+              </button>
+          </div>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
