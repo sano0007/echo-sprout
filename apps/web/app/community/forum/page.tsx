@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
+import Link from 'next/link';
 
 export default function CommunityForum() {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -15,7 +16,7 @@ export default function CommunityForum() {
   const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
 
   const categories = [
     { id: 'all', name: 'All Topics', count: 156 },
@@ -27,7 +28,7 @@ export default function CommunityForum() {
     { id: 'announcements', name: 'Announcements', count: 7 },
   ];
 
-  const forumPosts = [
+  const initialPosts = [
     {
       id: 1,
       title: 'Best practices for reforestation project documentation?',
@@ -97,7 +98,24 @@ export default function CommunityForum() {
     { name: 'David Kumar', posts: 29, reputation: 587 },
   ];
 
-  const filteredPosts = forumPosts.filter((post) => {
+  const [posts, setPosts] = useState(initialPosts);
+
+  // Merge locally saved topics into feed on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('my_topics');
+      if (raw) {
+        const myTopics = JSON.parse(raw);
+        if (Array.isArray(myTopics)) {
+          setPosts((prev) => [...myTopics, ...prev]);
+        }
+      }
+    } catch (e) {
+      // ignore localStorage errors
+    }
+  }, []);
+
+  const filteredPosts = posts.filter((post) => {
     const matchesCategory =
       activeCategory === 'all' || post.category === activeCategory;
     const matchesSearch =
@@ -133,17 +151,34 @@ export default function CommunityForum() {
 
     setSubmitting(true);
     try {
-      // TODO: Wire up to backend route for creating a topic
-      // For now, just simulate success and close the modal
-      console.log('Creating topic', {
-        title,
+      const newPost = {
+        id: Date.now(),
+        title: title.trim(),
+        author: user?.fullName || user?.primaryEmailAddress?.emailAddress || 'You',
         category,
+        replies: 0,
+        views: 0,
+        lastActivity: 'just now',
+        isAnswered: false,
+        isPinned: false,
         tags: tags
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean),
-        content,
-      });
+        content: content.trim(),
+      };
+
+      // Save to localStorage for availability in My Topics page
+      try {
+        const raw = localStorage.getItem('my_topics');
+        const arr = raw ? JSON.parse(raw) : [];
+        const next = Array.isArray(arr) ? [newPost, ...arr] : [newPost];
+        localStorage.setItem('my_topics', JSON.stringify(next));
+      } catch (e) {
+        // ignore localStorage errors
+      }
+
+      setPosts((prev) => [newPost, ...prev]);
       setIsModalOpen(false);
       resetForm();
     } catch (err) {
@@ -163,9 +198,12 @@ export default function CommunityForum() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+          <Link
+            href="/community/my-topics"
+            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          >
             My Topic
-          </button>
+          </Link>
           <SignedIn>
             <button
               onClick={() => setIsModalOpen(true)}
