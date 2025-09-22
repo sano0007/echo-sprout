@@ -1,9 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+
+import { PDFViewer } from '../../../../components/pdf';
+import type { Annotation } from '../../../../components/pdf/types';
 
 export default function ProjectReview() {
   const [activeSection, setActiveSection] = useState('overview');
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [documentAnnotations, setDocumentAnnotations] = useState<
+    Record<string, Annotation[]>
+  >({});
 
   const project = {
     id: 1,
@@ -14,10 +21,34 @@ export default function ProjectReview() {
     location: 'Nevada, USA',
     description: 'Large-scale solar installation with 500MW capacity',
     documents: [
-      { name: 'Project Proposal.pdf', size: '2.4 MB', pages: 45 },
-      { name: 'Environmental Impact.pdf', size: '1.8 MB', pages: 32 },
-      { name: 'Site Photos.pdf', size: '5.2 MB', pages: 15 },
-      { name: 'Technical Specifications.doc', size: '890 KB', pages: 12 },
+      {
+        name: 'Project Proposal.pdf',
+        size: '2.4 MB',
+        pages: 45,
+        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        id: 'project-proposal',
+      },
+      {
+        name: 'Environmental Impact.pdf',
+        size: '1.8 MB',
+        pages: 32,
+        url: '/sample-documents/project-proposal.pdf', // Using same sample for demo
+        id: 'environmental-impact',
+      },
+      {
+        name: 'Site Photos.pdf',
+        size: '5.2 MB',
+        pages: 15,
+        url: '/sample-documents/project-proposal.pdf', // Using same sample for demo
+        id: 'site-photos',
+      },
+      {
+        name: 'Technical Specifications.pdf',
+        size: '890 KB',
+        pages: 12,
+        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        id: 'technical-specs',
+      },
     ],
   };
 
@@ -79,6 +110,21 @@ export default function ProjectReview() {
       score: null,
     },
   ];
+
+  // Annotation handling functions
+  const handleAnnotationChange = useCallback(
+    (documentId: string, annotations: Annotation[]) => {
+      setDocumentAnnotations((prev) => ({
+        ...prev,
+        [documentId]: annotations,
+      }));
+    },
+    []
+  );
+
+  const handleDocumentSelect = useCallback((doc: any) => {
+    setSelectedDocument(doc.id);
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -182,64 +228,112 @@ export default function ProjectReview() {
 
           {/* Document Review */}
           {activeSection === 'documents' && (
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-semibold mb-6">Document Review</h2>
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-2xl font-semibold mb-4">Document Review</h2>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Document List */}
-                <div>
+                <div className="mb-6">
                   <h3 className="text-lg font-medium mb-4">
                     Project Documents
                   </h3>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                     {project.documents.map((doc, index) => (
                       <div
                         key={index}
-                        className="border rounded p-4 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleDocumentSelect(doc)}
+                        className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                          selectedDocument === doc.id
+                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
                       >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium">{doc.name}</p>
-                            <p className="text-sm text-gray-600">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm mb-1 line-clamp-2">
+                              {doc.name}
+                            </p>
+                            <p className="text-xs text-gray-600">
                               {doc.size} • {doc.pages} pages
                             </p>
+                            {(documentAnnotations[doc.id] || []).length > 0 && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                {documentAnnotations[doc.id]?.length} annotation
+                                {documentAnnotations[doc.id]?.length !== 1
+                                  ? 's'
+                                  : ''}
+                              </p>
+                            )}
                           </div>
-                          <button className="text-blue-600 hover:underline text-sm">
-                            View
-                          </button>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
+              </div>
 
-                {/* Document Viewer Placeholder */}
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Document Viewer</h3>
-                  <div className="border rounded bg-gray-50 h-96 flex items-center justify-center">
+              {/* PDF Viewer */}
+              <div className="h-[800px]">
+                {selectedDocument ? (
+                  (() => {
+                    const selectedDoc = project.documents.find(
+                      (doc) => doc.id === selectedDocument
+                    );
+                    if (!selectedDoc) return null;
+
+                    return (
+                      <PDFViewer
+                        url={selectedDoc.url}
+                        fileName={selectedDoc.name}
+                        annotations={documentAnnotations[selectedDoc.id] || []}
+                        onAnnotationChange={(annotations) =>
+                          handleAnnotationChange(selectedDoc.id, annotations)
+                        }
+                      />
+                    );
+                  })()
+                ) : (
+                  <div className="flex items-center justify-center h-full bg-gray-50">
                     <div className="text-center">
-                      <p className="text-gray-600 mb-2">
-                        Select a document to view
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="w-8 h-8 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Select a Document
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Choose a document from the list above to view and
+                        annotate
                       </p>
-                      <p className="text-sm text-gray-500">
-                        PDF viewer with annotation tools will appear here
-                      </p>
+                      <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-yellow-200 rounded"></div>
+                          <span>Highlight</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-blue-200 rounded"></div>
+                          <span>Note</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-red-200 rounded"></div>
+                          <span>Issue</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Annotation Tools */}
-                  <div className="mt-4 flex gap-2">
-                    <button className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-sm">
-                      Highlight
-                    </button>
-                    <button className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
-                      Note
-                    </button>
-                    <button className="bg-red-100 text-red-800 px-3 py-1 rounded text-sm">
-                      Issue
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}

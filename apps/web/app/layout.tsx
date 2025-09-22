@@ -1,11 +1,13 @@
+import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import './globals.css';
-import { ClerkProvider } from '@clerk/nextjs';
-import ConvexClientProvider from '../providers/ConvexProviderWithClerk';
 import React from 'react';
-import Navigation from '../components/Navigation';
+
+import './globals.css';
+
 import Footer from '../components/Footer';
+import Navigation from '../components/Navigation';
+import ConvexClientProvider from '../providers/ConvexProviderWithClerk';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
