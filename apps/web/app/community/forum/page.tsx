@@ -1,10 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 
 export default function CommunityForum() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Form state for New Topic
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('general');
+  const [tags, setTags] = useState('');
+  const [content, setContent] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const { isSignedIn } = useUser();
 
   const categories = [
     { id: 'all', name: 'All Topics', count: 156 },
@@ -98,6 +109,50 @@ export default function CommunityForum() {
     return matchesCategory && matchesSearch;
   });
 
+  const resetForm = () => {
+    setTitle('');
+    setCategory('general');
+    setTags('');
+    setContent('');
+    setError(null);
+  };
+
+  const handleCreateTopic = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!isSignedIn) {
+      setError('You must be signed in to create a topic.');
+      return;
+    }
+
+    if (!title.trim() || !content.trim()) {
+      setError('Title and content are required.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // TODO: Wire up to backend route for creating a topic
+      // For now, just simulate success and close the modal
+      console.log('Creating topic', {
+        title,
+        category,
+        tags: tags
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean),
+        content,
+      });
+      setIsModalOpen(false);
+      resetForm();
+    } catch (err) {
+      setError('Failed to create topic. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
@@ -107,15 +162,26 @@ export default function CommunityForum() {
             Connect with the carbon credit community
           </p>
         </div>
-          <div className="flex space-x-2">
+        <div className="flex space-x-2">
+          <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+            My Topic
+          </button>
+          <SignedIn>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+            >
+              New Topic
+            </button>
+          </SignedIn>
+          <SignedOut>
+            <SignInButton mode="modal">
               <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-                  My Topic
+                New Topic
               </button>
-              <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
-                  New Topic
-              </button>
-          </div>
-
+            </SignInButton>
+          </SignedOut>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -291,6 +357,128 @@ export default function CommunityForum() {
           </div>
         </div>
       </div>
+
+      {/* New Topic Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => {
+              setIsModalOpen(false);
+              resetForm();
+            }}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold">Create New Topic</h3>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTopic} className="px-6 py-4 space-y-4">
+              {error && (
+                <div className="bg-red-50 text-red-700 border border-red-200 px-3 py-2 rounded text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter a clear, concise topic title"
+                  className="w-full p-3 border rounded"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full p-3 border rounded"
+                  >
+                    {categories
+                      .filter((c) => c.id !== 'all')
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Tags</label>
+                  <input
+                    type="text"
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                    placeholder="e.g. reforestation, verification"
+                    className="w-full p-3 border rounded"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Separate tags with commas
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Content
+                </label>
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Describe your question or topic in detail..."
+                  className="w-full p-3 border rounded min-h-[160px]"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}
+                  className="px-4 py-2 border rounded hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !isSignedIn}
+                  className={`px-4 py-2 rounded text-white ${
+                    submitting || !isSignedIn
+                      ? 'bg-blue-300 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  {submitting ? 'Creating...' : 'Create Topic'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
