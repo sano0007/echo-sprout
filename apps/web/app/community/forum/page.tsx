@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 // Define the shape of a forum post including optional fields used conditionally
 type Post = {
-  id: number;
+  id: string | number;
   title: string;
   author: string;
   category: string;
@@ -34,7 +34,9 @@ export default function CommunityForum() {
   const [submitting, setSubmitting] = useState(false);
   const { isSignedIn, user } = useUser();
   const [isEdit, setIsEdit] = useState(false);
-  const [editingPostId, setEditingPostId] = useState<number | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | number | null>(
+    null
+  );
 
   const categories = [
     { id: 'all', name: 'All Topics', count: 156 },
@@ -118,23 +120,57 @@ export default function CommunityForum() {
 
   const [posts, setPosts] = useState<Post[]>(initialPosts);
 
-  // Merge locally saved topics into feed on mount
+  // Merge backend + locally saved topics into feed on mount
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('my_topics');
-      if (raw) {
-        const myTopics = JSON.parse(raw);
-        if (Array.isArray(myTopics)) {
-          const mapped = myTopics.map((t: any) => ({
-            ...t,
+    const load = async () => {
+      try {
+        const resp = await fetch('/api/forum/topics/mine');
+        if (resp.ok) {
+          const data = await resp.json();
+          const fromBackend = (data?.data || []).map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            author: 'You',
+            category: t.category,
+            replies: t.replies ?? 0,
+            views: t.views ?? 0,
+            lastActivity: 'just now',
+            isAnswered: false,
+            isPinned: false,
+            tags: t.tags ?? [],
+            content: t.content,
             isMine: true,
           })) as Post[];
-          setPosts((prev) => [...mapped, ...prev]);
+          setPosts((prev) => {
+            const existing = new Set(prev.map((p) => String(p.id)));
+            const unique = fromBackend.filter(
+              (p) => !existing.has(String(p.id))
+            );
+            return [...unique, ...prev];
+          });
         }
-      }
-    } catch (e) {
-      // ignore localStorage errors
-    }
+      } catch {}
+
+      // Local fallback
+      try {
+        const raw = localStorage.getItem('my_topics');
+        if (raw) {
+          const myTopics = JSON.parse(raw);
+          if (Array.isArray(myTopics)) {
+            const mapped = myTopics.map((t: any) => ({
+              ...t,
+              isMine: true,
+            })) as Post[];
+            setPosts((prev) => {
+              const existing = new Set(prev.map((p) => String(p.id)));
+              const unique = mapped.filter((p) => !existing.has(String(p.id)));
+              return [...unique, ...prev];
+            });
+          }
+        }
+      } catch {}
+    };
+    load();
   }, []);
 
   const filteredPosts = posts.filter((post) => {
@@ -169,13 +205,13 @@ export default function CommunityForum() {
     setIsModalOpen(true);
   };
 
-  const deleteTopic = (id: number) => {
-    setPosts((prev) => prev.filter((p) => p.id !== id));
+  const deleteTopic = (id: string | number) => {
+    setPosts((prev) => prev.filter((p) => String(p.id) !== String(id)));
     try {
       const raw = localStorage.getItem('my_topics');
       const arr = raw ? JSON.parse(raw) : [];
       const next = Array.isArray(arr)
-        ? arr.filter((p: any) => p.id !== id)
+        ? arr.filter((p: any) => String(p.id) !== String(id))
         : [];
       localStorage.setItem('my_topics', JSON.stringify(next));
     } catch (e) {
@@ -203,7 +239,7 @@ export default function CommunityForum() {
         // Update existing
         setPosts((prev) =>
           prev.map((p) =>
-            p.id === editingPostId
+            String(p.id) === String(editingPostId)
               ? {
                   ...p,
                   title: title.trim(),
@@ -218,6 +254,22 @@ export default function CommunityForum() {
               : p
           )
         );
+        // Backend update
+        try {
+          await fetch(`/api/forum/topics/${editingPostId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: title.trim(),
+              category,
+              tags: tags
+                .split(',')
+                .map((t) => t.trim())
+                .filter(Boolean),
+              content: content.trim(),
+            }),
+          });
+        } catch {}
         // Update localStorage
         try {
           const raw = localStorage.getItem('my_topics');
@@ -261,6 +313,24 @@ export default function CommunityForum() {
           content: content.trim(),
           isMine: true,
         };
+
+        // Backend create first
+        try {
+          const resp = await fetch('/api/forum/topics', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: newPost.title,
+              content: newPost.content,
+              category: newPost.category,
+              tags: newPost.tags,
+            }),
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data?.data?.id) newPost.id = data.data.id;
+          }
+        } catch {}
 
         // Save to localStorage for availability in My Topics page
         try {
@@ -462,22 +532,6 @@ export default function CommunityForum() {
                         </div>
                         <div className="flex items-center gap-3">
                           <span>{post.lastActivity}</span>
-                          {post.isMine && (
-                            <>
-                              <button
-                                onClick={() => openEdit(post)}
-                                className="text-blue-600 hover:underline"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => deleteTopic(post.id)}
-                                className="text-red-600 hover:underline"
-                              >
-                                Delete
-                              </button>
-                            </>
-                          )}
                         </div>
                       </div>
                     </div>
