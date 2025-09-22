@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
@@ -19,10 +19,7 @@ type Post = {
 };
 
 export default function MyTopicsPage() {
-  const categories = [
-    { id: 'all', name: 'All Topics', count: 156 },
-
-  ];
+  const categories = [{ id: 'all', name: 'All Topics', count: 156 }];
 
   const [myTopics, setMyTopics] = useState<Post[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -135,7 +132,9 @@ export default function MyTopicsPage() {
 
             <SignedOut>
               <div className="p-6">
-                <p className="text-gray-700 mb-3">Please sign in to view your topics.</p>
+                <p className="text-gray-700 mb-3">
+                  Please sign in to view your topics.
+                </p>
                 <SignInButton mode="modal">
                   <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                     Sign In
@@ -239,7 +238,9 @@ export default function MyTopicsPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Category</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Category
+                  </label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
@@ -268,7 +269,9 @@ export default function MyTopicsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Content</label>
+                <label className="block text-sm font-medium mb-1">
+                  Content
+                </label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}

@@ -1,8 +1,24 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
+
+// Define the shape of a forum post including optional fields used conditionally
+type Post = {
+  id: number;
+  title: string;
+  author: string;
+  category: string;
+  replies: number;
+  views: number;
+  lastActivity: string;
+  isAnswered: boolean;
+  isPinned: boolean;
+  tags: string[];
+  content?: string;
+  isMine?: boolean;
+};
 
 export default function CommunityForum() {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -17,6 +33,8 @@ export default function CommunityForum() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { isSignedIn, user } = useUser();
+  const [isEdit, setIsEdit] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<number | null>(null);
 
   const categories = [
     { id: 'all', name: 'All Topics', count: 156 },
@@ -28,7 +46,7 @@ export default function CommunityForum() {
     { id: 'announcements', name: 'Announcements', count: 7 },
   ];
 
-  const initialPosts = [
+  const initialPosts: Post[] = [
     {
       id: 1,
       title: 'Best practices for reforestation project documentation?',
@@ -98,7 +116,7 @@ export default function CommunityForum() {
     { name: 'David Kumar', posts: 29, reputation: 587 },
   ];
 
-  const [posts, setPosts] = useState(initialPosts);
+  const [posts, setPosts] = useState<Post[]>(initialPosts);
 
   // Merge locally saved topics into feed on mount
   useEffect(() => {
@@ -107,7 +125,11 @@ export default function CommunityForum() {
       if (raw) {
         const myTopics = JSON.parse(raw);
         if (Array.isArray(myTopics)) {
-          setPosts((prev) => [...myTopics, ...prev]);
+          const mapped = myTopics.map((t: any) => ({
+            ...t,
+            isMine: true,
+          })) as Post[];
+          setPosts((prev) => [...mapped, ...prev]);
         }
       }
     } catch (e) {
@@ -133,6 +155,32 @@ export default function CommunityForum() {
     setTags('');
     setContent('');
     setError(null);
+    setIsEdit(false);
+    setEditingPostId(null);
+  };
+
+  const openEdit = (post: Post) => {
+    setTitle(post.title);
+    setCategory(post.category);
+    setTags(post.tags?.join(', ') || '');
+    setContent(post.content || '');
+    setIsEdit(true);
+    setEditingPostId(post.id);
+    setIsModalOpen(true);
+  };
+
+  const deleteTopic = (id: number) => {
+    setPosts((prev) => prev.filter((p) => p.id !== id));
+    try {
+      const raw = localStorage.getItem('my_topics');
+      const arr = raw ? JSON.parse(raw) : [];
+      const next = Array.isArray(arr)
+        ? arr.filter((p: any) => p.id !== id)
+        : [];
+      localStorage.setItem('my_topics', JSON.stringify(next));
+    } catch (e) {
+      // ignore
+    }
   };
 
   const handleCreateTopic = async (e: React.FormEvent) => {
@@ -151,34 +199,82 @@ export default function CommunityForum() {
 
     setSubmitting(true);
     try {
-      const newPost = {
-        id: Date.now(),
-        title: title.trim(),
-        author: user?.fullName || user?.primaryEmailAddress?.emailAddress || 'You',
-        category,
-        replies: 0,
-        views: 0,
-        lastActivity: 'just now',
-        isAnswered: false,
-        isPinned: false,
-        tags: tags
-          .split(',')
-          .map((t) => t.trim())
-          .filter(Boolean),
-        content: content.trim(),
-      };
+      if (isEdit && editingPostId) {
+        // Update existing
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === editingPostId
+              ? {
+                  ...p,
+                  title: title.trim(),
+                  category,
+                  tags: tags
+                    .split(',')
+                    .map((t) => t.trim())
+                    .filter(Boolean),
+                  content: content.trim(),
+                  lastActivity: 'just now',
+                }
+              : p
+          )
+        );
+        // Update localStorage
+        try {
+          const raw = localStorage.getItem('my_topics');
+          const arr = raw ? JSON.parse(raw) : [];
+          const next = Array.isArray(arr)
+            ? arr.map((p: any) =>
+                p.id === editingPostId
+                  ? {
+                      ...p,
+                      title: title.trim(),
+                      category,
+                      tags: tags
+                        .split(',')
+                        .map((t) => t.trim())
+                        .filter(Boolean),
+                      content: content.trim(),
+                      lastActivity: 'just now',
+                    }
+                  : p
+              )
+            : [];
+          localStorage.setItem('my_topics', JSON.stringify(next));
+        } catch (e) {}
+      } else {
+        // Create new
+        const newPost: Post = {
+          id: Date.now(),
+          title: title.trim(),
+          author:
+            user?.fullName || user?.primaryEmailAddress?.emailAddress || 'You',
+          category,
+          replies: 0,
+          views: 0,
+          lastActivity: 'just now',
+          isAnswered: false,
+          isPinned: false,
+          tags: tags
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean),
+          content: content.trim(),
+          isMine: true,
+        };
 
-      // Save to localStorage for availability in My Topics page
-      try {
-        const raw = localStorage.getItem('my_topics');
-        const arr = raw ? JSON.parse(raw) : [];
-        const next = Array.isArray(arr) ? [newPost, ...arr] : [newPost];
-        localStorage.setItem('my_topics', JSON.stringify(next));
-      } catch (e) {
-        // ignore localStorage errors
+        // Save to localStorage for availability in My Topics page
+        try {
+          const raw = localStorage.getItem('my_topics');
+          const arr = raw ? JSON.parse(raw) : [];
+          const next = Array.isArray(arr) ? [newPost, ...arr] : [newPost];
+          localStorage.setItem('my_topics', JSON.stringify(next));
+        } catch (e) {
+          // ignore localStorage errors
+        }
+
+        setPosts((prev) => [newPost, ...prev]);
       }
 
-      setPosts((prev) => [newPost, ...prev]);
       setIsModalOpen(false);
       resetForm();
     } catch (err) {
@@ -364,7 +460,25 @@ export default function CommunityForum() {
                           <span>💬 {post.replies} replies</span>
                           <span>👁️ {post.views} views</span>
                         </div>
-                        <span>{post.lastActivity}</span>
+                        <div className="flex items-center gap-3">
+                          <span>{post.lastActivity}</span>
+                          {post.isMine && (
+                            <>
+                              <button
+                                onClick={() => openEdit(post)}
+                                className="text-blue-600 hover:underline"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deleteTopic(post.id)}
+                                className="text-red-600 hover:underline"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
