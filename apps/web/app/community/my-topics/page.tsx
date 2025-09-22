@@ -5,7 +5,7 @@ import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
 import Link from 'next/link';
 
 type Post = {
-  id: number;
+  id: string | number;
   title: string;
   author: string;
   category: string;
@@ -30,13 +30,39 @@ export default function MyTopicsPage() {
   const [content, setContent] = useState('');
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('my_topics');
-      const arr = raw ? JSON.parse(raw) : [];
-      setMyTopics(Array.isArray(arr) ? arr : []);
-    } catch (e) {
-      setMyTopics([]);
-    }
+    const load = async () => {
+      // Backend
+      try {
+        const resp = await fetch('/api/forum/topics/mine');
+        if (resp.ok) {
+          const data = await resp.json();
+          const mapped = (data?.data || []).map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            author: 'You',
+            category: t.category,
+            replies: t.replies ?? 0,
+            views: t.views ?? 0,
+            lastActivity: 'just now',
+            isAnswered: false,
+            isPinned: false,
+            tags: t.tags ?? [],
+            content: t.content,
+          }));
+          setMyTopics(mapped);
+          return;
+        }
+      } catch {}
+      // Local fallback
+      try {
+        const raw = localStorage.getItem('my_topics');
+        const arr = raw ? JSON.parse(raw) : [];
+        setMyTopics(Array.isArray(arr) ? arr : []);
+      } catch (e) {
+        setMyTopics([]);
+      }
+    };
+    load();
   }, []);
 
   const openEdit = (post: Post) => {
@@ -48,10 +74,10 @@ export default function MyTopicsPage() {
     setIsModalOpen(true);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editingId) return;
     const updated = myTopics.map((p) =>
-      p.id === editingId
+      String(p.id) === String(editingId)
         ? {
             ...p,
             title: title.trim(),
@@ -67,14 +93,32 @@ export default function MyTopicsPage() {
     );
     setMyTopics(updated);
     try {
+      await fetch(`/api/forum/topics/${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          category,
+          tags: tags
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean),
+          content: content.trim(),
+        }),
+      });
+    } catch {}
+    try {
       localStorage.setItem('my_topics', JSON.stringify(updated));
     } catch (e) {}
     setIsModalOpen(false);
     setEditingId(null);
   };
 
-  const deleteTopic = (id: number) => {
-    const updated = myTopics.filter((p) => p.id !== id);
+  const deleteTopic = async (id: string | number) => {
+    try {
+      await fetch(`/api/forum/topics/${id}`, { method: 'DELETE' });
+    } catch {}
+    const updated = myTopics.filter((p) => String(p.id) !== String(id));
     setMyTopics(updated);
     try {
       localStorage.setItem('my_topics', JSON.stringify(updated));
