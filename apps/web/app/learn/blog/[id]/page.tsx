@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { useQuery } from "convex/react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@packages/backend/convex/_generated/api";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -122,6 +122,73 @@ export default function BlogArticlePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const article = useQuery(api.learn.getBlog, { id: params.id });
+  const updateBlog = useMutation(api.learn.updateBlog);
+  const deleteBlog = useMutation(api.learn.deleteBlog);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState({
+    title: "",
+    content: "",
+    tags: "",
+    readTime: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<null | { message: string; type: "success" | "error" }>(null);
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const openEdit = () => {
+    if (!article) return;
+    setDraft({
+      title: article.title,
+      content: article.content,
+      tags: article.tags.join(", "),
+      readTime: (article.readTime || "").replace(/\s*min\s*read/i, "").trim(),
+    });
+    setIsEditing(true);
+  };
+
+  const onSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!article) return;
+    const tags = draft.tags
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean);
+    try {
+      setIsSaving(true);
+      await updateBlog({
+        id: String(article.id),
+        title: draft.title,
+        content: draft.content,
+        tags,
+        readTime: draft.readTime || undefined,
+      });
+      setIsEditing(false);
+      showToast("Article updated successfully", "success");
+    } catch (err) {
+      showToast("Failed to update article", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const onDelete = async () => {
+    if (!article) return;
+    if (!confirm("Delete this article? This action cannot be undone.")) return;
+    try {
+      setIsDeleting(true);
+      await deleteBlog({ id: String(article.id) });
+      showToast("Article deleted", "success");
+      router.push('/learn');
+    } catch (err) {
+      showToast("Failed to delete article", "error");
+      setIsDeleting(false);
+    }
+  };
 
   const contentNodes = useMemo(() => {
     if (!article?.content) return null;
@@ -164,6 +231,33 @@ export default function BlogArticlePage() {
             </div>
           </div>
 
+          {article.isOwner && (
+            <div className="mb-6 flex gap-2">
+              <button
+                onClick={openEdit}
+                disabled={isDeleting || isSaving}
+                className={`px-3 py-1.5 rounded text-white ${
+                  isDeleting || isSaving
+                    ? 'bg-blue-300 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {isSaving ? 'Saving...' : 'Edit'}
+              </button>
+              <button
+                onClick={onDelete}
+                disabled={isDeleting || isSaving}
+                className={`px-3 py-1.5 rounded text-white ${
+                  isDeleting || isSaving
+                    ? 'bg-red-300 cursor-not-allowed'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          )}
+
           <div className="space-y-1 mb-6">
             {article.tags.map((tag: string) => (
               <Link
@@ -177,6 +271,107 @@ export default function BlogArticlePage() {
           </div>
 
           <div className="break-words">{contentNodes}</div>
+          {/* Edit Modal */}
+          {isEditing && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div
+                className="absolute inset-0 bg-black/40"
+                onClick={() => setIsEditing(false)}
+              />
+              <div className="relative bg-white w-full max-w-2xl mx-4 rounded-lg shadow-lg">
+                <div className="border-b px-6 py-4 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Edit Article</h3>
+                  <button
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={() => setIsEditing(false)}
+                    aria-label="Close"
+                    title="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <form onSubmit={onSave} className="px-6 py-4 space-y-4 max-h-[80vh] overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Title</label>
+                      <input
+                        value={draft.title}
+                        onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="Article title"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Read Time (minutes)</label>
+                      <input
+                        value={draft.readTime}
+                        onChange={(e) => setDraft((d) => ({ ...d, readTime: e.target.value }))}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="e.g., 6"
+                        inputMode="numeric"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Tags</label>
+                    <input
+                      value={draft.tags}
+                      onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value }))}
+                      className="w-full border rounded px-3 py-2"
+                      placeholder="Comma-separated"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Content</label>
+                    <textarea
+                      value={draft.content}
+                      onChange={(e) => setDraft((d) => ({ ...d, content: e.target.value }))}
+                      className="w-full border rounded px-3 py-2"
+                      rows={10}
+                      placeholder="Write your article content here"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      disabled={isSaving}
+                      className={`px-4 py-2 rounded border ${isSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className={`px-4 py-2 rounded text-white ${
+                        isSaving
+                          ? 'bg-blue-300 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700'
+                      }`}
+                    >
+                      {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+          {toast && (
+            <div className="fixed bottom-6 right-6 z-50">
+              <div
+                className={`px-4 py-3 rounded shadow text-white ${
+                  toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+                }`}
+              >
+                {toast.message}
+              </div>
+            </div>
+          )}
         </article>
       )}
     </div>
