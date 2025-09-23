@@ -206,8 +206,19 @@ export default function BlogArticlePage() {
         </button>
       </div>
 
-      {!article ? (
+      {article === undefined ? (
         <div className="text-gray-600">Loading article...</div>
+      ) : article === null ? (
+        <div className="bg-white border rounded-xl shadow-sm p-6 md:p-10 text-gray-700">
+          <h2 className="text-2xl font-semibold mb-2">Article not found</h2>
+          <p className="mb-4">This article may have been deleted or the link is invalid.</p>
+          <button
+            className="text-blue-600 hover:underline"
+            onClick={() => router.push('/learn')}
+          >
+            Go back to Learning Hub
+          </button>
+        </div>
       ) : (
         <article className="bg-white border rounded-xl shadow-sm p-6 md:p-10 overflow-x-hidden">
           <h1 className="text-4xl font-extrabold tracking-tight mb-3">
