@@ -1,6 +1,38 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 
+async function ensureUser(ctx: any) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) throw new Error('Unauthorized');
+  const existing = await ctx.db
+    .query('users')
+    .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', identity.subject))
+    .unique();
+  if (existing) return existing;
+
+  // Auto-provision a minimal user if missing (webhook may not have run yet)
+  const fullName = identity.name || '';
+  const [firstName, ...rest] = fullName.split(' ').filter(Boolean);
+  const lastName = rest.join(' ');
+  const email = identity.email || `${identity.subject}@unknown.local`;
+
+  const userId = await ctx.db.insert('users', {
+    clerkId: identity.subject,
+    email,
+    firstName: firstName || 'Unknown',
+    lastName: lastName || 'User',
+    role: 'credit_buyer',
+    phoneNumber: '',
+    address: '',
+    city: '',
+    country: '',
+    isVerified: false,
+    isActive: true,
+    profileImage: identity.pictureUrl || undefined,
+  });
+  return await ctx.db.get(userId);
+}
+
 export const createTopic = mutation({
   args: {
     title: v.string(),
@@ -9,14 +41,7 @@ export const createTopic = mutation({
     tags: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error('Unauthorized');
-
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
-      .unique();
-    if (!user) throw new Error('User not found');
+    const user = await ensureUser(ctx);
 
     const id = await ctx.db.insert('forumTopics', {
       title: args.title,
@@ -51,11 +76,11 @@ export const updateTopic = mutation({
     const topic = await ctx.db.get(id);
     if (!topic) throw new Error('Topic not found');
 
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
-      .unique();
-    if (!user) throw new Error('User not found');
+    const user =
+      (await ctx.db
+        .query('users')
+        .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
+        .unique()) || (await ensureUser(ctx));
     if (topic.authorId !== user._id) throw new Error('Forbidden');
 
     await ctx.db.patch(id, {
@@ -74,11 +99,11 @@ export const deleteTopic = mutation({
     if (!identity) throw new Error('Unauthorized');
     const topic = await ctx.db.get(id);
     if (!topic) throw new Error('Topic not found');
-    const user = await ctx.db
-      .query('users')
-      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
-      .unique();
-    if (!user) throw new Error('User not found');
+    const user =
+      (await ctx.db
+        .query('users')
+        .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
+        .unique()) || (await ensureUser(ctx));
     if (topic.authorId !== user._id) throw new Error('Forbidden');
     await ctx.db.delete(id);
     return { ok: true };
@@ -89,12 +114,19 @@ export const listUserTopics = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error('Unauthorized');
+    if (!identity) {
+      // No signed-in user; return empty list rather than erroring
+      return [];
+    }
     const user = await ctx.db
       .query('users')
       .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .unique();
-    if (!user) throw new Error('User not found');
+    if (!user) {
+      // User record not yet provisioned in Convex (e.g., webhook not run)
+      // Return empty list to avoid crashing callers; UI can handle gracefully
+      return [];
+    }
     const items = await ctx.db
       .query('forumTopics')
       .withIndex('by_author', (q) => q.eq('authorId', user._id))
@@ -109,5 +141,49 @@ export const listUserTopics = query({
       replies: t.replyCount,
       views: t.viewCount,
     }));
+  },
+});
+
+export const getTopicById = query({
+  args: { id: v.id('forumTopics') },
+  handler: async (ctx, { id }) => {
+    const topic = await ctx.db.get(id);
+    if (!topic) throw new Error('Topic not found');
+
+    const author = await ctx.db.get(topic.authorId);
+
+    const replies = await ctx.db
+      .query('forumReplies')
+      .withIndex('by_topic', (q) => q.eq('topicId', id))
+      .collect();
+
+    // Map replies with basic author info
+    const replyItems = await Promise.all(
+      replies.map(async (r) => {
+        const rauthor = await ctx.db.get(r.authorId);
+        return {
+          id: r._id,
+          content: r.content,
+          isDeleted: r.isDeleted,
+          upvotes: r.upvotes,
+          downvotes: r.downvotes,
+          author: rauthor
+            ? `${rauthor.firstName} ${rauthor.lastName}`
+            : 'Unknown',
+        };
+      })
+    );
+
+    return {
+      id: topic._id,
+      title: topic.title,
+      content: topic.content,
+      category: topic.category,
+      tags: topic.tags,
+      replies: topic.replyCount,
+      views: topic.viewCount,
+      author: author ? `${author.firstName} ${author.lastName}` : 'Unknown',
+      replyItems,
+    };
   },
 });
