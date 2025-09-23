@@ -14,6 +14,8 @@ export default function TopicDetailPage() {
     : routeParams?.id;
   const data = useQuery((api as any).forum.getTopicById, { id: idParam });
   const createReply = useMutation((api as any).forum.createReply);
+  const upvoteReply = useMutation((api as any).forum.upvoteReply);
+  const downvoteReply = useMutation((api as any).forum.downvoteReply);
   const [reply, setReply] = useState('');
   const [posting, setPosting] = useState(false);
   const [notice, setNotice] = useState<{
@@ -130,12 +132,59 @@ export default function TopicDetailPage() {
                 <div className="text-gray-800 whitespace-pre-wrap">
                   {r.content}
                 </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  ⬆ {r.upvotes} ⬇ {r.downvotes}
+                <div className="mt-3 flex items-center gap-4 text-sm text-gray-700">
+                  <button
+                    className="px-2 py-1 border rounded hover:bg-gray-50"
+                    onClick={async () => {
+                      try {
+                        await upvoteReply({ id: r.id });
+                      } catch {}
+                    }}
+                  >
+                    ⬆ Upvote
+                  </button>
+                  <span className="text-gray-500">{r.upvotes}</span>
+                  <button
+                    className="px-2 py-1 border rounded hover:bg-gray-50"
+                    onClick={async () => {
+                      try {
+                        await downvoteReply({ id: r.id });
+                      } catch {}
+                    }}
+                  >
+                    ⬇ Downvote
+                  </button>
+                  <span className="text-gray-500">{r.downvotes}</span>
                 </div>
               </div>
             ))
           )}
+        </div>
+        <div className="p-5">
+          {(data.replyItems || []).map((r: any) => (
+            <div key={`actions-${r.id}`} className="mt-2">
+              <div className="flex items-center gap-4 text-sm text-gray-700">
+                <button
+                  className="px-2 py-1 border rounded hover:bg-gray-50"
+                  onClick={async () => {
+                    try {
+                      await (await import('convex/react')).useMutation;
+                    } catch {}
+                  }}
+                  hidden
+                />
+                <button
+                  className="px-2 py-1 border rounded hover:bg-gray-50"
+                  onClick={async () => {
+                    try {
+                      const fn = (await import('convex/react')).useMutation;
+                    } catch {}
+                  }}
+                  hidden
+                />
+              </div>
+            </div>
+          ))}
         </div>
         <div className="p-5 border-t bg-gray-50">
           <SignedIn>

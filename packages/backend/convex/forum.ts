@@ -225,3 +225,27 @@ export const createReply = mutation({
     return { id: replyId };
   },
 });
+
+export const upvoteReply = mutation({
+  args: { id: v.id('forumReplies') },
+  handler: async (ctx, { id }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error('Unauthorized');
+    const reply = await ctx.db.get(id);
+    if (!reply) throw new Error('Reply not found');
+    await ctx.db.patch(id, { upvotes: (reply.upvotes ?? 0) + 1 });
+    return { ok: true };
+  },
+});
+
+export const downvoteReply = mutation({
+  args: { id: v.id('forumReplies') },
+  handler: async (ctx, { id }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error('Unauthorized');
+    const reply = await ctx.db.get(id);
+    if (!reply) throw new Error('Reply not found');
+    await ctx.db.patch(id, { downvotes: (reply.downvotes ?? 0) + 1 });
+    return { ok: true };
+  },
+});
