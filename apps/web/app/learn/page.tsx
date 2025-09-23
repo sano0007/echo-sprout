@@ -1,9 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import type React from 'react';
 
 export default function LearnHub() {
   const [activeTab, setActiveTab] = useState('modules');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newArticle, setNewArticle] = useState({
+    title: '',
+    author: '',
+    date: '',
+    readTime: '5 min read',
+    tags: '',
+    content: '',
+  });
 
   const learningModules = [
     {
@@ -79,14 +89,14 @@ export default function LearnHub() {
     },
   ];
 
-  const blogPosts = [
+  const [blogPosts, setBlogPosts] = useState([
     {
       id: 1,
       title: 'The Future of Nature-Based Carbon Solutions',
       author: 'Dr. Sarah Chen',
       date: '2024-01-18',
-      excerpt:
-        'Exploring how reforestation and ecosystem restoration projects are reshaping the carbon credit landscape...',
+      content:
+        'Exploring how reforestation and ecosystem restoration projects are reshaping the carbon credit landscape. In this article, we look at key trends, methodologies, and real-world examples that highlight the potential of nature-based solutions...'
       readTime: '6 min read',
       tags: ['Nature-Based', 'Innovation', 'Future Trends'],
     },
@@ -95,8 +105,8 @@ export default function LearnHub() {
       title: 'Success Story: 10,000 Hectares Restored in Amazon',
       author: 'Green Earth Foundation',
       date: '2024-01-15',
-      excerpt:
-        'A detailed look at how our large-scale reforestation project achieved its goals ahead of schedule...',
+      content:
+        'A detailed look at how our large-scale reforestation project achieved its goals ahead of schedule. We discuss planning, execution, and the measurable ecological impact achieved by the team...'
       readTime: '8 min read',
       tags: ['Case Study', 'Reforestation', 'Success Story'],
     },
@@ -105,12 +115,78 @@ export default function LearnHub() {
       title: 'Technology Integration in Carbon Project Monitoring',
       author: 'Tech Innovations Team',
       date: '2024-01-12',
-      excerpt:
-        'How IoT sensors, satellite imagery, and AI are revolutionizing project monitoring and verification...',
+      content:
+        'How IoT sensors, satellite imagery, and AI are revolutionizing project monitoring and verification. From remote sensing to predictive analytics, we cover practical tools you can adopt today...'
       readTime: '10 min read',
       tags: ['Technology', 'Monitoring', 'Innovation'],
     },
-  ];
+  ]);
+
+  const previewText = (s: string, max = 180) => {
+    if (!s) return '';
+    const text = s.replace(/\s+/g, ' ').trim();
+    return text.length > max ? text.slice(0, max).trimEnd() + '...' : text;
+  };
+
+  const today = useMemo(() => {
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mm}-${dd}`;
+  }, []);
+
+  const openModal = () => {
+    setNewArticle((prev) => ({
+      ...prev,
+      date: prev.date || today,
+    }));
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setNewArticle((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newArticle.title || !newArticle.author || !newArticle.content) {
+      alert('Please fill in title, author and content.');
+      return;
+    }
+
+    const tagsArray = newArticle.tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    const newPost = {
+      id: Date.now(),
+      title: newArticle.title,
+      author: newArticle.author,
+      date: newArticle.date || today,
+      content: newArticle.content,
+      readTime: newArticle.readTime || '5 min read',
+      tags: tagsArray.length ? tagsArray : ['Community'],
+    } as any;
+
+    setBlogPosts((prev) => [newPost, ...prev]);
+    setNewArticle({
+      title: '',
+      author: '',
+      date: today,
+      readTime: '5 min read',
+      tags: '',
+      content: '',
+    });
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -294,7 +370,10 @@ export default function LearnHub() {
                     Insights, stories, and updates from our community
                   </p>
                 </div>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded">
+                <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  onClick={openModal}
+                >
                   Write Article
                 </button>
               </div>
@@ -322,7 +401,7 @@ export default function LearnHub() {
                       </div>
                     </div>
 
-                    <p className="text-gray-600 mb-4">{post.excerpt}</p>
+                    <p className="text-gray-600 mb-4">{previewText(post.content)}</p>
 
                     <div className="flex justify-between items-center">
                       <div className="flex gap-2">
@@ -352,10 +431,123 @@ export default function LearnHub() {
                   Have insights about carbon projects or sustainability? Share
                   your experience with the community.
                 </p>
-                <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+                <button
+                  className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                  onClick={openModal}
+                >
                   Contribute Article
                 </button>
               </div>
+
+              {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                  <div
+                    className="absolute inset-0 bg-black bg-opacity-40"
+                    onClick={closeModal}
+                  />
+                  <div className="relative bg-white w-full max-w-2xl mx-4 rounded-lg shadow-lg">
+                    <div className="border-b px-6 py-4 flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Create New Article</h3>
+                      <button
+                        className="text-gray-500 hover:text-gray-700"
+                        onClick={closeModal}
+                        aria-label="Close"
+                        title="Close"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4 max-h-[80vh] overflow-y-auto">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Title</label>
+                          <input
+                            name="title"
+                            value={newArticle.title}
+                            onChange={handleChange}
+                            className="w-full border rounded px-3 py-2"
+                            placeholder="Enter article title"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Author</label>
+                          <input
+                            name="author"
+                            value={newArticle.author}
+                            onChange={handleChange}
+                            className="w-full border rounded px-3 py-2"
+                            placeholder="Your name"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Date</label>
+                          <input
+                            type="date"
+                            name="date"
+                            value={newArticle.date || today}
+                            onChange={handleChange}
+                            className="w-full border rounded px-3 py-2"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Read Time</label>
+                          <input
+                            name="readTime"
+                            value={newArticle.readTime}
+                            onChange={handleChange}
+                            className="w-full border rounded px-3 py-2"
+                            placeholder="e.g., 6 min read"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Excerpt removed — preview derives from content */}
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Tags</label>
+                        <input
+                          name="tags"
+                          value={newArticle.tags}
+                          onChange={handleChange}
+                          className="w-full border rounded px-3 py-2"
+                          placeholder="Comma-separated, e.g., Technology, Innovation"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Content</label>
+                        <textarea
+                          name="content"
+                          value={newArticle.content}
+                          onChange={handleChange}
+                          className="w-full border rounded px-3 py-2"
+                          rows={6}
+                          placeholder="Write your article content here"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={closeModal}
+                          className="px-4 py-2 rounded border"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                        >
+                          Publish
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
