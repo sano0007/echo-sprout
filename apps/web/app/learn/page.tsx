@@ -285,19 +285,23 @@ export default function LearnHub() {
                       </div>
                     </div>
 
-                    {typeof module.progress === 'number' && (
-                      <div className="mb-4">
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Progress</span>
-                          <span>{module.progress}%</span>
+                    {String(module.id).startsWith('0x') || String(module.id).length > 10 ? (
+                      <PathProgressBar pathId={String(module.id)} />
+                    ) : (
+                      typeof module.progress === 'number' && (
+                        <div className="mb-4">
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>Progress</span>
+                            <span>{module.progress}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
+                              style={{ width: `${module.progress}%` }}
+                            ></div>
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${module.progress}%` }}
-                          ></div>
-                        </div>
-                      </div>
+                      )
                     )}
 
                     {String(module.id).startsWith('0x') || String(module.id).length > 10 ? (
@@ -603,6 +607,22 @@ export default function LearnHub() {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PathProgressBar({ pathId }: { pathId: string }) {
+  const progress = useQuery(api.learn.getPathProgress, { pathId });
+  const pct = progress?.pct ?? 0;
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between text-sm mb-1">
+        <span>Progress</span>
+        <span>{pct}%</span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${pct}%` }}></div>
       </div>
     </div>
   );
