@@ -82,9 +82,9 @@ export const getBlog = query({
   args: { id: v.string() },
   async handler(ctx, { id }) {
     const normalized = await ctx.db.normalizeId('educationalContent', id);
-    if (!normalized) throw new Error('Invalid article id');
+    if (!normalized) return null;
     const d = await ctx.db.get(normalized);
-    if (!d) throw new Error('Article not found');
+    if (!d) return null;
 
     const author = await ctx.db.get(d.authorId);
     const current = await UserService.getCurrentUser(ctx);
