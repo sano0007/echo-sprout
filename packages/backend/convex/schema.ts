@@ -406,6 +406,17 @@ export default defineSchema({
     .index('by_path', ['pathId'])
     .index('by_path_order', ['pathId', 'order']),
 
+  // ============= USER PROGRESS =============
+  learningPathProgress: defineTable({
+    userId: v.id('users'),
+    pathId: v.id('learningPaths'),
+    completedKeys: v.array(v.string()), // keys like v:<lessonId>, p:<lessonId>:<i>
+    updatedAt: v.float64(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_path', ['pathId'])
+    .index('by_user_path', ['userId', 'pathId']),
+
   // ============= FORUM SYSTEM =============
   forumTopics: defineTable({
     title: v.string(),
