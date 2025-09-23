@@ -10,35 +10,22 @@ export default function LearningPathDetailsPage() {
   const params = useParams();
   const id = useMemo(() => (Array.isArray(params?.id) ? params.id[0] : (params?.id as string)), [params]);
 
-  const data = useQuery(api.learn.getLearningPath, id ? { id } : 'skip');
-  const lessons = useQuery(api.learn.listLessonsForPath, id ? { pathId: id } : 'skip');
+  const data = useQuery(api.learn.getLearningPath, { id: id ?? '' } as any);
+  const lessons = useQuery(api.learn.listLessonsForPath, { pathId: id ?? '' } as any);
   const updatePath = useMutation(api.learn.updateLearningPath);
   const deletePath = useMutation(api.learn.deleteLearningPath);
   const updateLesson = useMutation(api.learn.updateLesson);
   const deleteLesson = useMutation(api.learn.deleteLesson);
-  const toggleProgress = useMutation(api.learn.toggleProgressItem);
-  const progressData = useQuery(api.learn.getPathProgress, id ? { pathId: id } : 'skip');
 
   const [editingPath, setEditingPath] = useState(false);
   const [pathForm, setPathForm] = useState<any>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Server-backed completion state
-  const [completed, setCompleted] = useState<Record<string, boolean>>({});
-  useEffect(() => {
-    const map: Record<string, boolean> = {};
-    (progressData?.completedKeys || []).forEach((k: string) => (map[k] = true));
-    setCompleted(map);
-  }, [progressData?.completedKeys]);
-  const toggleKey = async (key: string) => {
-    const next = !completed[key];
-    setCompleted((c) => ({ ...c, [key]: next }));
-    try {
-      await toggleProgress({ pathId: id!, key, completed: next });
-    } catch {
-      setCompleted((c) => ({ ...c, [key]: !next }));
-    }
-  };
+  // Local-only checkboxes
+  const [pdfChecked, setPdfChecked] = useState<Record<string, boolean>>({});
+  const togglePdf = (key: string) => setPdfChecked((c) => ({ ...c, [key]: !c[key] }));
+  const [videoChecked, setVideoChecked] = useState<Record<string, boolean>>({});
+  const toggleVideo = (key: string) => setVideoChecked((c) => ({ ...c, [key]: !c[key] }));
 
   if (!id) {
     return (
@@ -104,24 +91,7 @@ export default function LearningPathDetailsPage() {
     }
   };
 
-  // Compute progress locally as well (for instant UI)
-  const progress = useMemo(() => {
-    const list = lessons || [];
-    let total = 0;
-    let done = 0;
-    list.forEach((L) => {
-      if (L.videoUrl) {
-        total += 1;
-        if (completed[`v:${String(L.id)}`]) done += 1;
-      }
-      (L.pdfUrls || []).forEach((_, i) => {
-        total += 1;
-        if (completed[`p:${String(L.id)}:${i}`]) done += 1;
-      });
-    });
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    return { total, done, pct };
-  }, [lessons, completed]);
+  // No progress bar in this state
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -173,16 +143,7 @@ export default function LearningPathDetailsPage() {
         </div>
       </div>
 
-      {/* Progress bar for this course */}
-      <div className="mb-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span>Progress</span>
-          <span>{progress.pct}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${progress.pct}%` }}></div>
-        </div>
-      </div>
+      
 
       
       <div className="text-gray-600 mb-6">
@@ -352,8 +313,8 @@ export default function LearningPathDetailsPage() {
                       <div className="flex items-center gap-2 mb-2 text-gray-700 font-medium">
                         <input
                           type="checkbox"
-                          checked={!!completed[`v:${String(L.id)}`]}
-                          onChange={() => toggleKey(`v:${String(L.id)}`)}
+                          checked={!!videoChecked[`v:${String(L.id)}`]}
+                          onChange={() => toggleVideo(`v:${String(L.id)}`)}
                         />
                         <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                           <path d="M8 5v14l11-7-11-7z" />
@@ -407,8 +368,8 @@ export default function LearningPathDetailsPage() {
                                 <div className="flex items-center gap-2 mb-2 text-sm text-gray-700">
                                   <input
                                     type="checkbox"
-                                    checked={!!completed[key]}
-                                    onChange={() => toggleKey(key)}
+                                    checked={!!pdfChecked[key]}
+                                    onChange={() => togglePdf(key)}
                                   />
                                   <svg className="h-4 w-4 text-red-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                                     <path d="M6 2h7l5 5v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm7 1.5V8h5.5"/>

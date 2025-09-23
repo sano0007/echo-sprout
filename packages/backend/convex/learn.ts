@@ -373,13 +373,6 @@ export const deleteLearningPath = mutation({
     await Promise.all(lessons.map((l) => ctx.db.delete(l._id)));
 
     await ctx.db.delete(normalized);
-
-    // Remove progress rows for this path
-    const progress = await ctx.db
-      .query('learningPathProgress')
-      .withIndex('by_path', (q) => q.eq('pathId', normalized))
-      .collect();
-    await Promise.all(progress.map((p) => ctx.db.delete(p._id)));
   },
 });
 
@@ -444,99 +437,5 @@ export const deleteLesson = mutation({
       lessons.map((l, idx) => (l.order !== idx ? ctx.db.patch(l._id, { order: idx, lastUpdatedAt: Date.now() }) : Promise.resolve()))
     );
     await ctx.db.patch(path._id, { moduleCount: lessons.length, lastUpdatedAt: Date.now() });
-
-    // Clean progress keys related to this lesson
-    const allProgress = await ctx.db
-      .query('learningPathProgress')
-      .withIndex('by_path', (q) => q.eq('pathId', path._id))
-      .collect();
-    const lessonIdStr = String(id);
-    await Promise.all(
-      allProgress.map((pr) => {
-        const filtered = pr.completedKeys.filter(
-          (k) => !(k === `v:${lessonIdStr}` || k.startsWith(`p:${lessonIdStr}:`))
-        );
-        if (filtered.length !== pr.completedKeys.length) {
-          return ctx.db.patch(pr._id, { completedKeys: filtered, updatedAt: Date.now() });
-        }
-        return Promise.resolve();
-      })
-    );
-  },
-});
-
-// ============ PROGRESS ============
-export const getPathProgress = query({
-  args: { pathId: v.string() },
-  async handler(ctx, { pathId }) {
-    const user = await UserService.getCurrentUser(ctx);
-    if (!user) return { completedKeys: [], pct: 0, total: 0, done: 0 };
-    const normalized = await ctx.db.normalizeId('learningPaths', pathId);
-    if (!normalized) return { completedKeys: [], pct: 0, total: 0, done: 0 };
-
-    const row = await ctx.db
-      .query('learningPathProgress')
-      .withIndex('by_user_path', (q) => q.eq('userId', user._id).eq('pathId', normalized))
-      .unique();
-
-    // Compute totals from lessons
-    const lessons = await ctx.db
-      .query('learningPathLessons')
-      .withIndex('by_path', (q) => q.eq('pathId', normalized))
-      .collect();
-    let total = 0;
-    lessons.forEach((L) => {
-      if (L.videoUrl) total += 1;
-      total += (L.pdfUrls || []).length;
-    });
-    const done = row ? row.completedKeys.length : 0;
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    return { completedKeys: row ? row.completedKeys : [], total, done, pct };
-  },
-});
-
-export const toggleProgressItem = mutation({
-  args: { pathId: v.string(), key: v.string(), completed: v.boolean() },
-  async handler(ctx, { pathId, key, completed }) {
-    const user = await UserService.getCurrentUser(ctx);
-    if (!user) throw new Error('Not authenticated');
-    const normalized = await ctx.db.normalizeId('learningPaths', pathId);
-    if (!normalized) throw new Error('Invalid path id');
-
-    const existing = await ctx.db
-      .query('learningPathProgress')
-      .withIndex('by_user_path', (q) => q.eq('userId', user._id).eq('pathId', normalized))
-      .unique();
-
-    const now = Date.now();
-    let completedKeys: string[] = existing ? existing.completedKeys.slice() : [];
-    const has = completedKeys.includes(key);
-    if (completed && !has) completedKeys.push(key);
-    if (!completed && has) completedKeys = completedKeys.filter((k) => k !== key);
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { completedKeys, updatedAt: now });
-    } else {
-      await ctx.db.insert('learningPathProgress', {
-        userId: user._id,
-        pathId: normalized,
-        completedKeys,
-        updatedAt: now,
-      });
-    }
-
-    // Return updated counters
-    const lessons = await ctx.db
-      .query('learningPathLessons')
-      .withIndex('by_path', (q) => q.eq('pathId', normalized))
-      .collect();
-    let total = 0;
-    lessons.forEach((L) => {
-      if (L.videoUrl) total += 1;
-      total += (L.pdfUrls || []).length;
-    });
-    const done = completedKeys.length;
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    return { completedKeys, total, done, pct };
   },
 });
