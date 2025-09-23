@@ -161,3 +161,107 @@ export const deleteBlog = mutation({
     await ctx.db.delete(normalized);
   },
 });
+
+// ============ LEARNING PATHS ============
+export const listLearningPaths = query({
+  args: {},
+  async handler(ctx) {
+    const items = await ctx.db
+      .query('learningPaths')
+      .withIndex('by_published', (q) => q.eq('isPublished', true))
+      .order('desc')
+      .collect();
+
+    return items.map((d) => ({
+      id: d._id,
+      title: d.title,
+      description: d.description,
+      level: d.level,
+      estimatedDuration: d.estimatedDuration,
+      moduleCount: d.moduleCount,
+    }));
+  },
+});
+
+export const createLearningPath = mutation({
+  args: {
+    title: v.string(),
+    description: v.string(),
+    objectives: v.optional(v.array(v.string())),
+    level: v.union(v.literal('beginner'), v.literal('intermediate'), v.literal('advanced')),
+    estimatedDuration: v.number(), // minutes
+    tags: v.array(v.string()),
+    visibility: v.union(v.literal('public'), v.literal('private'), v.literal('unlisted')),
+    publish: v.optional(v.boolean()),
+    coverImageUrl: v.optional(v.string()),
+    lessons: v.optional(
+      v.array(
+        v.object({
+          title: v.string(),
+          description: v.optional(v.string()),
+          videoUrl: v.optional(v.string()),
+          pdfUrls: v.optional(v.array(v.string())),
+        })
+      )
+    ),
+  },
+  async handler(ctx, args) {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) throw new Error('Not authenticated');
+
+    const now = Date.now();
+    const isPublished = args.publish ?? false;
+    const lessons = args.lessons ?? [];
+
+    const id = await ctx.db.insert('learningPaths', {
+      title: args.title,
+      description: args.description,
+      objectives: args.objectives ?? undefined,
+      level: args.level,
+      estimatedDuration: args.estimatedDuration,
+      tags: args.tags,
+      visibility: args.visibility,
+      coverImageUrl: args.coverImageUrl ?? undefined,
+      createdBy: user._id,
+      status: isPublished ? 'published' : 'draft',
+      isPublished,
+      publishedAt: isPublished ? now : undefined,
+      lastUpdatedAt: now,
+      moduleCount: lessons.length,
+      enrollmentCount: 0,
+    } as any);
+
+    return id;
+  },
+});
+
+export const getLearningPath = query({
+  args: { id: v.string() },
+  async handler(ctx, { id }) {
+    const normalized = await ctx.db.normalizeId('learningPaths', id);
+    if (!normalized) return null;
+    const d = await ctx.db.get(normalized);
+    if (!d) return null;
+
+    const creator = await ctx.db.get(d.createdBy);
+
+    return {
+      id: d._id,
+      title: d.title,
+      description: d.description,
+      objectives: d.objectives ?? [],
+      level: d.level,
+      estimatedDuration: d.estimatedDuration,
+      tags: d.tags,
+      visibility: d.visibility,
+      coverImageUrl: d.coverImageUrl ?? null,
+      status: d.status,
+      isPublished: d.isPublished,
+      publishedAt: d.publishedAt ?? null,
+      lastUpdatedAt: d.lastUpdatedAt,
+      moduleCount: d.moduleCount,
+      enrollmentCount: d.enrollmentCount,
+      createdByName: creator ? `${creator.firstName ?? ''} ${creator.lastName ?? ''}`.trim() || creator.email : 'Unknown',
+    };
+  },
+});
