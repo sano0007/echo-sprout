@@ -7,7 +7,13 @@ import { api } from '../../../../../packages/backend/convex/_generated/api';
 interface ProjectFormData {
   title: string;
   description: string;
-  projectType: 'reforestation' | 'solar' | 'wind' | 'biogas' | 'waste_management' | 'mangrove_restoration';
+  projectType:
+    | 'reforestation'
+    | 'solar'
+    | 'wind'
+    | 'biogas'
+    | 'waste_management'
+    | 'mangrove_restoration';
   location: {
     lat: number;
     long: number;
@@ -61,7 +67,10 @@ export default function ProjectRegister() {
 
   const createProject = useMutation(api.projects.createProject);
 
-  const handleInputChange = (field: string, value: string | number | { lat: number; long: number; name: string }) => {
+  const handleInputChange = (
+    field: string,
+    value: string | number | { lat: number; long: number; name: string }
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
