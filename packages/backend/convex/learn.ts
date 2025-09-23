@@ -284,3 +284,25 @@ export const getLearningPath = query({
     };
   },
 });
+
+export const listLessonsForPath = query({
+  args: { pathId: v.string() },
+  async handler(ctx, { pathId }) {
+    const normalized = await ctx.db.normalizeId('learningPaths', pathId);
+    if (!normalized) return [];
+    const lessons = await ctx.db
+      .query('learningPathLessons')
+      .withIndex('by_path_order', (q) => q.eq('pathId', normalized))
+      .order('asc')
+      .collect();
+
+    return lessons.map((l) => ({
+      id: l._id,
+      title: l.title,
+      description: l.description ?? '',
+      videoUrl: l.videoUrl ?? '',
+      pdfUrls: l.pdfUrls,
+      order: l.order,
+    }));
+  },
+});
