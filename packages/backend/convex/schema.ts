@@ -407,6 +407,15 @@ export default defineSchema({
   })
     .index('by_topic', ['topicId'])
     .index('by_author', ['authorId']),
+  
+  forumReplyVotes: defineTable({
+    replyId: v.id('forumReplies'),
+    userId: v.id('users'),
+    value: v.union(v.literal(1), v.literal(-1)),
+  })
+    .index('by_reply', ['replyId'])
+    .index('by_user', ['userId'])
+    .index('by_reply_user', ['replyId', 'userId']),
   // .index("by_parent", ["parentReplyId"]),
   // .index("by_accepted", ["isAcceptedAnswer"]),
 
