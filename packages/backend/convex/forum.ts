@@ -187,3 +187,41 @@ export const getTopicById = query({
     };
   },
 });
+
+export const createReply = mutation({
+  args: {
+    topicId: v.id('forumTopics'),
+    content: v.string(),
+  },
+  handler: async (ctx, { topicId, content }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error('Unauthorized');
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
+      .unique();
+    if (!user) throw new Error('User not found');
+
+    const topic = await ctx.db.get(topicId);
+    if (!topic) throw new Error('Topic not found');
+
+    const replyId = await ctx.db.insert('forumReplies', {
+      topicId,
+      authorId: user._id,
+      content,
+      isDeleted: false,
+      upvotes: 0,
+      downvotes: 0,
+      acceptedBy: undefined,
+      acceptedAt: undefined,
+    });
+
+    await ctx.db.patch(topicId, {
+      replyCount: (topic.replyCount ?? 0) + 1,
+      lastReplyAt: Date.now(),
+      lastReplyBy: user._id,
+    });
+
+    return { id: replyId };
+  },
+});
