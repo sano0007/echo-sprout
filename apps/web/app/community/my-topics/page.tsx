@@ -205,9 +205,11 @@ export default function MyTopicsPage() {
                         </div>
 
                         <div className="flex-1">
-                          <h3 className="text-lg font-medium mb-2 hover:text-blue-600 cursor-pointer">
-                            {post.title}
-                          </h3>
+                          <Link href={`/community/topic/${post.id}`}>
+                            <h3 className="text-lg font-medium mb-2 hover:text-blue-600 cursor-pointer">
+                              {post.title}
+                            </h3>
+                          </Link>
 
                           <div className="flex items-center gap-2 mb-3">
                             {post.tags?.map((tag) => (
