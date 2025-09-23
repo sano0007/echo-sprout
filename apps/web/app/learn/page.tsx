@@ -95,6 +95,13 @@ export default function LearnHub() {
   const blogPosts = useQuery(api.learn.listBlog);
   const createBlog = useMutation(api.learn.createBlog);
   const { isSignedIn } = useUser();
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [toast, setToast] = useState<null | { message: string; type: 'success' | 'error' }>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const previewText = (s: string) => {
     if (!s) return '';
@@ -145,21 +152,29 @@ export default function LearnHub() {
       .map((t) => t.trim())
       .filter(Boolean);
 
-    await createBlog({
-      title: newArticle.title,
-      content: newArticle.content,
-      tags: tagsArray.length ? tagsArray : ['Community'],
-      readTime: newArticle.readTime,
-      publish: true,
-    });
-    setNewArticle({
-      title: '',
-      date: today,
-      readTime: '5 min read',
-      tags: '',
-      content: '',
-    });
-    setIsModalOpen(false);
+    try {
+      setIsPublishing(true);
+      await createBlog({
+        title: newArticle.title,
+        content: newArticle.content,
+        tags: tagsArray.length ? tagsArray : ['Community'],
+        readTime: newArticle.readTime,
+        publish: true,
+      });
+      setNewArticle({
+        title: '',
+        date: today,
+        readTime: '5 min read',
+        tags: '',
+        content: '',
+      });
+      setIsModalOpen(false);
+      showToast('Article published', 'success');
+    } catch (err) {
+      showToast('Failed to publish article', 'error');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -523,20 +538,31 @@ export default function LearnHub() {
                         </button>
                         <button
                           type="submit"
-                          disabled={!isSignedIn}
+                          disabled={!isSignedIn || isPublishing}
                           className={`px-4 py-2 rounded text-white ${
-                            isSignedIn
-                              ? 'bg-blue-600 hover:bg-blue-700'
-                              : 'bg-gray-400 cursor-not-allowed'
+                            !isSignedIn || isPublishing
+                              ? 'bg-gray-400 cursor-not-allowed'
+                              : 'bg-blue-600 hover:bg-blue-700'
                           }`}
                         >
-                          Publish
+                          {isPublishing ? 'Publishing...' : 'Publish'}
                         </button>
                       </div>
                     </form>
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          {toast && (
+            <div className="fixed bottom-6 right-6 z-50">
+              <div
+                className={`px-4 py-3 rounded shadow text-white ${
+                  toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+                }`}
+              >
+                {toast.message}
+              </div>
             </div>
           )}
         </div>
