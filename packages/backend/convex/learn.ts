@@ -263,6 +263,7 @@ export const getLearningPath = query({
     if (!d) return null;
 
     const creator = await ctx.db.get(d.createdBy);
+    const current = await UserService.getCurrentUser(ctx);
 
     return {
       id: d._id,
@@ -281,6 +282,7 @@ export const getLearningPath = query({
       moduleCount: d.moduleCount,
       enrollmentCount: d.enrollmentCount,
       createdByName: creator ? `${creator.firstName ?? ''} ${creator.lastName ?? ''}`.trim() || creator.email : 'Unknown',
+      isOwner: !!(current && current._id === d.createdBy) || false,
     };
   },
 });
@@ -304,5 +306,136 @@ export const listLessonsForPath = query({
       pdfUrls: l.pdfUrls,
       order: l.order,
     }));
+  },
+});
+
+export const updateLearningPath = mutation({
+  args: {
+    id: v.string(),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    objectives: v.optional(v.array(v.string())),
+    level: v.optional(v.union(v.literal('beginner'), v.literal('intermediate'), v.literal('advanced'))),
+    estimatedDuration: v.optional(v.number()),
+    tags: v.optional(v.array(v.string())),
+    visibility: v.optional(v.union(v.literal('public'), v.literal('private'), v.literal('unlisted'))),
+    coverImageUrl: v.optional(v.string()),
+    publish: v.optional(v.boolean()),
+  },
+  async handler(ctx, args) {
+    const normalized = await ctx.db.normalizeId('learningPaths', args.id);
+    if (!normalized) throw new Error('Invalid path id');
+    const doc = await ctx.db.get(normalized);
+    if (!doc) throw new Error('Path not found');
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) throw new Error('Not authenticated');
+    const isOwner = user._id === doc.createdBy;
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAdmin) throw new Error('Unauthorized');
+
+    const updates: any = { lastUpdatedAt: Date.now() };
+    if (typeof args.title === 'string') updates.title = args.title;
+    if (typeof args.description === 'string') updates.description = args.description;
+    if (Array.isArray(args.objectives)) updates.objectives = args.objectives;
+    if (args.level) updates.level = args.level;
+    if (typeof args.estimatedDuration === 'number') updates.estimatedDuration = args.estimatedDuration;
+    if (Array.isArray(args.tags)) updates.tags = args.tags;
+    if (args.visibility) updates.visibility = args.visibility;
+    if (typeof args.coverImageUrl === 'string') updates.coverImageUrl = args.coverImageUrl || undefined;
+    if (typeof args.publish === 'boolean') {
+      updates.isPublished = args.publish;
+      updates.status = args.publish ? 'published' : 'draft';
+      updates.publishedAt = args.publish ? Date.now() : undefined;
+    }
+
+    await ctx.db.patch(normalized, updates);
+  },
+});
+
+export const deleteLearningPath = mutation({
+  args: { id: v.string() },
+  async handler(ctx, { id }) {
+    const normalized = await ctx.db.normalizeId('learningPaths', id);
+    if (!normalized) throw new Error('Invalid path id');
+    const doc = await ctx.db.get(normalized);
+    if (!doc) throw new Error('Path not found');
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) throw new Error('Not authenticated');
+    const isOwner = user._id === doc.createdBy;
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAdmin) throw new Error('Unauthorized');
+
+    // Delete lessons first (cascade)
+    const lessons = await ctx.db
+      .query('learningPathLessons')
+      .withIndex('by_path', (q) => q.eq('pathId', normalized))
+      .collect();
+    await Promise.all(lessons.map((l) => ctx.db.delete(l._id)));
+
+    await ctx.db.delete(normalized);
+  },
+});
+
+export const updateLesson = mutation({
+  args: {
+    id: v.string(),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    videoUrl: v.optional(v.string()),
+    pdfUrls: v.optional(v.array(v.string())),
+    order: v.optional(v.number()),
+  },
+  async handler(ctx, args) {
+    const normalized = await ctx.db.normalizeId('learningPathLessons', args.id);
+    if (!normalized) throw new Error('Invalid lesson id');
+    const doc = await ctx.db.get(normalized);
+    if (!doc) throw new Error('Lesson not found');
+    const path = await ctx.db.get(doc.pathId);
+    if (!path) throw new Error('Parent path missing');
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) throw new Error('Not authenticated');
+    const isOwner = user._id === path.createdBy;
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAdmin) throw new Error('Unauthorized');
+
+    const updates: any = { lastUpdatedAt: Date.now() };
+    if (typeof args.title === 'string') updates.title = args.title;
+    if (typeof args.description === 'string') updates.description = args.description || undefined;
+    if (typeof args.videoUrl === 'string') updates.videoUrl = args.videoUrl || undefined;
+    if (Array.isArray(args.pdfUrls)) updates.pdfUrls = args.pdfUrls;
+    if (typeof args.order === 'number') updates.order = args.order;
+
+    await ctx.db.patch(normalized, updates);
+  },
+});
+
+export const deleteLesson = mutation({
+  args: { id: v.string() },
+  async handler(ctx, { id }) {
+    const normalized = await ctx.db.normalizeId('learningPathLessons', id);
+    if (!normalized) throw new Error('Invalid lesson id');
+    const doc = await ctx.db.get(normalized);
+    if (!doc) throw new Error('Lesson not found');
+    const path = await ctx.db.get(doc.pathId);
+    if (!path) throw new Error('Parent path missing');
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) throw new Error('Not authenticated');
+    const isOwner = user._id === path.createdBy;
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAdmin) throw new Error('Unauthorized');
+
+    // Delete lesson
+    await ctx.db.delete(normalized);
+
+    // Decrement moduleCount and compact order of remaining lessons
+    const lessons = await ctx.db
+      .query('learningPathLessons')
+      .withIndex('by_path_order', (q) => q.eq('pathId', path._id))
+      .order('asc')
+      .collect();
+    await Promise.all(
+      lessons.map((l, idx) => (l.order !== idx ? ctx.db.patch(l._id, { order: idx, lastUpdatedAt: Date.now() }) : Promise.resolve()))
+    );
+    await ctx.db.patch(path._id, { moduleCount: lessons.length, lastUpdatedAt: Date.now() });
   },
 });

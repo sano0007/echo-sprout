@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import Link from 'next/link';
 
@@ -12,6 +12,15 @@ export default function LearningPathDetailsPage() {
 
   const data = useQuery(api.learn.getLearningPath, id ? { id } : 'skip');
   const lessons = useQuery(api.learn.listLessonsForPath, id ? { pathId: id } : 'skip');
+  const updatePath = useMutation(api.learn.updateLearningPath);
+  const deletePath = useMutation(api.learn.deleteLearningPath);
+  const updateLesson = useMutation(api.learn.updateLesson);
+  const deleteLesson = useMutation(api.learn.deleteLesson);
+
+  const [editingPath, setEditingPath] = useState(false);
+  const [pathForm, setPathForm] = useState<any>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!id) {
     return (
@@ -71,7 +80,50 @@ export default function LearningPathDetailsPage() {
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-start justify-between mb-4">
         <h1 className="text-3xl font-bold">{data.title}</h1>
-        <Link href="/learn" className="text-blue-600 hover:underline">Back</Link>
+        <div className="flex items-center gap-3">
+          <Link href="/learn" className="text-blue-600 hover:underline">Back</Link>
+          <button
+            className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+            onClick={() => {
+              setEditingPath((e) => {
+                const next = !e;
+                if (next) {
+                  setPathForm({
+                    title: data.title,
+                    description: data.description,
+                    objectives: (data.objectives || []).join('\n'),
+                    level: data.level,
+                    estimatedDuration: data.estimatedDuration,
+                    tags: (data.tags || []).join(', '),
+                    visibility: data.visibility,
+                    coverImageUrl: data.coverImageUrl || '',
+                    publish: data.isPublished,
+                  });
+                }
+                return next;
+              });
+            }}
+          >
+            {editingPath ? 'Cancel Edit' : 'Edit Path'}
+          </button>
+          <button
+            className="text-sm bg-red-600 text-white hover:bg-red-700 px-3 py-1 rounded"
+            onClick={async () => {
+              if (!confirm('Delete this learning path and all its lessons?')) return;
+              try {
+                setBusy('deletePath');
+                await deletePath({ id: String(data.id) });
+                window.location.href = '/learn';
+              } catch (e) {
+                setError('Failed to delete path');
+              } finally {
+                setBusy(null);
+              }
+            }}
+          >
+            {busy === 'deletePath' ? 'Deleting...' : 'Delete Path'}
+          </button>
+        </div>
       </div>
 
       <div className="text-gray-600 mb-6">
@@ -82,6 +134,99 @@ export default function LearningPathDetailsPage() {
 
       {data.coverImageUrl && (
         <img src={data.coverImageUrl} alt="Cover" className="w-full max-h-64 object-cover rounded mb-6" />
+      )}
+
+      {editingPath && (
+        <div className="bg-white border rounded p-5 mb-6">
+          <h2 className="text-xl font-semibold mb-3">Edit Learning Path</h2>
+          {error && <div className="mb-3 text-red-600 text-sm">{error}</div>}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="md:col-span-3">
+              <label className="block text-sm font-medium mb-1">Title</label>
+              <input className="w-full border rounded px-3 py-2" value={pathForm.title}
+                     onChange={(e) => setPathForm((f: any) => ({ ...f, title: e.target.value }))} />
+            </div>
+            <div className="md:col-span-3">
+              <label className="block text-sm font-medium mb-1">Description</label>
+              <textarea className="w-full border rounded px-3 py-2" rows={3} value={pathForm.description}
+                        onChange={(e) => setPathForm((f: any) => ({ ...f, description: e.target.value }))} />
+            </div>
+            <div className="md:col-span-3">
+              <label className="block text-sm font-medium mb-1">Objectives</label>
+              <textarea className="w-full border rounded px-3 py-2" rows={3} value={pathForm.objectives}
+                        onChange={(e) => setPathForm((f: any) => ({ ...f, objectives: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Level</label>
+              <select className="w-full border rounded px-3 py-2" value={pathForm.level}
+                      onChange={(e) => setPathForm((f: any) => ({ ...f, level: e.target.value }))}>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Duration (min)</label>
+              <input type="number" min={1} className="w-full border rounded px-3 py-2" value={pathForm.estimatedDuration}
+                     onChange={(e) => setPathForm((f: any) => ({ ...f, estimatedDuration: Number(e.target.value) }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Visibility</label>
+              <select className="w-full border rounded px-3 py-2" value={pathForm.visibility}
+                      onChange={(e) => setPathForm((f: any) => ({ ...f, visibility: e.target.value }))}>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="unlisted">Unlisted</option>
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">Tags</label>
+              <input className="w-full border rounded px-3 py-2" value={pathForm.tags}
+                     onChange={(e) => setPathForm((f: any) => ({ ...f, tags: e.target.value }))} />
+            </div>
+            <div className="md:col-span-1">
+              <label className="block text-sm font-medium mb-1">Cover Image URL</label>
+              <input className="w-full border rounded px-3 py-2" value={pathForm.coverImageUrl}
+                     onChange={(e) => setPathForm((f: any) => ({ ...f, coverImageUrl: e.target.value }))} />
+            </div>
+            <div className="md:col-span-3 flex items-center gap-2">
+              <input id="publish_now" type="checkbox" checked={!!pathForm.publish}
+                     onChange={(e) => setPathForm((f: any) => ({ ...f, publish: e.target.checked }))} />
+              <label htmlFor="publish_now" className="text-sm">Published</label>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={async () => {
+                try {
+                  setBusy('savePath');
+                  setError(null);
+                  await updatePath({
+                    id: String(data.id),
+                    title: pathForm.title,
+                    description: pathForm.description,
+                    objectives: String(pathForm.objectives)
+                      .split('\n').map((s) => s.trim()).filter(Boolean),
+                    level: pathForm.level,
+                    estimatedDuration: Number(pathForm.estimatedDuration),
+                    tags: String(pathForm.tags).split(',').map((s) => s.trim()).filter(Boolean),
+                    visibility: pathForm.visibility,
+                    coverImageUrl: pathForm.coverImageUrl?.trim() || undefined,
+                    publish: !!pathForm.publish,
+                  });
+                  setEditingPath(false);
+                } catch (e) {
+                  setError('Failed to save changes');
+                } finally {
+                  setBusy(null);
+                }
+              }}
+            >
+              {busy === 'savePath' ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
       )}
 
       <div className="bg-white border rounded p-5 mb-6">
@@ -118,7 +263,27 @@ export default function LearningPathDetailsPage() {
               <li key={String(L.id)}>
                 <div className="flex items-start justify-between">
                   <div className="w-full">
-                    <div className="font-medium">{L.title}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium">{L.title}</div>
+                      <div className="flex items-center gap-2">
+                        <LessonEditButtons lesson={L} onUpdate={async (payload) => {
+                          try {
+                            setBusy(`updateLesson-${String(L.id)}`);
+                            await updateLesson({ id: String(L.id), ...payload });
+                          } finally {
+                            setBusy(null);
+                          }
+                        }} onDelete={async () => {
+                          if (!confirm('Delete this lesson?')) return;
+                          try {
+                            setBusy(`deleteLesson-${String(L.id)}`);
+                            await deleteLesson({ id: String(L.id) });
+                          } finally {
+                            setBusy(null);
+                          }
+                        }} busyKey={busy} />
+                      </div>
+                    </div>
                     {L.description && (
                       <div className="text-gray-600 text-sm mb-2">{L.description}</div>
                     )}
@@ -174,6 +339,84 @@ export default function LearningPathDetailsPage() {
         <span>Status: {data.status}</span>
         <span className="mx-2">•</span>
         <span>Created by: {data.createdByName}</span>
+      </div>
+    </div>
+  );
+}
+
+type Lesson = {
+  id: string | { _id: string };
+  title: string;
+  description?: string;
+  videoUrl?: string;
+  pdfUrls: string[];
+  order: number;
+};
+
+function LessonEditButtons({ lesson, onUpdate, onDelete, busyKey }: {
+  lesson: Lesson;
+  onUpdate: (payload: Partial<Omit<Lesson, 'id' | 'order'>>) => Promise<void>;
+  onDelete: () => Promise<void>;
+  busyKey: string | null;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    title: lesson.title,
+    description: lesson.description || '',
+    videoUrl: lesson.videoUrl || '',
+    pdfs: (lesson.pdfUrls || []).join(', '),
+  });
+  const saving = busyKey === `updateLesson-${String((lesson as any).id || lesson)}`;
+  const deleting = busyKey === `deleteLesson-${String((lesson as any).id || lesson)}`;
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-2">
+        <button className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded" onClick={() => setEditing(true)}>Edit</button>
+        <button className="text-xs bg-red-600 text-white hover:bg-red-700 px-2 py-1 rounded" onClick={onDelete} disabled={!!deleting}>
+          {deleting ? 'Deleting...' : 'Delete'}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 border rounded p-3 w-full max-w-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium mb-1">Title</label>
+          <input className="w-full border rounded px-2 py-1 text-sm" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">Video URL</label>
+          <input className="w-full border rounded px-2 py-1 text-sm" value={form.videoUrl} onChange={(e) => setForm((f) => ({ ...f, videoUrl: e.target.value }))} />
+        </div>
+      </div>
+      <div className="mt-2">
+        <label className="block text-xs font-medium mb-1">Description</label>
+        <textarea className="w-full border rounded px-2 py-1 text-sm" rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+      </div>
+      <div className="mt-2">
+        <label className="block text-xs font-medium mb-1">PDF URLs (comma)</label>
+        <input className="w-full border rounded px-2 py-1 text-sm" value={form.pdfs} onChange={(e) => setForm((f) => ({ ...f, pdfs: e.target.value }))} />
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        <button
+          className="text-xs bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded"
+          onClick={async () => {
+            await onUpdate({
+              title: form.title,
+              description: form.description,
+              videoUrl: form.videoUrl,
+              pdfUrls: form.pdfs.split(',').map((s) => s.trim()).filter(Boolean),
+            });
+            setEditing(false);
+          }}
+          disabled={!!saving}
+        >
+          {saving ? 'Saving...' : 'Save'}
+        </button>
+        <button className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded" onClick={() => setEditing(false)}>Cancel</button>
       </div>
     </div>
   );
