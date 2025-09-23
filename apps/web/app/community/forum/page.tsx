@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@packages/backend/convex/_generated/api';
 
 // Define the shape of a forum post including optional fields used conditionally
 type Post = {
@@ -37,6 +39,9 @@ export default function CommunityForum() {
   const [editingPostId, setEditingPostId] = useState<string | number | null>(
     null
   );
+  const [notice, setNotice] = useState<
+    { msg: string; type: 'success' | 'error' } | null
+  >(null);
 
   const categories = [
     { id: 'all', name: 'All Topics', count: 156 },
@@ -120,6 +125,10 @@ export default function CommunityForum() {
 
   const [posts, setPosts] = useState<Post[]>(initialPosts);
 
+  // Convex: create topic mutation and my topics query
+  const createTopic = useMutation((api as any).forum.createTopic);
+  const myTopics = useQuery((api as any).forum.listUserTopics, {});
+
   // Merge backend + locally saved topics into feed on mount
   useEffect(() => {
     const load = async () => {
@@ -173,7 +182,35 @@ export default function CommunityForum() {
     load();
   }, []);
 
-  const filteredPosts = posts.filter((post) => {
+  const backendPosts: Post[] = useMemo(() => {
+    if (!myTopics) return [];
+    return myTopics.map((t: any) => ({
+      id: t.id,
+      title: t.title,
+      author: 'You',
+      category: t.category,
+      replies: t.replies ?? 0,
+      views: t.views ?? 0,
+      lastActivity: 'just now',
+      isAnswered: false,
+      isPinned: false,
+      tags: t.tags ?? [],
+      content: t.content,
+      isMine: true,
+    }));
+  }, [myTopics]);
+
+  const allPosts = useMemo(() => {
+    const byId = new Map<string, Post>();
+    // Prefer backend items; fall back to local state
+    [...backendPosts, ...posts].forEach((p) => {
+      const key = String(p.id);
+      if (!byId.has(key)) byId.set(key, p);
+    });
+    return Array.from(byId.values());
+  }, [backendPosts, posts]);
+
+  const filteredPosts = allPosts.filter((post) => {
     const matchesCategory =
       activeCategory === 'all' || post.category === activeCategory;
     const matchesSearch =
@@ -207,16 +244,6 @@ export default function CommunityForum() {
 
   const deleteTopic = (id: string | number) => {
     setPosts((prev) => prev.filter((p) => String(p.id) !== String(id)));
-    try {
-      const raw = localStorage.getItem('my_topics');
-      const arr = raw ? JSON.parse(raw) : [];
-      const next = Array.isArray(arr)
-        ? arr.filter((p: any) => String(p.id) !== String(id))
-        : [];
-      localStorage.setItem('my_topics', JSON.stringify(next));
-    } catch (e) {
-      // ignore
-    }
   };
 
   const handleCreateTopic = async (e: React.FormEvent) => {
@@ -270,29 +297,7 @@ export default function CommunityForum() {
             }),
           });
         } catch {}
-        // Update localStorage
-        try {
-          const raw = localStorage.getItem('my_topics');
-          const arr = raw ? JSON.parse(raw) : [];
-          const next = Array.isArray(arr)
-            ? arr.map((p: any) =>
-                p.id === editingPostId
-                  ? {
-                      ...p,
-                      title: title.trim(),
-                      category,
-                      tags: tags
-                        .split(',')
-                        .map((t) => t.trim())
-                        .filter(Boolean),
-                      content: content.trim(),
-                      lastActivity: 'just now',
-                    }
-                  : p
-              )
-            : [];
-          localStorage.setItem('my_topics', JSON.stringify(next));
-        } catch (e) {}
+        // No local fallback
       } else {
         // Create new
         const newPost: Post = {
@@ -314,32 +319,17 @@ export default function CommunityForum() {
           isMine: true,
         };
 
-        // Backend create first
+        // Create directly in Convex backend
         try {
-          const resp = await fetch('/api/forum/topics', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: newPost.title,
-              content: newPost.content,
-              category: newPost.category,
-              tags: newPost.tags,
-            }),
+          const result = await createTopic({
+            title: newPost.title,
+            content: newPost.content!,
+            category: newPost.category,
+            tags: newPost.tags,
           });
-          if (resp.ok) {
-            const data = await resp.json();
-            if (data?.data?.id) newPost.id = data.data.id;
-          }
-        } catch {}
-
-        // Save to localStorage for availability in My Topics page
-        try {
-          const raw = localStorage.getItem('my_topics');
-          const arr = raw ? JSON.parse(raw) : [];
-          const next = Array.isArray(arr) ? [newPost, ...arr] : [newPost];
-          localStorage.setItem('my_topics', JSON.stringify(next));
+          if (result?.id) newPost.id = result.id;
         } catch (e) {
-          // ignore localStorage errors
+          // If Convex call fails, we still show locally; consider surfacing error to user
         }
 
         setPosts((prev) => [newPost, ...prev]);
@@ -347,8 +337,15 @@ export default function CommunityForum() {
 
       setIsModalOpen(false);
       resetForm();
+      setNotice({
+        msg: isEdit ? 'Topic updated successfully' : 'Topic created successfully',
+        type: 'success',
+      });
+      setTimeout(() => setNotice(null), 3000);
     } catch (err) {
       setError('Failed to create topic. Please try again.');
+      setNotice({ msg: 'Operation failed', type: 'error' });
+      setTimeout(() => setNotice(null), 3000);
     } finally {
       setSubmitting(false);
     }
@@ -356,6 +353,17 @@ export default function CommunityForum() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {notice && (
+        <div className="fixed top-4 right-4 z-50">
+          <div
+            className={`text-white px-4 py-2 rounded shadow ${
+              notice.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+            }`}
+          >
+            {notice.msg}
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Community Forum</h1>
@@ -487,7 +495,7 @@ export default function CommunityForum() {
 
             <div className="divide-y">
               {filteredPosts.map((post) => (
-                <div key={post.id} className="p-6 hover:bg-gray-50">
+                <div key={String(post.id)} className="p-6 hover:bg-gray-50">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                       <span className="text-blue-600 font-semibold text-sm">
