@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
 import Link from 'next/link';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@packages/backend/convex/_generated/api';
 
 type Post = {
   id: string | number;
@@ -28,42 +30,31 @@ export default function MyTopicsPage() {
   const [category, setCategory] = useState('general');
   const [tags, setTags] = useState('');
   const [content, setContent] = useState('');
+  const [notice, setNotice] = useState<
+    { msg: string; type: 'success' | 'error' } | null
+  >(null);
+
+  const queryMine = useQuery((api as any).forum.listUserTopics, {});
+  const updateTopic = useMutation((api as any).forum.updateTopic);
+  const deleteTopicMut = useMutation((api as any).forum.deleteTopic);
 
   useEffect(() => {
-    const load = async () => {
-      // Backend
-      try {
-        const resp = await fetch('/api/forum/topics/mine');
-        if (resp.ok) {
-          const data = await resp.json();
-          const mapped = (data?.data || []).map((t: any) => ({
-            id: t.id,
-            title: t.title,
-            author: 'You',
-            category: t.category,
-            replies: t.replies ?? 0,
-            views: t.views ?? 0,
-            lastActivity: 'just now',
-            isAnswered: false,
-            isPinned: false,
-            tags: t.tags ?? [],
-            content: t.content,
-          }));
-          setMyTopics(mapped);
-          return;
-        }
-      } catch {}
-      // Local fallback
-      try {
-        const raw = localStorage.getItem('my_topics');
-        const arr = raw ? JSON.parse(raw) : [];
-        setMyTopics(Array.isArray(arr) ? arr : []);
-      } catch (e) {
-        setMyTopics([]);
-      }
-    };
-    load();
-  }, []);
+    if (!queryMine) return;
+    const mapped = (queryMine || []).map((t: any) => ({
+      id: t.id,
+      title: t.title,
+      author: 'You',
+      category: t.category,
+      replies: t.replies ?? 0,
+      views: t.views ?? 0,
+      lastActivity: 'just now',
+      isAnswered: false,
+      isPinned: false,
+      tags: t.tags ?? [],
+      content: t.content,
+    }));
+    setMyTopics(mapped);
+  }, [queryMine]);
 
   const openEdit = (post: Post) => {
     setEditingId(post.id);
@@ -93,40 +84,52 @@ export default function MyTopicsPage() {
     );
     setMyTopics(updated);
     try {
-      await fetch(`/api/forum/topics/${editingId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          category,
-          tags: tags
-            .split(',')
-            .map((t) => t.trim())
-            .filter(Boolean),
-          content: content.trim(),
-        }),
+      await updateTopic({
+        id: editingId as any,
+        title: title.trim(),
+        category,
+        tags: tags
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean),
+        content: content.trim(),
       });
-    } catch {}
-    try {
-      localStorage.setItem('my_topics', JSON.stringify(updated));
-    } catch (e) {}
+      setNotice({ msg: 'Topic updated successfully', type: 'success' });
+      setTimeout(() => setNotice(null), 3000);
+    } catch {
+      setNotice({ msg: 'Update failed', type: 'error' });
+      setTimeout(() => setNotice(null), 3000);
+    }
     setIsModalOpen(false);
     setEditingId(null);
   };
 
   const deleteTopic = async (id: string | number) => {
     try {
-      await fetch(`/api/forum/topics/${id}`, { method: 'DELETE' });
-    } catch {}
-    const updated = myTopics.filter((p) => String(p.id) !== String(id));
-    setMyTopics(updated);
-    try {
-      localStorage.setItem('my_topics', JSON.stringify(updated));
-    } catch (e) {}
+      await deleteTopicMut({ id: id as any });
+      const updated = myTopics.filter((p) => String(p.id) !== String(id));
+      setMyTopics(updated);
+      setNotice({ msg: 'Topic deleted successfully', type: 'success' });
+      setTimeout(() => setNotice(null), 3000);
+    } catch {
+      setNotice({ msg: 'Delete failed', type: 'error' });
+      setTimeout(() => setNotice(null), 3000);
+    }
   };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {notice && (
+        <div className="fixed top-4 right-4 z-50">
+          <div
+            className={`text-white px-4 py-2 rounded shadow ${
+              notice.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+            }`}
+          >
+            {notice.msg}
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">My Topics</h1>
