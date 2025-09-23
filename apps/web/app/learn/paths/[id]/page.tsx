@@ -91,7 +91,7 @@ export default function LearningPathDetailsPage() {
     }
   };
 
-  // No progress bar in this state
+  // No progress functionality in this state
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -143,9 +143,17 @@ export default function LearningPathDetailsPage() {
         </div>
       </div>
 
-      
+      {/* Progress bar (UI-only) */}
+      <div className="mb-4">
+        <div className="flex justify-between text-sm mb-1">
+          <span>Progress</span>
+          <span>0%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="bg-blue-600 h-2 rounded-full" style={{ width: '0%' }}></div>
+        </div>
+      </div>
 
-      
       <div className="text-gray-600 mb-6">
         <span className="mr-4">Level: <strong>{cap(data.level)}</strong></span>
         <span className="mr-4">Duration: <strong>{data.estimatedDuration} min</strong></span>
