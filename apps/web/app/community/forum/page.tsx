@@ -128,60 +128,11 @@ export default function CommunityForum() {
 
   // Convex: create topic mutation and my topics query
   const createTopic = useMutation((api as any).forum.createTopic);
+  const updateTopicMutation = useMutation((api as any).forum.updateTopic);
+  const deleteTopicMutation = useMutation((api as any).forum.deleteTopic);
   const myTopics = useQuery((api as any).forum.listUserTopics, {});
 
-  // Merge backend + locally saved topics into feed on mount
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const resp = await fetch('/api/forum/topics/mine');
-        if (resp.ok) {
-          const data = await resp.json();
-          const fromBackend = (data?.data || []).map((t: any) => ({
-            id: t.id,
-            title: t.title,
-            author: 'You',
-            category: t.category,
-            replies: t.replies ?? 0,
-            views: t.views ?? 0,
-            lastActivity: 'just now',
-            isAnswered: false,
-            isPinned: false,
-            tags: t.tags ?? [],
-            content: t.content,
-            isMine: true,
-          })) as Post[];
-          setPosts((prev) => {
-            const existing = new Set(prev.map((p) => String(p.id)));
-            const unique = fromBackend.filter(
-              (p) => !existing.has(String(p.id))
-            );
-            return [...unique, ...prev];
-          });
-        }
-      } catch {}
-
-      // Local fallback
-      try {
-        const raw = localStorage.getItem('my_topics');
-        if (raw) {
-          const myTopics = JSON.parse(raw);
-          if (Array.isArray(myTopics)) {
-            const mapped = myTopics.map((t: any) => ({
-              ...t,
-              isMine: true,
-            })) as Post[];
-            setPosts((prev) => {
-              const existing = new Set(prev.map((p) => String(p.id)));
-              const unique = mapped.filter((p) => !existing.has(String(p.id)));
-              return [...unique, ...prev];
-            });
-          }
-        }
-      } catch {}
-    };
-    load();
-  }, []);
+  // No REST or localStorage: rely on Convex `myTopics` + local optimistic state
 
   const backendPosts: Post[] = useMemo(() => {
     if (!myTopics) return [];
@@ -243,8 +194,18 @@ export default function CommunityForum() {
     setIsModalOpen(true);
   };
 
-  const deleteTopic = (id: string | number) => {
+  const deleteTopic = async (id: string | number) => {
+    // Remove locally for snappy UI
     setPosts((prev) => prev.filter((p) => String(p.id) !== String(id)));
+    // Remove in backend if this is a Convex id
+    if (typeof id === 'string') {
+      try {
+        // @ts-ignore Convex runtime validates id
+        await deleteTopicMutation({ id });
+      } catch (e) {
+        // Optional: show toast; for now ignore
+      }
+    }
   };
 
   const handleCreateTopic = async (e: React.FormEvent) => {
@@ -282,12 +243,12 @@ export default function CommunityForum() {
               : p
           )
         );
-        // Backend update
-        try {
-          await fetch(`/api/forum/topics/${editingPostId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+        // Backend update via Convex
+        if (typeof editingPostId === 'string') {
+          try {
+            // @ts-ignore Convex runtime validates id
+            await updateTopicMutation({
+              id: editingPostId,
               title: title.trim(),
               category,
               tags: tags
@@ -295,10 +256,11 @@ export default function CommunityForum() {
                 .map((t) => t.trim())
                 .filter(Boolean),
               content: content.trim(),
-            }),
-          });
-        } catch {}
-        // No local fallback
+            });
+          } catch (e) {
+            // Optional: toast error
+          }
+        }
       } else {
         // Create new
         const newPost: Post = {

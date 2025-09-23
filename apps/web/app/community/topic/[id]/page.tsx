@@ -134,7 +134,9 @@ export default function TopicDetailPage() {
                 </div>
                 <div className="mt-3 flex items-center gap-4 text-sm text-gray-700">
                   <button
-                    className="px-2 py-1 border rounded hover:bg-gray-50"
+                    className={`px-2 py-1 border rounded hover:bg-gray-50 ${
+                      r.userVote === 1 ? 'bg-blue-600 text-white border-blue-600' : ''
+                    }`}
                     onClick={async () => {
                       try {
                         await upvoteReply({ id: r.id });
@@ -145,7 +147,9 @@ export default function TopicDetailPage() {
                   </button>
                   <span className="text-gray-500">{r.upvotes}</span>
                   <button
-                    className="px-2 py-1 border rounded hover:bg-gray-50"
+                    className={`px-2 py-1 border rounded hover:bg-gray-50 ${
+                      r.userVote === -1 ? 'bg-red-600 text-white border-red-600' : ''
+                    }`}
                     onClick={async () => {
                       try {
                         await downvoteReply({ id: r.id });
@@ -159,32 +163,6 @@ export default function TopicDetailPage() {
               </div>
             ))
           )}
-        </div>
-        <div className="p-5">
-          {(data.replyItems || []).map((r: any) => (
-            <div key={`actions-${r.id}`} className="mt-2">
-              <div className="flex items-center gap-4 text-sm text-gray-700">
-                <button
-                  className="px-2 py-1 border rounded hover:bg-gray-50"
-                  onClick={async () => {
-                    try {
-                      await (await import('convex/react')).useMutation;
-                    } catch {}
-                  }}
-                  hidden
-                />
-                <button
-                  className="px-2 py-1 border rounded hover:bg-gray-50"
-                  onClick={async () => {
-                    try {
-                      const fn = (await import('convex/react')).useMutation;
-                    } catch {}
-                  }}
-                  hidden
-                />
-              </div>
-            </div>
-          ))}
         </div>
         <div className="p-5 border-t bg-gray-50">
           <SignedIn>

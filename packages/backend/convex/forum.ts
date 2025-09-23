@@ -157,16 +157,36 @@ export const getTopicById = query({
       .withIndex('by_topic', (q) => q.eq('topicId', id))
       .collect();
 
+    // Find current user (if signed in) to include their vote state
+    const identity = await ctx.auth.getUserIdentity();
+    const currentUser = identity
+      ? await ctx.db
+          .query('users')
+          .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
+          .unique()
+      : null;
+
     // Map replies with basic author info
     const replyItems = await Promise.all(
       replies.map(async (r) => {
         const rauthor = await ctx.db.get(r.authorId);
+        let userVote: 1 | -1 | 0 = 0;
+        if (currentUser) {
+          const vote = await ctx.db
+            .query('forumReplyVotes')
+            .withIndex('by_reply_user', (q) =>
+              q.eq('replyId', r._id).eq('userId', currentUser._id)
+            )
+            .unique();
+          if (vote) userVote = vote.value as 1 | -1;
+        }
         return {
           id: r._id,
           content: r.content,
           isDeleted: r.isDeleted,
           upvotes: r.upvotes,
           downvotes: r.downvotes,
+          userVote,
           author: rauthor
             ? `${rauthor.firstName} ${rauthor.lastName}`
             : 'Unknown',
@@ -229,23 +249,79 @@ export const createReply = mutation({
 export const upvoteReply = mutation({
   args: { id: v.id('forumReplies') },
   handler: async (ctx, { id }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error('Unauthorized');
+    const user = await ensureUser(ctx);
     const reply = await ctx.db.get(id);
     if (!reply) throw new Error('Reply not found');
-    await ctx.db.patch(id, { upvotes: (reply.upvotes ?? 0) + 1 });
-    return { ok: true };
+
+    const existing = await ctx.db
+      .query('forumReplyVotes')
+      .withIndex('by_reply_user', (q) => q.eq('replyId', id).eq('userId', user._id))
+      .unique();
+
+    if (!existing) {
+      await ctx.db.insert('forumReplyVotes', {
+        replyId: id,
+        userId: user._id,
+        value: 1,
+      });
+      await ctx.db.patch(id, { upvotes: (reply.upvotes ?? 0) + 1 });
+      return { vote: 1 };
+    }
+
+    if (existing.value === 1) {
+      // Toggle off
+      await ctx.db.delete(existing._id);
+      await ctx.db.patch(id, { upvotes: Math.max(0, (reply.upvotes ?? 0) - 1) });
+      return { vote: 0 };
+    } else {
+      // Switch from downvote to upvote
+      await ctx.db.patch(existing._id, { value: 1 });
+      await ctx.db.patch(id, {
+        upvotes: (reply.upvotes ?? 0) + 1,
+        downvotes: Math.max(0, (reply.downvotes ?? 0) - 1),
+      });
+      return { vote: 1 };
+    }
   },
 });
 
 export const downvoteReply = mutation({
   args: { id: v.id('forumReplies') },
   handler: async (ctx, { id }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error('Unauthorized');
+    const user = await ensureUser(ctx);
     const reply = await ctx.db.get(id);
     if (!reply) throw new Error('Reply not found');
-    await ctx.db.patch(id, { downvotes: (reply.downvotes ?? 0) + 1 });
-    return { ok: true };
+
+    const existing = await ctx.db
+      .query('forumReplyVotes')
+      .withIndex('by_reply_user', (q) => q.eq('replyId', id).eq('userId', user._id))
+      .unique();
+
+    if (!existing) {
+      await ctx.db.insert('forumReplyVotes', {
+        replyId: id,
+        userId: user._id,
+        value: -1,
+      });
+      await ctx.db.patch(id, { downvotes: (reply.downvotes ?? 0) + 1 });
+      return { vote: -1 };
+    }
+
+    if (existing.value === -1) {
+      // Toggle off
+      await ctx.db.delete(existing._id);
+      await ctx.db.patch(id, {
+        downvotes: Math.max(0, (reply.downvotes ?? 0) - 1),
+      });
+      return { vote: 0 };
+    } else {
+      // Switch from upvote to downvote
+      await ctx.db.patch(existing._id, { value: -1 });
+      await ctx.db.patch(id, {
+        upvotes: Math.max(0, (reply.upvotes ?? 0) - 1),
+        downvotes: (reply.downvotes ?? 0) + 1,
+      });
+      return { vote: -1 };
+    }
   },
 });
