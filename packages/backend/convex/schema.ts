@@ -355,6 +355,42 @@ export default defineSchema({
     .index('by_type', ['contentType'])
     .index('by_review', ['status', 'reviewedBy']),
 
+  // ============= LEARNING PATHS =============
+  learningPaths: defineTable({
+    title: v.string(),
+    description: v.string(),
+    objectives: v.optional(v.array(v.string())),
+    level: v.union(
+      v.literal('beginner'),
+      v.literal('intermediate'),
+      v.literal('advanced')
+    ),
+    estimatedDuration: v.number(), // in minutes
+    tags: v.array(v.string()),
+    visibility: v.union(
+      v.literal('public'),
+      v.literal('private'),
+      v.literal('unlisted')
+    ),
+    coverImageUrl: v.optional(v.string()),
+    createdBy: v.id('users'),
+    status: v.union(
+      v.literal('draft'),
+      v.literal('published'),
+      v.literal('archived')
+    ),
+    isPublished: v.boolean(),
+    publishedAt: v.optional(v.float64()),
+    lastUpdatedAt: v.float64(),
+    moduleCount: v.number(),
+    enrollmentCount: v.number(),
+  })
+    .index('by_creator', ['createdBy'])
+    .index('by_status', ['status'])
+    .index('by_visibility', ['visibility'])
+    .index('by_published', ['isPublished'])
+    .index('by_level', ['level']),
+
   // ============= FORUM SYSTEM =============
   forumTopics: defineTable({
     title: v.string(),

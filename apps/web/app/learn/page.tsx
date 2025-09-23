@@ -18,6 +18,7 @@ export default function LearnHub() {
     content: '',
   });
 
+  // Fallback sample modules (used if no created learning paths yet)
   const learningModules = [
     {
       id: 1,
@@ -93,6 +94,7 @@ export default function LearnHub() {
   ];
 
   const blogPosts = useQuery(api.learn.listBlog);
+  const learningPaths = useQuery(api.learn.listLearningPaths);
   const createBlog = useMutation(api.learn.createBlog);
   const { isSignedIn } = useUser();
   const [isPublishing, setIsPublishing] = useState(false);
@@ -177,6 +179,20 @@ export default function LearnHub() {
     }
   };
 
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  const modulesList = (learningPaths ?? []).length
+    ? (learningPaths ?? []).map((p) => ({
+        id: String(p.id),
+        title: p.title,
+        description: p.description,
+        duration: `${p.estimatedDuration} minutes`,
+        level: cap(p.level as string),
+        lessons: (p as any).moduleCount ?? 0,
+        progress: 0,
+      }))
+    : learningModules;
+
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="text-center mb-8">
@@ -226,8 +242,18 @@ export default function LearnHub() {
                 </p>
               </div>
 
+              {/* Create Learning Path CTA (placeholder for future CRUD page) */}
+              <div className="flex justify-end">
+                <Link
+                  href="/learn/paths"
+                  className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Create Learning Path
+                </Link>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {learningModules.map((module) => (
+                {modulesList.map((module) => (
                   <div
                     key={module.id}
                     className="border rounded-lg p-6 hover:shadow-lg transition-shadow"
@@ -259,26 +285,37 @@ export default function LearnHub() {
                       </div>
                     </div>
 
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Progress</span>
-                        <span>{module.progress}%</span>
+                    {typeof module.progress === 'number' && (
+                      <div className="mb-4">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>Progress</span>
+                          <span>{module.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{ width: `${module.progress}%` }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{ width: `${module.progress}%` }}
-                        ></div>
-                      </div>
-                    </div>
+                    )}
 
-                    <button className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-                      {module.progress === 0
-                        ? 'Start Course'
-                        : module.progress === 100
-                          ? 'Review'
-                          : 'Continue'}
-                    </button>
+                    {String(module.id).startsWith('0x') || String(module.id).length > 10 ? (
+                      <Link
+                        href={`/learn/paths/${module.id}`}
+                        className="block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                      >
+                        {module.progress === 0
+                          ? 'Start Course'
+                          : module.progress === 100
+                            ? 'Review'
+                            : 'Continue'}
+                      </Link>
+                    ) : (
+                      <button className="w-full bg-blue-600 text-white py-2 px-4 rounded opacity-50 cursor-not-allowed" title="Create a Learning Path to view details">
+                        Start Course
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
