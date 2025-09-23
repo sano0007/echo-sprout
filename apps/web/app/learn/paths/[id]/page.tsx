@@ -16,31 +16,29 @@ export default function LearningPathDetailsPage() {
   const deletePath = useMutation(api.learn.deleteLearningPath);
   const updateLesson = useMutation(api.learn.updateLesson);
   const deleteLesson = useMutation(api.learn.deleteLesson);
-  const toggleProgress = useMutation(api.learn.toggleProgressItem);
-  const progressData = useQuery(api.learn.getPathProgress, id ? { pathId: id } : 'skip');
 
   const [editingPath, setEditingPath] = useState(false);
   const [pathForm, setPathForm] = useState<any>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Server-backed progress state (per user)
+  // Local progress state (per user via localStorage)
+  const storageKey = id ? `learningPathProgress:${id}` : '';
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   useEffect(() => {
-    const map: Record<string, boolean> = {};
-    (progressData?.completedKeys || []).forEach((k: string) => (map[k] = true));
-    setCompleted(map);
-  }, [progressData?.completedKeys]);
-  const toggle = async (key: string) => {
-    const next = !completed[key];
-    setCompleted((c) => ({ ...c, [key]: next }));
     try {
-      await toggleProgress({ pathId: id!, key, completed: next });
-    } catch {
-      // revert on error
-      setCompleted((c) => ({ ...c, [key]: !next }));
-    }
-  };
+      if (!storageKey) return;
+      const raw = localStorage.getItem(storageKey);
+      if (raw) setCompleted(JSON.parse(raw));
+    } catch {}
+  }, [storageKey]);
+  useEffect(() => {
+    try {
+      if (!storageKey) return;
+      localStorage.setItem(storageKey, JSON.stringify(completed));
+    } catch {}
+  }, [storageKey, completed]);
+  const toggle = (key: string) => setCompleted((c) => ({ ...c, [key]: !c[key] }));
 
   if (!id) {
     return (
