@@ -15,6 +15,12 @@ type FormState = {
   visibility: 'public' | 'private' | 'unlisted';
   coverImageUrl?: string;
   publish: boolean;
+  lessons: Array<{
+    title: string;
+    description: string;
+    videoUrl: string;
+    pdfs: string; // comma separated
+  }>;
 };
 
 export default function LearningPathsCreatePage() {
@@ -32,6 +38,7 @@ export default function LearningPathsCreatePage() {
     visibility: 'public',
     coverImageUrl: '',
     publish: false,
+    lessons: [],
   });
 
   const update = (name: keyof FormState, value: string | number | boolean) =>
@@ -63,6 +70,15 @@ export default function LearningPathsCreatePage() {
 
     try {
       setIsSubmitting(true);
+      const lessonsPayload = form.lessons.map((l) => ({
+        title: l.title.trim(),
+        description: l.description.trim() || undefined,
+        videoUrl: l.videoUrl.trim() || undefined,
+        pdfUrls: l.pdfs
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      }));
       await createLearningPath({
         title: form.title.trim(),
         description: form.description.trim(),
@@ -73,6 +89,7 @@ export default function LearningPathsCreatePage() {
         visibility: form.visibility,
         coverImageUrl: form.coverImageUrl?.trim() || undefined,
         publish: form.publish,
+        lessons: lessonsPayload,
       });
       setMessage({ type: 'success', text: 'Learning path created successfully.' });
       setForm({
@@ -85,6 +102,7 @@ export default function LearningPathsCreatePage() {
         visibility: 'public',
         coverImageUrl: '',
         publish: false,
+        lessons: [],
       });
     } catch (err) {
       setMessage({ type: 'error', text: 'Failed to create learning path.' });
@@ -111,7 +129,7 @@ export default function LearningPathsCreatePage() {
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-5 bg-white rounded-lg border p-6">
+      <form onSubmit={onSubmit} className="space-y-6 bg-white rounded-lg border p-6">
         <div>
           <label className="block text-sm font-medium mb-1">Title</label>
           <input
@@ -203,6 +221,125 @@ export default function LearningPathsCreatePage() {
               onChange={(e) => update('coverImageUrl', e.target.value)}
               placeholder="https://..."
             />
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">Lessons</h2>
+            <button
+              type="button"
+              onClick={() =>
+                setForm((f) => ({
+                  ...f,
+                  lessons: [
+                    ...f.lessons,
+                    { title: '', description: '', videoUrl: '', pdfs: '' },
+                  ],
+                }))
+              }
+              className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
+            >
+              Add Lesson
+            </button>
+          </div>
+
+          {form.lessons.length === 0 && (
+            <p className="text-sm text-gray-500">
+              No lessons added yet. Use "Add Lesson" to include placeholders (video and PDFs).
+            </p>
+          )}
+
+          <div className="space-y-4">
+            {form.lessons.map((lesson, idx) => (
+              <div key={idx} className="border rounded p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium">Lesson {idx + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        lessons: f.lessons.filter((_, i) => i !== idx),
+                      }))
+                    }
+                    className="text-sm text-red-600 hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Title</label>
+                    <input
+                      className="w-full border rounded px-3 py-2"
+                      value={lesson.title}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          lessons: f.lessons.map((L, i) =>
+                            i === idx ? { ...L, title: e.target.value } : L
+                          ),
+                        }))
+                      }
+                      placeholder="e.g., Introduction to Carbon Credits"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Video URL (placeholder)</label>
+                    <input
+                      className="w-full border rounded px-3 py-2"
+                      value={lesson.videoUrl}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          lessons: f.lessons.map((L, i) =>
+                            i === idx ? { ...L, videoUrl: e.target.value } : L
+                          ),
+                        }))
+                      }
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <textarea
+                    className="w-full border rounded px-3 py-2"
+                    rows={3}
+                    value={lesson.description}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        lessons: f.lessons.map((L, i) =>
+                          i === idx ? { ...L, description: e.target.value } : L
+                        ),
+                      }))
+                    }
+                    placeholder="Brief summary of the lesson"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium mb-1">PDF URLs (comma separated, placeholders)</label>
+                  <input
+                    className="w-full border rounded px-3 py-2"
+                    value={lesson.pdfs}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        lessons: f.lessons.map((L, i) =>
+                          i === idx ? { ...L, pdfs: e.target.value } : L
+                        ),
+                      }))
+                    }
+                    placeholder="https://...intro.pdf, https://...guide.pdf"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

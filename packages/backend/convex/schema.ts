@@ -391,6 +391,21 @@ export default defineSchema({
     .index('by_published', ['isPublished'])
     .index('by_level', ['level']),
 
+  // ============= LEARNING PATH LESSONS =============
+  learningPathLessons: defineTable({
+    pathId: v.id('learningPaths'),
+    title: v.string(),
+    description: v.optional(v.string()),
+    videoUrl: v.optional(v.string()),
+    pdfUrls: v.array(v.string()),
+    order: v.number(),
+    estimatedDuration: v.optional(v.number()),
+    createdBy: v.id('users'),
+    lastUpdatedAt: v.float64(),
+  })
+    .index('by_path', ['pathId'])
+    .index('by_path_order', ['pathId', 'order']),
+
   // ============= FORUM SYSTEM =============
   forumTopics: defineTable({
     title: v.string(),

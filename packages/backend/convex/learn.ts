@@ -213,7 +213,7 @@ export const createLearningPath = mutation({
     const isPublished = args.publish ?? false;
     const lessons = args.lessons ?? [];
 
-    const id = await ctx.db.insert('learningPaths', {
+    const pathId = await ctx.db.insert('learningPaths', {
       title: args.title,
       description: args.description,
       objectives: args.objectives ?? undefined,
@@ -231,7 +231,26 @@ export const createLearningPath = mutation({
       enrollmentCount: 0,
     } as any);
 
-    return id;
+    // Persist lessons with stable ordering
+    if (lessons.length) {
+      await Promise.all(
+        lessons.map((L, idx) =>
+          ctx.db.insert('learningPathLessons', {
+            pathId: pathId,
+            title: L.title,
+            description: L.description ?? undefined,
+            videoUrl: L.videoUrl ?? undefined,
+            pdfUrls: Array.isArray(L.pdfUrls) ? L.pdfUrls : [],
+            order: idx,
+            estimatedDuration: undefined,
+            createdBy: user._id,
+            lastUpdatedAt: now,
+          } as any)
+        )
+      );
+    }
+
+    return pathId;
   },
 });
 
