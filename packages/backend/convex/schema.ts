@@ -407,7 +407,7 @@ export default defineSchema({
   })
     .index('by_topic', ['topicId'])
     .index('by_author', ['authorId']),
-  
+
   forumReplyVotes: defineTable({
     replyId: v.id('forumReplies'),
     userId: v.id('users'),

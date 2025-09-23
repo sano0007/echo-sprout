@@ -255,7 +255,9 @@ export const upvoteReply = mutation({
 
     const existing = await ctx.db
       .query('forumReplyVotes')
-      .withIndex('by_reply_user', (q) => q.eq('replyId', id).eq('userId', user._id))
+      .withIndex('by_reply_user', (q) =>
+        q.eq('replyId', id).eq('userId', user._id)
+      )
       .unique();
 
     if (!existing) {
@@ -271,7 +273,9 @@ export const upvoteReply = mutation({
     if (existing.value === 1) {
       // Toggle off
       await ctx.db.delete(existing._id);
-      await ctx.db.patch(id, { upvotes: Math.max(0, (reply.upvotes ?? 0) - 1) });
+      await ctx.db.patch(id, {
+        upvotes: Math.max(0, (reply.upvotes ?? 0) - 1),
+      });
       return { vote: 0 };
     } else {
       // Switch from downvote to upvote
@@ -294,7 +298,9 @@ export const downvoteReply = mutation({
 
     const existing = await ctx.db
       .query('forumReplyVotes')
-      .withIndex('by_reply_user', (q) => q.eq('replyId', id).eq('userId', user._id))
+      .withIndex('by_reply_user', (q) =>
+        q.eq('replyId', id).eq('userId', user._id)
+      )
       .unique();
 
     if (!existing) {

@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as forum from "../forum.js";
 import type * as http from "../http.js";
+import type * as learn from "../learn.js";
 import type * as marketplace from "../marketplace.js";
 import type * as users from "../users.js";
 
@@ -29,6 +30,7 @@ import type * as users from "../users.js";
 declare const fullApi: ApiFromModules<{
   forum: typeof forum;
   http: typeof http;
+  learn: typeof learn;
   marketplace: typeof marketplace;
   users: typeof users;
 }>;

@@ -135,7 +135,9 @@ export default function TopicDetailPage() {
                 <div className="mt-3 flex items-center gap-4 text-sm text-gray-700">
                   <button
                     className={`px-2 py-1 border rounded hover:bg-gray-50 ${
-                      r.userVote === 1 ? 'bg-blue-600 text-white border-blue-600' : ''
+                      r.userVote === 1
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : ''
                     }`}
                     onClick={async () => {
                       try {
@@ -148,7 +150,9 @@ export default function TopicDetailPage() {
                   <span className="text-gray-500">{r.upvotes}</span>
                   <button
                     className={`px-2 py-1 border rounded hover:bg-gray-50 ${
-                      r.userVote === -1 ? 'bg-red-600 text-white border-red-600' : ''
+                      r.userVote === -1
+                        ? 'bg-red-600 text-white border-red-600'
+                        : ''
                     }`}
                     onClick={async () => {
                       try {

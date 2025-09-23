@@ -2,13 +2,15 @@
 
 import { useState, useMemo } from 'react';
 import type React from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@packages/backend/convex/_generated/api';
+import { useUser } from '@clerk/nextjs';
 
 export default function LearnHub() {
   const [activeTab, setActiveTab] = useState('modules');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newArticle, setNewArticle] = useState({
     title: '',
-    author: '',
     date: '',
     readTime: '5 min read',
     tags: '',
@@ -89,43 +91,15 @@ export default function LearnHub() {
     },
   ];
 
-  const [blogPosts, setBlogPosts] = useState([
-    {
-      id: 1,
-      title: 'The Future of Nature-Based Carbon Solutions',
-      author: 'Dr. Sarah Chen',
-      date: '2024-01-18',
-      content:
-        'Exploring how reforestation and ecosystem restoration projects are reshaping the carbon credit landscape. In this article, we look at key trends, methodologies, and real-world examples that highlight the potential of nature-based solutions...'
-      readTime: '6 min read',
-      tags: ['Nature-Based', 'Innovation', 'Future Trends'],
-    },
-    {
-      id: 2,
-      title: 'Success Story: 10,000 Hectares Restored in Amazon',
-      author: 'Green Earth Foundation',
-      date: '2024-01-15',
-      content:
-        'A detailed look at how our large-scale reforestation project achieved its goals ahead of schedule. We discuss planning, execution, and the measurable ecological impact achieved by the team...'
-      readTime: '8 min read',
-      tags: ['Case Study', 'Reforestation', 'Success Story'],
-    },
-    {
-      id: 3,
-      title: 'Technology Integration in Carbon Project Monitoring',
-      author: 'Tech Innovations Team',
-      date: '2024-01-12',
-      content:
-        'How IoT sensors, satellite imagery, and AI are revolutionizing project monitoring and verification. From remote sensing to predictive analytics, we cover practical tools you can adopt today...'
-      readTime: '10 min read',
-      tags: ['Technology', 'Monitoring', 'Innovation'],
-    },
-  ]);
+  const blogPosts = useQuery(api.learn.listBlog);
+  const createBlog = useMutation(api.learn.createBlog);
+  const { isSignedIn } = useUser();
 
-  const previewText = (s: string, max = 180) => {
+  const previewText = (s: string) => {
     if (!s) return '';
     const text = s.replace(/\s+/g, ' ').trim();
-    return text.length > max ? text.slice(0, max).trimEnd() + '...' : text;
+    const max = 50;
+    return text.length > max ? text.slice(0, max).trimEnd() + '.....' : text;
   };
 
   const today = useMemo(() => {
@@ -156,8 +130,12 @@ export default function LearnHub() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newArticle.title || !newArticle.author || !newArticle.content) {
-      alert('Please fill in title, author and content.');
+    if (!isSignedIn) {
+      alert('Please sign in to publish an article.');
+      return;
+    }
+    if (!newArticle.title || !newArticle.content) {
+      alert('Please fill in title and content.');
       return;
     }
 
@@ -166,20 +144,15 @@ export default function LearnHub() {
       .map((t) => t.trim())
       .filter(Boolean);
 
-    const newPost = {
-      id: Date.now(),
+    await createBlog({
       title: newArticle.title,
-      author: newArticle.author,
-      date: newArticle.date || today,
       content: newArticle.content,
-      readTime: newArticle.readTime || '5 min read',
       tags: tagsArray.length ? tagsArray : ['Community'],
-    } as any;
-
-    setBlogPosts((prev) => [newPost, ...prev]);
+      readTime: newArticle.readTime,
+      publish: true,
+    });
     setNewArticle({
       title: '',
-      author: '',
       date: today,
       readTime: '5 min read',
       tags: '',
@@ -379,9 +352,9 @@ export default function LearnHub() {
               </div>
 
               <div className="space-y-6">
-                {blogPosts.map((post) => (
+                {(blogPosts ?? []).map((post) => (
                   <article
-                    key={post.id}
+                    key={String(post.id)}
                     className="border rounded-lg p-6 hover:shadow-lg transition-shadow"
                   >
                     <div className="flex justify-between items-start mb-3">
@@ -390,7 +363,7 @@ export default function LearnHub() {
                           {post.title}
                         </h3>
                         <div className="flex items-center text-sm text-gray-500 mb-2">
-                          <span>By {post.author}</span>
+                          <span>By {post.authorName ?? 'Unknown'}</span>
                           <span className="mx-2">•</span>
                           <span>
                             {new Date(post.date).toLocaleDateString()}
@@ -401,11 +374,13 @@ export default function LearnHub() {
                       </div>
                     </div>
 
-                    <p className="text-gray-600 mb-4">{previewText(post.content)}</p>
+                    <p className="text-gray-600 mb-4">
+                      {previewText(post.content)}
+                    </p>
 
                     <div className="flex justify-between items-center">
                       <div className="flex gap-2">
-                        {post.tags.map((tag) => (
+                        {post.tags.map((tag: string) => (
                           <span
                             key={tag}
                             className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm"
@@ -447,7 +422,9 @@ export default function LearnHub() {
                   />
                   <div className="relative bg-white w-full max-w-2xl mx-4 rounded-lg shadow-lg">
                     <div className="border-b px-6 py-4 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Create New Article</h3>
+                      <h3 className="text-lg font-semibold">
+                        Create New Article
+                      </h3>
                       <button
                         className="text-gray-500 hover:text-gray-700"
                         onClick={closeModal}
@@ -457,10 +434,15 @@ export default function LearnHub() {
                         ✕
                       </button>
                     </div>
-                    <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4 max-h-[80vh] overflow-y-auto">
+                    <form
+                      onSubmit={handleSubmit}
+                      className="px-6 py-4 space-y-4 max-h-[80vh] overflow-y-auto"
+                    >
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium mb-1">Title</label>
+                          <label className="block text-sm font-medium mb-1">
+                            Title
+                          </label>
                           <input
                             name="title"
                             value={newArticle.title}
@@ -470,19 +452,11 @@ export default function LearnHub() {
                             required
                           />
                         </div>
+                        {/* Author is taken from the signed-in user */}
                         <div>
-                          <label className="block text-sm font-medium mb-1">Author</label>
-                          <input
-                            name="author"
-                            value={newArticle.author}
-                            onChange={handleChange}
-                            className="w-full border rounded px-3 py-2"
-                            placeholder="Your name"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Date</label>
+                          <label className="block text-sm font-medium mb-1">
+                            Date
+                          </label>
                           <input
                             type="date"
                             name="date"
@@ -492,7 +466,9 @@ export default function LearnHub() {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-1">Read Time</label>
+                          <label className="block text-sm font-medium mb-1">
+                            Read Time
+                          </label>
                           <input
                             name="readTime"
                             value={newArticle.readTime}
@@ -506,7 +482,9 @@ export default function LearnHub() {
                       {/* Excerpt removed — preview derives from content */}
 
                       <div>
-                        <label className="block text-sm font-medium mb-1">Tags</label>
+                        <label className="block text-sm font-medium mb-1">
+                          Tags
+                        </label>
                         <input
                           name="tags"
                           value={newArticle.tags}
@@ -517,7 +495,9 @@ export default function LearnHub() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-1">Content</label>
+                        <label className="block text-sm font-medium mb-1">
+                          Content
+                        </label>
                         <textarea
                           name="content"
                           value={newArticle.content}
@@ -539,7 +519,12 @@ export default function LearnHub() {
                         </button>
                         <button
                           type="submit"
-                          className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                          disabled={!isSignedIn}
+                          className={`px-4 py-2 rounded text-white ${
+                            isSignedIn
+                              ? 'bg-blue-600 hover:bg-blue-700'
+                              : 'bg-gray-400 cursor-not-allowed'
+                          }`}
                         >
                           Publish
                         </button>
