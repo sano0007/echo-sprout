@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useAction } from 'convex/react';
 import { api } from '../../../../../packages/backend/convex/_generated/api';
+import { Id } from '../../../../../packages/backend/convex/_generated/dataModel';
+import FileUpload from '../../components/FileUpload';
 
 interface ProjectFormData {
   title: string;
@@ -39,6 +41,7 @@ const steps = [
 
 export default function ProjectRegister() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [tempUploadedFiles, setTempUploadedFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     description: '',
@@ -66,6 +69,10 @@ export default function ProjectRegister() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createProject = useMutation(api.projects.createProject);
+  const uploadProjectDocuments = useMutation(
+    api.projects.uploadProjectDocument
+  );
+  const generateUploadUrl = useAction(api.projects.generateUploadUrl);
 
   const handleInputChange = (
     field: string,
@@ -147,7 +154,8 @@ export default function ProjectRegister() {
 
   const submitProject = async (data: ProjectFormData) => {
     try {
-      await createProject({
+      // Create the project first
+      const projectId = await createProject({
         title: data.title,
         description: data.description,
         projectType: data.projectType,
@@ -162,8 +170,59 @@ export default function ProjectRegister() {
         requiredDocuments: data.requiredDocuments,
       });
 
-      alert('Project submitted successfully!');
-      // Reset form or redirect to project management
+      // Now upload the files if any exist
+      if (tempUploadedFiles.length > 0) {
+        alert(
+          `Project created successfully! Uploading ${tempUploadedFiles.length} document${tempUploadedFiles.length !== 1 ? 's' : ''}...`
+        );
+
+        const uploadPromises = tempUploadedFiles.map(async (file) => {
+          try {
+            // Step 1: Get upload URL
+            const uploadUrl = await generateUploadUrl();
+            console.log('Generated upload URL for', file.name);
+
+            // Step 2: Upload file to the URL
+            const response = await fetch(uploadUrl, {
+              method: 'POST',
+              body: file,
+              headers: {
+                'Content-Type': file.type,
+              },
+            });
+
+            if (!response.ok) {
+              throw new Error(`Upload failed: ${response.statusText}`);
+            }
+
+            const { storageId } = await response.json();
+            console.log('File uploaded successfully, storage ID:', storageId);
+
+            // Step 3: Store document metadata in database
+            await uploadProjectDocuments({
+              projectId: projectId,
+              fileName: file.name,
+              fileType: file.type,
+              storageId: storageId,
+            });
+          } catch (error) {
+            console.error(`Failed to upload ${file.name}:`, error);
+            throw error;
+          }
+        });
+
+        await Promise.all(uploadPromises);
+        alert(
+          `Successfully uploaded ${tempUploadedFiles.length} document${tempUploadedFiles.length !== 1 ? 's' : ''}!`
+        );
+      } else {
+        alert('Project created successfully!');
+      }
+
+      // Reset form state
+      setTempUploadedFiles([]);
+
+      // Redirect to project management after successful creation
       window.location.href = '/projects/manage';
     } catch (error) {
       console.error('Error creating project:', error);
@@ -438,12 +497,32 @@ export default function ProjectRegister() {
           <div>
             <h2 className="text-2xl font-semibold mb-4">Document Upload</h2>
             <div className="space-y-4">
-              <div className="border-2 border-dashed border-gray-300 p-8 text-center">
-                <p>Drag and drop files here or click to browse</p>
-                <p className="text-sm text-gray-600">
-                  Supported formats: PDF, JPG, PNG, DOC (Max 50MB)
-                </p>
-              </div>
+              <FileUpload
+                projectId="" // Empty for deferred uploads
+                uploadMode="deferred"
+                onFilesReady={(files) => {
+                  setTempUploadedFiles(files.map((f) => f.file));
+                  console.log(
+                    'Files ready for upload after project creation:',
+                    files
+                  );
+                }}
+                maxFiles={10}
+                maxSizeMB={50}
+                acceptedTypes={[
+                  'application/pdf',
+                  'image/jpeg',
+                  'image/png',
+                  'application/msword',
+                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                ]}
+              />
+              {tempUploadedFiles.length > 0 && (
+                <div className="text-sm text-green-600">
+                  ✓ {tempUploadedFiles.length} file
+                  {tempUploadedFiles.length !== 1 ? 's' : ''} ready to upload
+                </div>
+              )}
               <div className="text-sm text-gray-600">
                 <p>Required documents:</p>
                 <ul className="list-disc ml-4">
