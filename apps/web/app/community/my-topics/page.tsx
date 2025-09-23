@@ -30,9 +30,10 @@ export default function MyTopicsPage() {
   const [category, setCategory] = useState('general');
   const [tags, setTags] = useState('');
   const [content, setContent] = useState('');
-  const [notice, setNotice] = useState<
-    { msg: string; type: 'success' | 'error' } | null
-  >(null);
+  const [notice, setNotice] = useState<{
+    msg: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   const queryMine = useQuery((api as any).forum.listUserTopics, {});
   const updateTopic = useMutation((api as any).forum.updateTopic);

@@ -39,9 +39,10 @@ export default function CommunityForum() {
   const [editingPostId, setEditingPostId] = useState<string | number | null>(
     null
   );
-  const [notice, setNotice] = useState<
-    { msg: string; type: 'success' | 'error' } | null
-  >(null);
+  const [notice, setNotice] = useState<{
+    msg: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   const categories = [
     { id: 'all', name: 'All Topics', count: 156 },
@@ -338,7 +339,9 @@ export default function CommunityForum() {
       setIsModalOpen(false);
       resetForm();
       setNotice({
-        msg: isEdit ? 'Topic updated successfully' : 'Topic created successfully',
+        msg: isEdit
+          ? 'Topic updated successfully'
+          : 'Topic created successfully',
         type: 'success',
       });
       setTimeout(() => setNotice(null), 3000);

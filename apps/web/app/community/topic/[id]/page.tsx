@@ -1,15 +1,42 @@
 'use client';
 
 import Link from 'next/link';
-import { useQuery } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
+import { useParams } from 'next/navigation';
+import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
+import { useState } from 'react';
 
-export default function TopicDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const data = useQuery((api as any).forum.getTopicById, { id: params.id });
+export default function TopicDetailPage() {
+  const routeParams = useParams<{ id: string | string[] }>();
+  const idParam = Array.isArray(routeParams?.id)
+    ? routeParams.id[0]
+    : routeParams?.id;
+  const data = useQuery((api as any).forum.getTopicById, { id: idParam });
+  const createReply = useMutation((api as any).forum.createReply);
+  const [reply, setReply] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [notice, setNotice] = useState<{
+    msg: string;
+    type: 'success' | 'error';
+  } | null>(null);
+
+  const submitReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reply.trim() || !idParam) return;
+    setPosting(true);
+    try {
+      await createReply({ topicId: idParam as any, content: reply.trim() });
+      setReply('');
+      setNotice({ msg: 'Reply posted', type: 'success' });
+      setTimeout(() => setNotice(null), 2500);
+    } catch {
+      setNotice({ msg: 'Failed to post reply', type: 'error' });
+      setTimeout(() => setNotice(null), 2500);
+    } finally {
+      setPosting(false);
+    }
+  };
 
   if (data === undefined) {
     return (
@@ -37,6 +64,17 @@ export default function TopicDetailPage({
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      {notice && (
+        <div className="fixed top-4 right-4 z-50">
+          <div
+            className={`text-white px-4 py-2 rounded shadow ${
+              notice.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+            }`}
+          >
+            {notice.msg}
+          </div>
+        </div>
+      )}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{data.title}</h1>
@@ -98,6 +136,41 @@ export default function TopicDetailPage({
               </div>
             ))
           )}
+        </div>
+        <div className="p-5 border-t bg-gray-50">
+          <SignedIn>
+            <form onSubmit={submitReply} className="space-y-3">
+              <textarea
+                className="w-full p-3 border rounded min-h-[120px]"
+                placeholder="Write your reply..."
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+              />
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={posting || !reply.trim()}
+                  className={`px-4 py-2 rounded text-white ${
+                    posting || !reply.trim()
+                      ? 'bg-blue-300 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  {posting ? 'Posting…' : 'Post Reply'}
+                </button>
+              </div>
+            </form>
+          </SignedIn>
+          <SignedOut>
+            <div className="flex items-center justify-between">
+              <div className="text-gray-700">Sign in to reply.</div>
+              <SignInButton mode="modal">
+                <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                  Sign In
+                </button>
+              </SignInButton>
+            </div>
+          </SignedOut>
         </div>
       </div>
     </div>
