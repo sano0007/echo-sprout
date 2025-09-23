@@ -5,6 +5,7 @@ import type React from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import { useUser } from '@clerk/nextjs';
+import Link from 'next/link';
 
 export default function LearnHub() {
   const [activeTab, setActiveTab] = useState('modules');
@@ -374,7 +375,7 @@ export default function LearnHub() {
                       </div>
                     </div>
 
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-gray-600 mb-4 break-words">
                       {previewText(post.content)}
                     </p>
 
@@ -389,9 +390,12 @@ export default function LearnHub() {
                           </span>
                         ))}
                       </div>
-                      <button className="text-blue-600 hover:underline">
+                      <Link
+                        className="text-blue-600 hover:underline"
+                        href={`/learn/blog/${String(post.id)}`}
+                      >
                         Read More
-                      </button>
+                      </Link>
                     </div>
                   </article>
                 ))}

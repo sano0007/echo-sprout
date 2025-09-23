@@ -77,3 +77,30 @@ export const createBlog = mutation({
     return id;
   },
 });
+
+export const getBlog = query({
+  args: { id: v.string() },
+  async handler(ctx, { id }) {
+    const normalized = await ctx.db.normalizeId('educationalContent', id);
+    if (!normalized) throw new Error('Invalid article id');
+    const d = await ctx.db.get(normalized);
+    if (!d) throw new Error('Article not found');
+
+    const author = await ctx.db.get(d.authorId);
+    const fullName = author
+      ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim() || author.email
+      : 'Unknown';
+    const publishedAt = d.publishedAt ?? d._creationTime;
+
+    return {
+      id: d._id,
+      title: d.title,
+      content: d.content,
+      tags: d.tags,
+      readTime: (d.estimatedReadTime ?? 5) + ' min read',
+      authorName: fullName,
+      authorAvatarUrl: author?.profileImage ?? null,
+      date: new Date(publishedAt).toISOString(),
+    };
+  },
+});
