@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
@@ -16,11 +16,31 @@ export default function LearningPathDetailsPage() {
   const deletePath = useMutation(api.learn.deleteLearningPath);
   const updateLesson = useMutation(api.learn.updateLesson);
   const deleteLesson = useMutation(api.learn.deleteLesson);
+  const toggleProgress = useMutation(api.learn.toggleProgressItem);
+  const progressData = useQuery(api.learn.getPathProgress, id ? { pathId: id } : 'skip');
 
   const [editingPath, setEditingPath] = useState(false);
   const [pathForm, setPathForm] = useState<any>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Server-backed progress state (per user)
+  const [completed, setCompleted] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    const map: Record<string, boolean> = {};
+    (progressData?.completedKeys || []).forEach((k: string) => (map[k] = true));
+    setCompleted(map);
+  }, [progressData?.completedKeys]);
+  const toggle = async (key: string) => {
+    const next = !completed[key];
+    setCompleted((c) => ({ ...c, [key]: next }));
+    try {
+      await toggleProgress({ pathId: id!, key, completed: next });
+    } catch {
+      // revert on error
+      setCompleted((c) => ({ ...c, [key]: !next }));
+    }
+  };
 
   if (!id) {
     return (
@@ -76,6 +96,25 @@ export default function LearningPathDetailsPage() {
     return null;
   };
 
+  // Compute progress based on checked items across lessons
+  const progress = useMemo(() => {
+    const list = lessons || [];
+    let total = 0;
+    let done = 0;
+    list.forEach((L) => {
+      if (L.videoUrl) {
+        total += 1;
+        if (completed[`v:${String(L.id)}`]) done += 1;
+      }
+      (L.pdfUrls || []).forEach((_, i) => {
+        total += 1;
+        if (completed[`p:${String(L.id)}:${i}`]) done += 1;
+      });
+    });
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    return { total, done, pct };
+  }, [lessons, completed]);
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-start justify-between mb-4">
@@ -123,6 +162,17 @@ export default function LearningPathDetailsPage() {
           >
             {busy === 'deletePath' ? 'Deleting...' : 'Delete Path'}
           </button>
+        </div>
+      </div>
+
+      {/* Progress bar for this course */}
+      <div className="mb-4">
+        <div className="flex justify-between text-sm mb-1">
+          <span>Progress</span>
+          <span>{progress.pct}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${progress.pct}%` }}></div>
         </div>
       </div>
 
@@ -293,19 +343,28 @@ export default function LearningPathDetailsPage() {
                       {L.videoUrl ? (
                         (() => {
                           const embed = getYouTubeEmbed(L.videoUrl);
-                          return embed ? (
-                            <div className="w-full" style={{ aspectRatio: '16 / 9' }}>
-                              <iframe
-                                src={embed}
-                                title={`YouTube video: ${L.title}`}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowFullScreen
-                                className="w-full h-full rounded border"
-                              />
-                            </div>
-                          ) : (
-                            <div className="text-gray-500 text-sm">
-                              Video: <a className="text-blue-600 hover:underline" href={L.videoUrl} target="_blank" rel="noreferrer">open link</a>
+                          const key = `v:${String(L.id)}`;
+                          return (
+                            <div>
+                              <label className="flex items-center gap-2 mb-2 text-sm text-gray-700">
+                                <input type="checkbox" checked={!!completed[key]} onChange={() => toggle(key)} />
+                                <span>Mark video as watched</span>
+                              </label>
+                              {embed ? (
+                                <div className="w-full" style={{ aspectRatio: '16 / 9' }}>
+                                  <iframe
+                                    src={embed}
+                                    title={`YouTube video: ${L.title}`}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowFullScreen
+                                    className="w-full h-full rounded border"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="text-gray-500 text-sm">
+                                  Video: <a className="text-blue-600 hover:underline" href={L.videoUrl} target="_blank" rel="noreferrer">open link</a>
+                                </div>
+                              )}
                             </div>
                           );
                         })()
@@ -315,15 +374,22 @@ export default function LearningPathDetailsPage() {
                     </div>
 
                     {/* PDFs */}
-                    <div className="text-gray-500 text-sm">
-                      PDFs: {L.pdfUrls && L.pdfUrls.length > 0 ? (
-                        <span className="inline-flex flex-wrap gap-2">
-                          {L.pdfUrls.map((u, i) => (
-                            <a key={i} className="text-blue-600 hover:underline" href={u} target="_blank" rel="noreferrer">pdf {i + 1}</a>
-                          ))}
-                        </span>
+                    <div className="text-gray-700 text-sm">
+                      <div className="mb-1">PDFs:</div>
+                      {L.pdfUrls && L.pdfUrls.length > 0 ? (
+                        <ul className="space-y-1">
+                          {L.pdfUrls.map((u, i) => {
+                            const key = `p:${String(L.id)}:${i}`;
+                            return (
+                              <li key={i} className="flex items-center gap-2">
+                                <input type="checkbox" checked={!!completed[key]} onChange={() => toggle(key)} />
+                                <a className="text-blue-600 hover:underline" href={u} target="_blank" rel="noreferrer">pdf {i + 1}</a>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       ) : (
-                        'placeholders'
+                        <div className="text-gray-500">placeholders</div>
                       )}
                     </div>
                   </div>
