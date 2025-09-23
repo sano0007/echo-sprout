@@ -503,7 +503,7 @@ export default function LearnHub() {
                             name="title"
                             value={newArticle.title}
                             onChange={handleChange}
-                            className="w-full border rounded px-3 py-2"
+                            className="w-full border rounded px-3 py-2 bg-white"
                             placeholder="Enter article title"
                             required
                           />
@@ -518,7 +518,7 @@ export default function LearnHub() {
                             name="date"
                             value={newArticle.date || today}
                             onChange={handleChange}
-                            className="w-full border rounded px-3 py-2"
+                            className="w-full border rounded px-3 py-2 bg-white"
                           />
                         </div>
                         <div>
@@ -529,7 +529,7 @@ export default function LearnHub() {
                             name="readTime"
                             value={newArticle.readTime}
                             onChange={handleChange}
-                            className="w-full border rounded px-3 py-2"
+                            className="w-full border rounded px-3 py-2 bg-white"
                             placeholder="e.g., 6 min read"
                           />
                         </div>
@@ -545,7 +545,7 @@ export default function LearnHub() {
                           name="tags"
                           value={newArticle.tags}
                           onChange={handleChange}
-                          className="w-full border rounded px-3 py-2"
+                          className="w-full border rounded px-3 py-2 bg-white"
                           placeholder="Comma-separated, e.g., Technology, Innovation"
                         />
                       </div>
@@ -558,7 +558,7 @@ export default function LearnHub() {
                           name="content"
                           value={newArticle.content}
                           onChange={handleChange}
-                          className="w-full border rounded px-3 py-2"
+                          className="w-full border rounded px-3 py-2 bg-white"
                           rows={6}
                           placeholder="Write your article content here"
                           required

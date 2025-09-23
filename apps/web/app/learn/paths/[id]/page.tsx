@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
@@ -21,24 +21,14 @@ export default function LearningPathDetailsPage() {
   const [pathForm, setPathForm] = useState<any>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pdfChecked, setPdfChecked] = useState<Record<string, boolean>>({});
+  const togglePdf = (key: string) =>
+    setPdfChecked((c) => ({ ...c, [key]: !c[key] }));
+  const [videoChecked, setVideoChecked] = useState<Record<string, boolean>>({});
+  const toggleVideo = (key: string) =>
+    setVideoChecked((c) => ({ ...c, [key]: !c[key] }));
 
-  // Local progress state (per user via localStorage)
-  const storageKey = id ? `learningPathProgress:${id}` : '';
-  const [completed, setCompleted] = useState<Record<string, boolean>>({});
-  useEffect(() => {
-    try {
-      if (!storageKey) return;
-      const raw = localStorage.getItem(storageKey);
-      if (raw) setCompleted(JSON.parse(raw));
-    } catch {}
-  }, [storageKey]);
-  useEffect(() => {
-    try {
-      if (!storageKey) return;
-      localStorage.setItem(storageKey, JSON.stringify(completed));
-    } catch {}
-  }, [storageKey, completed]);
-  const toggle = (key: string) => setCompleted((c) => ({ ...c, [key]: !c[key] }));
+  // (No local progress tracking)
 
   if (!id) {
     return (
@@ -94,24 +84,17 @@ export default function LearningPathDetailsPage() {
     return null;
   };
 
-  // Compute progress based on checked items across lessons
-  const progress = useMemo(() => {
-    const list = lessons || [];
-    let total = 0;
-    let done = 0;
-    list.forEach((L) => {
-      if (L.videoUrl) {
-        total += 1;
-        if (completed[`v:${String(L.id)}`]) done += 1;
-      }
-      (L.pdfUrls || []).forEach((_, i) => {
-        total += 1;
-        if (completed[`p:${String(L.id)}:${i}`]) done += 1;
-      });
-    });
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-    return { total, done, pct };
-  }, [lessons, completed]);
+  const getFileName = (url: string): string => {
+    try {
+      const u = new URL(url);
+      const last = u.pathname.split('/').filter(Boolean).pop();
+      return last || url;
+    } catch {
+      return url;
+    }
+  };
+
+  // (No progress calculation)
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -163,17 +146,7 @@ export default function LearningPathDetailsPage() {
         </div>
       </div>
 
-      {/* Progress bar for this course */}
-      <div className="mb-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span>Progress</span>
-          <span>{progress.pct}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${progress.pct}%` }}></div>
-        </div>
-      </div>
-
+      
       <div className="text-gray-600 mb-6">
         <span className="mr-4">Level: <strong>{cap(data.level)}</strong></span>
         <span className="mr-4">Duration: <strong>{data.estimatedDuration} min</strong></span>
@@ -191,22 +164,22 @@ export default function LearningPathDetailsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="md:col-span-3">
               <label className="block text-sm font-medium mb-1">Title</label>
-              <input className="w-full border rounded px-3 py-2" value={pathForm.title}
+              <input className="w-full border rounded px-3 py-2 bg-white" value={pathForm.title}
                      onChange={(e) => setPathForm((f: any) => ({ ...f, title: e.target.value }))} />
             </div>
             <div className="md:col-span-3">
               <label className="block text-sm font-medium mb-1">Description</label>
-              <textarea className="w-full border rounded px-3 py-2" rows={3} value={pathForm.description}
+              <textarea className="w-full border rounded px-3 py-2 bg-white" rows={3} value={pathForm.description}
                         onChange={(e) => setPathForm((f: any) => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="md:col-span-3">
               <label className="block text-sm font-medium mb-1">Objectives</label>
-              <textarea className="w-full border rounded px-3 py-2" rows={3} value={pathForm.objectives}
+              <textarea className="w-full border rounded px-3 py-2 bg-white" rows={3} value={pathForm.objectives}
                         onChange={(e) => setPathForm((f: any) => ({ ...f, objectives: e.target.value }))} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Level</label>
-              <select className="w-full border rounded px-3 py-2" value={pathForm.level}
+              <select className="w-full border rounded px-3 py-2 bg-white" value={pathForm.level}
                       onChange={(e) => setPathForm((f: any) => ({ ...f, level: e.target.value }))}>
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
@@ -215,12 +188,12 @@ export default function LearningPathDetailsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Duration (min)</label>
-              <input type="number" min={1} className="w-full border rounded px-3 py-2" value={pathForm.estimatedDuration}
+              <input type="number" min={1} className="w-full border rounded px-3 py-2 bg-white" value={pathForm.estimatedDuration}
                      onChange={(e) => setPathForm((f: any) => ({ ...f, estimatedDuration: Number(e.target.value) }))} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Visibility</label>
-              <select className="w-full border rounded px-3 py-2" value={pathForm.visibility}
+              <select className="w-full border rounded px-3 py-2 bg-white" value={pathForm.visibility}
                       onChange={(e) => setPathForm((f: any) => ({ ...f, visibility: e.target.value }))}>
                 <option value="public">Public</option>
                 <option value="private">Private</option>
@@ -229,12 +202,12 @@ export default function LearningPathDetailsPage() {
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Tags</label>
-              <input className="w-full border rounded px-3 py-2" value={pathForm.tags}
+              <input className="w-full border rounded px-3 py-2 bg-white" value={pathForm.tags}
                      onChange={(e) => setPathForm((f: any) => ({ ...f, tags: e.target.value }))} />
             </div>
             <div className="md:col-span-1">
               <label className="block text-sm font-medium mb-1">Cover Image URL</label>
-              <input className="w-full border rounded px-3 py-2" value={pathForm.coverImageUrl}
+              <input className="w-full border rounded px-3 py-2 bg-white" value={pathForm.coverImageUrl}
                      onChange={(e) => setPathForm((f: any) => ({ ...f, coverImageUrl: e.target.value }))} />
             </div>
             <div className="md:col-span-3 flex items-center gap-2">
@@ -337,57 +310,87 @@ export default function LearningPathDetailsPage() {
                     )}
 
                     {/* Video */}
-                    <div className="mb-2">
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-2 text-gray-700 font-medium">
+                        <input
+                          type="checkbox"
+                          checked={!!videoChecked[`v:${String(L.id)}`]}
+                          onChange={() => toggleVideo(`v:${String(L.id)}`)}
+                        />
+                        <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                          <path d="M8 5v14l11-7-11-7z" />
+                        </svg>
+                        <span>Video</span>
+                      </div>
                       {L.videoUrl ? (
                         (() => {
                           const embed = getYouTubeEmbed(L.videoUrl);
-                          const key = `v:${String(L.id)}`;
-                          return (
-                            <div>
-                              <label className="flex items-center gap-2 mb-2 text-sm text-gray-700">
-                                <input type="checkbox" checked={!!completed[key]} onChange={() => toggle(key)} />
-                                <span>Mark video as watched</span>
-                              </label>
-                              {embed ? (
-                                <div className="w-full" style={{ aspectRatio: '16 / 9' }}>
-                                  <iframe
-                                    src={embed}
-                                    title={`YouTube video: ${L.title}`}
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                    allowFullScreen
-                                    className="w-full h-full rounded border"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="text-gray-500 text-sm">
-                                  Video: <a className="text-blue-600 hover:underline" href={L.videoUrl} target="_blank" rel="noreferrer">open link</a>
-                                </div>
-                              )}
+                          return embed ? (
+                            <div className="w-full" style={{ aspectRatio: '16 / 9' }}>
+                              <iframe
+                                src={embed}
+                                title={`YouTube video: ${L.title}`}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                                className="w-full h-full rounded border"
+                              />
                             </div>
+                          ) : (
+                            <a className="flex items-center gap-2 text-blue-600 hover:underline text-sm" href={L.videoUrl} target="_blank" rel="noreferrer">
+                              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                                <path d="M8 5v14l11-7-11-7z" />
+                              </svg>
+                              Open video link
+                            </a>
                           );
                         })()
                       ) : (
-                        <div className="text-gray-500 text-sm">Video: placeholder</div>
+                        <div className="text-gray-500 text-sm">No video provided</div>
                       )}
                     </div>
 
-                    {/* PDFs */}
-                    <div className="text-gray-700 text-sm">
-                      <div className="mb-1">PDFs:</div>
+                    {/* PDFs (stacked previews) */}
+                    <div className="mt-4">
+                      <div className="flex items-center gap-2 mb-3 text-gray-700 font-medium">
+                        <svg className="h-5 w-5 text-red-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                          <path d="M6 2h7l5 5v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm7 1.5V8h5.5"/>
+                          <path d="M8 13h2.5a1.5 1.5 0 0 0 0-3H8v3zm0 0v3m4-6h2m-2 3h2m-2 3h2"/>
+                        </svg>
+                        <span>PDFs</span>
+                      </div>
                       {L.pdfUrls && L.pdfUrls.length > 0 ? (
-                        <ul className="space-y-1">
+                        <div className="space-y-6">
                           {L.pdfUrls.map((u, i) => {
+                            const name = getFileName(u) || `PDF ${i + 1}`;
+                            const isPdf = u.toLowerCase().includes('.pdf');
                             const key = `p:${String(L.id)}:${i}`;
                             return (
-                              <li key={i} className="flex items-center gap-2">
-                                <input type="checkbox" checked={!!completed[key]} onChange={() => toggle(key)} />
-                                <a className="text-blue-600 hover:underline" href={u} target="_blank" rel="noreferrer">pdf {i + 1}</a>
-                              </li>
+                              <div key={i}>
+                                <div className="flex items-center gap-2 mb-2 text-sm text-gray-700">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!pdfChecked[key]}
+                                    onChange={() => togglePdf(key)}
+                                  />
+                                  <svg className="h-4 w-4 text-red-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                                    <path d="M6 2h7l5 5v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm7 1.5V8h5.5"/>
+                                    <path d="M8 13h2.5a1.5 1.5 0 0 0 0-3H8v3zm0 0v3m4-6h2m-2 3h2m-2 3h2"/>
+                                  </svg>
+                                  <a className="text-blue-600 hover:underline" href={u} target="_blank" rel="noreferrer">{name}</a>
+                                </div>
+                                {isPdf ? (
+                                  <div className="w-full border rounded overflow-hidden">
+                                    <iframe src={u} className="w-full" style={{ height: '600px' }} title={name} />
+                                  </div>
+                                ) : (
+                                  <div className="text-gray-500 text-sm">Preview unavailable — open link above</div>
+                                )}
+                              </div>
                             );
                           })}
-                        </ul>
+                        </div>
                       ) : (
-                        <div className="text-gray-500">placeholders</div>
+                        <div className="text-gray-500 text-sm">No PDFs</div>
                       )}
                     </div>
                   </div>
@@ -449,20 +452,20 @@ function LessonEditButtons({ lesson, onUpdate, onDelete, busyKey }: {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium mb-1">Title</label>
-          <input className="w-full border rounded px-2 py-1 text-sm" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+          <input className="w-full border rounded px-2 py-1 text-sm bg-white" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
         </div>
         <div>
           <label className="block text-xs font-medium mb-1">Video URL</label>
-          <input className="w-full border rounded px-2 py-1 text-sm" value={form.videoUrl} onChange={(e) => setForm((f) => ({ ...f, videoUrl: e.target.value }))} />
+          <input className="w-full border rounded px-2 py-1 text-sm bg-white" value={form.videoUrl} onChange={(e) => setForm((f) => ({ ...f, videoUrl: e.target.value }))} />
         </div>
       </div>
       <div className="mt-2">
         <label className="block text-xs font-medium mb-1">Description</label>
-        <textarea className="w-full border rounded px-2 py-1 text-sm" rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+        <textarea className="w-full border rounded px-2 py-1 text-sm bg-white" rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
       </div>
       <div className="mt-2">
         <label className="block text-xs font-medium mb-1">PDF URLs (comma)</label>
-        <input className="w-full border rounded px-2 py-1 text-sm" value={form.pdfs} onChange={(e) => setForm((f) => ({ ...f, pdfs: e.target.value }))} />
+        <input className="w-full border rounded px-2 py-1 text-sm bg-white" value={form.pdfs} onChange={(e) => setForm((f) => ({ ...f, pdfs: e.target.value }))} />
       </div>
       <div className="mt-3 flex items-center gap-2">
         <button

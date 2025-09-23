@@ -168,7 +168,7 @@ export default function LearningPathsCreatePage() {
           <div>
             <label className="block text-sm font-medium mb-1">Level</label>
             <select
-              className="w-full border rounded px-3 py-2"
+              className="w-full border rounded px-3 py-2 bg-white"
               value={form.level}
               onChange={(e) => update('level', e.target.value)}
             >
@@ -192,7 +192,7 @@ export default function LearningPathsCreatePage() {
           <div>
             <label className="block text-sm font-medium mb-1">Visibility</label>
             <select
-              className="w-full border rounded px-3 py-2"
+              className="w-full border rounded px-3 py-2 bg-white"
               value={form.visibility}
               onChange={(e) => update('visibility', e.target.value)}
             >
