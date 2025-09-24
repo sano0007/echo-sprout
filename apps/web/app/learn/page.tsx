@@ -6,8 +6,10 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LearnHub() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('modules');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newArticle, setNewArticle] = useState({
@@ -320,16 +322,22 @@ export default function LearnHub() {
                     )}
 
                     {String(module.id).startsWith('0x') || String(module.id).length > 10 ? (
-                      <Link
-                        href={`/learn/paths/${module.id}`}
+                      <button
                         className="block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                        onClick={() => {
+                          if (!isSignedIn) {
+                            alert('Please sign in to start the course.');
+                            return;
+                          }
+                          router.push(`/learn/paths/${module.id}`);
+                        }}
                       >
                         {module.progress === 0
                           ? 'Start Course'
                           : module.progress === 100
                             ? 'Review'
                             : 'Continue'}
-                      </Link>
+                      </button>
                     ) : (
                       <button className="w-full bg-blue-600 text-white py-2 px-4 rounded opacity-50 cursor-not-allowed" title="Create a Learning Path to view details">
                         Start Course
