@@ -10,15 +10,20 @@ export class StripeService {
     }
   }
 
-  public getStripeInstance() {
+  public static getStripeInstance() {
     if (!StripeService.instance) {
-      throw new Error('Stripe instance not initialized');
+      StripeService.instance = new Stripe(process.env.STRIPE_SECRET_KEY!);
+      return StripeService.instance;
     }
     return StripeService.instance;
   }
 
-  public async createCheckoutSession(amount: number, credits: number) {
-    const stripe = this.getStripeInstance();
+  public async createCheckoutSession(
+    amount: number,
+    credits: number,
+    projectId?: string
+  ) {
+    const stripe = StripeService.getStripeInstance();
 
     if (!stripe) {
       throw new Error('Stripe instance not initialized');

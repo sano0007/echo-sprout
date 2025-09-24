@@ -116,19 +116,13 @@ export default defineSchema({
     .index('by_reserved_by', ['reservedBy']),
 
   transactions: defineTable({
-    buyerId: v.id('users'),
-    projectId: v.id('projects'),
+    // todo: replace when auth is set up
+    // buyerId: v.id('users'),
+    buyerId: v.string(), // Clerk user ID of the buyer
     creditAmount: v.number(),
     unitPrice: v.number(),
     totalAmount: v.number(),
-    platformFee: v.number(), // platform fee
-    netAmount: v.number(), // Amount after platform fee
-    // paymentMethod: v.union(
-    //     v.literal("stripe"),
-    //     v.literal("paypal"),
-    //     v.literal("bank_transfer"),
-    //     v.literal("crypto"),
-    // ),
+    // platformFee: v.number(), // consider having a platform fee in the future
     paymentStatus: v.union(
       v.literal('pending'),
       v.literal('processing'),
@@ -140,11 +134,9 @@ export default defineSchema({
     stripePaymentIntentId: v.optional(v.string()),
     stripeSessionId: v.optional(v.string()),
     certificateUrl: v.optional(v.string()),
-    impactDescription: v.string(),
     transactionReference: v.string(), // Unique transaction reference
   })
     .index('by_buyer', ['buyerId'])
-    .index('by_project', ['projectId'])
     .index('by_payment_status', ['paymentStatus'])
     .index('by_reference', ['transactionReference']),
 
@@ -435,7 +427,7 @@ export default defineSchema({
     totalPurchased: v.number(),
     totalAllocated: v.number(),
     totalSpent: v.number(),
-    lifetimeImpact: v.number(),
+    lifetimeImpact: v.number(), // Total CO2 offset by user's purchases
     lastTransactionAt: v.optional(v.float64()),
   }).index('by_user', ['userId']),
 
