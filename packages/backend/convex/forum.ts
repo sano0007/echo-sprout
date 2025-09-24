@@ -144,6 +144,66 @@ export const listUserTopics = query({
   },
 });
 
+export const listAllTopics = query({
+  args: {},
+  handler: async (ctx) => {
+    const items = await ctx.db.query('forumTopics').collect();
+    const authors = new Map();
+    const result = [] as any[];
+    for (const t of items) {
+      let name = authors.get(t.authorId as any);
+      if (!name) {
+        const a = await ctx.db.get(t.authorId);
+        name = a ? `${a.firstName} ${a.lastName}` : 'Unknown';
+        authors.set(t.authorId as any, name);
+      }
+      result.push({
+        id: t._id,
+        title: t.title,
+        content: t.content,
+        category: t.category,
+        tags: t.tags,
+        lastReplyAt: t.lastReplyAt,
+        replies: t.replyCount,
+        views: t.viewCount,
+        author: name,
+      });
+    }
+    return result;
+  },
+});
+
+export const getTopContributors = query({
+  args: {},
+  handler: async (ctx) => {
+    const items = await ctx.db.query('forumTopics').collect();
+    const map = new Map<string, { name: string; posts: number; reputation: number }>();
+    for (const t of items) {
+      let entry = map.get(t.authorId as any);
+      if (!entry) {
+        const a = await ctx.db.get(t.authorId);
+        const name = a ? `${a.firstName} ${a.lastName}` : 'Unknown';
+        entry = { name, posts: 0, reputation: 0 };
+        map.set(t.authorId as any, entry);
+      }
+      entry.posts += 1;
+      entry.reputation += 10; // naive reputation
+    }
+    return Array.from(map.values())
+      .sort((a, b) => b.posts - a.posts)
+      .slice(0, 5);
+  },
+});
+
+export const getActiveUsersCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const items = await ctx.db.query('forumTopics').collect();
+    const set = new Set(items.map((t) => String(t.authorId)));
+    return set.size;
+  },
+});
+
 export const getTopicById = query({
   args: { id: v.id('forumTopics') },
   handler: async (ctx, { id }) => {

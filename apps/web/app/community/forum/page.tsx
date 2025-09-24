@@ -152,21 +152,21 @@ export default function CommunityForum() {
 
   const [posts, setPosts] = useState<Post[]>(initialPosts);
 
-  // Convex: create topic mutation and my topics query
+  // Convex: create/update/delete topic and list all topics (public)
   const createTopic = useMutation((api as any).forum.createTopic);
   const updateTopicMutation = useMutation((api as any).forum.updateTopic);
   const deleteTopicMutation = useMutation((api as any).forum.deleteTopic);
-  const myTopics = useQuery((api as any).forum.listUserTopics, {});
+  const allTopicsQuery = useQuery((api as any).forum.listAllTopics, {});
   const activeUsersCount = useQuery((api as any).forum.getActiveUsersCount, {});
 
   // No REST or localStorage: rely on Convex `myTopics` + local optimistic state
 
   const backendPosts: Post[] = useMemo(() => {
-    if (!myTopics) return [];
-    return myTopics.map((t: any) => ({
+    if (!allTopicsQuery) return [];
+    return allTopicsQuery.map((t: any) => ({
       id: t.id,
       title: t.title,
-      author: 'You',
+      author: t.author || 'Unknown',
       category: t.category,
       replies: t.replies ?? 0,
       views: t.views ?? 0,
@@ -176,9 +176,8 @@ export default function CommunityForum() {
       isPinned: false,
       tags: t.tags ?? [],
       content: t.content,
-      isMine: true,
     }));
-  }, [myTopics]);
+  }, [allTopicsQuery]);
 
   const allPosts = useMemo(() => {
     const byId = new Map<string, Post>();
@@ -532,11 +531,15 @@ export default function CommunityForum() {
                         )}
                       </div>
 
-                      <Link href={`/community/topic/${post.id}`}>
-                        <h3 className="text-lg font-medium mb-2 hover:text-blue-600 cursor-pointer">
-                          {post.title}
-                        </h3>
-                      </Link>
+                      {typeof post.id === 'string' ? (
+                        <Link href={`/community/topic/${post.id}`}>
+                          <h3 className="text-lg font-medium mb-2 hover:text-blue-600 cursor-pointer">
+                            {post.title}
+                          </h3>
+                        </Link>
+                      ) : (
+                        <h3 className="text-lg font-medium mb-2">{post.title}</h3>
+                      )}
 
                       <div className="flex items-center gap-2 mb-3">
                         {post.tags.map((tag) => (
