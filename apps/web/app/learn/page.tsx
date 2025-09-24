@@ -433,8 +433,13 @@ export default function LearnHub() {
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
-                        <h3 className="text-xl font-semibold mb-2 hover:text-blue-600 cursor-pointer">
-                          {post.title}
+                        <h3 className="text-xl font-semibold mb-2">
+                          <Link
+                            href={`/learn/blog/${String(post.id)}`}
+                            className="hover:text-blue-600 cursor-pointer"
+                          >
+                            {post.title}
+                          </Link>
                         </h3>
                         <div className="flex items-center text-sm text-gray-500 mb-2">
                           <span>By {post.authorName ?? 'Unknown'}</span>
