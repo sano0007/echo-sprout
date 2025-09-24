@@ -218,6 +218,41 @@ export const incrementViews = mutation({
   },
 });
 
+export const getTopContributors = query({
+  args: {},
+  handler: async (ctx) => {
+    const topics = await ctx.db.query('forumTopics').collect();
+    const counts = new Map<string, number>();
+    for (const t of topics) {
+      const key = t.authorId.id as unknown as string; // stable string id
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+
+    // Fetch user records and build list
+    const entries = Array.from(counts.entries());
+    // Sort by post count desc
+    entries.sort((a, b) => (b[1] - a[1]));
+    const top4 = entries.slice(0, 4);
+
+    const results: { name: string; posts: number }[] = [];
+    for (const [authorKey, postCount] of top4) {
+      // authorKey is the string form of the Id; reconstruct Id type
+      // Convex allows using the original id object, but we only have the string here.
+      // We can find by scanning since we have topics collected.
+      const anyTopic = topics.find((t) => (t.authorId.id as unknown as string) === authorKey);
+      if (!anyTopic) {
+        results.push({ name: 'Unknown', posts: postCount });
+        continue;
+      }
+      const user = await ctx.db.get(anyTopic.authorId);
+      const name = user ? `${user.firstName} ${user.lastName}` : 'Unknown';
+      results.push({ name, posts: postCount });
+    }
+
+    return results;
+  },
+});
+
 export const createReply = mutation({
   args: {
     topicId: v.id('forumTopics'),

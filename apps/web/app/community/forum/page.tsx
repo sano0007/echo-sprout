@@ -41,7 +41,7 @@ function RelativeTime({ timestamp, fallback }: { timestamp?: number; fallback?: 
 }
 
 export default function CommunityForum() {
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategory, setActiveCategory] = useState('general');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -74,79 +74,74 @@ export default function CommunityForum() {
 
   const nowTs = Date.now();
   const initialPosts: Post[] = [
-    {
-      id: 1,
-      title: 'Best practices for reforestation project documentation?',
-      author: 'Maria Garcia',
-      category: 'project-dev',
-      replies: 12,
-      views: 234,
-      lastActivity: '2 hours ago',
-      lastActivityAt: nowTs - 2 * 60 * 60 * 1000,
-      isAnswered: false,
-      isPinned: false,
-      tags: ['reforestation', 'documentation', 'best-practices'],
-    },
-    {
-      id: 2,
-      title: '[ANNOUNCEMENT] New verification standards update',
-      author: 'Admin Team',
-      category: 'announcements',
-      replies: 8,
-      views: 456,
-      lastActivity: '4 hours ago',
-      lastActivityAt: nowTs - 4 * 60 * 60 * 1000,
-      isAnswered: false,
-      isPinned: true,
-      tags: ['announcement', 'verification', 'standards'],
-    },
-    {
-      id: 3,
-      title: 'How long does the verification process typically take?',
-      author: 'John Smith',
-      category: 'verification',
-      replies: 15,
-      views: 189,
-      lastActivity: '6 hours ago',
-      lastActivityAt: nowTs - 6 * 60 * 60 * 1000,
-      isAnswered: true,
-      isPinned: false,
-      tags: ['verification', 'timeline', 'question'],
-    },
-    {
-      id: 4,
-      title: 'Solar project credit calculation methodology',
-      author: 'Sarah Chen',
-      category: 'project-dev',
-      replies: 7,
-      views: 123,
-      lastActivity: '1 day ago',
-      lastActivityAt: nowTs - 24 * 60 * 60 * 1000,
-      isAnswered: false,
-      isPinned: false,
-      tags: ['solar', 'calculation', 'methodology'],
-    },
-    {
-      id: 5,
-      title: 'Marketplace pricing trends - Q1 2024',
-      author: 'Market Analyst',
-      category: 'marketplace',
-      replies: 23,
-      views: 567,
-      lastActivity: '1 day ago',
-      lastActivityAt: nowTs - 24 * 60 * 60 * 1000,
-      isAnswered: false,
-      isPinned: false,
-      tags: ['pricing', 'trends', 'analysis'],
-    },
+    // {
+    //   id: 1,
+    //   title: 'Best practices for reforestation project documentation?',
+    //   author: 'Maria Garcia',
+    //   category: 'project-dev',
+    //   replies: 12,
+    //   views: 234,
+    //   lastActivity: '2 hours ago',
+    //   lastActivityAt: nowTs - 2 * 60 * 60 * 1000,
+    //   isAnswered: false,
+    //   isPinned: false,
+    //   tags: ['reforestation', 'documentation', 'best-practices'],
+    // },
+    // {
+    //   id: 2,
+    //   title: '[ANNOUNCEMENT] New verification standards update',
+    //   author: 'Admin Team',
+    //   category: 'announcements',
+    //   replies: 8,
+    //   views: 456,
+    //   lastActivity: '4 hours ago',
+    //   lastActivityAt: nowTs - 4 * 60 * 60 * 1000,
+    //   isAnswered: false,
+    //   isPinned: true,
+    //   tags: ['announcement', 'verification', 'standards'],
+    // },
+    // {
+    //   id: 3,
+    //   title: 'How long does the verification process typically take?',
+    //   author: 'John Smith',
+    //   category: 'verification',
+    //   replies: 15,
+    //   views: 189,
+    //   lastActivity: '6 hours ago',
+    //   lastActivityAt: nowTs - 6 * 60 * 60 * 1000,
+    //   isAnswered: true,
+    //   isPinned: false,
+    //   tags: ['verification', 'timeline', 'question'],
+    // },
+    // {
+    //   id: 4,
+    //   title: 'Solar project credit calculation methodology',
+    //   author: 'Sarah Chen',
+    //   category: 'project-dev',
+    //   replies: 7,
+    //   views: 123,
+    //   lastActivity: '1 day ago',
+    //   lastActivityAt: nowTs - 24 * 60 * 60 * 1000,
+    //   isAnswered: false,
+    //   isPinned: false,
+    //   tags: ['solar', 'calculation', 'methodology'],
+    // },
+    // {
+    //   id: 5,
+    //   title: 'Marketplace pricing trends - Q1 2024',
+    //   author: 'Market Analyst',
+    //   category: 'marketplace',
+    //   replies: 23,
+    //   views: 567,
+    //   lastActivity: '1 day ago',
+    //   lastActivityAt: nowTs - 24 * 60 * 60 * 1000,
+    //   isAnswered: false,
+    //   isPinned: false,
+    //   tags: ['pricing', 'trends', 'analysis'],
+    // },
   ];
 
-  const topContributors = [
-    { name: 'Dr. Elena Rodriguez', posts: 45, reputation: 892 },
-    { name: 'Michael Johnson', posts: 38, reputation: 743 },
-    { name: 'Sarah Chen', posts: 32, reputation: 654 },
-    { name: 'David Kumar', posts: 29, reputation: 587 },
-  ];
+  const topContributors = useQuery((api as any).forum.getTopContributors, {}) || [];
 
   const [posts, setPosts] = useState<Post[]>(initialPosts);
 
@@ -186,6 +181,15 @@ export default function CommunityForum() {
     });
     return Array.from(byId.values());
   }, [backendPosts, posts]);
+
+  // Dynamic counts per category (and overall)
+  const countsByCategory = useMemo(() => {
+    const counts: Record<string, number> = { all: allPosts.length };
+    for (const p of allPosts) {
+      counts[p.category] = (counts[p.category] || 0) + 1;
+    }
+    return counts;
+  }, [allPosts]);
 
   const filteredPosts = allPosts.filter((post) => {
     const matchesCategory =
@@ -418,7 +422,7 @@ export default function CommunityForum() {
                 >
                   <span>{category.name}</span>
                   <span className="text-sm text-gray-500">
-                    {category.count}
+                    {countsByCategory[category.id] ?? 0}
                   </span>
                 </button>
               ))}
@@ -429,20 +433,10 @@ export default function CommunityForum() {
           <div className="bg-white p-4 rounded-lg shadow-md">
             <h3 className="font-semibold mb-4">Top Contributors</h3>
             <div className="space-y-3">
-              {topContributors.map((contributor, index) => (
+              {(topContributors || []).slice(0, 4).map((contributor: any, index: number) => (
                 <div key={index} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">{contributor.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {contributor.posts} posts
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-blue-600">
-                      {contributor.reputation}
-                    </p>
-                    <p className="text-xs text-gray-500">reputation</p>
-                  </div>
+                  <p className="font-medium text-sm">{contributor.name}</p>
+                  <p className="text-sm text-gray-500">{contributor.posts} posts</p>
                 </div>
               ))}
             </div>
