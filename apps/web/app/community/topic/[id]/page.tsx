@@ -5,7 +5,7 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import { useParams } from 'next/navigation';
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function TopicDetailPage() {
   const routeParams = useParams<{ id: string | string[] }>();
@@ -16,6 +16,7 @@ export default function TopicDetailPage() {
   const createReply = useMutation((api as any).forum.createReply);
   const upvoteReply = useMutation((api as any).forum.upvoteReply);
   const downvoteReply = useMutation((api as any).forum.downvoteReply);
+  const incrementViews = useMutation((api as any).forum.incrementViews);
   const [reply, setReply] = useState('');
   const [posting, setPosting] = useState(false);
   const [notice, setNotice] = useState<{
@@ -39,6 +40,24 @@ export default function TopicDetailPage() {
       setPosting(false);
     }
   };
+
+  // Increment view count when landing on a topic
+  useEffect(() => {
+    if (!idParam) return;
+    (async () => {
+      try {
+        const key = 'viewed_topics';
+        const raw = typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
+        const viewed: string[] = raw ? JSON.parse(raw) : [];
+        const sid = String(idParam);
+        if (viewed.includes(sid)) return; // already counted in this session
+        viewed.push(sid);
+        if (typeof window !== 'undefined') sessionStorage.setItem(key, JSON.stringify(viewed));
+        // @ts-ignore Convex validates id at runtime
+        await incrementViews({ id: idParam });
+      } catch {}
+    })();
+  }, [idParam]);
 
   if (data === undefined) {
     return (

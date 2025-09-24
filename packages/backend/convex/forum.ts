@@ -208,6 +208,16 @@ export const getTopicById = query({
   },
 });
 
+export const incrementViews = mutation({
+  args: { id: v.id('forumTopics') },
+  handler: async (ctx, { id }) => {
+    const topic = await ctx.db.get(id);
+    if (!topic) throw new Error('Topic not found');
+    await ctx.db.patch(id, { viewCount: (topic.viewCount || 0) + 1 });
+    return { ok: true };
+  },
+});
+
 export const createReply = mutation({
   args: {
     topicId: v.id('forumTopics'),

@@ -227,7 +227,7 @@ export default function MyTopicsPage() {
                             <div className="flex items-center gap-4">
                               <span>by {post.author}</span>
                               <span>💬 {post.replies ?? 0} replies</span>
-                              <span>👁️ {post.views ?? 0} views</span>
+                              <span>️ {post.views ?? 0} views</span>
                             </div>
                             <div className="flex items-center gap-3">
                               <span>{post.lastActivity ?? 'just now'}</span>

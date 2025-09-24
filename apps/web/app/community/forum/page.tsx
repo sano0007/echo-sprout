@@ -503,7 +503,7 @@ export default function CommunityForum() {
                         <div className="flex items-center gap-4">
                           <span>by {post.author}</span>
                           <span>💬 {post.replies} replies</span>
-                          <span>👁️ {post.views} views</span>
+                          <span>️ {post.views} views</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <span>{post.lastActivity}</span>
