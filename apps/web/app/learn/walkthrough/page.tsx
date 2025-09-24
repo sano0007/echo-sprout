@@ -58,7 +58,7 @@ export default function WalkthroughPage() {
           onClick={prev}
           className="absolute left-2 top-1/2 -translate-y-1/2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded shadow"
         >
-          Prev
+          {"<"}
         </button>
 
         <button
@@ -66,10 +66,9 @@ export default function WalkthroughPage() {
           onClick={next}
           className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded shadow"
         >
-          Next
+          {">"}
         </button>
       </div>
     </div>
   );
 }
-
