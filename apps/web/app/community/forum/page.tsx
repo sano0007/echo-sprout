@@ -494,16 +494,22 @@ export default function CommunityForum() {
                     ? 'All Topics'
                     : categories.find((c) => c.id === activeCategory)?.name}
                 </h2>
-                <select className="border rounded px-3 py-1 text-sm">
-                  <option>Most Replies</option>
-                  <option>Most Views</option>
-                  <option>Newest</option>
+                <select
+                  className="border rounded px-3 py-1 text-sm"
+                  value={sortBy}
+                  onChange={(e) =>
+                    setSortBy((e.target.value as 'replies' | 'views' | 'newest') || 'newest')
+                  }
+                >
+                  <option value="replies">Most Replies</option>
+                  <option value="views">Most Views</option>
+                  <option value="newest">Newest</option>
                 </select>
               </div>
             </div>
 
             <div className="divide-y">
-              {filteredPosts.map((post) => (
+              {sortedPosts.map((post) => (
                 <div key={String(post.id)} className="p-6 hover:bg-gray-50">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
