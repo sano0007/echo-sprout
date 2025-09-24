@@ -253,6 +253,22 @@ export const getTopContributors = query({
   },
 });
 
+export const getActiveUsersCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const topics = await ctx.db.query('forumTopics').collect();
+    const replies = await ctx.db.query('forumReplies').collect();
+    const unique = new Set<string>();
+    for (const t of topics) {
+      unique.add((t.authorId.id as unknown as string) || String(t.authorId));
+    }
+    for (const r of replies) {
+      unique.add((r.authorId.id as unknown as string) || String(r.authorId));
+    }
+    return unique.size;
+  },
+});
+
 export const createReply = mutation({
   args: {
     topicId: v.id('forumTopics'),

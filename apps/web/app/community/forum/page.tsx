@@ -23,6 +23,12 @@ type Post = {
   isMine?: boolean;
 };
 
+function formatShortNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
+  return String(n);
+}
+
 function RelativeTime({ timestamp, fallback }: { timestamp?: number; fallback?: string }) {
   const [now, setNow] = useState<number>(Date.now());
   useEffect(() => {
@@ -44,6 +50,7 @@ export default function CommunityForum() {
   const [activeCategory, setActiveCategory] = useState('general');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'replies' | 'views' | 'newest'>('newest');
 
   // Form state for New Topic
   const [title, setTitle] = useState('');
@@ -150,6 +157,7 @@ export default function CommunityForum() {
   const updateTopicMutation = useMutation((api as any).forum.updateTopic);
   const deleteTopicMutation = useMutation((api as any).forum.deleteTopic);
   const myTopics = useQuery((api as any).forum.listUserTopics, {});
+  const activeUsersCount = useQuery((api as any).forum.getActiveUsersCount, {});
 
   // No REST or localStorage: rely on Convex `myTopics` + local optimistic state
 
@@ -182,6 +190,10 @@ export default function CommunityForum() {
     return Array.from(byId.values());
   }, [backendPosts, posts]);
 
+  const totalReplies = useMemo(() => {
+    return allPosts.reduce((sum, p) => sum + (p.replies ?? 0), 0);
+  }, [allPosts]);
+
   // Dynamic counts per category (and overall)
   const countsByCategory = useMemo(() => {
     const counts: Record<string, number> = { all: allPosts.length };
@@ -202,6 +214,18 @@ export default function CommunityForum() {
       );
     return matchesCategory && matchesSearch;
   });
+
+  const sortedPosts = useMemo(() => {
+    const arr = [...filteredPosts];
+    if (sortBy === 'replies') {
+      arr.sort((a, b) => (b.replies ?? 0) - (a.replies ?? 0));
+    } else if (sortBy === 'views') {
+      arr.sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
+    } else {
+      arr.sort((a, b) => (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0));
+    }
+    return arr;
+  }, [filteredPosts, sortBy]);
 
   const resetForm = () => {
     setTitle('');
@@ -446,19 +470,19 @@ export default function CommunityForum() {
         {/* Main Content */}
         <div className="lg:col-span-3">
           {/* Forum Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg shadow-md text-center">
-              <p className="text-2xl font-bold text-blue-600">{allPosts.length}</p>
-              <p className="text-sm text-gray-600">Total Topics</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-md text-center">
-              <p className="text-2xl font-bold text-green-600">1.2k</p>
-              <p className="text-sm text-gray-600">Total Replies</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-md text-center">
-              <p className="text-2xl font-bold text-purple-600">89</p>
-              <p className="text-sm text-gray-600">Active Users</p>
-            </div>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-white p-4 rounded-lg shadow-md text-center">
+                <p className="text-2xl font-bold text-blue-600">{allPosts.length}</p>
+                <p className="text-sm text-gray-600">Total Topics</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-md text-center">
+                <p className="text-2xl font-bold text-green-600">{formatShortNumber(totalReplies)}</p>
+                <p className="text-sm text-gray-600">Total Replies</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-md text-center">
+                <p className="text-2xl font-bold text-purple-600">{activeUsersCount ?? 0}</p>
+                <p className="text-sm text-gray-600">Active Users</p>
+              </div>
           </div>
 
           {/* Forum Posts */}
@@ -471,7 +495,6 @@ export default function CommunityForum() {
                     : categories.find((c) => c.id === activeCategory)?.name}
                 </h2>
                 <select className="border rounded px-3 py-1 text-sm">
-                  <option>Latest Activity</option>
                   <option>Most Replies</option>
                   <option>Most Views</option>
                   <option>Newest</option>
