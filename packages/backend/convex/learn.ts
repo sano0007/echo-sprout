@@ -37,6 +37,109 @@ export const listBlog = query({
   },
 });
 
+// ============ STEP-BY-STEP GUIDES ============
+export const listGuides = query({
+  args: {},
+  async handler(ctx) {
+    const items = await ctx.db
+      .query('educationalContent')
+      .withIndex('by_type', (q) => q.eq('contentType', 'article'))
+      .filter((q) => q.eq(q.field('category'), 'guide'))
+      .order('desc')
+      .collect();
+
+    const authorIds = items.map((i) => i.authorId);
+    const authors = await Promise.all(authorIds.map((id) => ctx.db.get(id)));
+    const byId = new Map(authors.filter(Boolean).map((u) => [u!._id, u!]));
+
+    return items.map((d) => {
+      const author = byId.get(d.authorId);
+      const fullName = author
+        ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim()
+        : 'Unknown';
+      const publishedAt = d.publishedAt ?? d._creationTime;
+      return {
+        id: d._id,
+        title: d.title,
+        content: d.content,
+        tags: d.tags,
+        readTime: (d.estimatedReadTime ?? 5) + ' min read',
+        authorName: fullName,
+        authorAvatarUrl: author?.profileImage ?? null,
+        date: new Date(publishedAt).toISOString(),
+      };
+    });
+  },
+});
+
+export const createGuide = mutation({
+  args: {
+    title: v.string(),
+    content: v.string(),
+    tags: v.array(v.string()),
+    readTime: v.optional(v.string()),
+    publish: v.optional(v.boolean()),
+    photoUrls: v.optional(v.array(v.string())),
+  },
+  async handler(ctx, { title, content, tags, readTime, publish, photoUrls }) {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) throw new Error('Not authenticated');
+
+    const now = Date.now();
+    const est = readTime
+      ? parseInt(readTime, 10) || Math.ceil(content.split(/\s+/).length / 200)
+      : Math.ceil(content.split(/\s+/).length / 200) || 5;
+
+    const isPublished = publish ?? true;
+
+    const id = await ctx.db.insert('educationalContent', {
+      title,
+      content,
+      contentType: 'article',
+      category: 'guide',
+      tags,
+      images: photoUrls && photoUrls.length ? photoUrls : undefined,
+      authorId: user._id,
+      status: isPublished ? 'published' : 'draft',
+      isPublished,
+      publishedAt: isPublished ? now : undefined,
+      lastUpdatedAt: now,
+      estimatedReadTime: est,
+      viewCount: 0,
+      likeCount: 0,
+      shareCount: 0,
+      difficultyLevel: 'beginner',
+    } as any);
+
+    return id;
+  },
+});
+
+export const getGuide = query({
+  args: { id: v.string() },
+  async handler(ctx, { id }) {
+    const normalized = await ctx.db.normalizeId('educationalContent', id);
+    if (!normalized) return null;
+    const d = await ctx.db.get(normalized);
+    if (!d) return null;
+
+    const author = await ctx.db.get(d.authorId);
+    const fullName = author
+      ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim() || author.email
+      : 'Unknown';
+
+    return {
+      id: d._id,
+      title: d.title,
+      content: d.content,
+      tags: d.tags,
+      images: (d as any).images ?? [],
+      authorName: fullName,
+      date: new Date((d.publishedAt ?? d._creationTime)).toISOString(),
+    };
+  },
+});
+
 export const createBlog = mutation({
   args: {
     title: v.string(),

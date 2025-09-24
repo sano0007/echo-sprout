@@ -94,6 +94,7 @@ export default function LearnHub() {
   ];
 
   const blogPosts = useQuery(api.learn.listBlog);
+  const guidesData = useQuery(api.learn.listGuides);
   const learningPaths = useQuery(api.learn.listLearningPaths);
   const createBlog = useMutation(api.learn.createBlog);
   const { isSignedIn } = useUser();
@@ -334,8 +335,18 @@ export default function LearnHub() {
                 </p>
               </div>
 
+              {/* Create Guide CTA */}
+              <div className="flex justify-end">
+                <Link
+                  href="/learn/guides/create"
+                  className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Create Guide
+                </Link>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {guides.map((guide) => (
+                {(guidesData && guidesData.length ? guidesData : guides).map((guide: any) => (
                   <div
                     key={guide.id}
                     className="border rounded-lg p-6 hover:shadow-lg transition-shadow"
@@ -353,13 +364,20 @@ export default function LearnHub() {
                     <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
                       <span>📖 {guide.readTime}</span>
                       <span>
-                        Updated {new Date(guide.updated).toLocaleDateString()}
+                        {guide.updated ? (
+                          <>Updated {new Date(guide.updated).toLocaleDateString()}</>
+                        ) : (
+                          <>Published {new Date(guide.date).toLocaleDateString()}</>
+                        )}
                       </span>
                     </div>
 
-                    <button className="w-full bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200">
+                    <Link
+                      href={`/learn/guides/${String(guide.id)}`}
+                      className="block text-center w-full bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200"
+                    >
                       Read Guide
-                    </button>
+                    </Link>
                   </div>
                 ))}
               </div>

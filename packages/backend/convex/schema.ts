@@ -321,6 +321,7 @@ export default defineSchema({
     ),
     category: v.string(),
     tags: v.array(v.string()),
+    images: v.optional(v.array(v.string())),
     authorId: v.id('users'),
     status: v.union(
       v.literal('draft'),
