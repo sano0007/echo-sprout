@@ -196,12 +196,30 @@ export default function LearnHub() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4">Educational Content Hub</h1>
-        <p className="text-lg text-gray-600">
-          Learn about carbon credits, project development, and sustainable
-          impact
-        </p>
+      <div className="mb-8">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="text-left">
+            <h1 className="text-4xl font-bold mb-2">Educational Content Hub</h1>
+            <p className="text-lg text-gray-600">
+              Learn about carbon credits, project development, and sustainable impact
+            </p>
+          </div>
+          {isSignedIn ? (
+            <Link
+              href="/learn/analytics"
+              className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+            >
+              Generate Report
+            </Link>
+          ) : (
+            <Link
+              href="/sign-in?redirect_url=%2Flearn%2Fanalytics"
+              className="inline-flex items-center bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+            >
+              Sign in to Generate Report
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
