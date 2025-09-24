@@ -377,9 +377,12 @@ export default function LearnHub() {
                   conception to final submission, including templates and
                   checklists.
                 </p>
-                <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                <Link
+                  href="/learn/walkthrough"
+                  className="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                >
                   Start Walkthrough
-                </button>
+                </Link>
               </div>
             </div>
           )}
