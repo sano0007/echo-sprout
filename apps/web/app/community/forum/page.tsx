@@ -15,12 +15,30 @@ type Post = {
   replies: number;
   views: number;
   lastActivity: string;
+  lastActivityAt?: number;
   isAnswered: boolean;
   isPinned: boolean;
   tags: string[];
   content?: string;
   isMine?: boolean;
 };
+
+function RelativeTime({ timestamp, fallback }: { timestamp?: number; fallback?: string }) {
+  const [now, setNow] = useState<number>(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  if (!timestamp) return <span>{fallback ?? 'just now'}</span>;
+  const diff = Math.max(0, now - timestamp);
+  if (diff < 60_000) return <span>just now</span>;
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return <span>{mins} min{mins === 1 ? '' : 's'} ago</span>;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return <span>{hours} hour{hours === 1 ? '' : 's'} ago</span>;
+  const days = Math.floor(hours / 24);
+  return <span>{days} day{days === 1 ? '' : 's'} ago</span>;
+}
 
 export default function CommunityForum() {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -54,6 +72,7 @@ export default function CommunityForum() {
     { id: 'announcements', name: 'Announcements', count: 7 },
   ];
 
+  const nowTs = Date.now();
   const initialPosts: Post[] = [
     {
       id: 1,
@@ -63,6 +82,7 @@ export default function CommunityForum() {
       replies: 12,
       views: 234,
       lastActivity: '2 hours ago',
+      lastActivityAt: nowTs - 2 * 60 * 60 * 1000,
       isAnswered: false,
       isPinned: false,
       tags: ['reforestation', 'documentation', 'best-practices'],
@@ -75,6 +95,7 @@ export default function CommunityForum() {
       replies: 8,
       views: 456,
       lastActivity: '4 hours ago',
+      lastActivityAt: nowTs - 4 * 60 * 60 * 1000,
       isAnswered: false,
       isPinned: true,
       tags: ['announcement', 'verification', 'standards'],
@@ -87,6 +108,7 @@ export default function CommunityForum() {
       replies: 15,
       views: 189,
       lastActivity: '6 hours ago',
+      lastActivityAt: nowTs - 6 * 60 * 60 * 1000,
       isAnswered: true,
       isPinned: false,
       tags: ['verification', 'timeline', 'question'],
@@ -99,6 +121,7 @@ export default function CommunityForum() {
       replies: 7,
       views: 123,
       lastActivity: '1 day ago',
+      lastActivityAt: nowTs - 24 * 60 * 60 * 1000,
       isAnswered: false,
       isPinned: false,
       tags: ['solar', 'calculation', 'methodology'],
@@ -111,6 +134,7 @@ export default function CommunityForum() {
       replies: 23,
       views: 567,
       lastActivity: '1 day ago',
+      lastActivityAt: nowTs - 24 * 60 * 60 * 1000,
       isAnswered: false,
       isPinned: false,
       tags: ['pricing', 'trends', 'analysis'],
@@ -144,6 +168,7 @@ export default function CommunityForum() {
       replies: t.replies ?? 0,
       views: t.views ?? 0,
       lastActivity: 'just now',
+      lastActivityAt: t.lastReplyAt ?? Date.now(),
       isAnswered: false,
       isPinned: false,
       tags: t.tags ?? [],
@@ -239,6 +264,7 @@ export default function CommunityForum() {
                     .filter(Boolean),
                   content: content.trim(),
                   lastActivity: 'just now',
+                  lastActivityAt: Date.now(),
                 }
               : p
           )
@@ -272,6 +298,7 @@ export default function CommunityForum() {
           replies: 0,
           views: 0,
           lastActivity: 'just now',
+          lastActivityAt: Date.now(),
           isAnswered: false,
           isPinned: false,
           tags: tags
@@ -427,7 +454,7 @@ export default function CommunityForum() {
           {/* Forum Stats */}
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-white p-4 rounded-lg shadow-md text-center">
-              <p className="text-2xl font-bold text-blue-600">156</p>
+              <p className="text-2xl font-bold text-blue-600">{allPosts.length}</p>
               <p className="text-sm text-gray-600">Total Topics</p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-md text-center">
@@ -506,7 +533,7 @@ export default function CommunityForum() {
                           <span>️ {post.views} views</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span>{post.lastActivity}</span>
+                  <RelativeTime timestamp={post.lastActivityAt} fallback={post.lastActivity} />
                         </div>
                       </div>
                     </div>

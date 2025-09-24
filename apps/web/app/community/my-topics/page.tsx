@@ -14,11 +14,29 @@ type Post = {
   replies: number;
   views: number;
   lastActivity: string;
+  lastActivityAt?: number;
   isAnswered: boolean;
   isPinned: boolean;
   tags: string[];
   content?: string;
 };
+
+function RelativeTime({ timestamp, fallback }: { timestamp?: number; fallback?: string }) {
+  const [now, setNow] = useState<number>(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  if (!timestamp) return <span>{fallback ?? 'just now'}</span>;
+  const diff = Math.max(0, now - timestamp);
+  if (diff < 60_000) return <span>just now</span>;
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return <span>{mins} min{mins === 1 ? '' : 's'} ago</span>;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return <span>{hours} hour{hours === 1 ? '' : 's'} ago</span>;
+  const days = Math.floor(hours / 24);
+  return <span>{days} day{days === 1 ? '' : 's'} ago</span>;
+}
 
 export default function MyTopicsPage() {
   const categories = [{ id: 'all', name: 'All Topics', count: 156 }];
@@ -49,6 +67,7 @@ export default function MyTopicsPage() {
       replies: t.replies ?? 0,
       views: t.views ?? 0,
       lastActivity: 'just now',
+      lastActivityAt: t.lastReplyAt ?? Date.now(),
       isAnswered: false,
       isPinned: false,
       tags: t.tags ?? [],
@@ -230,7 +249,7 @@ export default function MyTopicsPage() {
                               <span>️ {post.views ?? 0} views</span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span>{post.lastActivity ?? 'just now'}</span>
+                              <RelativeTime timestamp={post.lastActivityAt} fallback={post.lastActivity} />
                               <button
                                 onClick={() => openEdit(post)}
                                 className="text-blue-600 hover:underline"
