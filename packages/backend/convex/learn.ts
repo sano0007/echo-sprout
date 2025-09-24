@@ -124,6 +124,7 @@ export const getGuide = query({
     if (!d) return null;
 
     const author = await ctx.db.get(d.authorId);
+    const current = await UserService.getCurrentUser(ctx);
     const fullName = author
       ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim() || author.email
       : 'Unknown';
@@ -136,7 +137,67 @@ export const getGuide = query({
       images: (d as any).images ?? [],
       authorName: fullName,
       date: new Date((d.publishedAt ?? d._creationTime)).toISOString(),
+      isOwner: !!(current && current._id === d.authorId) || false,
     };
+  },
+});
+
+export const updateGuide = mutation({
+  args: {
+    id: v.string(),
+    title: v.optional(v.string()),
+    content: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    readTime: v.optional(v.string()),
+    publish: v.optional(v.boolean()),
+    photoUrls: v.optional(v.array(v.string())),
+  },
+  async handler(ctx, args) {
+    const normalized = await ctx.db.normalizeId('educationalContent', args.id);
+    if (!normalized) throw new Error('Invalid guide id');
+    const doc = await ctx.db.get(normalized);
+    if (!doc) throw new Error('Guide not found');
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) throw new Error('Not authenticated');
+    const isOwner = user._id === doc.authorId;
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAdmin) throw new Error('Unauthorized');
+
+    const updates: any = { lastUpdatedAt: Date.now() };
+    if (typeof args.title === 'string') updates.title = args.title;
+    if (typeof args.content === 'string') updates.content = args.content;
+    if (Array.isArray(args.tags)) updates.tags = args.tags;
+    if (typeof args.readTime === 'string') {
+      const est = parseInt(args.readTime, 10) || (doc.estimatedReadTime ?? 5);
+      updates.estimatedReadTime = est;
+    }
+    if (typeof args.publish === 'boolean') {
+      updates.isPublished = args.publish;
+      updates.status = args.publish ? 'published' : 'draft';
+      updates.publishedAt = args.publish ? Date.now() : undefined;
+    }
+    if (Array.isArray(args.photoUrls)) {
+      updates.images = args.photoUrls;
+    }
+
+    await ctx.db.patch(normalized, updates);
+  },
+});
+
+export const deleteGuide = mutation({
+  args: { id: v.string() },
+  async handler(ctx, { id }) {
+    const normalized = await ctx.db.normalizeId('educationalContent', id);
+    if (!normalized) throw new Error('Invalid guide id');
+    const doc = await ctx.db.get(normalized);
+    if (!doc) throw new Error('Guide not found');
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) throw new Error('Not authenticated');
+    const isOwner = user._id === doc.authorId;
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAdmin) throw new Error('Unauthorized');
+
+    await ctx.db.delete(normalized);
   },
 });
 
