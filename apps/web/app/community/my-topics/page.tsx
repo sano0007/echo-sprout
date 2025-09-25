@@ -39,8 +39,6 @@ function RelativeTime({ timestamp, fallback }: { timestamp?: number; fallback?: 
 }
 
 export default function MyTopicsPage() {
-  const categories = [{ id: 'all', name: 'All Topics', count: 156 }];
-
   const [myTopics, setMyTopics] = useState<Post[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -136,6 +134,9 @@ export default function MyTopicsPage() {
       setTimeout(() => setNotice(null), 3000);
     }
   };
+
+  // Sidebar categories with dynamic count of user's topics
+  const categories = [{ id: 'all', name: 'All Topics', count: myTopics.length }];
 
   return (
     <div className="max-w-7xl mx-auto p-6">
