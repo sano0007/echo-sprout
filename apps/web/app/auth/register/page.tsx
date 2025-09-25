@@ -156,8 +156,7 @@ export default function RegisterPage() {
     if (!validateStep(currentStep)) return;
 
     try {
-      // Here you would integrate with Clerk and Convex
-      // For now, just show success
+      await handleUpgradeToCreator();
       alert(
         'Registration completed! Please check your email for verification.'
       );
@@ -609,38 +608,38 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Upgrade to Project Creator Section */}
-                <div className="border-t pt-6">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                    <div className="flex items-start">
-                      <span className="text-3xl mr-4">🌱</span>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-green-900 mb-2">
-                          Want to Create Carbon Credit Projects?
-                        </h3>
-                        <p className="text-green-700 mb-4">
-                          Upgrade to a Project Creator account to develop and
-                          manage your own carbon credit projects. You can
-                          upgrade anytime after registration.
-                        </p>
-                        <button
-                          onClick={handleUpgradeToCreator}
-                          disabled={upgradeLoading}
-                          className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {upgradeLoading
-                            ? 'Upgrading...'
-                            : 'Upgrade to Project Creator'}
-                        </button>
-                        {showUpgradeSuccess && (
-                          <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded text-green-800 text-sm">
-                            ✅ Upgrade request submitted! You'll receive an
-                            email with next steps.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/*<div className="border-t pt-6">*/}
+                {/*  <div className="bg-green-50 border border-green-200 rounded-lg p-6">*/}
+                {/*    <div className="flex items-start">*/}
+                {/*      <span className="text-3xl mr-4">🌱</span>*/}
+                {/*      <div className="flex-1">*/}
+                {/*        <h3 className="text-lg font-semibold text-green-900 mb-2">*/}
+                {/*          Want to Create Carbon Credit Projects?*/}
+                {/*        </h3>*/}
+                {/*        <p className="text-green-700 mb-4">*/}
+                {/*          Upgrade to a Project Creator account to develop and*/}
+                {/*          manage your own carbon credit projects. You can*/}
+                {/*          upgrade anytime after registration.*/}
+                {/*        </p>*/}
+                {/*        <button*/}
+                {/*          onClick={handleUpgradeToCreator}*/}
+                {/*          disabled={upgradeLoading}*/}
+                {/*          className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"*/}
+                {/*        >*/}
+                {/*          {upgradeLoading*/}
+                {/*            ? 'Upgrading...'*/}
+                {/*            : 'Upgrade to Project Creator'}*/}
+                {/*        </button>*/}
+                {/*        {showUpgradeSuccess && (*/}
+                {/*          <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded text-green-800 text-sm">*/}
+                {/*            ✅ Upgrade request submitted! You'll receive an*/}
+                {/*            email with next steps.*/}
+                {/*          </div>*/}
+                {/*        )}*/}
+                {/*      </div>*/}
+                {/*    </div>*/}
+                {/*  </div>*/}
+                {/*</div>*/}
 
                 <div className="border-t pt-6">
                   <label className="flex items-start">
