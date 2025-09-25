@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.28.1",
     "@echo-sprout/types": "*",
+    "@packages/backend": "^1.0.0",
     "@repo/ui": "*",
     "convex": "^1.17.4",
     "convex-helpers": "^0.1.101",

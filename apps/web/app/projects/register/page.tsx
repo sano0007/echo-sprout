@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useAction } from 'convex/react';
-import { api } from '../../../../../packages/backend/convex/_generated/api';
-import { Id } from '../../../../../packages/backend/convex/_generated/dataModel';
+import { api } from '@packages/backend/convex/_generated/api';
 import FileUpload from '../../components/FileUpload';
 
 interface ProjectFormData {

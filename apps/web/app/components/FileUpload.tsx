@@ -1,7 +1,9 @@
+'use client';
+
 import React, { useState, useCallback, useRef } from 'react';
 import { useMutation, useAction } from 'convex/react';
-import { api } from '../../../../packages/backend/convex/_generated/api';
-import { Id } from '../../../../packages/backend/convex/_generated/dataModel';
+import { api } from '@packages/backend/convex/_generated/api';
+import { Id } from '@packages/backend/convex/_generated/dataModel';
 import { X, Upload, FileText, Image, File } from 'lucide-react';
 
 interface UploadedFile {
@@ -64,18 +66,21 @@ export default function FileUpload({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const validateFile = (file: File): string | null => {
-    if (!acceptedTypes.includes(file.type)) {
-      return `File type ${file.type} is not supported. Please upload PDF, JPG, PNG, or DOC files.`;
-    }
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      return `File size exceeds ${maxSizeMB}MB limit.`;
-    }
-    if (uploadedFiles.length >= maxFiles) {
-      return `Maximum ${maxFiles} files allowed.`;
-    }
-    return null;
-  };
+  const validateFile = useCallback(
+    (file: File): string | null => {
+      if (!acceptedTypes.includes(file.type)) {
+        return `File type ${file.type} is not supported. Please upload PDF, JPG, PNG, or DOC files.`;
+      }
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        return `File size exceeds ${maxSizeMB}MB limit.`;
+      }
+      if (uploadedFiles.length >= maxFiles) {
+        return `Maximum ${maxFiles} files allowed.`;
+      }
+      return null;
+    },
+    [acceptedTypes, maxSizeMB, maxFiles, uploadedFiles.length]
+  );
 
   const handleFiles = useCallback(
     (files: FileList) => {
@@ -109,14 +114,7 @@ export default function FileUpload({
         onFilesReady(validFiles);
       }
     },
-    [
-      uploadedFiles.length,
-      maxFiles,
-      maxSizeMB,
-      acceptedTypes,
-      uploadMode,
-      onFilesReady,
-    ]
+    [validateFile, uploadMode, onFilesReady]
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {

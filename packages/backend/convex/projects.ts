@@ -203,6 +203,88 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+export const updateProject = mutation({
+  args: {
+    projectId: v.id('projects'),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    projectType: v.optional(
+      v.union(
+        v.literal('reforestation'),
+        v.literal('solar'),
+        v.literal('wind'),
+        v.literal('biogas'),
+        v.literal('waste_management'),
+        v.literal('mangrove_restoration')
+      )
+    ),
+    location: v.optional(
+      v.object({
+        lat: v.float64(),
+        long: v.float64(),
+        name: v.string(),
+      })
+    ),
+    areaSize: v.optional(v.number()),
+    estimatedCO2Reduction: v.optional(v.number()),
+    budget: v.optional(v.number()),
+    startDate: v.optional(v.string()),
+    expectedCompletionDate: v.optional(v.string()),
+    totalCarbonCredits: v.optional(v.number()),
+    pricePerCredit: v.optional(v.number()),
+    requiredDocuments: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Get the project
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // Verify the user owns the project
+    const user = await ctx.db
+      .query('users')
+      .filter((q) => q.eq(q.field('clerkId'), identity.subject))
+      .first();
+
+    if (!user || project.creatorId !== user._id) {
+      throw new Error('Unauthorized to edit this project');
+    }
+
+    // Build the update object with only provided fields
+    const updateData: any = {};
+    if (args.title !== undefined) updateData.title = args.title;
+    if (args.description !== undefined)
+      updateData.description = args.description;
+    if (args.projectType !== undefined)
+      updateData.projectType = args.projectType;
+    if (args.location !== undefined) updateData.location = args.location;
+    if (args.areaSize !== undefined) updateData.areaSize = args.areaSize;
+    if (args.estimatedCO2Reduction !== undefined)
+      updateData.estimatedCO2Reduction = args.estimatedCO2Reduction;
+    if (args.budget !== undefined) updateData.budget = args.budget;
+    if (args.startDate !== undefined) updateData.startDate = args.startDate;
+    if (args.expectedCompletionDate !== undefined)
+      updateData.expectedCompletionDate = args.expectedCompletionDate;
+    if (args.totalCarbonCredits !== undefined)
+      updateData.totalCarbonCredits = args.totalCarbonCredits;
+    if (args.pricePerCredit !== undefined)
+      updateData.pricePerCredit = args.pricePerCredit;
+    if (args.requiredDocuments !== undefined)
+      updateData.requiredDocuments = args.requiredDocuments;
+
+    // Update the project
+    await ctx.db.patch(args.projectId, updateData);
+
+    return args.projectId;
+  },
+});
+
 export const updateProjectStatus = mutation({
   args: {
     projectId: v.id('projects'),
