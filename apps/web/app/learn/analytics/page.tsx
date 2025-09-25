@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "@packages/backend/convex/_generated/api";
 
 export default function LearnAnalyticsPage() {
+  const learningPaths = useQuery(api.learn.listLearningPaths);
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -12,9 +15,12 @@ export default function LearnAnalyticsPage() {
         </Link>
       </div>
 
-      {/* KPI Cards (static placeholders) */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <KpiCard title="Total Content" value="—" />
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="text-sm text-gray-500">Total Content</div>
+          <div className="text-2xl font-semibold">{learningPaths ? learningPaths.length : "—"}</div>
+        </div>
         <KpiCard title="Published" value="—" />
         <KpiCard title="Views" value="—" />
         <KpiCard title="Engagement" value="—" />
