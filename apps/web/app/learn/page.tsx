@@ -101,9 +101,15 @@ export default function LearnHub() {
   const createBlog = useMutation(api.learn.createBlog);
   const { isSignedIn } = useUser();
   const [isPublishing, setIsPublishing] = useState(false);
-  const [toast, setToast] = useState<null | { message: string; type: 'success' | 'error' }>(null);
+  const [toast, setToast] = useState<null | {
+    message: string;
+    type: 'success' | 'error';
+  }>(null);
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' = 'success'
+  ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
@@ -203,7 +209,8 @@ export default function LearnHub() {
           <div className="text-left">
             <h1 className="text-4xl font-bold mb-2">Educational Content Hub</h1>
             <p className="text-lg text-gray-600">
-              Learn about carbon credits, project development, and sustainable impact
+              Learn about carbon credits, project development, and sustainable
+              impact
             </p>
           </div>
           {isSignedIn ? (
@@ -321,7 +328,8 @@ export default function LearnHub() {
                       </div>
                     )}
 
-                    {String(module.id).startsWith('0x') || String(module.id).length > 10 ? (
+                    {String(module.id).startsWith('0x') ||
+                    String(module.id).length > 10 ? (
                       <button
                         className="block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
                         onClick={() => {
@@ -339,7 +347,10 @@ export default function LearnHub() {
                             : 'Continue'}
                       </button>
                     ) : (
-                      <button className="w-full bg-blue-600 text-white py-2 px-4 rounded opacity-50 cursor-not-allowed" title="Create a Learning Path to view details">
+                      <button
+                        className="w-full bg-blue-600 text-white py-2 px-4 rounded opacity-50 cursor-not-allowed"
+                        title="Create a Learning Path to view details"
+                      >
                         Start Course
                       </button>
                     )}
@@ -372,40 +383,48 @@ export default function LearnHub() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {(guidesData && guidesData.length ? guidesData : guides).map((guide: any) => (
-                  <div
-                    key={guide.id}
-                    className="border rounded-lg p-6 hover:shadow-lg transition-shadow"
-                  >
-                    <div className="mb-4">
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                        {guide.category}
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg font-semibold mb-2">
-                      {guide.title}
-                    </h3>
-
-                    <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
-                      <span>📖 {guide.readTime}</span>
-                      <span>
-                        {guide.updated ? (
-                          <>Updated {new Date(guide.updated).toLocaleDateString()}</>
-                        ) : (
-                          <>Published {new Date(guide.date).toLocaleDateString()}</>
-                        )}
-                      </span>
-                    </div>
-
-                    <Link
-                      href={`/learn/guides/${String(guide.id)}`}
-                      className="block text-center w-full bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200"
+                {(guidesData && guidesData.length ? guidesData : guides).map(
+                  (guide: any) => (
+                    <div
+                      key={guide.id}
+                      className="border rounded-lg p-6 hover:shadow-lg transition-shadow"
                     >
-                      Read Guide
-                    </Link>
-                  </div>
-                ))}
+                      <div className="mb-4">
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                          {guide.category}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg font-semibold mb-2">
+                        {guide.title}
+                      </h3>
+
+                      <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
+                        <span>📖 {guide.readTime}</span>
+                        <span>
+                          {guide.updated ? (
+                            <>
+                              Updated{' '}
+                              {new Date(guide.updated).toLocaleDateString()}
+                            </>
+                          ) : (
+                            <>
+                              Published{' '}
+                              {new Date(guide.date).toLocaleDateString()}
+                            </>
+                          )}
+                        </span>
+                      </div>
+
+                      <Link
+                        href={`/learn/guides/${String(guide.id)}`}
+                        className="block text-center w-full bg-gray-100 text-gray-800 py-2 px-4 rounded hover:bg-gray-200"
+                      >
+                        Read Guide
+                      </Link>
+                    </div>
+                  )
+                )}
               </div>
 
               {/* Featured Guide */}

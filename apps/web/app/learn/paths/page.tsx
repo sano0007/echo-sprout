@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { useMutation } from 'convex/react';
@@ -27,7 +27,10 @@ export default function LearningPathsCreatePage() {
   const { isSignedIn } = useUser();
   const createLearningPath = useMutation(api.learn.createLearningPath);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<null | { type: 'success' | 'error'; text: string }>(null);
+  const [message, setMessage] = useState<null | {
+    type: 'success' | 'error';
+    text: string;
+  }>(null);
   const [form, setForm] = useState<FormState>({
     title: '',
     description: '',
@@ -47,15 +50,27 @@ export default function LearningPathsCreatePage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSignedIn) {
-      setMessage({ type: 'error', text: 'Please sign in to create a learning path.' });
+      setMessage({
+        type: 'error',
+        text: 'Please sign in to create a learning path.',
+      });
       return;
     }
     if (!form.title.trim() || !form.description.trim()) {
-      setMessage({ type: 'error', text: 'Title and description are required.' });
+      setMessage({
+        type: 'error',
+        text: 'Title and description are required.',
+      });
       return;
     }
-    if (!Number.isFinite(form.estimatedDuration) || form.estimatedDuration <= 0) {
-      setMessage({ type: 'error', text: 'Estimated duration must be a positive number.' });
+    if (
+      !Number.isFinite(form.estimatedDuration) ||
+      form.estimatedDuration <= 0
+    ) {
+      setMessage({
+        type: 'error',
+        text: 'Estimated duration must be a positive number.',
+      });
       return;
     }
 
@@ -91,7 +106,10 @@ export default function LearningPathsCreatePage() {
         publish: form.publish,
         lessons: lessonsPayload,
       });
-      setMessage({ type: 'success', text: 'Learning path created successfully.' });
+      setMessage({
+        type: 'success',
+        text: 'Learning path created successfully.',
+      });
       setForm({
         title: '',
         description: '',
@@ -129,7 +147,10 @@ export default function LearningPathsCreatePage() {
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-6 bg-white rounded-lg border p-6">
+      <form
+        onSubmit={onSubmit}
+        className="space-y-6 bg-white rounded-lg border p-6"
+      >
         <div>
           <label className="block text-sm font-medium mb-1">Title</label>
           <input
@@ -160,7 +181,9 @@ export default function LearningPathsCreatePage() {
             rows={3}
             value={form.objectives}
             onChange={(e) => update('objectives', e.target.value)}
-            placeholder={"One objective per line\nUnderstand credits\nExplore verification standards"}
+            placeholder={
+              'One objective per line\nUnderstand credits\nExplore verification standards'
+            }
           />
         </div>
 
@@ -179,13 +202,17 @@ export default function LearningPathsCreatePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Duration (min)</label>
+            <label className="block text-sm font-medium mb-1">
+              Duration (min)
+            </label>
             <input
               type="number"
               min={1}
               className="w-full border rounded px-3 py-2"
               value={form.estimatedDuration}
-              onChange={(e) => update('estimatedDuration', Number(e.target.value))}
+              onChange={(e) =>
+                update('estimatedDuration', Number(e.target.value))
+              }
             />
           </div>
 
@@ -214,7 +241,9 @@ export default function LearningPathsCreatePage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Cover Image URL (optional)</label>
+            <label className="block text-sm font-medium mb-1">
+              Cover Image URL (optional)
+            </label>
             <input
               className="w-full border rounded px-3 py-2"
               value={form.coverImageUrl}
@@ -246,7 +275,8 @@ export default function LearningPathsCreatePage() {
 
           {form.lessons.length === 0 && (
             <p className="text-sm text-gray-500">
-              No lessons added yet. Use "Add Lesson" to include placeholders (video and PDFs).
+              No lessons added yet. Use "Add Lesson" to include placeholders
+              (video and PDFs).
             </p>
           )}
 
@@ -271,7 +301,9 @@ export default function LearningPathsCreatePage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Title</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Title
+                    </label>
                     <input
                       className="w-full border rounded px-3 py-2"
                       value={lesson.title}
@@ -287,7 +319,9 @@ export default function LearningPathsCreatePage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Video URL (placeholder)</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Video URL (placeholder)
+                    </label>
                     <input
                       className="w-full border rounded px-3 py-2"
                       value={lesson.videoUrl}
@@ -305,7 +339,9 @@ export default function LearningPathsCreatePage() {
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Description
+                  </label>
                   <textarea
                     className="w-full border rounded px-3 py-2"
                     rows={3}
@@ -323,7 +359,9 @@ export default function LearningPathsCreatePage() {
                 </div>
 
                 <div className="mt-4">
-                  <label className="block text-sm font-medium mb-1">PDF URLs (comma separated, placeholders)</label>
+                  <label className="block text-sm font-medium mb-1">
+                    PDF URLs (comma separated, placeholders)
+                  </label>
                   <input
                     className="w-full border rounded px-3 py-2"
                     value={lesson.pdfs}
@@ -350,7 +388,9 @@ export default function LearningPathsCreatePage() {
             checked={form.publish}
             onChange={(e) => update('publish', e.target.checked)}
           />
-          <label htmlFor="publish" className="text-sm">Publish immediately</label>
+          <label htmlFor="publish" className="text-sm">
+            Publish immediately
+          </label>
         </div>
 
         <div className="flex justify-end gap-3">
@@ -358,7 +398,9 @@ export default function LearningPathsCreatePage() {
             type="submit"
             disabled={!isSignedIn || isSubmitting}
             className={`px-4 py-2 rounded text-white ${
-              !isSignedIn || isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              !isSignedIn || isSubmitting
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
             {isSubmitting ? 'Creating...' : 'Create Learning Path'}

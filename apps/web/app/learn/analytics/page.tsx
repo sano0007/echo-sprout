@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useQuery } from "convex/react";
-import { api } from "@packages/backend/convex/_generated/api";
+import Link from 'next/link';
+import { useQuery } from 'convex/react';
+import { api } from '@packages/backend/convex/_generated/api';
 
 export default function LearnAnalyticsPage() {
   const learningPaths = useQuery(api.learn.listLearningPaths);
@@ -19,7 +19,9 @@ export default function LearnAnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="text-sm text-gray-500">Total Content</div>
-          <div className="text-2xl font-semibold">{learningPaths ? learningPaths.length : "—"}</div>
+          <div className="text-2xl font-semibold">
+            {learningPaths ? learningPaths.length : '—'}
+          </div>
         </div>
         <KpiCard title="Published" value="—" />
         <KpiCard title="Views" value="—" />
@@ -70,7 +72,13 @@ function KpiCard({ title, value }: { title: string; value: string | number }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="space-y-3">
       <h2 className="text-xl font-semibold">{title}</h2>
@@ -94,7 +102,10 @@ function PlaceholderBars({ title }: { title: string }) {
       <div className="font-medium mb-2">{title}</div>
       <div className="space-y-2">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="w-full bg-gray-100 rounded h-3 animate-pulse" />
+          <div
+            key={i}
+            className="w-full bg-gray-100 rounded h-3 animate-pulse"
+          />
         ))}
       </div>
     </div>
@@ -116,4 +127,3 @@ function PlaceholderList({ title }: { title: string }) {
     </div>
   );
 }
-

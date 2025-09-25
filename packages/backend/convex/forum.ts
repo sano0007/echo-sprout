@@ -177,7 +177,10 @@ export const getTopContributors = query({
   args: {},
   handler: async (ctx) => {
     const items = await ctx.db.query('forumTopics').collect();
-    const map = new Map<string, { name: string; posts: number; reputation: number }>();
+    const map = new Map<
+      string,
+      { name: string; posts: number; reputation: number }
+    >();
     for (const t of items) {
       let entry = map.get(t.authorId as any);
       if (!entry) {
@@ -291,7 +294,7 @@ export const getTopContributors = query({
     // Fetch user records and build list
     const entries = Array.from(counts.entries());
     // Sort by post count desc
-    entries.sort((a, b) => (b[1] - a[1]));
+    entries.sort((a, b) => b[1] - a[1]);
     const top4 = entries.slice(0, 4);
 
     const results: { name: string; posts: number }[] = [];
@@ -299,7 +302,9 @@ export const getTopContributors = query({
       // authorKey is the string form of the Id; reconstruct Id type
       // Convex allows using the original id object, but we only have the string here.
       // We can find by scanning since we have topics collected.
-      const anyTopic = topics.find((t) => (t.authorId.id as unknown as string) === authorKey);
+      const anyTopic = topics.find(
+        (t) => (t.authorId.id as unknown as string) === authorKey
+      );
       if (!anyTopic) {
         results.push({ name: 'Unknown', posts: postCount });
         continue;

@@ -24,12 +24,19 @@ type Post = {
 };
 
 function formatShortNumber(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (n >= 1_000_000)
+    return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
   return String(n);
 }
 
-function RelativeTime({ timestamp, fallback }: { timestamp?: number; fallback?: string }) {
+function RelativeTime({
+  timestamp,
+  fallback,
+}: {
+  timestamp?: number;
+  fallback?: string;
+}) {
   const [now, setNow] = useState<number>(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
@@ -39,18 +46,34 @@ function RelativeTime({ timestamp, fallback }: { timestamp?: number; fallback?: 
   const diff = Math.max(0, now - timestamp);
   if (diff < 60_000) return <span>just now</span>;
   const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return <span>{mins} min{mins === 1 ? '' : 's'} ago</span>;
+  if (mins < 60)
+    return (
+      <span>
+        {mins} min{mins === 1 ? '' : 's'} ago
+      </span>
+    );
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return <span>{hours} hour{hours === 1 ? '' : 's'} ago</span>;
+  if (hours < 24)
+    return (
+      <span>
+        {hours} hour{hours === 1 ? '' : 's'} ago
+      </span>
+    );
   const days = Math.floor(hours / 24);
-  return <span>{days} day{days === 1 ? '' : 's'} ago</span>;
+  return (
+    <span>
+      {days} day{days === 1 ? '' : 's'} ago
+    </span>
+  );
 }
 
 export default function CommunityForum() {
   const [activeCategory, setActiveCategory] = useState('general');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<'replies' | 'views' | 'newest'>('newest');
+  const [sortBy, setSortBy] = useState<'replies' | 'views' | 'newest'>(
+    'newest'
+  );
 
   // Form state for New Topic
   const [title, setTitle] = useState('');
@@ -148,7 +171,8 @@ export default function CommunityForum() {
     // },
   ];
 
-  const topContributors = useQuery((api as any).forum.getTopContributors, {}) || [];
+  const topContributors =
+    useQuery((api as any).forum.getTopContributors, {}) || [];
 
   const [posts, setPosts] = useState<Post[]>(initialPosts);
 
@@ -456,12 +480,19 @@ export default function CommunityForum() {
           <div className="bg-white p-4 rounded-lg shadow-md">
             <h3 className="font-semibold mb-4">Top Contributors</h3>
             <div className="space-y-3">
-              {(topContributors || []).slice(0, 4).map((contributor: any, index: number) => (
-                <div key={index} className="flex items-center justify-between">
-                  <p className="font-medium text-sm">{contributor.name}</p>
-                  <p className="text-sm text-gray-500">{contributor.posts} posts</p>
-                </div>
-              ))}
+              {(topContributors || [])
+                .slice(0, 4)
+                .map((contributor: any, index: number) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
+                    <p className="font-medium text-sm">{contributor.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {contributor.posts} posts
+                    </p>
+                  </div>
+                ))}
             </div>
           </div>
         </div>
@@ -469,19 +500,25 @@ export default function CommunityForum() {
         {/* Main Content */}
         <div className="lg:col-span-3">
           {/* Forum Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-white p-4 rounded-lg shadow-md text-center">
-                <p className="text-2xl font-bold text-blue-600">{allPosts.length}</p>
-                <p className="text-sm text-gray-600">Total Topics</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-md text-center">
-                <p className="text-2xl font-bold text-green-600">{formatShortNumber(totalReplies)}</p>
-                <p className="text-sm text-gray-600">Total Replies</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-md text-center">
-                <p className="text-2xl font-bold text-purple-600">{activeUsersCount ?? 0}</p>
-                <p className="text-sm text-gray-600">Active Users</p>
-              </div>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-white p-4 rounded-lg shadow-md text-center">
+              <p className="text-2xl font-bold text-blue-600">
+                {allPosts.length}
+              </p>
+              <p className="text-sm text-gray-600">Total Topics</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md text-center">
+              <p className="text-2xl font-bold text-green-600">
+                {formatShortNumber(totalReplies)}
+              </p>
+              <p className="text-sm text-gray-600">Total Replies</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md text-center">
+              <p className="text-2xl font-bold text-purple-600">
+                {activeUsersCount ?? 0}
+              </p>
+              <p className="text-sm text-gray-600">Active Users</p>
+            </div>
           </div>
 
           {/* Forum Posts */}
@@ -497,7 +534,10 @@ export default function CommunityForum() {
                   className="border rounded px-3 py-1 text-sm"
                   value={sortBy}
                   onChange={(e) =>
-                    setSortBy((e.target.value as 'replies' | 'views' | 'newest') || 'newest')
+                    setSortBy(
+                      (e.target.value as 'replies' | 'views' | 'newest') ||
+                        'newest'
+                    )
                   }
                 >
                   <option value="replies">Most Replies</option>
@@ -538,7 +578,9 @@ export default function CommunityForum() {
                           </h3>
                         </Link>
                       ) : (
-                        <h3 className="text-lg font-medium mb-2">{post.title}</h3>
+                        <h3 className="text-lg font-medium mb-2">
+                          {post.title}
+                        </h3>
                       )}
 
                       <div className="flex items-center gap-2 mb-3">
@@ -559,7 +601,10 @@ export default function CommunityForum() {
                           <span>️ {post.views} views</span>
                         </div>
                         <div className="flex items-center gap-3">
-                  <RelativeTime timestamp={post.lastActivityAt} fallback={post.lastActivity} />
+                          <RelativeTime
+                            timestamp={post.lastActivityAt}
+                            fallback={post.lastActivity}
+                          />
                         </div>
                       </div>
                     </div>

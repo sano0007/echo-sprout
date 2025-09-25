@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "@packages/backend/convex/_generated/api";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@packages/backend/convex/_generated/api';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 function renderFormattedContent(raw: string) {
   const lines = raw.split(/\r?\n/);
@@ -17,8 +17,11 @@ function renderFormattedContent(raw: string) {
   const flushPara = () => {
     if (para.length) {
       nodes.push(
-        <p key={`p-${nodes.length}`} className="leading-7 text-gray-800 mb-4 break-words">
-          {para.join(" ")}
+        <p
+          key={`p-${nodes.length}`}
+          className="leading-7 text-gray-800 mb-4 break-words"
+        >
+          {para.join(' ')}
         </p>
       );
       para = [];
@@ -27,9 +30,14 @@ function renderFormattedContent(raw: string) {
   const flushList = () => {
     if (list.length) {
       nodes.push(
-        <ul key={`ul-${nodes.length}`} className="list-disc pl-6 space-y-2 mb-4 text-gray-800 break-words">
+        <ul
+          key={`ul-${nodes.length}`}
+          className="list-disc pl-6 space-y-2 mb-4 text-gray-800 break-words"
+        >
           {list.map((item, idx) => (
-            <li key={idx} className="break-words">{item}</li>
+            <li key={idx} className="break-words">
+              {item}
+            </li>
           ))}
         </ul>
       );
@@ -43,7 +51,7 @@ function renderFormattedContent(raw: string) {
           key={`code-${nodes.length}`}
           className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto mb-4"
         >
-          <code>{code.join("\n")}</code>
+          <code>{code.join('\n')}</code>
         </pre>
       );
       code = [];
@@ -51,7 +59,7 @@ function renderFormattedContent(raw: string) {
   };
 
   for (const line of lines) {
-    if (line.trim().startsWith("```")) {
+    if (line.trim().startsWith('```')) {
       if (inCode) {
         // closing block
         flushCode();
@@ -72,9 +80,9 @@ function renderFormattedContent(raw: string) {
     if (/^\s*[-*]\s+/.test(line)) {
       // list item
       if (para.length) flushPara();
-      list.push(line.replace(/^\s*[-*]\s+/, ""));
+      list.push(line.replace(/^\s*[-*]\s+/, ''));
       continue;
-    } else if (line.trim() === "") {
+    } else if (line.trim() === '') {
       flushList();
       flushPara();
       continue;
@@ -85,24 +93,33 @@ function renderFormattedContent(raw: string) {
       flushList();
       flushPara();
       nodes.push(
-        <h2 key={`h2-${nodes.length}`} className="text-2xl font-semibold mt-8 mb-3 break-words">
-          {line.replace(/^#\s+/, "")}
+        <h2
+          key={`h2-${nodes.length}`}
+          className="text-2xl font-semibold mt-8 mb-3 break-words"
+        >
+          {line.replace(/^#\s+/, '')}
         </h2>
       );
     } else if (/^##\s+/.test(line)) {
       flushList();
       flushPara();
       nodes.push(
-        <h3 key={`h3-${nodes.length}`} className="text-xl font-semibold mt-6 mb-2 break-words">
-          {line.replace(/^##\s+/, "")}
+        <h3
+          key={`h3-${nodes.length}`}
+          className="text-xl font-semibold mt-6 mb-2 break-words"
+        >
+          {line.replace(/^##\s+/, '')}
         </h3>
       );
     } else if (/^###\s+/.test(line)) {
       flushList();
       flushPara();
       nodes.push(
-        <h4 key={`h4-${nodes.length}`} className="text-lg font-semibold mt-4 mb-2 break-words">
-          {line.replace(/^###\s+/, "")}
+        <h4
+          key={`h4-${nodes.length}`}
+          className="text-lg font-semibold mt-4 mb-2 break-words"
+        >
+          {line.replace(/^###\s+/, '')}
         </h4>
       );
     } else {
@@ -126,16 +143,22 @@ export default function BlogArticlePage() {
   const deleteBlog = useMutation(api.learn.deleteBlog);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState({
-    title: "",
-    content: "",
-    tags: "",
-    readTime: "",
+    title: '',
+    content: '',
+    tags: '',
+    readTime: '',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [toast, setToast] = useState<null | { message: string; type: "success" | "error" }>(null);
+  const [toast, setToast] = useState<null | {
+    message: string;
+    type: 'success' | 'error';
+  }>(null);
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' = 'success'
+  ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
@@ -145,8 +168,8 @@ export default function BlogArticlePage() {
     setDraft({
       title: article.title,
       content: article.content,
-      tags: article.tags.join(", "),
-      readTime: (article.readTime || "").replace(/\s*min\s*read/i, "").trim(),
+      tags: article.tags.join(', '),
+      readTime: (article.readTime || '').replace(/\s*min\s*read/i, '').trim(),
     });
     setIsEditing(true);
   };
@@ -156,7 +179,7 @@ export default function BlogArticlePage() {
     if (!article) return;
     const tags = draft.tags
       .split(',')
-      .map(t => t.trim())
+      .map((t) => t.trim())
       .filter(Boolean);
     try {
       setIsSaving(true);
@@ -168,9 +191,9 @@ export default function BlogArticlePage() {
         readTime: draft.readTime || undefined,
       });
       setIsEditing(false);
-      showToast("Article updated successfully", "success");
+      showToast('Article updated successfully', 'success');
     } catch (err) {
-      showToast("Failed to update article", "error");
+      showToast('Failed to update article', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -178,14 +201,14 @@ export default function BlogArticlePage() {
 
   const onDelete = async () => {
     if (!article) return;
-    if (!confirm("Delete this article? This action cannot be undone.")) return;
+    if (!confirm('Delete this article? This action cannot be undone.')) return;
     try {
       setIsDeleting(true);
       await deleteBlog({ id: String(article.id) });
-      showToast("Article deleted", "success");
+      showToast('Article deleted', 'success');
       router.push('/learn');
     } catch (err) {
-      showToast("Failed to delete article", "error");
+      showToast('Failed to delete article', 'error');
       setIsDeleting(false);
     }
   };
@@ -211,7 +234,9 @@ export default function BlogArticlePage() {
       ) : article === null ? (
         <div className="bg-white border rounded-xl shadow-sm p-6 md:p-10 text-gray-700">
           <h2 className="text-2xl font-semibold mb-2">Article not found</h2>
-          <p className="mb-4">This article may have been deleted or the link is invalid.</p>
+          <p className="mb-4">
+            This article may have been deleted or the link is invalid.
+          </p>
           <button
             className="text-blue-600 hover:underline"
             onClick={() => router.push('/learn')}
@@ -301,23 +326,34 @@ export default function BlogArticlePage() {
                     ✕
                   </button>
                 </div>
-                <form onSubmit={onSave} className="px-6 py-4 space-y-4 max-h-[80vh] overflow-y-auto">
+                <form
+                  onSubmit={onSave}
+                  className="px-6 py-4 space-y-4 max-h-[80vh] overflow-y-auto"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Title</label>
+                      <label className="block text-sm font-medium mb-1">
+                        Title
+                      </label>
                       <input
                         value={draft.title}
-                        onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, title: e.target.value }))
+                        }
                         className="w-full border rounded px-3 py-2"
                         placeholder="Article title"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Read Time (minutes)</label>
+                      <label className="block text-sm font-medium mb-1">
+                        Read Time (minutes)
+                      </label>
                       <input
                         value={draft.readTime}
-                        onChange={(e) => setDraft((d) => ({ ...d, readTime: e.target.value }))}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, readTime: e.target.value }))
+                        }
                         className="w-full border rounded px-3 py-2"
                         placeholder="e.g., 6"
                         inputMode="numeric"
@@ -326,20 +362,28 @@ export default function BlogArticlePage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Tags</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Tags
+                    </label>
                     <input
                       value={draft.tags}
-                      onChange={(e) => setDraft((d) => ({ ...d, tags: e.target.value }))}
+                      onChange={(e) =>
+                        setDraft((d) => ({ ...d, tags: e.target.value }))
+                      }
                       className="w-full border rounded px-3 py-2"
                       placeholder="Comma-separated"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Content</label>
+                    <label className="block text-sm font-medium mb-1">
+                      Content
+                    </label>
                     <textarea
                       value={draft.content}
-                      onChange={(e) => setDraft((d) => ({ ...d, content: e.target.value }))}
+                      onChange={(e) =>
+                        setDraft((d) => ({ ...d, content: e.target.value }))
+                      }
                       className="w-full border rounded px-3 py-2"
                       rows={10}
                       placeholder="Write your article content here"

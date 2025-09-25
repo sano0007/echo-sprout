@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState } from 'react';
+import Link from 'next/link';
 
 type Slide = {
   image: string;
@@ -10,16 +10,17 @@ type Slide = {
 
 const slides: Slide[] = [
   {
-    image: "https://placehold.co/800x450?text=Step+1",
-    details: "Step 1: Placeholder details explaining the first action in the walkthrough.",
+    image: 'https://placehold.co/800x450?text=Step+1',
+    details:
+      'Step 1: Placeholder details explaining the first action in the walkthrough.',
   },
   {
-    image: "https://placehold.co/800x450?text=Step+2",
-    details: "Step 2: More placeholder details to demonstrate navigation.",
+    image: 'https://placehold.co/800x450?text=Step+2',
+    details: 'Step 2: More placeholder details to demonstrate navigation.',
   },
   {
-    image: "https://placehold.co/800x450?text=Step+3",
-    details: "Step 3: Final placeholder description to complete the demo.",
+    image: 'https://placehold.co/800x450?text=Step+3',
+    details: 'Step 3: Final placeholder description to complete the demo.',
   },
 ];
 
@@ -58,7 +59,7 @@ export default function WalkthroughPage() {
           onClick={prev}
           className="absolute left-2 top-1/2 -translate-y-1/2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded shadow"
         >
-          {"<"}
+          {'<'}
         </button>
 
         <button
@@ -66,7 +67,7 @@ export default function WalkthroughPage() {
           onClick={next}
           className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded shadow"
         >
-          {">"}
+          {'>'}
         </button>
       </div>
     </div>

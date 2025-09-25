@@ -126,7 +126,8 @@ export const getGuide = query({
     const author = await ctx.db.get(d.authorId);
     const current = await UserService.getCurrentUser(ctx);
     const fullName = author
-      ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim() || author.email
+      ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim() ||
+        author.email
       : 'Unknown';
 
     return {
@@ -136,7 +137,7 @@ export const getGuide = query({
       tags: d.tags,
       images: (d as any).images ?? [],
       authorName: fullName,
-      date: new Date((d.publishedAt ?? d._creationTime)).toISOString(),
+      date: new Date(d.publishedAt ?? d._creationTime).toISOString(),
       isOwner: !!(current && current._id === d.authorId) || false,
     };
   },
@@ -253,7 +254,8 @@ export const getBlog = query({
     const author = await ctx.db.get(d.authorId);
     const current = await UserService.getCurrentUser(ctx);
     const fullName = author
-      ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim() || author.email
+      ? `${author.firstName ?? ''} ${author.lastName ?? ''}`.trim() ||
+        author.email
       : 'Unknown';
     const publishedAt = d.publishedAt ?? d._creationTime;
 
@@ -296,7 +298,12 @@ export const updateBlog = mutation({
     if (typeof content === 'string') updates.content = content;
     if (Array.isArray(tags)) updates.tags = tags;
     if (typeof readTime === 'string') {
-      const est = parseInt(readTime, 10) || (content ? Math.ceil(content.split(/\s+/).length / 200) : doc.estimatedReadTime) || 5;
+      const est =
+        parseInt(readTime, 10) ||
+        (content
+          ? Math.ceil(content.split(/\s+/).length / 200)
+          : doc.estimatedReadTime) ||
+        5;
       updates.estimatedReadTime = est;
     }
     if (typeof publish === 'boolean') {
@@ -352,10 +359,18 @@ export const createLearningPath = mutation({
     title: v.string(),
     description: v.string(),
     objectives: v.optional(v.array(v.string())),
-    level: v.union(v.literal('beginner'), v.literal('intermediate'), v.literal('advanced')),
+    level: v.union(
+      v.literal('beginner'),
+      v.literal('intermediate'),
+      v.literal('advanced')
+    ),
     estimatedDuration: v.number(), // minutes
     tags: v.array(v.string()),
-    visibility: v.union(v.literal('public'), v.literal('private'), v.literal('unlisted')),
+    visibility: v.union(
+      v.literal('public'),
+      v.literal('private'),
+      v.literal('unlisted')
+    ),
     publish: v.optional(v.boolean()),
     coverImageUrl: v.optional(v.string()),
     lessons: v.optional(
@@ -445,7 +460,10 @@ export const getLearningPath = query({
       lastUpdatedAt: d.lastUpdatedAt,
       moduleCount: d.moduleCount,
       enrollmentCount: d.enrollmentCount,
-      createdByName: creator ? `${creator.firstName ?? ''} ${creator.lastName ?? ''}`.trim() || creator.email : 'Unknown',
+      createdByName: creator
+        ? `${creator.firstName ?? ''} ${creator.lastName ?? ''}`.trim() ||
+          creator.email
+        : 'Unknown',
       isOwner: !!(current && current._id === d.createdBy) || false,
     };
   },
@@ -479,10 +497,18 @@ export const updateLearningPath = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     objectives: v.optional(v.array(v.string())),
-    level: v.optional(v.union(v.literal('beginner'), v.literal('intermediate'), v.literal('advanced'))),
+    level: v.optional(
+      v.union(
+        v.literal('beginner'),
+        v.literal('intermediate'),
+        v.literal('advanced')
+      )
+    ),
     estimatedDuration: v.optional(v.number()),
     tags: v.optional(v.array(v.string())),
-    visibility: v.optional(v.union(v.literal('public'), v.literal('private'), v.literal('unlisted'))),
+    visibility: v.optional(
+      v.union(v.literal('public'), v.literal('private'), v.literal('unlisted'))
+    ),
     coverImageUrl: v.optional(v.string()),
     publish: v.optional(v.boolean()),
   },
@@ -499,13 +525,16 @@ export const updateLearningPath = mutation({
 
     const updates: any = { lastUpdatedAt: Date.now() };
     if (typeof args.title === 'string') updates.title = args.title;
-    if (typeof args.description === 'string') updates.description = args.description;
+    if (typeof args.description === 'string')
+      updates.description = args.description;
     if (Array.isArray(args.objectives)) updates.objectives = args.objectives;
     if (args.level) updates.level = args.level;
-    if (typeof args.estimatedDuration === 'number') updates.estimatedDuration = args.estimatedDuration;
+    if (typeof args.estimatedDuration === 'number')
+      updates.estimatedDuration = args.estimatedDuration;
     if (Array.isArray(args.tags)) updates.tags = args.tags;
     if (args.visibility) updates.visibility = args.visibility;
-    if (typeof args.coverImageUrl === 'string') updates.coverImageUrl = args.coverImageUrl || undefined;
+    if (typeof args.coverImageUrl === 'string')
+      updates.coverImageUrl = args.coverImageUrl || undefined;
     if (typeof args.publish === 'boolean') {
       updates.isPublished = args.publish;
       updates.status = args.publish ? 'published' : 'draft';
@@ -564,8 +593,10 @@ export const updateLesson = mutation({
 
     const updates: any = { lastUpdatedAt: Date.now() };
     if (typeof args.title === 'string') updates.title = args.title;
-    if (typeof args.description === 'string') updates.description = args.description || undefined;
-    if (typeof args.videoUrl === 'string') updates.videoUrl = args.videoUrl || undefined;
+    if (typeof args.description === 'string')
+      updates.description = args.description || undefined;
+    if (typeof args.videoUrl === 'string')
+      updates.videoUrl = args.videoUrl || undefined;
     if (Array.isArray(args.pdfUrls)) updates.pdfUrls = args.pdfUrls;
     if (typeof args.order === 'number') updates.order = args.order;
 
@@ -598,8 +629,15 @@ export const deleteLesson = mutation({
       .order('asc')
       .collect();
     await Promise.all(
-      lessons.map((l, idx) => (l.order !== idx ? ctx.db.patch(l._id, { order: idx, lastUpdatedAt: Date.now() }) : Promise.resolve()))
+      lessons.map((l, idx) =>
+        l.order !== idx
+          ? ctx.db.patch(l._id, { order: idx, lastUpdatedAt: Date.now() })
+          : Promise.resolve()
+      )
     );
-    await ctx.db.patch(path._id, { moduleCount: lessons.length, lastUpdatedAt: Date.now() });
+    await ctx.db.patch(path._id, {
+      moduleCount: lessons.length,
+      lastUpdatedAt: Date.now(),
+    });
   },
 });

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { useMutation } from 'convex/react';
@@ -10,7 +10,10 @@ export default function CreateGuidePage() {
   const { isSignedIn } = useUser();
   const createGuide = useMutation(api.learn.createGuide);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<null | { type: 'success' | 'error'; text: string }>(null);
+  const [message, setMessage] = useState<null | {
+    type: 'success' | 'error';
+    text: string;
+  }>(null);
   const [form, setForm] = useState({
     title: '',
     readTime: '5',
@@ -39,7 +42,9 @@ export default function CreateGuidePage() {
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
-      const photoUrls = (form.photos || []).map((u) => u.trim()).filter(Boolean);
+      const photoUrls = (form.photos || [])
+        .map((u) => u.trim())
+        .filter(Boolean);
       await createGuide({
         title: form.title.trim(),
         content: form.content.trim(),
@@ -49,7 +54,14 @@ export default function CreateGuidePage() {
         photoUrls,
       });
       setMessage({ type: 'success', text: 'Guide created.' });
-      setForm({ title: '', readTime: '5', tags: '', content: '', publish: true, photos: [] });
+      setForm({
+        title: '',
+        readTime: '5',
+        tags: '',
+        content: '',
+        publish: true,
+        photos: [],
+      });
     } catch (e) {
       setMessage({ type: 'error', text: 'Failed to create guide.' });
     } finally {
@@ -62,16 +74,23 @@ export default function CreateGuidePage() {
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Create Guide</h1>
-        <Link href="/learn" className="text-blue-600 hover:underline">Back</Link>
+        <Link href="/learn" className="text-blue-600 hover:underline">
+          Back
+        </Link>
       </div>
 
       {message && (
-        <div className={`mb-4 rounded px-4 py-3 text-white ${message.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+        <div
+          className={`mb-4 rounded px-4 py-3 text-white ${message.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}
+        >
           {message.text}
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-5 bg-white rounded-lg border p-6">
+      <form
+        onSubmit={onSubmit}
+        className="space-y-5 bg-white rounded-lg border p-6"
+      >
         <div>
           <label className="block text-sm font-medium mb-1">Title</label>
           <input
@@ -85,7 +104,9 @@ export default function CreateGuidePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Read Time (min)</label>
+            <label className="block text-sm font-medium mb-1">
+              Read Time (min)
+            </label>
             <input
               type="number"
               min={1}
@@ -122,14 +143,18 @@ export default function CreateGuidePage() {
             <label className="block text-sm font-medium">Photos</label>
             <button
               type="button"
-              onClick={() => setForm((f) => ({ ...f, photos: [...f.photos, ''] }))}
+              onClick={() =>
+                setForm((f) => ({ ...f, photos: [...f.photos, ''] }))
+              }
               className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded"
             >
               Add Photo
             </button>
           </div>
           {(!form.photos || form.photos.length === 0) && (
-            <p className="text-sm text-gray-500">No photos added. Click "Add Photo" to include image URLs.</p>
+            <p className="text-sm text-gray-500">
+              No photos added. Click "Add Photo" to include image URLs.
+            </p>
           )}
           <div className="space-y-2">
             {(form.photos || []).map((url, idx) => (
@@ -140,7 +165,9 @@ export default function CreateGuidePage() {
                   onChange={(e) =>
                     setForm((f) => ({
                       ...f,
-                      photos: f.photos.map((p, i) => (i === idx ? e.target.value : p)),
+                      photos: f.photos.map((p, i) =>
+                        i === idx ? e.target.value : p
+                      ),
                     }))
                   }
                   placeholder="https://...image.jpg"
@@ -148,7 +175,12 @@ export default function CreateGuidePage() {
                 <button
                   type="button"
                   className="text-sm text-red-600 hover:underline"
-                  onClick={() => setForm((f) => ({ ...f, photos: f.photos.filter((_, i) => i !== idx) }))}
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      photos: f.photos.filter((_, i) => i !== idx),
+                    }))
+                  }
                 >
                   Remove
                 </button>
@@ -164,7 +196,9 @@ export default function CreateGuidePage() {
             checked={form.publish}
             onChange={(e) => update('publish', e.target.checked)}
           />
-          <label htmlFor="publish" className="text-sm">Publish immediately</label>
+          <label htmlFor="publish" className="text-sm">
+            Publish immediately
+          </label>
         </div>
 
         <div className="flex justify-end gap-3">
@@ -172,7 +206,9 @@ export default function CreateGuidePage() {
             type="submit"
             disabled={!isSignedIn || isSubmitting}
             className={`px-4 py-2 rounded text-white ${
-              !isSignedIn || isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              !isSignedIn || isSubmitting
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
             {isSubmitting ? 'Creating...' : 'Create Guide'}

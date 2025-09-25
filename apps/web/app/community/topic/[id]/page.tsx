@@ -47,12 +47,14 @@ export default function TopicDetailPage() {
     (async () => {
       try {
         const key = 'viewed_topics';
-        const raw = typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
+        const raw =
+          typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
         const viewed: string[] = raw ? JSON.parse(raw) : [];
         const sid = String(idParam);
         if (viewed.includes(sid)) return; // already counted in this session
         viewed.push(sid);
-        if (typeof window !== 'undefined') sessionStorage.setItem(key, JSON.stringify(viewed));
+        if (typeof window !== 'undefined')
+          sessionStorage.setItem(key, JSON.stringify(viewed));
         // @ts-ignore Convex validates id at runtime
         await incrementViews({ id: idParam });
       } catch {}

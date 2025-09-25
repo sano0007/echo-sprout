@@ -21,7 +21,13 @@ type Post = {
   content?: string;
 };
 
-function RelativeTime({ timestamp, fallback }: { timestamp?: number; fallback?: string }) {
+function RelativeTime({
+  timestamp,
+  fallback,
+}: {
+  timestamp?: number;
+  fallback?: string;
+}) {
   const [now, setNow] = useState<number>(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
@@ -31,11 +37,25 @@ function RelativeTime({ timestamp, fallback }: { timestamp?: number; fallback?: 
   const diff = Math.max(0, now - timestamp);
   if (diff < 60_000) return <span>just now</span>;
   const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return <span>{mins} min{mins === 1 ? '' : 's'} ago</span>;
+  if (mins < 60)
+    return (
+      <span>
+        {mins} min{mins === 1 ? '' : 's'} ago
+      </span>
+    );
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return <span>{hours} hour{hours === 1 ? '' : 's'} ago</span>;
+  if (hours < 24)
+    return (
+      <span>
+        {hours} hour{hours === 1 ? '' : 's'} ago
+      </span>
+    );
   const days = Math.floor(hours / 24);
-  return <span>{days} day{days === 1 ? '' : 's'} ago</span>;
+  return (
+    <span>
+      {days} day{days === 1 ? '' : 's'} ago
+    </span>
+  );
 }
 
 export default function MyTopicsPage() {
@@ -136,7 +156,9 @@ export default function MyTopicsPage() {
   };
 
   // Sidebar categories with dynamic count of user's topics
-  const categories = [{ id: 'all', name: 'All Topics', count: myTopics.length }];
+  const categories = [
+    { id: 'all', name: 'All Topics', count: myTopics.length },
+  ];
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -250,7 +272,10 @@ export default function MyTopicsPage() {
                               <span>️ {post.views ?? 0} views</span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <RelativeTime timestamp={post.lastActivityAt} fallback={post.lastActivity} />
+                              <RelativeTime
+                                timestamp={post.lastActivityAt}
+                                fallback={post.lastActivity}
+                              />
                               <button
                                 onClick={() => openEdit(post)}
                                 className="text-blue-600 hover:underline"
