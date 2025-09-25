@@ -2,8 +2,8 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { useMutation, useAction } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
-import { Id } from '@packages/backend/convex/_generated/dataModel';
+import { api } from '@packages/backend';
+import { Id } from '@packages/backend';
 import { X, Upload, FileText, Image, File } from 'lucide-react';
 
 interface UploadedFile {

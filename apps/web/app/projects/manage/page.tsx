@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
-import { Id } from '@packages/backend/convex/_generated/dataModel';
+import { api } from '@packages/backend';
+import { Id } from '@packages/backend';
 import { Project } from '@echo-sprout/types';
 
 export default function ManageProjects() {

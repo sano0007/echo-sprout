@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useAction } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 import FileUpload from '../../components/FileUpload';
 
 interface ProjectFormData {
@@ -499,8 +499,12 @@ export default function ProjectRegister() {
               <FileUpload
                 projectId="" // Empty for deferred uploads
                 uploadMode="deferred"
-                onFilesReady={(files) => {
-                  setTempUploadedFiles(files.map((f) => f.file));
+                onFilesReady={(
+                  files: Array<{ file: File; id: string; status: string }>
+                ) => {
+                  setTempUploadedFiles(
+                    files.map((f: { file: File }) => f.file)
+                  );
                   console.log(
                     'Files ready for upload after project creation:',
                     files
