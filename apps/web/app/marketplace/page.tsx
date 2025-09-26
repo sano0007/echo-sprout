@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import Image from 'next/image';
-import ReactPaginate from 'react-paginate';
-import { useMarketplaceStore } from '@/store/marketplace-store';
 import _ from 'lodash';
+import Image from 'next/image';
+import { useEffect, useMemo, useState } from 'react';
+import ReactPaginate from 'react-paginate';
+
+import { useMarketplaceStore } from '@/store/marketplace-store';
 
 export default function Marketplace() {
   const {

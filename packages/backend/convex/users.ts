@@ -47,6 +47,8 @@ export const updateUserDetails = mutation({
         )
       ),
       verifierSpecialty: v.optional(v.array(v.string())),
+      website: v.optional(v.string()),
+      description: v.optional(v.string()),
     }),
   },
   async handler(ctx, { userId, updates }) {
@@ -60,18 +62,30 @@ export const updateUserDetails = mutation({
       throw new Error('No updates provided');
     }
 
+    // Prevent email changes - this is a security measure
     if (updates.email && updates.email !== user.email) {
-      const existingUser = await ctx.db
-        .query('users')
-        .withIndex('by_email', (q) => q.eq('email', updates.email!))
-        .unique();
-
-      if (existingUser && existingUser._id !== userId) {
-        throw new Error('Email already in use');
-      }
+      throw new Error(
+        'Email cannot be modified through this endpoint for security reasons'
+      );
     }
 
-    await ctx.db.patch(userId, updates);
+    // Remove email from updates to ensure it cannot be changed
+    const { email, ...safeUpdates } = updates;
+
+    // Validate string fields are not empty if provided
+    const validatedUpdates: any = {};
+    Object.entries(safeUpdates).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'string' && value.trim() === '') {
+          // Convert empty strings to undefined to remove them
+          validatedUpdates[key] = undefined;
+        } else {
+          validatedUpdates[key] = value;
+        }
+      }
+    });
+
+    await ctx.db.patch(userId, validatedUpdates);
   },
 });
 
@@ -285,5 +299,28 @@ export const updateUserRole = mutation({
     }
 
     await ctx.db.patch(userId, updates);
+  },
+});
+
+export const upgradeToProjectCreator = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('User not found');
+    }
+
+    if (currentUser.role !== 'credit_buyer') {
+      throw new Error('Only credit buyers can upgrade to project creator');
+    }
+
+    await ctx.db.patch(currentUser._id, {
+      role: 'project_creator',
+    });
+
+    return {
+      success: true,
+      message: 'Successfully upgraded to Project Creator',
+    };
   },
 });
