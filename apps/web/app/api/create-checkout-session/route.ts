@@ -34,7 +34,9 @@ export async function POST(request: NextRequest) {
     const client = await clerkClient();
     const user = await client.users.getUser(userId);
 
-    const userEmail = user.emailAddresses.find((email) => email.id === user.primaryEmailAddressId)?.emailAddress;
+    const userEmail = user.emailAddresses.find(
+      (email) => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
 
     if (!userEmail) {
       return NextResponse.json(
@@ -44,7 +46,11 @@ export async function POST(request: NextRequest) {
     }
 
     const stripeService = new StripeService();
-    const session = await stripeService.createCheckoutSession(amount, credits, userEmail);
+    const session = await stripeService.createCheckoutSession(
+      amount,
+      credits,
+      userEmail
+    );
 
     return NextResponse.json({
       success: true,
