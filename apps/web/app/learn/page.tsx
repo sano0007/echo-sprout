@@ -382,22 +382,24 @@ export default function LearnHub() {
 
                     {String(module.id).startsWith('0x') ||
                     String(module.id).length > 10 ? (
-                      <button
-                        className="block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                        onClick={() => {
-                          if (!isSignedIn) {
-                            alert('Please sign in to start the course.');
-                            return;
-                          }
-                          router.push(`/learn/paths/${module.id}?from=learn`);
-                        }}
-                      >
-                        {module.progress === 0
-                          ? 'Start Course'
-                          : module.progress === 100
-                            ? 'Review'
-                            : 'Continue'}
-                      </button>
+                      (() => {
+                        const pct = progressMap ? progressMap[String(module.id)] ?? 0 : 0;
+                        const label = pct <= 0 ? 'Start Course' : pct >= 100 ? 'Review Course' : 'Continue Course';
+                        return (
+                          <button
+                            className="block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                            onClick={() => {
+                              if (!isSignedIn) {
+                                alert('Please sign in to start the course.');
+                                return;
+                              }
+                              router.push(`/learn/paths/${module.id}?from=learn`);
+                            }}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })()
                     ) : (
                       <button
                         className="w-full bg-blue-600 text-white py-2 px-4 rounded opacity-50 cursor-not-allowed"
