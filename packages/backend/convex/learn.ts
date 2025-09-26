@@ -562,6 +562,77 @@ export const setPathProgress = mutation({
   },
 });
 
+// Batch progress percent per path for current user
+export const progressForPaths = query({
+  args: { pathIds: v.array(v.string()) },
+  async handler(ctx, { pathIds }) {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user || !Array.isArray(pathIds) || pathIds.length === 0) {
+      return {} as Record<string, number>;
+    }
+
+    const result: Record<string, number> = {};
+
+    for (const pid of pathIds) {
+      try {
+        const normalizedPath = await ctx.db.normalizeId('learningPaths', pid);
+        if (!normalizedPath) {
+          result[pid] = 0;
+          continue;
+        }
+
+        const lessons = await ctx.db
+          .query('learningPathLessons')
+          .withIndex('by_path_order', (q) => q.eq('pathId', normalizedPath))
+          .order('asc')
+          .collect();
+
+        // Total items = #videos present + sum of pdfs per lesson
+        let total = 0;
+        for (const L of lessons) {
+          if (L.videoUrl) total += 1;
+          total += Array.isArray(L.pdfUrls) ? L.pdfUrls.length : 0;
+        }
+
+        if (total === 0) {
+          result[pid] = 0;
+          continue;
+        }
+
+        const rows = await ctx.db
+          .query('learningProgress')
+          .withIndex('by_user_path', (q) =>
+            q.eq('userId', user._id).eq('pathId', normalizedPath)
+          )
+          .collect();
+
+        // Count only rows that correspond to existing items
+        let done = 0;
+        const lessonsById = new Map(lessons.map((l) => [String(l._id), l]));
+        for (const r of rows) {
+          if (!r.completed) continue;
+          const lesson = lessonsById.get(String(r.lessonId));
+          if (!lesson) continue;
+          if (r.itemType === 'video') {
+            if (lesson.videoUrl) done += 1;
+          } else if (r.itemType === 'pdf') {
+            const idx = Number(r.itemIndex ?? 0);
+            const arr = Array.isArray(lesson.pdfUrls) ? lesson.pdfUrls : [];
+            if (idx >= 0 && idx < arr.length) done += 1;
+          }
+        }
+
+        const pct = Math.round((done / total) * 100);
+        result[pid] = pct;
+      } catch {
+        result[pid] = 0;
+      }
+    }
+
+    return result;
+  },
+});
+
 export const updateLearningPath = mutation({
   args: {
     id: v.string(),

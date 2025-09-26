@@ -213,6 +213,14 @@ export default function LearnHub() {
       }))
     : learningModules;
 
+  // Batch fetch persisted progress for all real Convex paths
+  const realPathIds = Array.isArray(learningPaths)
+    ? (learningPaths as any[]).map((p) => String(p.id))
+    : [];
+  const progressMap = useQuery(api.learn.progressForPaths, {
+    pathIds: realPathIds,
+  } as any);
+
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
@@ -325,9 +333,36 @@ export default function LearnHub() {
                     </div>
 
                     {/* Progress bar: persisted for real paths, static for samples */}
-                    {String(module.id).startsWith('0x') ||
-                    String(module.id).length > 10 ? (
-                      <PathProgressBar pathId={String(module.id)} />
+                    {String(module.id).startsWith('0x') || String(module.id).length > 10 ? (
+                      progressMap === undefined ? (
+                        <div className="mb-4">
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>Progress</span>
+                            <span className="text-gray-400">…</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div className="h-2 w-1/2 animate-pulse bg-gray-300"></div>
+                          </div>
+                        </div>
+                      ) : (
+                        (() => {
+                          const pct = progressMap[String(module.id)] ?? 0;
+                          return (
+                            <div className="mb-4">
+                              <div className="flex justify-between text-sm mb-1">
+                                <span>Progress</span>
+                                <span>{pct}%</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-blue-600 h-2 rounded-full"
+                                  style={{ width: `${pct}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          );
+                        })()
+                      )
                     ) : (
                       typeof module.progress === 'number' && (
                         <div className="mb-4">
@@ -696,63 +731,4 @@ export default function LearnHub() {
   );
 }
 
-function PathProgressBar({ pathId }: { pathId: string }) {
-  const lessons = useQuery(api.learn.listLessonsForPath, { pathId } as any);
-  const progress = useQuery((api as any).learn.getPathProgress, { pathId } as any);
-
-  if (lessons === undefined || progress === undefined) {
-    return (
-      <div className="mb-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span>Progress</span>
-          <span>…</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div className="bg-gray-300 h-2 rounded-full" style={{ width: '0%' }}></div>
-        </div>
-      </div>
-    );
-  }
-
-  const ls = Array.isArray(lessons) ? lessons : [];
-  const rows = Array.isArray(progress) ? progress : [];
-  let total = 0;
-  let done = 0;
-  for (const L of ls) {
-    const lid = String((L as any).id ?? L);
-    if (L.videoUrl) {
-      total += 1;
-      if (rows.some((r: any) => (String((r.lessonId as any)?._id ?? r.lessonId) === lid) && r.itemType === 'video' && r.completed)) {
-        done += 1;
-      }
-    }
-    const pdfs = Array.isArray(L.pdfUrls) ? L.pdfUrls : [];
-    total += pdfs.length;
-    for (let i = 0; i < pdfs.length; i++) {
-      if (
-        rows.some(
-          (r: any) =>
-            String((r.lessonId as any)?._id ?? r.lessonId) === lid &&
-            r.itemType === 'pdf' &&
-            Number(r.itemIndex ?? 0) === i &&
-            r.completed
-        )
-      ) {
-        done += 1;
-      }
-    }
-  }
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
-  return (
-    <div className="mb-4">
-      <div className="flex justify-between text-sm mb-1">
-        <span>Progress</span>
-        <span>{pct}%</span>
-      </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${pct}%` }}></div>
-      </div>
-    </div>
-  );
-}
+// PathProgressBar component removed; using batch query instead

@@ -25,8 +25,8 @@ export default function LearningPathDetailsPage() {
   const deleteLesson = useMutation(api.learn.deleteLesson);
   const recordEntry = useMutation(api.learn.recordPathsEntry);
   const recordStart = useMutation(api.learn.recordCourseStart);
-  const progress = useQuery((api as any).learn.getPathProgress, { pathId: id ?? '' } as any);
-  const setProgress = useMutation((api as any).learn.setPathProgress);
+  const progress = useQuery(api.learn.getPathProgress, { pathId: id ?? '' } as any);
+  const setProgress = useMutation(api.learn.setPathProgress);
 
   const [editingPath, setEditingPath] = useState(false);
   const [pathForm, setPathForm] = useState<any>(null);
