@@ -1,7 +1,6 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { UserService } from '../services/user-service';
-import { internal } from './_generated/api';
 
 /**
  * ALERT MANAGEMENT API
@@ -69,11 +68,50 @@ export const createAlert = mutation({
       }
     }
 
-    // Use the alert generation engine for consistent alert creation
-    return await ctx.runMutation(internal.alertGeneration.generateAlert, {
+    // Create alert directly with proper urgency calculation
+    const urgencyScore = calculateUrgencyScore(args.severity, args.alertType);
+
+    function calculateUrgencyScore(severity: string, alertType: string): number {
+      const severityWeights = { critical: 90, high: 70, medium: 50, low: 30 };
+      const typeWeights: Record<string, number> = {
+        'system_failure': 20,
+        'deadline_overdue': 15,
+        'verification_delay': 10,
+        'data_anomaly': 5,
+      };
+      return (severityWeights[severity as keyof typeof severityWeights] || 50) +
+             (typeWeights[alertType] || 0);
+    }
+
+    const alertId = await ctx.db.insert('systemAlerts', {
       ...args,
       source: args.source || `manual_${user.role}`,
+      isResolved: false,
+      escalationLevel: 0,
+      urgencyScore,
+      autoEscalationEnabled: true,
+      occurrenceCount: 1,
+      firstOccurrence: Date.now(),
+      lastOccurrence: Date.now(),
+      lastUpdatedBy: user._id,
+      lastUpdatedAt: Date.now(),
     });
+
+    // Log the creation
+    await ctx.db.insert('auditLogs', {
+      userId: user._id,
+      action: 'alert_created',
+      entityType: 'system_alert',
+      entityId: alertId,
+      metadata: {
+        alertType: args.alertType,
+        severity: args.severity,
+        source: args.source || `manual_${user.role}`,
+        timestamp: Date.now(),
+      },
+    });
+
+    return alertId;
   },
 });
 
@@ -143,46 +181,39 @@ export const getAlerts = query({
 
     // Apply filters
     if (filters.isResolved !== undefined) {
-      query = query.filter((q) =>
+      query = query.filter((q: any) =>
         q.eq(q.field('isResolved'), filters.isResolved)
       );
     }
 
     if (filters.projectId) {
-      query = query.filter((q) =>
+      query = query.filter((q: any) =>
         q.eq(q.field('projectId'), filters.projectId)
       );
     }
 
     if (filters.assignedTo) {
-      query = query.filter((q) =>
+      query = query.filter((q: any) =>
         q.eq(q.field('assignedTo'), filters.assignedTo)
       );
     }
 
     if (filters.category) {
-      query = query.filter((q) => q.eq(q.field('category'), filters.category));
+      query = query.filter((q: any) => q.eq(q.field('category'), filters.category));
     }
 
     if (filters.dateRange) {
       query = query.filter(
-        (q) =>
-          q.gte(q.field('_creationTime'), filters.dateRange!.start) &&
-          q.lte(q.field('_creationTime'), filters.dateRange!.end)
+        (q: any) =>
+          q.and(
+            q.gte(q.field('_creationTime'), filters.dateRange!.start),
+            q.lte(q.field('_creationTime'), filters.dateRange!.end)
+          )
       );
     }
 
-    // Apply sorting
-    if (sorting.direction === 'desc') {
-      query = query.order('desc');
-    } else {
-      query = query.order('asc');
-    }
-
-    // Get results with pagination
-    const alerts = await query.take(
-      pagination.limit + (pagination.offset || 0)
-    );
+    // Get results with pagination - collect all first due to filtering complexity
+    const alerts = await query.collect();
 
     // Apply client-side filters that couldn't be done in the query
     let filteredAlerts = alerts;
@@ -203,6 +234,40 @@ export const getAlerts = query({
     if (user.role !== 'admin') {
       filteredAlerts = await filterAlertsByAccess(ctx, filteredAlerts, user);
     }
+
+    // Apply client-side sorting
+    filteredAlerts.sort((a, b) => {
+      let aValue: any, bValue: any;
+
+      switch (sorting.field) {
+        case '_creationTime':
+          aValue = a._creationTime;
+          bValue = b._creationTime;
+          break;
+        case 'severity':
+          const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+          aValue = severityOrder[a.severity as keyof typeof severityOrder] || 0;
+          bValue = severityOrder[b.severity as keyof typeof severityOrder] || 0;
+          break;
+        case 'urgencyScore':
+          aValue = a.urgencyScore || 0;
+          bValue = b.urgencyScore || 0;
+          break;
+        case 'lastOccurrence':
+          aValue = a.lastOccurrence || 0;
+          bValue = b.lastOccurrence || 0;
+          break;
+        default:
+          aValue = a._creationTime;
+          bValue = b._creationTime;
+      }
+
+      if (sorting.direction === 'desc') {
+        return bValue - aValue;
+      } else {
+        return aValue - bValue;
+      }
+    });
 
     // Apply pagination offset
     if (pagination.offset) {
@@ -255,8 +320,11 @@ export const getAlert = query({
     // Get alert history/timeline
     const auditLogs = await ctx.db
       .query('auditLogs')
-      .withIndex('by_entity', (q) =>
-        q.eq('entityType', 'system_alert').eq('entityId', alertId)
+      .filter((q: any) =>
+        q.and(
+          q.eq(q.field('entityType'), 'system_alert'),
+          q.eq(q.field('entityId'), alertId)
+        )
       )
       .order('desc')
       .take(20);
@@ -564,13 +632,34 @@ export const bulkResolveAlerts = mutation({
 
     for (const alertId of alertIds) {
       try {
-        await ctx.runMutation(internal.alertManagement.resolveAlert, {
-          alertId,
+        // Resolve alert directly to avoid internal API issues
+        const alert = await ctx.db.get(alertId);
+        if (!alert || alert.isResolved) {
+          throw new Error('Alert not found or already resolved');
+        }
+
+        await ctx.db.patch(alertId, {
+          isResolved: true,
+          resolvedAt: Date.now(),
+          resolvedBy: user._id,
           resolutionNotes,
           resolutionType,
         });
+
+        // Log the resolution
+        await ctx.db.insert('auditLogs', {
+          userId: user._id,
+          action: 'alert_resolved_bulk',
+          entityType: 'system_alert',
+          entityId: alertId,
+          metadata: {
+            resolutionType,
+            resolutionNotes,
+            timestamp: Date.now(),
+          },
+        });
         results.push({ alertId, success: true });
-      } catch (error) {
+      } catch (error: any) {
         results.push({ alertId, success: false, error: error.message });
       }
     }
@@ -609,13 +698,32 @@ export const bulkAssignAlerts = mutation({
 
     for (const alertId of alertIds) {
       try {
-        await ctx.runMutation(internal.alertManagement.assignAlert, {
-          alertId,
+        // Assign alert directly to avoid internal API issues
+        const alert = await ctx.db.get(alertId);
+        if (!alert) {
+          throw new Error('Alert not found');
+        }
+
+        await ctx.db.patch(alertId, {
           assignedTo,
-          notes,
+          assignedBy: user._id,
+          assignedAt: Date.now(),
+        });
+
+        // Log the assignment
+        await ctx.db.insert('auditLogs', {
+          userId: user._id,
+          action: 'alert_assigned_bulk',
+          entityType: 'system_alert',
+          entityId: alertId,
+          metadata: {
+            assignedTo,
+            notes,
+            timestamp: Date.now(),
+          },
         });
         results.push({ alertId, success: true });
-      } catch (error) {
+      } catch (error: any) {
         results.push({ alertId, success: false, error: error.message });
       }
     }
@@ -770,7 +878,7 @@ export const getAlertSummary = query({
 
     let alerts = await ctx.db
       .query('systemAlerts')
-      .filter((q) => q.gte(q.field('_creationTime'), startTime))
+      .filter((q: any) => q.gte(q.field('_creationTime'), startTime))
       .collect();
 
     // Apply access control
@@ -815,13 +923,4 @@ export const getAlertSummary = query({
   },
 });
 
-// Export internal functions for use by other modules
-export const internal = {
-  alertManagement: {
-    createAlert,
-    resolveAlert,
-    assignAlert,
-    bulkResolveAlerts,
-    bulkAssignAlerts,
-  },
-};
+// Alert management helper functions and exports completed
