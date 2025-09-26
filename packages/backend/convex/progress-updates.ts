@@ -6,22 +6,6 @@ import type {
   ProgressValidationResult,
 } from '../types/monitoring-types';
 
-/**
- * PROGRESS UPDATE SUBMISSION SYSTEM
- *
- * This module handles the core progress update submission system:
- * - Progress update creation and validation
- * - Photo and document upload handling
- * - Impact metrics validation
- * - Progress status management
- * - Timeline and milestone integration
- */
-
-// ============= PROGRESS UPDATE SUBMISSION =============
-
-/**
- * Submit a new progress update for a project
- */
 export const submitProgressUpdate = mutation({
   args: {
     projectId: v.id('projects'),
@@ -50,45 +34,36 @@ export const submitProgressUpdate = mutation({
     ),
     measurementData: v.optional(
       v.object({
-        // Reforestation metrics
         treesPlanted: v.optional(v.number()),
         survivalRate: v.optional(v.number()),
 
-        // Solar/Wind energy metrics
         energyGenerated: v.optional(v.number()),
         systemUptime: v.optional(v.number()),
 
-        // Biogas metrics
         gasProduced: v.optional(v.number()),
 
-        // Waste management metrics
         wasteProcessed: v.optional(v.number()),
         recyclingRate: v.optional(v.number()),
 
-        // Mangrove restoration metrics
         areaRestored: v.optional(v.number()),
         mangrovesPlanted: v.optional(v.number()),
 
-        // Common metrics
         carbonImpactToDate: v.optional(v.number()),
       })
     ),
     reportingDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Get current user
     const currentUser = await UserService.getCurrentUser(ctx);
     if (!currentUser) {
       throw new Error('Authentication required');
     }
 
-    // Verify project access
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       throw new Error('Project not found');
     }
 
-    // Check if user can submit progress updates for this project
     const canSubmit =
       currentUser.role === 'admin' ||
       (currentUser.role === 'project_creator' &&
@@ -102,7 +77,6 @@ export const submitProgressUpdate = mutation({
       );
     }
 
-    // Basic validation
     if (!args.title?.trim()) {
       throw new Error('Title is required');
     }
@@ -113,7 +87,6 @@ export const submitProgressUpdate = mutation({
       throw new Error('Progress percentage must be between 0 and 100');
     }
 
-    // Validate and prepare photos for storage
     const photoPreparation = CloudinaryService.preparePhotosForStorage(
       args.photos,
       project.projectType
@@ -125,7 +98,6 @@ export const submitProgressUpdate = mutation({
       );
     }
 
-    // Create progress update
     const updateId = await ctx.db.insert('progressUpdates', {
       projectId: args.projectId,
       reportedBy: currentUser._id,
@@ -139,14 +111,12 @@ export const submitProgressUpdate = mutation({
       reportingDate: args.reportingDate || Date.now(),
       isVerified: false,
 
-      // Flatten measurement data for easier querying
       carbonImpactToDate: args.measurementData?.carbonImpactToDate,
       treesPlanted: args.measurementData?.treesPlanted,
       energyGenerated: args.measurementData?.energyGenerated,
       wasteProcessed: args.measurementData?.wasteProcessed,
     });
 
-    // Update project progress percentage if this is the latest update
     if (args.progressPercentage > (project.progressPercentage || 0)) {
       await ctx.db.patch(args.projectId, {
         progressPercentage: args.progressPercentage,
@@ -154,7 +124,6 @@ export const submitProgressUpdate = mutation({
       });
     }
 
-    // Check if this update completes any milestones
     const milestones = await ctx.db
       .query('projectMilestones')
       .withIndex('by_project_status', (q) =>
@@ -187,7 +156,6 @@ export const submitProgressUpdate = mutation({
       }
     }
 
-    // Log the progress update submission
     await ctx.db.insert('auditLogs', {
       userId: currentUser._id,
       action: 'monitoring_submit_progress_update',
@@ -202,7 +170,6 @@ export const submitProgressUpdate = mutation({
       },
     });
 
-    // Check for significant progress jumps that might need review
     const recentUpdates = await ctx.db
       .query('progressUpdates')
       .withIndex('by_project', (q) => q.eq('projectId', args.projectId))
@@ -255,9 +222,6 @@ export const submitProgressUpdate = mutation({
   },
 });
 
-/**
- * Get progress updates for a project
- */
 export const getProjectProgress = query({
   args: {
     projectId: v.id('projects'),
@@ -336,7 +300,6 @@ export const getProjectProgress = query({
       })
     );
 
-    // Get project summary data
     const projectSummary = await ctx.db.get(projectId);
     const totalUpdates = await ctx.db
       .query('progressUpdates')
@@ -364,9 +327,6 @@ export const getProjectProgress = query({
   },
 });
 
-/**
- * Update progress update status (verification, etc.)
- */
 export const updateProgressStatus = mutation({
   args: {
     updateId: v.id('progressUpdates'),
@@ -401,7 +361,6 @@ export const updateProgressStatus = mutation({
       throw new Error('Access denied: Cannot update progress status');
     }
 
-    // Update the progress update
     const patches: any = {};
 
     if (args.isVerified !== undefined) {
@@ -416,7 +375,6 @@ export const updateProgressStatus = mutation({
 
     await ctx.db.patch(args.updateId, patches);
 
-    // Log the status change
     await ctx.db.insert('auditLogs', {
       userId: currentUser._id,
       action: 'monitoring_update_progress_status',
@@ -435,15 +393,11 @@ export const updateProgressStatus = mutation({
   },
 });
 
-/**
- * Get progress summary for a project
- */
 export const getProgressSummary = query({
   args: {
     projectId: v.id('projects'),
   },
   handler: async (ctx, { projectId }) => {
-    // Verify access
     const currentUser = await UserService.getCurrentUser(ctx);
     if (!currentUser) {
       throw new Error('Authentication required');
@@ -454,21 +408,18 @@ export const getProgressSummary = query({
       throw new Error('Project not found');
     }
 
-    // Get recent progress updates
     const recentUpdates = await ctx.db
       .query('progressUpdates')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .order('desc')
       .take(5);
 
-    // Get milestones
     const milestones = await ctx.db
       .query('projectMilestones')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .order('asc')
       .collect();
 
-    // Calculate progress metrics
     const totalUpdates = await ctx.db
       .query('progressUpdates')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
@@ -480,7 +431,6 @@ export const getProgressSummary = query({
       (m) => m.status === 'completed'
     ).length;
 
-    // Get latest impact metrics
     const latestImpactUpdate = recentUpdates.find(
       (u) =>
         u.carbonImpactToDate ||
@@ -489,7 +439,6 @@ export const getProgressSummary = query({
         u.wasteProcessed
     );
 
-    // Calculate days since last update
     const daysSinceLastUpdate =
       recentUpdates.length > 0
         ? Math.floor(
@@ -534,9 +483,6 @@ export const getProgressSummary = query({
   },
 });
 
-/**
- * Get Cloudinary upload configuration for frontend
- */
 export const getUploadConfig = query({
   args: {
     projectId: v.id('projects'),
@@ -559,7 +505,6 @@ export const getUploadConfig = query({
       throw new Error('Project not found');
     }
 
-    // Check access permissions
     const canSubmit =
       currentUser.role === 'admin' ||
       (currentUser.role === 'project_creator' &&
@@ -575,11 +520,6 @@ export const getUploadConfig = query({
   },
 });
 
-// ============= INTERNAL HELPER FUNCTIONS =============
-
-/**
- * Validate progress update data before submission
- */
 export const validateProgressUpdateData = internalQuery({
   args: {
     projectId: v.id('projects'),
@@ -598,7 +538,6 @@ export const validateProgressUpdateData = internalQuery({
       return { isValid: false, errors, warnings, score: 0 };
     }
 
-    // Basic field validation
     if (!updateData.title?.trim()) {
       errors.push('Title is required');
     }
@@ -616,7 +555,6 @@ export const validateProgressUpdateData = internalQuery({
       errors.push('Progress percentage must be between 0 and 100');
     }
 
-    // Progress validation - shouldn't go backwards significantly
     if (
       project.progressPercentage &&
       updateData.progressPercentage < project.progressPercentage - 5
@@ -624,7 +562,6 @@ export const validateProgressUpdateData = internalQuery({
       warnings.push('Progress appears to have decreased significantly');
     }
 
-    // Photo requirements validation using Cloudinary service
     const photoValidation = CloudinaryService.validatePhotoUpload(
       updateData.photos || [],
       project.projectType
@@ -633,16 +570,13 @@ export const validateProgressUpdateData = internalQuery({
     errors.push(...photoValidation.errors);
     warnings.push(...photoValidation.warnings);
 
-    // Project-specific metric validation
     if (updateData.measurementData) {
-      // Basic metric validation
       for (const [key, value] of Object.entries(updateData.measurementData)) {
         if (typeof value === 'number' && value < 0) {
           errors.push(`${key} cannot be negative`);
         }
       }
 
-      // Project-specific thresholds (simplified validation)
       if (project.projectType === 'reforestation') {
         if (
           updateData.measurementData.survivalRate &&
@@ -664,7 +598,6 @@ export const validateProgressUpdateData = internalQuery({
       }
     }
 
-    // Check frequency - warn if submitting too frequently
     const recentUpdates = await ctx.db
       .query('progressUpdates')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
@@ -690,9 +623,6 @@ export const validateProgressUpdateData = internalQuery({
   },
 });
 
-/**
- * Check if progress update completes any milestones
- */
 export const checkMilestoneCompletion = internalMutation({
   args: {
     projectId: v.id('projects'),
@@ -710,7 +640,6 @@ export const checkMilestoneCompletion = internalMutation({
     const completedMilestones = [];
 
     for (const milestone of milestones) {
-      // Check if this milestone should be completed based on progress
       let shouldComplete = false;
 
       switch (milestone.milestoneType) {
@@ -736,7 +665,6 @@ export const checkMilestoneCompletion = internalMutation({
 
         completedMilestones.push(milestone);
 
-        // Log milestone completion
         await ctx.db.insert('auditLogs', {
           userId: undefined,
           action: 'monitoring_complete_milestone',
@@ -756,9 +684,6 @@ export const checkMilestoneCompletion = internalMutation({
   },
 });
 
-/**
- * Analyze progress update for potential alerts
- */
 export const analyzeProgressForAlerts = internalMutation({
   args: {
     projectId: v.id('projects'),
@@ -772,7 +697,6 @@ export const analyzeProgressForAlerts = internalMutation({
     const project = await ctx.db.get(projectId);
     if (!project) return;
 
-    // Get recent updates for comparison
     const recentUpdates = await ctx.db
       .query('progressUpdates')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
@@ -781,7 +705,6 @@ export const analyzeProgressForAlerts = internalMutation({
 
     const alerts = [];
 
-    // Check for significant progress jumps (might indicate data entry error)
     if (recentUpdates.length > 1) {
       const previousProgress = recentUpdates[1].progressPercentage;
       const progressJump = newUpdate.progressPercentage - previousProgress;
@@ -807,7 +730,6 @@ export const analyzeProgressForAlerts = internalMutation({
       }
     }
 
-    // Check if project is behind schedule
     const projectStart = new Date(project.startDate).getTime();
     const projectEnd = new Date(project.expectedCompletionDate).getTime();
     const now = Date.now();
@@ -816,7 +738,6 @@ export const analyzeProgressForAlerts = internalMutation({
     const progressRatio = newUpdate.progressPercentage / 100;
 
     if (timeElapsed > progressRatio + 0.1 && timeElapsed > 0.5) {
-      // 10% tolerance, only after 50% of time elapsed
       const alertId = await ctx.db.insert('systemAlerts', {
         projectId,
         alertType: 'milestone_delay',
@@ -839,9 +760,6 @@ export const analyzeProgressForAlerts = internalMutation({
   },
 });
 
-/**
- * Get upcoming milestones for a project
- */
 export const getUpcomingMilestones = internalQuery({
   args: {
     projectId: v.id('projects'),
