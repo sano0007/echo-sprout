@@ -8,14 +8,14 @@
  * @module
  */
 
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
-import type * as http from "../http.js";
-import type * as marketplace from "../marketplace.js";
-import type * as users from "../users.js";
+import type { ApiFromModules, FilterApi, FunctionReference, } from 'convex/server';
+import type * as documents from '../documents.js';
+import type * as http from '../http.js';
+import type * as marketplace from '../marketplace.js';
+import type * as permissions from '../permissions.js';
+import type * as users from '../users.js';
+import type * as verificationMessages from '../verificationMessages.js';
+import type * as verifications from '../verifications.js';
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -26,9 +26,13 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  documents: typeof documents;
   http: typeof http;
   marketplace: typeof marketplace;
+  permissions: typeof permissions;
   users: typeof users;
+  verificationMessages: typeof verificationMessages;
+  verifications: typeof verifications;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
