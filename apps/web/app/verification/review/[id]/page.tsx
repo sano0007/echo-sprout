@@ -1,115 +1,28 @@
 'use client';
 
+import { api } from '@packages/backend/convex/_generated/api';
+import type { Id } from '@packages/backend/convex/_generated/dataModel';
+import { useMutation, useQuery } from 'convex/react';
+import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
+import { toast } from 'react-hot-toast';
+
+import type { Annotation } from '@/components/pdf';
 
 import { PDFViewer } from '../../../../components/pdf';
-import type { Annotation } from '../../../../components/pdf/types';
 
 export default function ProjectReview() {
+  const params = useParams();
+  const router = useRouter();
+  const projectId = params.id as Id<'projects'>;
+
   const [activeSection, setActiveSection] = useState('overview');
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [documentAnnotations, setDocumentAnnotations] = useState<
     Record<string, Annotation[]>
   >({});
-
-  const project = {
-    id: 1,
-    name: 'Solar Farm Project',
-    creator: 'SolarTech Inc',
-    type: 'Solar Energy',
-    submitted: '2024-01-15',
-    location: 'Nevada, USA',
-    description: 'Large-scale solar installation with 500MW capacity',
-    documents: [
-      {
-        name: 'Project Proposal.pdf',
-        size: '2.4 MB',
-        pages: 45,
-        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        id: 'project-proposal',
-      },
-      {
-        name: 'Environmental Impact.pdf',
-        size: '1.8 MB',
-        pages: 32,
-        url: '/sample-documents/project-proposal.pdf', // Using same sample for demo
-        id: 'environmental-impact',
-      },
-      {
-        name: 'Site Photos.pdf',
-        size: '5.2 MB',
-        pages: 15,
-        url: '/sample-documents/project-proposal.pdf', // Using same sample for demo
-        id: 'site-photos',
-      },
-      {
-        name: 'Technical Specifications.pdf',
-        size: '890 KB',
-        pages: 12,
-        url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        id: 'technical-specs',
-      },
-    ],
-  };
-
-  const checklist = [
-    {
-      id: 1,
-      category: 'Documentation',
-      item: 'Project proposal completeness',
-      status: 'pending',
-      score: null,
-    },
-    {
-      id: 2,
-      category: 'Documentation',
-      item: 'Environmental impact assessment',
-      status: 'approved',
-      score: 9,
-    },
-    {
-      id: 3,
-      category: 'Technical',
-      item: 'Technical feasibility analysis',
-      status: 'pending',
-      score: null,
-    },
-    {
-      id: 4,
-      category: 'Technical',
-      item: 'Equipment specifications review',
-      status: 'pending',
-      score: null,
-    },
-    {
-      id: 5,
-      category: 'Financial',
-      item: 'Budget and cost analysis',
-      status: 'pending',
-      score: null,
-    },
-    {
-      id: 6,
-      category: 'Financial',
-      item: 'Financial sustainability assessment',
-      status: 'pending',
-      score: null,
-    },
-    {
-      id: 7,
-      category: 'Compliance',
-      item: 'Regulatory compliance check',
-      status: 'approved',
-      score: 8,
-    },
-    {
-      id: 8,
-      category: 'Compliance',
-      item: 'Carbon credit calculation methodology',
-      status: 'pending',
-      score: null,
-    },
-  ];
+  const [verificationNotes, setVerificationNotes] = useState('');
+  const [qualityScore, setQualityScore] = useState<number>(5);
 
   // Annotation handling functions
   const handleAnnotationChange = useCallback(
@@ -126,23 +39,258 @@ export default function ProjectReview() {
     setSelectedDocument(doc.id);
   }, []);
 
+  // Queries
+  const verification = useQuery(api.verifications.getVerificationByProjectId, {
+    projectId: projectId,
+  });
+  const permissions = useQuery(api.permissions.getCurrentUserPermissions);
+  const projectDocuments = useQuery(api.documents.getDocumentsByEntity, {
+    entityId: projectId,
+    entityType: 'project',
+  });
+  const documentVerificationStatus = useQuery(
+    api.documents.getDocumentVerificationStatus,
+    {
+      projectId: projectId,
+    }
+  );
+
+  // Mutations
+  const startVerification = useMutation(api.verifications.startVerification);
+  const updateChecklist = useMutation(
+    api.verifications.updateVerificationChecklist
+  );
+  const completeVerification = useMutation(
+    api.verifications.completeVerification
+  );
+  const verifyDocument = useMutation(api.documents.verifyDocument);
+  const sendMessage = useMutation(api.verificationMessages.sendMessage);
+
+  // Loading states
+  if (
+    !verification ||
+    !permissions ||
+    !projectDocuments ||
+    !documentVerificationStatus
+  ) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading project review...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check permissions
+  if (!permissions.canViewVerifierDashboard) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Access Denied
+          </h1>
+          <p className="text-gray-600">
+            You don't have permission to review this project.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Action handlers
+  const handleStartVerification = async () => {
+    if (!verification?._id) return;
+
+    try {
+      await startVerification({ verificationId: verification._id });
+      toast.success('Verification started successfully');
+    } catch (error) {
+      toast.error('Failed to start verification');
+    }
+  };
+
+  const handleChecklistUpdate = async (field: string, value: boolean) => {
+    if (!verification?._id) return;
+
+    try {
+      await updateChecklist({
+        verificationId: verification._id,
+        updates: { [field]: value },
+      });
+      toast.success('Checklist updated');
+    } catch (error) {
+      toast.error('Failed to update checklist');
+    }
+  };
+
+  const handleDocumentVerify = async (
+    documentId: Id<'documents'>,
+    isVerified: boolean
+  ) => {
+    try {
+      await verifyDocument({ documentId, isVerified });
+      toast.success(`Document ${isVerified ? 'verified' : 'unverified'}`);
+    } catch (error) {
+      toast.error('Failed to update document verification');
+    }
+  };
+
+  const handleCompleteVerification = async (
+    recommendation: 'approved' | 'rejected' | 'revision_required'
+  ) => {
+    if (!verification?._id) return;
+
+    try {
+      await completeVerification({
+        verificationId: verification._id,
+        qualityScore,
+        verificationNotes,
+        recommendation,
+        rejectionReason:
+          recommendation === 'rejected' ? verificationNotes : undefined,
+        revisionRequests:
+          recommendation === 'revision_required'
+            ? verificationNotes
+            : undefined,
+      });
+      toast.success('Verification completed successfully');
+      router.push('/verification/dashboard');
+    } catch (error) {
+      toast.error('Failed to complete verification');
+    }
+  };
+
+  // Create checklist from verification data
+  const checklist = [
+    {
+      id: 'timelineCompliance',
+      category: 'Documentation',
+      item: 'Timeline compliance verification',
+      status: verification.timelineCompliance
+        ? 'approved'
+        : verification.timelineCompliance === false
+          ? 'rejected'
+          : 'pending',
+      required: true,
+    },
+    {
+      id: 'documentationComplete',
+      category: 'Documentation',
+      item: 'Documentation completeness check',
+      status: verification.documentationComplete
+        ? 'approved'
+        : verification.documentationComplete === false
+          ? 'rejected'
+          : 'pending',
+      required: true,
+    },
+    {
+      id: 'co2CalculationAccurate',
+      category: 'Technical',
+      item: 'CO2 calculation accuracy',
+      status: verification.co2CalculationAccurate
+        ? 'approved'
+        : verification.co2CalculationAccurate === false
+          ? 'rejected'
+          : 'pending',
+      required: true,
+    },
+    {
+      id: 'environmentalImpactValid',
+      category: 'Environmental',
+      item: 'Environmental impact validation',
+      status: verification.environmentalImpactValid
+        ? 'approved'
+        : verification.environmentalImpactValid === false
+          ? 'rejected'
+          : 'pending',
+      required: true,
+    },
+    {
+      id: 'projectFeasible',
+      category: 'Technical',
+      item: 'Project feasibility assessment',
+      status: verification.projectFeasible
+        ? 'approved'
+        : verification.projectFeasible === false
+          ? 'rejected'
+          : 'pending',
+      required: true,
+    },
+    {
+      id: 'locationVerified',
+      category: 'Location',
+      item: 'Location verification',
+      status: verification.locationVerified
+        ? 'approved'
+        : verification.locationVerified === false
+          ? 'rejected'
+          : 'pending',
+      required: true,
+    },
+    {
+      id: 'sustainabilityAssessed',
+      category: 'Environmental',
+      item: 'Sustainability assessment',
+      status: verification.sustainabilityAssessed
+        ? 'approved'
+        : verification.sustainabilityAssessed === false
+          ? 'rejected'
+          : 'pending',
+      required: true,
+    },
+  ];
+
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">{project.name}</h1>
-          <p className="text-gray-600">Review Session - {project.creator}</p>
+          <h1 className="text-3xl font-bold">
+            Verification Review #{verification._id.slice(-6)}
+          </h1>
+          <p className="text-gray-600">
+            Verification Session - Priority: {verification.priority}
+          </p>
+          <p className="text-sm text-gray-500">
+            Status: {verification.status} | Due:{' '}
+            {new Date(verification.dueDate).toLocaleDateString()}
+          </p>
         </div>
         <div className="flex gap-3">
-          <button className="bg-green-600 text-white px-4 py-2 rounded">
-            Approve Project
-          </button>
-          <button className="bg-red-600 text-white px-4 py-2 rounded">
-            Request Revision
-          </button>
-          <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded">
-            Save Progress
-          </button>
+          {verification.status === 'assigned' && (
+            <button
+              onClick={handleStartVerification}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Start Verification
+            </button>
+          )}
+          {verification.status === 'in_progress' && (
+            <>
+              <button
+                onClick={() => handleCompleteVerification('approved')}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Approve Project
+              </button>
+              <button
+                onClick={() => handleCompleteVerification('rejected')}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Reject Project
+              </button>
+              <button
+                onClick={() => handleCompleteVerification('revision_required')}
+                className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
+              >
+                Request Revision
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -187,41 +335,55 @@ export default function ProjectReview() {
               <h2 className="text-2xl font-semibold mb-6">Project Overview</h2>
               <div className="grid grid-cols-2 gap-6 mb-6">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Project Type</p>
-                  <p className="font-medium">{project.type}</p>
+                  <p className="text-sm text-gray-600 mb-1">Verification ID</p>
+                  <p className="font-medium">#{verification._id.slice(-8)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Location</p>
-                  <p className="font-medium">{project.location}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Submitted Date</p>
-                  <p className="font-medium">
-                    {new Date(project.submitted).toLocaleDateString()}
+                  <p className="text-sm text-gray-600 mb-1">Priority</p>
+                  <p className="font-medium capitalize">
+                    {verification.priority}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Creator</p>
-                  <p className="font-medium">{project.creator}</p>
+                  <p className="text-sm text-gray-600 mb-1">Assigned Date</p>
+                  <p className="font-medium">
+                    {new Date(verification.assignedAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Due Date</p>
+                  <p className="font-medium">
+                    {new Date(verification.dueDate).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
 
-              <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-2">
-                  Project Description
-                </p>
-                <p className="text-gray-700">{project.description}</p>
-              </div>
-
               {/* Review Notes */}
-              <div>
+              <div className="mb-6">
                 <label className="block text-sm font-medium mb-2">
-                  Review Notes
+                  Verification Notes
                 </label>
                 <textarea
+                  value={verificationNotes}
+                  onChange={(e) => setVerificationNotes(e.target.value)}
                   className="w-full h-32 p-3 border rounded"
-                  placeholder="Add your review notes here..."
-                ></textarea>
+                  placeholder="Add your verification notes here..."
+                />
+              </div>
+
+              {/* Quality Score */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Quality Score (1-10)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={qualityScore}
+                  onChange={(e) => setQualityScore(Number(e.target.value))}
+                  className="w-24 p-2 border rounded"
+                />
               </div>
             </div>
           )}
@@ -237,13 +399,13 @@ export default function ProjectReview() {
                   <h3 className="text-lg font-medium mb-4">
                     Project Documents
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {project.documents.map((doc, index) => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {projectDocuments.map((doc: any) => (
                       <div
-                        key={index}
+                        key={doc._id}
                         onClick={() => handleDocumentSelect(doc)}
                         className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                          selectedDocument === doc.id
+                          selectedDocument === doc._id
                             ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
@@ -251,19 +413,36 @@ export default function ProjectReview() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <p className="font-medium text-sm mb-1 line-clamp-2">
-                              {doc.name}
+                              {doc.originalName}
                             </p>
                             <p className="text-xs text-gray-600">
-                              {doc.size} • {doc.pages} pages
+                              {doc.fileSizeFormatted} • {doc.documentType}
                             </p>
-                            {(documentAnnotations[doc.id] || []).length > 0 && (
-                              <p className="text-xs text-blue-600 mt-1">
-                                {documentAnnotations[doc.id]?.length} annotation
-                                {documentAnnotations[doc.id]?.length !== 1
-                                  ? 's'
-                                  : ''}
-                              </p>
-                            )}
+                            <div className="flex items-center gap-2 mt-2">
+                              <span
+                                className={`text-xs px-2 py-1 rounded ${
+                                  doc.isVerified
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }`}
+                              >
+                                {doc.isVerified ? 'Verified' : 'Pending'}
+                              </span>
+                              {permissions.canVerifyDocuments && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDocumentVerify(
+                                      doc._id,
+                                      !doc.isVerified
+                                    );
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  {doc.isVerified ? 'Unverify' : 'Verify'}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -273,21 +452,21 @@ export default function ProjectReview() {
               </div>
 
               {/* PDF Viewer */}
-              <div className="h-[800px]">
+              <div className="h-[600px]">
                 {selectedDocument ? (
                   (() => {
-                    const selectedDoc = project.documents.find(
-                      (doc) => doc.id === selectedDocument
+                    const selectedDoc = projectDocuments.find(
+                      (doc: any) => doc._id === selectedDocument
                     );
                     if (!selectedDoc) return null;
 
                     return (
                       <PDFViewer
-                        url={selectedDoc.url}
-                        fileName={selectedDoc.name}
-                        annotations={documentAnnotations[selectedDoc.id] || []}
+                        url={selectedDoc.media.cloudinary_url}
+                        fileName={selectedDoc.originalName}
+                        annotations={documentAnnotations[selectedDoc._id] || []}
                         onAnnotationChange={(annotations) =>
-                          handleAnnotationChange(selectedDoc.id, annotations)
+                          handleAnnotationChange(selectedDoc._id, annotations)
                         }
                       />
                     );
@@ -317,20 +496,6 @@ export default function ProjectReview() {
                         Choose a document from the list above to view and
                         annotate
                       </p>
-                      <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-yellow-200 rounded"></div>
-                          <span>Highlight</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-blue-200 rounded"></div>
-                          <span>Note</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 bg-red-200 rounded"></div>
-                          <span>Issue</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -346,152 +511,255 @@ export default function ProjectReview() {
               </h2>
 
               <div className="space-y-6">
-                {['Documentation', 'Technical', 'Financial', 'Compliance'].map(
-                  (category) => (
-                    <div key={category}>
-                      <h3 className="text-lg font-medium mb-3 text-blue-700">
-                        {category}
-                      </h3>
-                      <div className="space-y-3 ml-4">
-                        {checklist
-                          .filter((item) => item.category === category)
-                          .map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex items-center justify-between p-3 border rounded"
-                            >
-                              <div className="flex-1">
-                                <p className="font-medium">{item.item}</p>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <select
-                                  className="border rounded px-2 py-1 text-sm"
-                                  defaultValue={item.status}
-                                >
-                                  <option value="pending">Pending</option>
-                                  <option value="approved">Approved</option>
-                                  <option value="rejected">
-                                    Needs Revision
-                                  </option>
-                                </select>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  max="10"
-                                  placeholder="Score"
-                                  defaultValue={item.score || ''}
-                                  className="w-16 border rounded px-2 py-1 text-sm"
-                                />
-                              </div>
+                {[
+                  'Documentation',
+                  'Technical',
+                  'Environmental',
+                  'Location',
+                ].map((category) => (
+                  <div key={category}>
+                    <h3 className="text-lg font-medium mb-3 text-blue-700">
+                      {category}
+                    </h3>
+                    <div className="space-y-3 ml-4">
+                      {checklist
+                        .filter((item) => item.category === category)
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center justify-between p-3 border rounded"
+                          >
+                            <div className="flex-1">
+                              <p className="font-medium">{item.item}</p>
                             </div>
-                          ))}
-                      </div>
+                            <div className="flex items-center gap-4">
+                              <select
+                                className="border rounded px-2 py-1 text-sm"
+                                value={item.status}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (value === 'approved') {
+                                    handleChecklistUpdate(item.id, true);
+                                  } else if (value === 'rejected') {
+                                    handleChecklistUpdate(item.id, false);
+                                  }
+                                }}
+                                disabled={verification.status !== 'in_progress'}
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                              </select>
+                            </div>
+                          </div>
+                        ))}
                     </div>
-                  )
-                )}
-              </div>
-
-              {/* Overall Assessment */}
-              <div className="mt-8 pt-6 border-t">
-                <h3 className="text-lg font-medium mb-4">Overall Assessment</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Overall Score (1-10)
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      className="w-full p-2 border rounded"
-                    />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Recommendation
-                    </label>
-                    <select className="w-full p-2 border rounded">
-                      <option>Select recommendation</option>
-                      <option>Approve</option>
-                      <option>Approve with conditions</option>
-                      <option>Request revisions</option>
-                      <option>Reject</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <label className="block text-sm font-medium mb-2">
-                    Final Comments
-                  </label>
-                  <textarea
-                    className="w-full h-24 p-3 border rounded"
-                    placeholder="Provide detailed feedback and recommendations..."
-                  ></textarea>
-                </div>
+                ))}
               </div>
             </div>
           )}
 
           {/* Communication */}
           {activeSection === 'communication' && (
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-semibold mb-6">Communication</h2>
-
-              {/* Message Thread */}
-              <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
-                <div className="bg-gray-50 p-4 rounded">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-medium">SolarTech Inc</span>
-                    <span className="text-sm text-gray-500">
-                      Jan 15, 2024 10:30 AM
-                    </span>
-                  </div>
-                  <p className="text-gray-700">
-                    We have submitted our solar farm project for verification.
-                    Please let us know if you need any additional documentation.
-                  </p>
-                </div>
-
-                <div className="bg-blue-50 p-4 rounded">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-medium">John Smith (Verifier)</span>
-                    <span className="text-sm text-gray-500">
-                      Jan 16, 2024 2:15 PM
-                    </span>
-                  </div>
-                  <p className="text-gray-700">
-                    Thank you for the submission. I have reviewed the initial
-                    documents and have some questions about the environmental
-                    impact assessment. Could you provide more details on the
-                    biodiversity impact study?
-                  </p>
-                </div>
-              </div>
-
-              {/* Send Message */}
-              <div className="border-t pt-6">
-                <label className="block text-sm font-medium mb-2">
-                  Send Message
-                </label>
-                <textarea
-                  className="w-full h-24 p-3 border rounded mb-3"
-                  placeholder="Type your message here..."
-                ></textarea>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      <span className="text-sm">Send email notification</span>
-                    </label>
-                  </div>
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded">
-                    Send Message
-                  </button>
-                </div>
-              </div>
-            </div>
+            <CommunicationPanel
+              verification={verification}
+              onSendMessage={async (
+                subject: string,
+                message: string,
+                recipientId: Id<'users'>
+              ) => {
+                try {
+                  await sendMessage({
+                    verificationId: verification._id,
+                    recipientId,
+                    subject,
+                    message,
+                    priority: 'normal',
+                  });
+                  toast.success('Message sent successfully');
+                } catch (error) {
+                  toast.error('Failed to send message');
+                }
+              }}
+            />
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Communication Panel Component
+function CommunicationPanel({
+  verification,
+  onSendMessage,
+}: {
+  verification: any;
+  onSendMessage: (
+    subject: string,
+    message: string,
+    recipientId: Id<'users'>
+  ) => Promise<void>;
+}) {
+  const [newMessage, setNewMessage] = useState('');
+  const [messageSubject, setMessageSubject] = useState('');
+  const [isComposing, setIsComposing] = useState(false);
+
+  // Get verification messages
+  const messages = useQuery(
+    api.verificationMessages.getMessagesByVerification,
+    verification?._id ? { verificationId: verification._id } : 'skip'
+  );
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !messageSubject.trim()) {
+      toast.error('Please enter both subject and message');
+      return;
+    }
+
+    // For now, we'll use a placeholder recipient ID
+    // In a real implementation, this would be the project creator's ID
+    const recipientId = verification.verifierId as Id<'users'>; // Placeholder
+
+    try {
+      await onSendMessage(messageSubject, newMessage, recipientId);
+      setNewMessage('');
+      setMessageSubject('');
+      setIsComposing(false);
+    } catch (error) {
+      // Error is handled in the parent component
+    }
+  };
+
+  if (!messages) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="flex items-center justify-center h-32">
+          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold">Communication</h2>
+        <button
+          onClick={() => setIsComposing(!isComposing)}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          {isComposing ? 'Cancel' : 'New Message'}
+        </button>
+      </div>
+
+      {/* New Message Composer */}
+      {isComposing && (
+        <div className="mb-6 p-4 border border-blue-200 rounded-lg bg-blue-50">
+          <h3 className="text-lg font-medium mb-4">Compose Message</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Subject</label>
+              <input
+                type="text"
+                value={messageSubject}
+                onChange={(e) => setMessageSubject(e.target.value)}
+                className="w-full p-2 border rounded"
+                placeholder="Message subject..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Message</label>
+              <textarea
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="w-full h-24 p-3 border rounded"
+                placeholder="Type your message here..."
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim() || !messageSubject.trim()}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                Send Message
+              </button>
+              <button
+                onClick={() => setIsComposing(false)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Message Thread */}
+      <div className="space-y-4 max-h-96 overflow-y-auto">
+        {messages.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-4.126-.98L3 20l1.98-5.874A8.955 8.955 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"
+                />
+              </svg>
+            </div>
+            <p>No messages yet. Start a conversation!</p>
+          </div>
+        ) : (
+          messages
+            .sort(
+              (a: any, b: any) =>
+                (a._creationTime || 0) - (b._creationTime || 0)
+            )
+            .map((message: any) => (
+              <div
+                key={message._id}
+                className={`p-4 rounded-lg ${
+                  message.senderId === verification.verifierId
+                    ? 'bg-blue-50 ml-8'
+                    : 'bg-gray-50 mr-8'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-medium text-sm">{message.subject}</h4>
+                    <p className="text-xs text-gray-500">
+                      {message.senderId === verification.verifierId
+                        ? 'You'
+                        : 'Project Creator'}{' '}
+                      • {new Date(message._creationTime).toLocaleDateString()}{' '}
+                      {new Date(message._creationTime).toLocaleTimeString()}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-xs px-2 py-1 rounded ${
+                      message.priority === 'urgent'
+                        ? 'bg-red-100 text-red-800'
+                        : message.priority === 'high'
+                          ? 'bg-orange-100 text-orange-800'
+                          : 'bg-blue-100 text-blue-800'
+                    }`}
+                  >
+                    {message.priority}
+                  </span>
+                </div>
+                <p className="text-gray-700">{message.message}</p>
+              </div>
+            ))
+        )}
       </div>
     </div>
   );

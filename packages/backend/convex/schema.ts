@@ -460,30 +460,51 @@ export default defineSchema({
     .index('by_action', ['action']),
 
   // System notifications
-  // notifications: defineTable({
-  //     userId: v.id("users"),
-  //     type: v.union(
-  //         v.literal("project_approved"),
-  //         v.literal("project_rejected"),
-  //         v.literal("verification_assigned"),
-  //         v.literal("payment_received"),
-  //         v.literal("progress_update"),
-  //         v.literal("certificate_ready"),
-  //         v.literal("system_announcement")
-  //     ),
-  //     title: v.string(),
-  //     message: v.string(),
-  //     isRead: v.boolean(),
-  //     readAt: v.optional(v.string()),
-  //     actionUrl: v.optional(v.string()), // Link to relevant page
-  //     priority: v.union(v.literal("low"), v.literal("normal"), v.literal("high")),
-  //     expiresAt: v.optional(v.string()),
-  //     metadata: v.optional(v.any()), // Additional data (JSON)
-  // })
-  //     .index("by_user", ["userId"])
-  //     .index("by_unread", ["userId", "isRead"])
-  //     .index("by_type", ["type"])
-  //     .index("by_priority", ["priority"]),
+  notifications: defineTable({
+    recipientId: v.id('users'),
+    type: v.union(
+      v.literal('verification_assigned'),
+      v.literal('verification_started'),
+      v.literal('verification_completed'),
+      v.literal('project_approved'),
+      v.literal('project_rejected'),
+      v.literal('revision_required'),
+      v.literal('message_received'),
+      v.literal('deadline_approaching'),
+      v.literal('deadline_overdue'),
+      v.literal('document_uploaded'),
+      v.literal('document_verified'),
+      v.literal('quality_score_updated')
+    ),
+    title: v.string(),
+    message: v.string(),
+    priority: v.union(
+      v.literal('low'),
+      v.literal('normal'),
+      v.literal('high'),
+      v.literal('urgent')
+    ),
+    relatedEntityId: v.optional(v.string()),
+    relatedEntityType: v.optional(
+      v.union(
+        v.literal('project'),
+        v.literal('verification'),
+        v.literal('document'),
+        v.literal('message')
+      )
+    ),
+    actionUrl: v.optional(v.string()),
+    isRead: v.boolean(),
+    readAt: v.optional(v.float64()),
+    isEmailSent: v.boolean(),
+    isPushSent: v.boolean(),
+    expiresAt: v.optional(v.float64()),
+    metadata: v.optional(v.any()), // Additional data (JSON)
+  })
+    .index('by_recipient', ['recipientId'])
+    .index('by_unread', ['recipientId', 'isRead'])
+    .index('by_type', ['type'])
+    .index('by_priority', ['priority']),
 
   // ============= ANALYTICS & REPORTING =============
   analytics: defineTable({

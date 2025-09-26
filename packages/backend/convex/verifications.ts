@@ -25,7 +25,20 @@ export const createVerification = mutation({
       throw new Error('Unauthorized: Admin or verifier access required');
     }
 
-    return await VerificationService.createVerification(ctx, args);
+    const verificationId = await VerificationService.createVerification(
+      ctx,
+      args
+    );
+
+    // Trigger workflow assignment
+    const { WorkflowService } = await import('../services/workflow-service');
+    await WorkflowService.handleVerificationAssignment(
+      ctx,
+      verificationId,
+      currentUser._id
+    );
+
+    return verificationId;
   },
 });
 
@@ -177,11 +190,21 @@ export const startVerification = mutation({
       throw new Error('Unauthorized: Verifier access required');
     }
 
-    return await VerificationService.startVerification(
+    const result = await VerificationService.startVerification(
       ctx,
       verificationId,
       currentUser._id
     );
+
+    // Trigger workflow start
+    const { WorkflowService } = await import('../services/workflow-service');
+    await WorkflowService.handleVerificationStart(
+      ctx,
+      verificationId,
+      currentUser._id
+    );
+
+    return result;
   },
 });
 
@@ -250,11 +273,23 @@ export const completeVerification = mutation({
     }
 
     const { verificationId, ...data } = args;
-    return await VerificationService.completeVerification(
+    const result = await VerificationService.completeVerification(
       ctx,
       verificationId,
       data
     );
+
+    // Trigger workflow completion
+    const { WorkflowService } = await import('../services/workflow-service');
+    await WorkflowService.handleVerificationCompletion(
+      ctx,
+      verificationId,
+      args.recommendation,
+      args.qualityScore,
+      currentUser._id
+    );
+
+    return result;
   },
 });
 
