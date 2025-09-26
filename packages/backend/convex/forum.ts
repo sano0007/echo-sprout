@@ -442,8 +442,14 @@ export const replyContributors = query({
     const users = await Promise.all(entries.map((e) => ctx.db.get(e.userId)));
     const result = entries.map((e, i) => {
       const u = users[i] as any;
-      const name = u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.email : 'Unknown';
-      return { userId: (e.userId?.id as unknown as string) || String(e.userId), name, replies: e.count };
+      const name = u
+        ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.email
+        : 'Unknown';
+      return {
+        userId: (e.userId?.id as unknown as string) || String(e.userId),
+        name,
+        replies: e.count,
+      };
     });
     result.sort((a, b) => b.replies - a.replies);
     return result;
@@ -456,13 +462,18 @@ export const topicsByDateRange = query({
   handler: async (ctx, { from, to }) => {
     const fromDate = new Date(from + 'T00:00:00.000Z');
     const toDate = new Date(to + 'T23:59:59.999Z');
-    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return [] as { date: string; value: number }[];
-    if (fromDate.getTime() > toDate.getTime()) return [] as { date: string; value: number }[];
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime()))
+      return [] as { date: string; value: number }[];
+    if (fromDate.getTime() > toDate.getTime())
+      return [] as { date: string; value: number }[];
 
     const topics = await ctx.db.query('forumTopics').collect();
     const byDay = new Map<string, number>();
     for (const t of topics as any[]) {
-      const ts = typeof t._creationTime === 'number' ? t._creationTime : Number(t._creationTime ?? 0);
+      const ts =
+        typeof t._creationTime === 'number'
+          ? t._creationTime
+          : Number(t._creationTime ?? 0);
       if (!ts) continue;
       if (ts < fromDate.getTime() || ts > toDate.getTime()) continue;
       const d = new Date(ts);

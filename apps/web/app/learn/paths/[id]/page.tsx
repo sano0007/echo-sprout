@@ -25,7 +25,9 @@ export default function LearningPathDetailsPage() {
   const deleteLesson = useMutation(api.learn.deleteLesson);
   const recordEntry = useMutation(api.learn.recordPathsEntry);
   const recordStart = useMutation(api.learn.recordCourseStart);
-  const progress = useQuery(api.learn.getPathProgress, { pathId: id ?? '' } as any);
+  const progress = useQuery(api.learn.getPathProgress, {
+    pathId: id ?? '',
+  } as any);
   const setProgress = useMutation(api.learn.setPathProgress);
 
   const [editingPath, setEditingPath] = useState(false);
@@ -608,7 +610,10 @@ export default function LearningPathDetailsPage() {
                                     onChange={async () => {
                                       const lid = String(L.id);
                                       const next = !pdfChecked[key];
-                                      setPdfChecked((c) => ({ ...c, [key]: next }));
+                                      setPdfChecked((c) => ({
+                                        ...c,
+                                        [key]: next,
+                                      }));
                                       try {
                                         await setProgress({
                                           pathId: String(id),

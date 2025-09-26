@@ -501,7 +501,9 @@ export const getPathProgress = query({
     if (!normalizedPath) return [];
     const rows = await ctx.db
       .query('learningProgress')
-      .withIndex('by_user_path', (q) => q.eq('userId', user._id).eq('pathId', normalizedPath))
+      .withIndex('by_user_path', (q) =>
+        q.eq('userId', user._id).eq('pathId', normalizedPath)
+      )
       .collect();
     return rows.map((r) => ({
       lessonId: r.lessonId,
@@ -526,7 +528,10 @@ export const setPathProgress = mutation({
 
     const normalizedPath = await ctx.db.normalizeId('learningPaths', pathId);
     if (!normalizedPath) throw new Error('Invalid path id');
-    const normalizedLesson = await ctx.db.normalizeId('learningPathLessons', lessonId);
+    const normalizedLesson = await ctx.db.normalizeId(
+      'learningPathLessons',
+      lessonId
+    );
     if (!normalizedLesson) throw new Error('Invalid lesson id');
 
     const idx = typeof itemIndex === 'number' ? itemIndex : 0;
@@ -859,11 +864,15 @@ export const engagementPercent = query({
 
     const viewers = new Set<string>();
     for (const r of entryRows as any[]) {
-      const key = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      const key =
+        (r.metadata?.userId?.id as unknown as string) ||
+        String(r.metadata?.userId ?? '');
       if (key) viewers.add(key);
     }
     for (const r of startRows as any[]) {
-      const key = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      const key =
+        (r.metadata?.userId?.id as unknown as string) ||
+        String(r.metadata?.userId ?? '');
       if (key) viewers.add(key);
     }
 
@@ -871,9 +880,7 @@ export const engagementPercent = query({
     if (denom === 0) return 0;
 
     // Users who have any completed progress
-    const progressRows = await ctx.db
-      .query('learningProgress')
-      .collect();
+    const progressRows = await ctx.db.query('learningProgress').collect();
     const progressedViewerUsers = new Set<string>();
     for (const r of progressRows as any[]) {
       if (!r.completed) continue;
@@ -898,7 +905,9 @@ export const pathsByViews = query({
 
     const counts = new Map<string, number>();
     for (const r of rows as any[]) {
-      const pid = (r.metadata?.pathId?.id as unknown as string) || String(r.metadata?.pathId ?? '');
+      const pid =
+        (r.metadata?.pathId?.id as unknown as string) ||
+        String(r.metadata?.pathId ?? '');
       if (!pid) continue;
       counts.set(pid, (counts.get(pid) ?? 0) + (r.value ?? 0));
     }
@@ -914,7 +923,7 @@ export const pathsByViews = query({
       result.push({ id: pid, title, views });
     }
 
-    result.sort((a, b) => (b.views - a.views) || a.title.localeCompare(b.title));
+    result.sort((a, b) => b.views - a.views || a.title.localeCompare(b.title));
     return result;
   },
 });
@@ -931,7 +940,9 @@ export const pathsByEngagement = query({
         .collect(),
       ctx.db
         .query('analytics')
-        .withIndex('by_metric', (q) => q.eq('metric', 'learn_course_start_user'))
+        .withIndex('by_metric', (q) =>
+          q.eq('metric', 'learn_course_start_user')
+        )
         .collect(),
     ]);
 
@@ -947,17 +958,32 @@ export const pathsByEngagement = query({
     };
 
     for (const r of entryRows as any[]) {
-      const pid = (r.metadata?.pathId?.id as unknown as string) || String(r.metadata?.pathId ?? '');
-      const uid = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      const pid =
+        (r.metadata?.pathId?.id as unknown as string) ||
+        String(r.metadata?.pathId ?? '');
+      const uid =
+        (r.metadata?.userId?.id as unknown as string) ||
+        String(r.metadata?.userId ?? '');
       if (pid && uid) addViewer(pid, uid);
     }
     for (const r of startRows as any[]) {
-      const pid = (r.metadata?.pathId?.id as unknown as string) || String(r.metadata?.pathId ?? '');
-      const uid = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      const pid =
+        (r.metadata?.pathId?.id as unknown as string) ||
+        String(r.metadata?.pathId ?? '');
+      const uid =
+        (r.metadata?.userId?.id as unknown as string) ||
+        String(r.metadata?.userId ?? '');
       if (pid && uid) addViewer(pid, uid);
     }
 
-    if (viewersByPath.size === 0) return [] as { id: string; title: string; engagement: number; viewers: number; progressed: number }[];
+    if (viewersByPath.size === 0)
+      return [] as {
+        id: string;
+        title: string;
+        engagement: number;
+        viewers: number;
+        progressed: number;
+      }[];
 
     // Build progressed users per path from learningProgress
     const progressRows = await ctx.db.query('learningProgress').collect();
@@ -975,7 +1001,13 @@ export const pathsByEngagement = query({
       set.add(uid);
     }
 
-    const result: { id: string; title: string; engagement: number; viewers: number; progressed: number }[] = [];
+    const result: {
+      id: string;
+      title: string;
+      engagement: number;
+      viewers: number;
+      progressed: number;
+    }[] = [];
     for (const [pid, viewers] of viewersByPath.entries()) {
       const progressedSet = progressedByPath.get(pid) || new Set<string>();
       let progressedCount = 0;
@@ -991,10 +1023,21 @@ export const pathsByEngagement = query({
         if (doc) title = doc.title;
       }
 
-      result.push({ id: pid, title, engagement: pct, viewers: denom, progressed: progressedCount });
+      result.push({
+        id: pid,
+        title,
+        engagement: pct,
+        viewers: denom,
+        progressed: progressedCount,
+      });
     }
 
-    result.sort((a, b) => (b.engagement - a.engagement) || (b.viewers - a.viewers) || a.title.localeCompare(b.title));
+    result.sort(
+      (a, b) =>
+        b.engagement - a.engagement ||
+        b.viewers - a.viewers ||
+        a.title.localeCompare(b.title)
+    );
     return result;
   },
 });
@@ -1041,8 +1084,10 @@ export const viewsByDateRange = query({
     // Expect YYYY-MM-DD; normalize to UTC midnight bounds
     const fromDate = new Date(from + 'T00:00:00.000Z');
     const toDate = new Date(to + 'T23:59:59.999Z');
-    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return [] as { date: string; value: number }[];
-    if (fromDate.getTime() > toDate.getTime()) return [] as { date: string; value: number }[];
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime()))
+      return [] as { date: string; value: number }[];
+    if (fromDate.getTime() > toDate.getTime())
+      return [] as { date: string; value: number }[];
 
     const rows = await ctx.db
       .query('analytics')
@@ -1081,8 +1126,10 @@ export const viewsAndEngagementByRange = query({
   async handler(ctx, { from, to }) {
     const fromDate = new Date(from + 'T00:00:00.000Z');
     const toDate = new Date(to + 'T23:59:59.999Z');
-    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return [] as { date: string; views: number; engagement: number }[];
-    if (fromDate.getTime() > toDate.getTime()) return [] as { date: string; views: number; engagement: number }[];
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime()))
+      return [] as { date: string; views: number; engagement: number }[];
+    if (fromDate.getTime() > toDate.getTime())
+      return [] as { date: string; views: number; engagement: number }[];
 
     // Views per day from analytics metric
     const analytics = await ctx.db
@@ -1114,10 +1161,15 @@ export const viewsAndEngagementByRange = query({
       const d = new Date(ts);
       d.setUTCHours(0, 0, 0, 0);
       const key = d.toISOString().slice(0, 10);
-      const uid = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      const uid =
+        (r.metadata?.userId?.id as unknown as string) ||
+        String(r.metadata?.userId ?? '');
       if (!uid) continue;
       let set = viewersByDay.get(key);
-      if (!set) { set = new Set<string>(); viewersByDay.set(key, set); }
+      if (!set) {
+        set = new Set<string>();
+        viewersByDay.set(key, set);
+      }
       set.add(uid);
     }
 
@@ -1125,7 +1177,10 @@ export const viewsAndEngagementByRange = query({
     const progressedByDay = new Map<string, Set<string>>();
     for (const r of progressRows as any[]) {
       if (!r.completed) continue;
-      const ts = typeof r._creationTime === 'number' ? r._creationTime : Number(r._creationTime ?? 0);
+      const ts =
+        typeof r._creationTime === 'number'
+          ? r._creationTime
+          : Number(r._creationTime ?? 0);
       if (!ts) continue;
       if (ts < fromDate.getTime() || ts > toDate.getTime()) continue;
       const d = new Date(ts);
@@ -1134,13 +1189,18 @@ export const viewsAndEngagementByRange = query({
       const uid = (r.userId?.id as unknown as string) || String(r.userId ?? '');
       if (!uid) continue;
       let set = progressedByDay.get(key);
-      if (!set) { set = new Set<string>(); progressedByDay.set(key, set); }
+      if (!set) {
+        set = new Set<string>();
+        progressedByDay.set(key, set);
+      }
       set.add(uid);
     }
 
     const msPerDay = 24 * 60 * 60 * 1000;
-    const start = new Date(fromDate); start.setUTCHours(0,0,0,0);
-    const end = new Date(toDate); end.setUTCHours(0,0,0,0);
+    const start = new Date(fromDate);
+    start.setUTCHours(0, 0, 0, 0);
+    const end = new Date(toDate);
+    end.setUTCHours(0, 0, 0, 0);
     const result: { date: string; views: number; engagement: number }[] = [];
     for (let t = start.getTime(); t <= end.getTime(); t += msPerDay) {
       const d = new Date(t);
@@ -1148,7 +1208,8 @@ export const viewsAndEngagementByRange = query({
       const views = viewsByDay.get(key) ?? 0;
       const viewers = viewersByDay.get(key)?.size ?? 0;
       const progressed = progressedByDay.get(key)?.size ?? 0;
-      const engagement = viewers === 0 ? 0 : Math.round((progressed / viewers) * 100);
+      const engagement =
+        viewers === 0 ? 0 : Math.round((progressed / viewers) * 100);
       result.push({ date: key, views, engagement });
     }
     return result;

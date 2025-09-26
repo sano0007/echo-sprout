@@ -333,7 +333,8 @@ export default function LearnHub() {
                     </div>
 
                     {/* Progress bar: persisted for real paths, static for samples */}
-                    {String(module.id).startsWith('0x') || String(module.id).length > 10 ? (
+                    {String(module.id).startsWith('0x') ||
+                    String(module.id).length > 10 ? (
                       progressMap === undefined ? (
                         <div className="mb-4">
                           <div className="flex justify-between text-sm mb-1">
@@ -383,8 +384,15 @@ export default function LearnHub() {
                     {String(module.id).startsWith('0x') ||
                     String(module.id).length > 10 ? (
                       (() => {
-                        const pct = progressMap ? progressMap[String(module.id)] ?? 0 : 0;
-                        const label = pct <= 0 ? 'Start Course' : pct >= 100 ? 'Review Course' : 'Continue Course';
+                        const pct = progressMap
+                          ? (progressMap[String(module.id)] ?? 0)
+                          : 0;
+                        const label =
+                          pct <= 0
+                            ? 'Start Course'
+                            : pct >= 100
+                              ? 'Review Course'
+                              : 'Continue Course';
                         return (
                           <button
                             className="block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
@@ -393,7 +401,9 @@ export default function LearnHub() {
                                 alert('Please sign in to start the course.');
                                 return;
                               }
-                              router.push(`/learn/paths/${module.id}?from=learn`);
+                              router.push(
+                                `/learn/paths/${module.id}?from=learn`
+                              );
                             }}
                           >
                             {label}

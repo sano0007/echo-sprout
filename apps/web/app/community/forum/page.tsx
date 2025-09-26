@@ -475,7 +475,6 @@ export default function CommunityForum() {
               ))}
             </nav>
           </div>
-
         </div>
 
         {/* Main Content */}
