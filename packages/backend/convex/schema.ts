@@ -502,14 +502,7 @@ export default defineSchema({
         v.literal('critical')
       )
     ),
-  })
-    .index('by_user', ['userId'])
-    .index('by_entity', ['entityType', 'entityId'])
-    .index('by_action', ['action'])
-    // Enhanced indexes for monitoring
-    .index('by_user_action', ['userId', 'action'])
-    .index('by_severity', ['severity'])
-    .index('by_entity_time', ['entityType', 'entityId', '_creationTime']),
+  }),
 
   // System notifications
   notifications: defineTable({
