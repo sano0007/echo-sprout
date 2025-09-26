@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { Doc, Id } from './_generated/dataModel';
+import { Id } from './_generated/dataModel';
 
 // Report template types and interfaces
 export interface ReportTemplate {
@@ -429,7 +429,7 @@ export const createReportTemplate = mutation({
     }
 
     const template: ReportTemplate = {
-      id: crypto.randomUUID(),
+      id: `template_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       name: args.name,
       description: args.description,
       templateType: args.templateType,
@@ -458,18 +458,20 @@ export const createReportTemplate = mutation({
       },
     };
 
-    const templateId = await ctx.db.insert('reportTemplates', {
-      templateId: template.id,
-      name: template.name,
+    const templateId = await ctx.db.insert('analyticsReports', {
+      reportType: 'platform_analytics',
+      title: template.name,
       description: template.description,
-      templateType: template.templateType,
-      format: template.format,
-      templateData: template,
-      createdBy: identity.subject,
-      isActive: true,
-      isDefault: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+      reportData: template,
+      generatedBy: identity.subject as Id<'users'>,
+      generatedAt: Date.now(),
+      timeframe: {
+        type: 'template',
+        format: template.format,
+        templateType: template.templateType,
+      },
+      format: 'json',
+      isPublic: false,
     });
 
     return templateId;
@@ -480,16 +482,18 @@ export const getReportTemplate = query({
   args: { templateId: v.string() },
   handler: async (ctx, args) => {
     const template = await ctx.db
-      .query('reportTemplates')
-      .withIndex('by_templateId', (q) => q.eq('templateId', args.templateId))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .query('analyticsReports')
+      .filter((q: any) => q.and(
+        q.eq(q.field('reportType'), 'platform_analytics'),
+        q.eq(q.field('reportData.id'), args.templateId)
+      ))
       .first();
 
     if (!template) {
       return null;
     }
 
-    return template.templateData as ReportTemplate;
+    return template.reportData as ReportTemplate;
   },
 });
 
@@ -501,30 +505,30 @@ export const listReportTemplates = query({
   },
   handler: async (ctx, args) => {
     let query = ctx.db
-      .query('reportTemplates')
-      .filter((q) => q.eq(q.field('isActive'), true));
+      .query('analyticsReports')
+      .filter((q: any) => q.eq(q.field('reportType'), 'platform_analytics'));
 
     if (args.templateType) {
-      query = query.filter((q) =>
-        q.eq(q.field('templateType'), args.templateType)
+      query = query.filter((q: any) =>
+        q.eq(q.field('reportData.templateType'), args.templateType)
       );
     }
 
     if (args.format) {
-      query = query.filter((q) => q.eq(q.field('format'), args.format));
+      query = query.filter((q: any) => q.eq(q.field('reportData.format'), args.format));
     }
 
     const templates = await query.collect();
 
     return templates.map((template) => ({
-      id: template.templateId,
-      name: template.name,
+      id: template.reportData.id,
+      name: template.title,
       description: template.description,
-      templateType: template.templateType,
-      format: template.format,
-      isDefault: template.isDefault,
-      createdAt: template.createdAt,
-      updatedAt: template.updatedAt,
+      templateType: template.reportData.templateType,
+      format: template.reportData.format,
+      isDefault: template.timeframe?.isDefault || false,
+      createdAt: template.generatedAt,
+      updatedAt: template.generatedAt,
     }));
   },
 });
@@ -541,16 +545,18 @@ export const updateReportTemplate = mutation({
     }
 
     const template = await ctx.db
-      .query('reportTemplates')
-      .withIndex('by_templateId', (q) => q.eq('templateId', args.templateId))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .query('analyticsReports')
+      .filter((q: any) => q.and(
+        q.eq(q.field('reportType'), 'platform_analytics'),
+        q.eq(q.field('reportData.id'), args.templateId)
+      ))
       .first();
 
     if (!template) {
       throw new Error('Template not found');
     }
 
-    const templateData = template.templateData as ReportTemplate;
+    const templateData = template.reportData as ReportTemplate;
 
     // Check permissions
     const hasPermission =
@@ -576,8 +582,8 @@ export const updateReportTemplate = mutation({
     };
 
     await ctx.db.patch(template._id, {
-      templateData: updatedTemplate,
-      updatedAt: Date.now(),
+      reportData: updatedTemplate,
+      description: updatedTemplate.description,
     });
 
     return updatedTemplate.id;
@@ -593,20 +599,19 @@ export const deleteReportTemplate = mutation({
     }
 
     const template = await ctx.db
-      .query('reportTemplates')
-      .withIndex('by_templateId', (q) => q.eq('templateId', args.templateId))
-      .filter((q) => q.eq(q.field('isActive'), true))
+      .query('analyticsReports')
+      .filter((q: any) => q.and(
+        q.eq(q.field('reportType'), 'platform_analytics'),
+        q.eq(q.field('reportData.id'), args.templateId)
+      ))
       .first();
 
     if (!template) {
       throw new Error('Template not found');
     }
 
-    // Soft delete - mark as inactive
-    await ctx.db.patch(template._id, {
-      isActive: false,
-      updatedAt: Date.now(),
-    });
+    // Delete the template
+    await ctx.db.delete(template._id);
 
     return true;
   },
@@ -615,7 +620,7 @@ export const deleteReportTemplate = mutation({
 // Template utility functions
 export const initializeDefaultTemplates = mutation({
   args: {},
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error('Not authenticated');
@@ -623,8 +628,11 @@ export const initializeDefaultTemplates = mutation({
 
     // Check if default templates already exist
     const existingDefaults = await ctx.db
-      .query('reportTemplates')
-      .filter((q) => q.eq(q.field('isDefault'), true))
+      .query('analyticsReports')
+      .filter((q: any) => q.and(
+        q.eq(q.field('reportType'), 'platform_analytics'),
+        q.eq(q.field('timeframe.isDefault'), true)
+      ))
       .collect();
 
     if (existingDefaults.length > 0) {
@@ -638,7 +646,7 @@ export const initializeDefaultTemplates = mutation({
 
     for (const defaultTemplate of DEFAULT_TEMPLATES) {
       const template: ReportTemplate = {
-        id: crypto.randomUUID(),
+        id: `template_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
         name: defaultTemplate.name!,
         description: defaultTemplate.description!,
         templateType: defaultTemplate.templateType!,
@@ -667,18 +675,21 @@ export const initializeDefaultTemplates = mutation({
         },
       };
 
-      const templateId = await ctx.db.insert('reportTemplates', {
-        templateId: template.id,
-        name: template.name,
+      const templateId = await ctx.db.insert('analyticsReports', {
+        reportType: 'platform_analytics',
+        title: template.name,
         description: template.description,
-        templateType: template.templateType,
-        format: template.format,
-        templateData: template,
-        createdBy: 'system',
-        isActive: true,
-        isDefault: true,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        reportData: template,
+        generatedBy: identity.subject as Id<'users'>,
+        generatedAt: Date.now(),
+        timeframe: {
+          type: 'template',
+          format: template.format,
+          templateType: template.templateType,
+          isDefault: true,
+        },
+        format: 'json',
+        isPublic: true,
       });
 
       createdTemplates.push(templateId);
@@ -738,7 +749,7 @@ function incrementVersion(currentVersion: string): string {
 // Template validation
 export const validateTemplate = query({
   args: { templateData: v.any() },
-  handler: async (ctx, args) => {
+  handler: async (_, args) => {
     const template = args.templateData as ReportTemplate;
     const errors: string[] = [];
 
