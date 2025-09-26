@@ -62,8 +62,8 @@ export const validateEnvironmentalMetrics = mutation({
     // Get historical data for this project
     const historicalUpdates = await ctx.db
       .query('progressUpdates')
-      .withIndex('by_project', (q) => q.eq('projectId', args.projectId))
-      .filter((q) => q.eq(q.field('isVerified'), true))
+      .withIndex('by_project', (q: any) => q.eq('projectId', args.projectId))
+      .filter((q: any) => q.eq(q.field('isVerified'), true))
       .collect();
 
     const historicalMetrics = historicalUpdates.map((update) => ({
@@ -543,8 +543,10 @@ function analyzeTrend(
 
   const recentValues = values.slice(-3);
   const isIncreasing =
+    recentValues[2] !== undefined && recentValues[1] !== undefined && recentValues[0] !== undefined &&
     recentValues[2] > recentValues[1] && recentValues[1] > recentValues[0];
   const isDecreasing =
+    recentValues[2] !== undefined && recentValues[1] !== undefined && recentValues[0] !== undefined &&
     recentValues[2] < recentValues[1] && recentValues[1] < recentValues[0];
 
   return {
@@ -562,7 +564,7 @@ export const getValidationConfig = query({
   handler: async (ctx, args) => {
     const config = await ctx.db
       .query('monitoringConfig')
-      .withIndex('by_project_type_key', (q) =>
+      .withIndex('by_project_type_key', (q: any) =>
         q
           .eq('projectType', args.projectType)
           .eq('configKey', 'validation_thresholds')
@@ -619,10 +621,13 @@ export const getProjectValidationHistory = query({
   handler: async (ctx, args) => {
     const validationLogs = await ctx.db
       .query('auditLogs')
-      .withIndex('by_entity', (q) =>
-        q.eq('entityType', 'project').eq('entityId', args.projectId)
+      .filter((q: any) =>
+        q.and(
+          q.eq(q.field('entityType'), 'project'),
+          q.eq(q.field('entityId'), args.projectId),
+          q.eq(q.field('action'), 'environmental_validation')
+        )
       )
-      .filter((q) => q.eq(q.field('action'), 'environmental_validation'))
       .order('desc')
       .take(20);
 
