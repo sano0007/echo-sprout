@@ -196,7 +196,11 @@ export default function ManageProjects() {
   };
 
   const handleDeleteProject = async (projectId: Id<'projects'>) => {
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this project? This action cannot be undone.'
+      )
+    ) {
       return;
     }
 
@@ -224,8 +228,18 @@ export default function ManageProjects() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
           </div>
@@ -327,7 +341,9 @@ export default function ManageProjects() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
                     <p className="text-sm text-gray-600">Location</p>
-                    <p className="text-sm font-medium">{project.location.name}</p>
+                    <p className="text-sm font-medium">
+                      {project.location.name}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Area Size</p>
@@ -346,8 +362,8 @@ export default function ManageProjects() {
                       ></div>
                     </div>
                     <p className="text-xs mt-1 text-gray-500">
-                      {project.creditsSold} / {project.totalCarbonCredits} credits
-                      sold
+                      {project.creditsSold} / {project.totalCarbonCredits}{' '}
+                      credits sold
                     </p>
                   </div>
                 </div>
@@ -381,7 +397,9 @@ export default function ManageProjects() {
                       </button>
                     )}
                     <button
-                      onClick={() => handleDeleteProject(project._id as Id<'projects'>)}
+                      onClick={() =>
+                        handleDeleteProject(project._id as Id<'projects'>)
+                      }
                       className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
                     >
                       Delete

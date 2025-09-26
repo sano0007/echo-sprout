@@ -500,12 +500,17 @@ export default function ProjectRegister() {
                   placeholder="Price per Credit"
                   value={formData.pricePerCredit || ''}
                   onChange={(e) =>
-                    handleInputChange('pricePerCredit', parseFloat(e.target.value) || 0)
+                    handleInputChange(
+                      'pricePerCredit',
+                      parseFloat(e.target.value) || 0
+                    )
                   }
                   className={`w-full p-3 border rounded ${errors.pricePerCredit ? 'border-red-500' : ''}`}
                 />
                 {errors.pricePerCredit && (
-                  <p className="text-red-500 text-sm mt-1">{errors.pricePerCredit}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.pricePerCredit}
+                  </p>
                 )}
               </div>
             </div>
