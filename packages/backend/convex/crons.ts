@@ -5,21 +5,22 @@ import { internal } from './_generated/api';
  * MONITORING & TRACKING SYSTEM - CRON JOBS CONFIGURATION
  *
  * This file defines the scheduled jobs for the monitoring system:
- * - Daily project monitoring (6:00 AM UTC)
+ * - Enhanced daily project monitoring (6:00 AM UTC)
  * - Hourly urgent monitoring (every hour)
  * - Weekly report generation (Monday 8:00 AM UTC)
+ * - Additional monitoring jobs for comprehensive coverage
  */
 
 const crons = cronJobs();
 
-// Daily monitoring job - runs every day at 6:00 AM UTC
+// Enhanced daily monitoring job - runs every day at 6:00 AM UTC
 crons.daily(
-  'Daily Project Monitoring',
+  'Enhanced Daily Project Monitoring',
   {
     hourUTC: 6, // 6:00 AM UTC
     minuteUTC: 0,
   },
-  internal.monitoring.dailyProjectMonitoring
+  internal.automatedMonitoring.enhancedDailyMonitoring
 );
 
 // Hourly urgent monitoring - runs every hour
@@ -40,6 +41,34 @@ crons.weekly(
     minuteUTC: 0,
   },
   internal.monitoring.weeklyReportGeneration
+);
+
+// Additional monitoring jobs for comprehensive coverage
+
+// Mid-day progress check - runs daily at 2:00 PM UTC
+crons.daily(
+  'Mid-day Progress Check',
+  {
+    hourUTC: 14, // 2:00 PM UTC
+    minuteUTC: 30,
+  },
+  internal.automatedMonitoring.processHighPriorityNotifications
+);
+
+// Milestone risk assessment - runs every 6 hours
+crons.interval(
+  'Milestone Risk Assessment',
+  { hours: 6 }, // Every 6 hours
+  internal.automatedMonitoring.monitorMilestoneDelays
+);
+
+// Alert escalation processing - runs every hour
+crons.hourly(
+  'Alert Escalation Processing',
+  {
+    minuteUTC: 5, // Run at 5 minutes past each hour to avoid conflicts
+  },
+  internal.alertEscalation.batchProcessEscalations
 );
 
 export default crons;

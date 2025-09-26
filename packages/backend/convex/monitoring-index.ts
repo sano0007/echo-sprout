@@ -12,6 +12,18 @@ export * from './monitoring-auth';
 export * from './monitoring-utils';
 export * from './progress-updates';
 export * from './progress-validation';
+export * from './automated-monitoring';
+export * from './monitoring-admin';
+export * from './alert-generation';
+export * from './alert-management';
+export * from './alert-escalation';
+export * from './notifications';
+
+// Environmental Impact Validation System
+export * from './impact-validation';
+export * from './project-validators';
+export * from './trend-analysis';
+export * from './third-party-validation';
 
 // Re-export types
 export * from '../types/monitoring-types';
@@ -46,7 +58,56 @@ export * from '../types/monitoring-types';
  *    - Progress trend analysis
  *    - Performance comparison tools
  *
- * 5. SCHEDULED JOBS (crons.ts)
+ * 5. ALERT GENERATION SYSTEM (alert-generation.ts)
+ *    - Dynamic alert creation with severity classification
+ *    - Alert deduplication and consolidation
+ *    - Context-aware alert enrichment
+ *    - Performance-optimized alert processing
+ *
+ * 6. ALERT MANAGEMENT API (alert-management.ts)
+ *    - CRUD operations for alerts
+ *    - Role-based alert access control
+ *    - Alert lifecycle management
+ *    - Bulk operations for efficiency
+ *
+ * 7. ALERT ESCALATION SYSTEM (alert-escalation.ts)
+ *    - Time-based escalation with severity consideration
+ *    - Priority management and dynamic adjustment
+ *    - Escalation chain management
+ *    - Escalation analytics and monitoring
+ *
+ * 8. NOTIFICATION SYSTEM (notifications.ts)
+ *    - Multi-channel notifications (email, in-app, SMS)
+ *    - Template-based messaging system
+ *    - User preference management
+ *    - Notification queue and delivery tracking
+ *
+ * 9. ENVIRONMENTAL IMPACT VALIDATION (impact-validation.ts)
+ *    - Comprehensive metric validation framework
+ *    - Project-type specific validation algorithms
+ *    - Range checking and anomaly detection
+ *    - Historical data validation and comparison
+ *
+ * 10. PROJECT-SPECIFIC VALIDATORS (project-validators.ts)
+ *    - Advanced reforestation validation with survival rates
+ *    - Solar energy validation with weather factors
+ *    - Wind, biogas, waste management validators
+ *    - Seasonal and location-based adjustments
+ *
+ * 11. TREND ANALYSIS ENGINE (trend-analysis.ts)
+ *    - Statistical trend analysis and forecasting
+ *    - Anomaly detection and pattern recognition
+ *    - Performance benchmarking against similar projects
+ *    - Data quality assessment and recommendations
+ *
+ * 12. THIRD-PARTY VALIDATION (third-party-validation.ts)
+ *    - Satellite imagery validation integration
+ *    - Weather data cross-referencing
+ *    - Carbon registry verification
+ *    - IoT sensor data validation
+ *    - Consensus-based multi-provider validation
+ *
+ * 13. SCHEDULED JOBS (crons.ts)
  *    - Daily project monitoring (6:00 AM UTC)
  *    - Hourly urgent monitoring
  *    - Weekly report generation
@@ -125,6 +186,11 @@ export * from '../types/monitoring-types';
  * - users: User roles and permissions
  * - auditLogs: Activity tracking
  * - analytics: System metrics and reports
+ * - notifications: In-app notification delivery
+ * - escalationConfig: Alert escalation configuration
+ * - emailDeliveryLog: Email notification tracking
+ * - smsDeliveryLog: SMS notification tracking
+ * - notificationDeliveryLog: Multi-channel delivery tracking
  *
  * SCHEDULED JOB TIMING:
  * - Daily Monitoring: 6:00 AM UTC every day

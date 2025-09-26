@@ -25,6 +25,39 @@ export default defineSchema({
     verifierSpecialty: v.optional(v.array(v.string())), // For verifiers: ["solar", "reforestation", etc.]
     isActive: v.boolean(),
     lastLoginAt: v.optional(v.string()),
+    // Notification preferences
+    notificationPreferences: v.optional(
+      v.object({
+        channels: v.array(
+          v.union(v.literal('email'), v.literal('in_app'), v.literal('sms'))
+        ),
+        alertTypes: v.object({
+          progress_reminders: v.boolean(),
+          milestone_delays: v.boolean(),
+          system_alerts: v.boolean(),
+          escalations: v.boolean(),
+          weekly_reports: v.boolean(),
+        }),
+        quietHours: v.optional(
+          v.object({
+            enabled: v.boolean(),
+            start: v.string(), // "22:00"
+            end: v.string(), // "08:00"
+            timezone: v.string(),
+          })
+        ),
+        frequency: v.object({
+          immediate: v.boolean(),
+          hourly: v.boolean(),
+          daily: v.boolean(),
+          weekly: v.boolean(),
+        }),
+      })
+    ),
+    preferencesUpdatedAt: v.optional(v.number()),
+    // Additional contact information
+    phone: v.optional(v.string()), // For SMS notifications
+    name: v.optional(v.string()), // Computed field for full name
   })
     .index('by_email', ['email'])
     .index('by_clerk_id', ['clerkId'])
@@ -559,41 +592,76 @@ export default defineSchema({
     .index('by_status_date', ['status', 'plannedDate']),
 
   systemAlerts: defineTable({
-    projectId: v.id('projects'),
-    alertType: v.union(
-      v.literal('progress_reminder'),
-      v.literal('overdue_warning'),
-      v.literal('milestone_delay'),
-      v.literal('impact_shortfall'),
-      v.literal('quality_concern'),
-      v.literal('document_missing'),
-      v.literal('verification_overdue')
-    ),
+    projectId: v.optional(v.id('projects')), // Optional for system-wide alerts
+    alertType: v.string(), // Flexible string for any alert type
     severity: v.union(
       v.literal('low'),
       v.literal('medium'),
       v.literal('high'),
       v.literal('critical')
     ),
-    title: v.string(),
     message: v.string(),
-    targetUserId: v.optional(v.id('users')), // Specific user this alert is for
+    description: v.optional(v.string()),
+    source: v.optional(v.string()), // 'system', 'manual_admin', etc.
+    category: v.optional(v.string()), // 'monitoring', 'system', 'performance', etc.
+    tags: v.optional(v.array(v.string())),
+
+    // Resolution tracking
     isResolved: v.boolean(),
-    resolvedAt: v.optional(v.float64()),
+    resolvedAt: v.optional(v.number()),
     resolvedBy: v.optional(v.id('users')),
     resolutionNotes: v.optional(v.string()),
-    notificationsSent: v.array(v.id('users')),
+    resolutionType: v.optional(
+      v.union(
+        v.literal('fixed'),
+        v.literal('acknowledged'),
+        v.literal('dismissed'),
+        v.literal('duplicate')
+      )
+    ),
+
+    // Assignment and ownership
+    assignedTo: v.optional(v.id('users')),
+    assignedBy: v.optional(v.id('users')),
+    assignedAt: v.optional(v.number()),
+
+    // Escalation management
     escalationLevel: v.number(), // 0-3 (0=initial, 3=final warning)
-    nextEscalationAt: v.optional(v.float64()),
-    metadata: v.optional(v.any()), // Additional context data
+    lastEscalationTime: v.optional(v.number()),
+    nextEscalationTime: v.optional(v.number()),
+    autoEscalationEnabled: v.optional(v.boolean()),
+    escalatedBy: v.optional(v.id('users')),
+    escalationReason: v.optional(v.string()),
+    deEscalatedAt: v.optional(v.number()),
+    deEscalatedBy: v.optional(v.id('users')),
+    deEscalationReason: v.optional(v.string()),
+
+    // Alert metrics and context
+    urgencyScore: v.optional(v.number()), // 0-100 calculated urgency score
+    estimatedResolutionTime: v.optional(v.number()), // Estimated time to resolve in ms
+    occurrenceCount: v.optional(v.number()), // How many times this alert occurred
+    firstOccurrence: v.optional(v.number()),
+    lastOccurrence: v.optional(v.number()),
+
+    // Reopening tracking
+    reopenedAt: v.optional(v.number()),
+    reopenedBy: v.optional(v.id('users')),
+    reopenReason: v.optional(v.string()),
+
+    // Additional context and metadata
+    metadata: v.optional(v.any()),
+    lastUpdatedBy: v.optional(v.id('users')),
+    lastUpdatedAt: v.optional(v.number()),
   })
     .index('by_project', ['projectId'])
-    .index('by_project_severity', ['projectId', 'severity'])
-    .index('by_alert_type', ['alertType'])
+    .index('by_type', ['alertType'])
     .index('by_severity', ['severity'])
-    .index('by_unresolved', ['isResolved'])
-    .index('by_target_user', ['targetUserId'])
-    .index('by_escalation', ['nextEscalationAt']),
+    .index('by_resolved', ['isResolved'])
+    .index('by_assigned', ['assignedTo'])
+    .index('by_escalation_time', ['nextEscalationTime'])
+    .index('by_category', ['category'])
+    .index('by_project_resolved', ['projectId', 'isResolved'])
+    .index('by_type_resolved', ['alertType', 'isResolved']),
 
   monitoringConfig: defineTable({
     projectType: v.string(),
@@ -605,4 +673,144 @@ export default defineSchema({
     .index('by_project_type', ['projectType'])
     .index('by_project_type_key', ['projectType', 'configKey'])
     .index('by_active', ['isActive']),
+
+  // ============= NOTIFICATION SYSTEM =============
+  notifications: defineTable({
+    recipientId: v.id('users'),
+    senderId: v.optional(v.id('users')), // 'system' for automated notifications
+    subject: v.string(),
+    message: v.string(),
+    type: v.string(), // 'alert', 'reminder', 'info', 'warning', 'success', 'error'
+    severity: v.optional(v.string()),
+    category: v.optional(v.string()),
+    channels: v.array(v.string()), // ['email', 'in_app', 'sms']
+
+    // Read status
+    isRead: v.boolean(),
+    readAt: v.optional(v.number()),
+
+    // Delivery tracking
+    deliveryStatus: v.object({
+      email: v.union(
+        v.literal('pending'),
+        v.literal('sent'),
+        v.literal('delivered'),
+        v.literal('failed'),
+        v.literal('skipped')
+      ),
+      in_app: v.union(
+        v.literal('pending'),
+        v.literal('sent'),
+        v.literal('delivered'),
+        v.literal('failed'),
+        v.literal('skipped')
+      ),
+      sms: v.union(
+        v.literal('pending'),
+        v.literal('sent'),
+        v.literal('delivered'),
+        v.literal('failed'),
+        v.literal('skipped')
+      ),
+    }),
+
+    // Scheduling
+    scheduledFor: v.optional(v.number()),
+    sentAt: v.optional(v.number()),
+    deliveredAt: v.optional(v.number()),
+
+    // Context and metadata
+    relatedEntityType: v.optional(v.string()), // 'alert', 'project', 'milestone'
+    relatedEntityId: v.optional(v.string()),
+    metadata: v.optional(v.any()),
+
+    createdAt: v.number(),
+  })
+    .index('by_recipient', ['recipientId'])
+    .index('by_recipient_read', ['recipientId', 'isRead'])
+    .index('by_type', ['type'])
+    .index('by_scheduled', ['scheduledFor'])
+    .index('by_entity', ['relatedEntityType', 'relatedEntityId']),
+
+  escalationConfig: defineTable({
+    alertType: v.string(),
+    severity: v.union(
+      v.literal('low'),
+      v.literal('medium'),
+      v.literal('high'),
+      v.literal('critical')
+    ),
+    rules: v.object({
+      escalationChain: v.array(
+        v.object({
+          level: v.number(),
+          roles: v.array(v.string()),
+          delayMinutes: v.number(),
+          specificUsers: v.optional(v.array(v.id('users'))),
+        })
+      ),
+      maxEscalationLevel: v.number(),
+      autoEscalationEnabled: v.boolean(),
+      businessHoursOnly: v.optional(v.boolean()),
+      cooldownPeriod: v.optional(v.number()),
+    }),
+    createdBy: v.id('users'),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_type_severity', ['alertType', 'severity'])
+    .index('by_created_by', ['createdBy']),
+
+  // ============= NOTIFICATION DELIVERY LOGS =============
+  emailDeliveryLog: defineTable({
+    recipientId: v.id('users'),
+    email: v.string(),
+    subject: v.string(),
+    body: v.string(),
+    type: v.string(),
+    status: v.union(
+      v.literal('sent'),
+      v.literal('delivered'),
+      v.literal('failed'),
+      v.literal('bounced')
+    ),
+    provider: v.optional(v.string()), // 'sendgrid', 'aws-ses', etc.
+    providerMessageId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    sentAt: v.number(),
+    deliveredAt: v.optional(v.number()),
+  })
+    .index('by_recipient', ['recipientId'])
+    .index('by_status', ['status'])
+    .index('by_type', ['type']),
+
+  smsDeliveryLog: defineTable({
+    recipientId: v.id('users'),
+    phone: v.string(),
+    message: v.string(),
+    type: v.string(),
+    status: v.union(
+      v.literal('sent'),
+      v.literal('delivered'),
+      v.literal('failed'),
+      v.literal('undelivered')
+    ),
+    provider: v.optional(v.string()), // 'twilio', 'aws-sns', etc.
+    providerMessageId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    sentAt: v.number(),
+    deliveredAt: v.optional(v.number()),
+  })
+    .index('by_recipient', ['recipientId'])
+    .index('by_status', ['status'])
+    .index('by_type', ['type']),
+
+  notificationDeliveryLog: defineTable({
+    alertId: v.optional(v.id('systemAlerts')),
+    type: v.string(), // 'immediate_alert', 'escalation', 'reminder', etc.
+    results: v.any(), // Delivery results summary
+    timestamp: v.number(),
+  })
+    .index('by_alert', ['alertId'])
+    .index('by_type', ['type']),
 });
