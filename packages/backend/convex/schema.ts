@@ -695,64 +695,6 @@ export default defineSchema({
     .index('by_project_type_key', ['projectType', 'configKey'])
     .index('by_active', ['isActive']),
 
-  // ============= NOTIFICATION SYSTEM =============
-  notifications: defineTable({
-    recipientId: v.id('users'),
-    senderId: v.optional(v.id('users')), // 'system' for automated notifications
-    subject: v.string(),
-    message: v.string(),
-    type: v.string(), // 'alert', 'reminder', 'info', 'warning', 'success', 'error'
-    severity: v.optional(v.string()),
-    category: v.optional(v.string()),
-    channels: v.array(v.string()), // ['email', 'in_app', 'sms']
-
-    // Read status
-    isRead: v.boolean(),
-    readAt: v.optional(v.number()),
-
-    // Delivery tracking
-    deliveryStatus: v.object({
-      email: v.union(
-        v.literal('pending'),
-        v.literal('sent'),
-        v.literal('delivered'),
-        v.literal('failed'),
-        v.literal('skipped')
-      ),
-      in_app: v.union(
-        v.literal('pending'),
-        v.literal('sent'),
-        v.literal('delivered'),
-        v.literal('failed'),
-        v.literal('skipped')
-      ),
-      sms: v.union(
-        v.literal('pending'),
-        v.literal('sent'),
-        v.literal('delivered'),
-        v.literal('failed'),
-        v.literal('skipped')
-      ),
-    }),
-
-    // Scheduling
-    scheduledFor: v.optional(v.number()),
-    sentAt: v.optional(v.number()),
-    deliveredAt: v.optional(v.number()),
-
-    // Context and metadata
-    relatedEntityType: v.optional(v.string()), // 'alert', 'project', 'milestone'
-    relatedEntityId: v.optional(v.string()),
-    metadata: v.optional(v.any()),
-
-    createdAt: v.number(),
-  })
-    .index('by_recipient', ['recipientId'])
-    .index('by_recipient_read', ['recipientId', 'isRead'])
-    .index('by_type', ['type'])
-    .index('by_scheduled', ['scheduledFor'])
-    .index('by_entity', ['relatedEntityType', 'relatedEntityId']),
-
   escalationConfig: defineTable({
     alertType: v.string(),
     severity: v.union(
