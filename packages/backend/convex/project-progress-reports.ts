@@ -1,11 +1,31 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { Doc, Id } from './_generated/dataModel';
-import {
-  ReportGenerationRequest,
-  GeneratedReport,
-  ReportMetadata,
-} from './report-template-engine';
+
+// Define the missing types locally
+interface ReportGenerationRequest {
+  projectId: Id<'projects'>;
+  templateId?: string;
+  reportPeriod: {
+    startDate: number;
+    endDate: number;
+    label: string;
+  };
+}
+
+interface GeneratedReport {
+  id: string;
+  title: string;
+  downloadUrl?: string;
+  metadata: ReportMetadata;
+}
+
+interface ReportMetadata {
+  format: string;
+  generatedAt: number;
+  version: string;
+  pages?: number;
+}
 
 // Project progress report specific interfaces
 export interface ProjectProgressReport {
@@ -266,19 +286,21 @@ export const generateProjectProgressReport = mutation({
     const report = await generateReportContent(ctx, reportData, args);
 
     // Save report record
-    const reportId = await ctx.db.insert('generatedReports', {
-      reportId: report.id,
-      projectId: args.projectId,
-      userId: identity.subject,
-      templateId: args.templateId || 'default_progress',
+    const reportId = await ctx.db.insert('analyticsReports', {
+      reportType: 'project_performance',
       title: report.title,
-      format: 'pdf',
-      status: 'completed',
-      progress: 100,
-      generatedAt: Date.now(),
-      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
-      metadata: report.metadata,
+      description: `Progress report for ${project.title}`,
       reportData: report,
+      generatedBy: identity.subject as Id<'users'>,
+      generatedAt: Date.now(),
+      format: 'pdf',
+      isPublic: false,
+      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
+      timeframe: {
+        startDate: args.reportPeriod.startDate,
+        endDate: args.reportPeriod.endDate,
+        label: args.reportPeriod.label,
+      },
     });
 
     return {
@@ -286,8 +308,12 @@ export const generateProjectProgressReport = mutation({
       convexId: reportId,
       title: report.title,
       status: 'completed',
-      downloadUrl: report.downloadUrl,
-      metadata: report.metadata,
+      downloadUrl: undefined,
+      metadata: {
+        format: 'pdf',
+        generatedAt: Date.now(),
+        version: '1.0',
+      },
     };
   },
 });
@@ -301,8 +327,8 @@ export const getProjectProgressReport = query({
     }
 
     const report = await ctx.db
-      .query('generatedReports')
-      .withIndex('by_reportId', (q) => q.eq('reportId', args.reportId))
+      .query('analyticsReports')
+      .filter((q) => q.eq(q.field('reportData.id'), args.reportId))
       .first();
 
     if (!report) {
@@ -311,10 +337,10 @@ export const getProjectProgressReport = query({
 
     // Verify access permissions
     const hasAccess =
-      report.userId === identity.subject ||
+      report.generatedBy === identity.subject ||
       (await verifyProjectAccessPermission(
         ctx,
-        report.projectId as Id<'projects'>,
+        report.reportData.projectId as Id<'projects'>,
         identity.subject
       ));
 
@@ -349,19 +375,23 @@ export const listProjectReports = query({
     }
 
     const reports = await ctx.db
-      .query('generatedReports')
-      .withIndex('by_project', (q) => q.eq('projectId', args.projectId))
+      .query('analyticsReports')
+      .filter((q) => q.eq(q.field('reportData.projectId'), args.projectId))
       .order('desc')
       .take(args.limit || 20);
 
     return reports.map((report) => ({
-      id: report.reportId,
+      id: report.reportData.id,
       title: report.title,
       format: report.format,
-      status: report.status,
+      status: 'completed',
       generatedAt: report.generatedAt,
-      generatedBy: report.userId,
-      metadata: report.metadata,
+      generatedBy: report.generatedBy,
+      metadata: {
+        format: report.format,
+        generatedAt: report.generatedAt,
+        version: '1.0',
+      },
     }));
   },
 });
@@ -405,8 +435,8 @@ export const getProjectTimelineVisualization = query({
       args.startDate && args.endDate
         ? progressUpdates.filter(
             (update) =>
-              update.submittedAt >= args.startDate! &&
-              update.submittedAt <= args.endDate!
+              update.reportingDate >= args.startDate! &&
+              update.reportingDate <= args.endDate!
           )
         : progressUpdates;
 
@@ -482,8 +512,8 @@ async function verifyProjectAccessPermission(
   // Check if user is a buyer of this project's credits
   const purchases = await ctx.db
     .query('creditPurchases')
-    .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
-    .filter((q) => q.eq(q.field('projectId'), projectId))
+    .withIndex('by_buyer', (q: any) => q.eq('buyerId', userId))
+    .filter((q: any) => q.eq(q.field('projectId'), projectId))
     .collect();
 
   if (purchases.length > 0) return true;
@@ -491,7 +521,7 @@ async function verifyProjectAccessPermission(
   // Check if user has admin/verifier role
   const user = await ctx.db
     .query('users')
-    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .withIndex('by_userId', (q: any) => q.eq('userId', userId))
     .first();
 
   return user?.role === 'admin' || user?.role === 'verifier';
@@ -506,11 +536,11 @@ async function gatherProjectReportData(ctx: any, args: any): Promise<any> {
   // Get progress updates for the period
   const progressUpdates = await ctx.db
     .query('progressUpdates')
-    .withIndex('by_project', (q) => q.eq('projectId', projectId))
-    .filter((q) =>
+    .withIndex('by_project', (q: any) => q.eq('projectId', projectId))
+    .filter((q: any) =>
       q.and(
-        q.gte(q.field('submittedAt'), reportPeriod.startDate),
-        q.lte(q.field('submittedAt'), reportPeriod.endDate)
+        q.gte(q.field('reportingDate'), reportPeriod.startDate),
+        q.lte(q.field('reportingDate'), reportPeriod.endDate)
       )
     )
     .collect();
@@ -518,14 +548,14 @@ async function gatherProjectReportData(ctx: any, args: any): Promise<any> {
   // Get milestones
   const milestones = await ctx.db
     .query('projectMilestones')
-    .withIndex('by_project', (q) => q.eq('projectId', projectId))
+    .withIndex('by_project', (q: any) => q.eq('projectId', projectId))
     .collect();
 
   // Get alerts and issues
   const alerts = await ctx.db
     .query('systemAlerts')
-    .withIndex('by_project', (q) => q.eq('projectId', projectId))
-    .filter((q) =>
+    .withIndex('by_project', (q: any) => q.eq('projectId', projectId))
+    .filter((q: any) =>
       q.and(
         q.gte(q.field('_creationTime'), reportPeriod.startDate),
         q.lte(q.field('_creationTime'), reportPeriod.endDate)
@@ -567,7 +597,7 @@ async function generateReportContent(
   const photos = args.includePhotos ? extractReportPhotos(progressUpdates) : [];
 
   const report: ProjectProgressReport = {
-    id: crypto.randomUUID(),
+    id: `report_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     projectId: project._id,
     title: `${project.title} - Progress Report (${reportPeriod.label})`,
     reportPeriod,
@@ -772,10 +802,10 @@ function extractReportPhotos(progressUpdates: any[]): ReportPhoto[] {
           thumbnail: photo.thumbnail || photo.url,
           caption:
             photo.caption ||
-            `Progress photo from ${new Date(update.submittedAt).toLocaleDateString()}`,
+            `Progress photo from ${new Date(update.reportingDate).toLocaleDateString()}`,
           category: 'progress',
-          takenDate: update.submittedAt,
-          takenBy: update.submittedBy,
+          takenDate: update.reportingDate,
+          takenBy: update.submittedBy || 'system',
           metadata: {
             width: photo.width || 800,
             height: photo.height || 600,
@@ -933,7 +963,7 @@ function createTimelineVisualization(
   return {
     milestones: milestones.map(mapToTimelineItem),
     progressPoints: progressUpdates.map((update) => ({
-      date: update.submittedAt,
+      date: update.reportingDate,
       progress: update.progressPercentage,
       carbonImpact: update.carbonImpactToDate,
       highlights: update.achievements || [],
@@ -951,11 +981,11 @@ async function gatherPeriodMetrics(
 ) {
   const updates = await ctx.db
     .query('progressUpdates')
-    .withIndex('by_project', (q) => q.eq('projectId', projectId))
-    .filter((q) =>
+    .withIndex('by_project', (q: any) => q.eq('projectId', projectId))
+    .filter((q: any) =>
       q.and(
-        q.gte(q.field('submittedAt'), period.startDate),
-        q.lte(q.field('submittedAt'), period.endDate)
+        q.gte(q.field('reportingDate'), period.startDate),
+        q.lte(q.field('reportingDate'), period.endDate)
       )
     )
     .collect();
@@ -972,7 +1002,7 @@ async function gatherPeriodMetrics(
       (earliestUpdate?.carbonImpactToDate || 0),
     updatesSubmitted: updates.length,
     averageProgress:
-      updates.reduce((sum, u) => sum + (u.progressPercentage || 0), 0) /
+      updates.reduce((sum: any, u: any) => sum + (u.progressPercentage || 0), 0) /
       updates.length,
   };
 }
