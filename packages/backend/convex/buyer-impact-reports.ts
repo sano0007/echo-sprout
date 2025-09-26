@@ -1,10 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { Doc, Id } from './_generated/dataModel';
-import {
-  ReportGenerationRequest,
-  GeneratedReport,
-} from './report-template-engine';
+import type { Id } from './_generated/dataModel';
 
 // Buyer impact report interfaces
 export interface BuyerImpactReport {
@@ -115,7 +111,7 @@ export interface ProjectImpactSummary {
   projectName: string;
   projectType: string;
   creditsOwned: number;
-  purchaseDate: number;
+  _creationTime: number;
   purchasePrice: number;
   currentStatus: string;
   impactMetrics: {
@@ -363,32 +359,19 @@ export const generateBuyerImpactReport = mutation({
     const report = await generateBuyerReportContent(ctx, reportData, args);
 
     // Save report record
-    const reportId = await ctx.db.insert('generatedReports', {
-      reportId: report.id,
-      userId: identity.subject,
-      templateId: `buyer_${args.reportType}`,
+    const reportId = await ctx.db.insert('analyticsReports', {
+      reportType: 'impact_summary',
       title:
         report.portfolio.totalCreditsOwned > 0
-          ? `${reportData.buyer.name} - ${args.reportType.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())} Report`
+          ? `${reportData.buyer?.name || 'Buyer'} - ${args.reportType.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())} Report`
           : `Buyer Impact Report - ${args.reportPeriod.label}`,
-      format: args.format || 'pdf',
-      status: 'completed',
-      progress: 100,
+      description: `Impact report for buyer ${args.buyerId}`,
+      generatedBy: identity.subject as Id<'users'>,
+      format: (args.format as 'json' | 'pdf' | 'csv') || 'json',
+      isPublic: false,
       generatedAt: Date.now(),
       expiresAt: Date.now() + 90 * 24 * 60 * 60 * 1000, // 90 days
-      metadata: {
-        generationTime: 0,
-        dataPoints: reportData.purchases.length + reportData.projects.length,
-        sectionsIncluded: [
-          'portfolio',
-          'projects',
-          'impact',
-          'recommendations',
-        ],
-        chartCount: 5,
-        tableCount: 3,
-        wordCount: 0,
-      },
+      timeframe: args.reportPeriod,
       reportData: report,
     });
 
@@ -411,35 +394,32 @@ export const generateBuyerImpactReport = mutation({
 });
 
 export const getBuyerImpactReport = query({
-  args: { reportId: v.string() },
+  args: { reportId: v.id('analyticsReports') },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error('Not authenticated');
     }
 
-    const report = await ctx.db
-      .query('generatedReports')
-      .withIndex('by_reportId', (q) => q.eq('reportId', args.reportId))
-      .first();
+    const report = await ctx.db.get(args.reportId);
 
     if (!report) {
       return null;
     }
 
-    // Verify access
-    const buyerReport = report.reportData as BuyerImpactReport;
-    const hasAccess = await verifyBuyerAccess(
-      ctx,
-      buyerReport.buyerId,
-      identity.subject
-    );
+    // Verify access - check if user generated this report or has admin access
+    if (report.generatedBy !== identity.subject) {
+      const user = await ctx.db
+        .query('users')
+        .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', identity.subject))
+        .first();
 
-    if (!hasAccess) {
-      throw new Error('Not authorized to access this report');
+      if (!user || !['admin', 'verifier'].includes(user.role)) {
+        throw new Error('Not authorized to access this report');
+      }
     }
 
-    return buyerReport;
+    return report.reportData as BuyerImpactReport;
   },
 });
 
@@ -461,9 +441,9 @@ export const getBuyerPortfolio = query({
     }
 
     const purchases = await ctx.db
-      .query('creditPurchases')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', args.buyerId))
-      .filter((q) => q.eq(q.field('status'), 'completed'))
+      .query('transactions')
+      .withIndex('by_buyer', (q: any) => q.eq('buyerId', args.buyerId))
+      .filter((q: any) => q.eq(q.field('paymentStatus'), 'completed'))
       .collect();
 
     const portfolio = await buildPortfolioSummary(ctx, purchases);
@@ -504,20 +484,29 @@ export const generateImpactCertificate = mutation({
     // Generate certificate
     const certificate = await generateCertificate(ctx, args);
 
-    // Save certificate
-    const certificateId = await ctx.db.insert('impactCertificates', {
-      certificateId: certificate.id,
-      buyerId: args.buyerId,
-      type: certificate.type,
+    // Save certificate (using analyticsReports table)
+    const certificateId = await ctx.db.insert('analyticsReports', {
+      reportType: 'impact_summary',
       title: certificate.title,
-      quantification: certificate.quantification,
-      unit: certificate.unit,
-      issueDate: certificate.issueDate,
-      validUntil: certificate.validUntil,
-      verificationStandard: certificate.verificationStandard,
-      projects: certificate.projects,
-      metadata: certificate.metadata,
-      status: 'active',
+      description: certificate.description,
+      generatedBy: identity.subject as Id<'users'>,
+      generatedAt: Date.now(),
+      format: 'json',
+      isPublic: false,
+      timeframe: args.timeframe,
+      reportData: {
+        certificateId: certificate.id,
+        buyerId: args.buyerId,
+        type: certificate.type,
+        quantification: certificate.quantification,
+        unit: certificate.unit,
+        issueDate: certificate.issueDate,
+        validUntil: certificate.validUntil,
+        verificationStandard: certificate.verificationStandard,
+        projects: certificate.projects,
+        metadata: certificate.metadata,
+        status: 'active',
+      },
     });
 
     return {
@@ -550,25 +539,25 @@ export const listBuyerReports = query({
     }
 
     let query = ctx.db
-      .query('generatedReports')
-      .withIndex('by_user', (q) => q.eq('userId', identity.subject));
+      .query('analyticsReports')
+      .withIndex('by_user', (q: any) => q.eq('generatedBy', identity.subject));
 
     if (args.reportType) {
-      query = query.filter((q) =>
-        q.eq(q.field('templateId'), `buyer_${args.reportType}`)
+      query = query.filter((q: any) =>
+        q.eq(q.field('reportType'), args.reportType)
       );
     }
 
     const reports = await query.order('desc').take(args.limit || 20);
 
     return reports.map((report) => ({
-      id: report.reportId,
+      id: report._id,
       title: report.title,
-      type: report.templateId.replace('buyer_', ''),
+      type: report.reportType,
       format: report.format,
-      status: report.status,
+      status: 'completed',
       generatedAt: report.generatedAt,
-      metadata: report.metadata,
+      metadata: {},
     }));
   },
 });
@@ -595,9 +584,9 @@ export const getBuyerImpactTrends = query({
     }
 
     const purchases = await ctx.db
-      .query('creditPurchases')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', args.buyerId))
-      .filter((q) => q.eq(q.field('status'), 'completed'))
+      .query('transactions')
+      .withIndex('by_buyer', (q: any) => q.eq('buyerId', args.buyerId))
+      .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
       .collect();
 
     const trends = calculateImpactTrends(
@@ -621,7 +610,7 @@ async function verifyBuyerAccess(
   // Check if user has admin/verifier role
   const user = await ctx.db
     .query('users')
-    .withIndex('by_userId', (q) => q.eq('userId', userId))
+    .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', userId))
     .first();
 
   return user?.role === 'admin' || user?.role === 'verifier';
@@ -631,21 +620,21 @@ async function gatherBuyerReportData(ctx: any, args: any) {
   // Get buyer information
   const buyer = await ctx.db
     .query('users')
-    .withIndex('by_userId', (q) => q.eq('userId', args.buyerId))
+    .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', args.buyerId))
     .first();
 
   // Get all purchases for the buyer
   let purchasesQuery = ctx.db
-    .query('creditPurchases')
-    .withIndex('by_buyer', (q) => q.eq('buyerId', args.buyerId))
-    .filter((q) => q.eq(q.field('status'), 'completed'));
+    .query('transactions')
+    .withIndex('by_buyer', (q: any) => q.eq('buyerId', args.buyerId))
+    .filter((q: any) => q.eq(q.field('paymentStatus'), 'completed'));
 
   // Filter by date range if specified
   if (args.reportPeriod.startDate && args.reportPeriod.endDate) {
-    purchasesQuery = purchasesQuery.filter((q) =>
+    purchasesQuery = purchasesQuery.filter((q: any) =>
       q.and(
-        q.gte(q.field('purchaseDate'), args.reportPeriod.startDate),
-        q.lte(q.field('purchaseDate'), args.reportPeriod.endDate)
+        q.gte(q.field('_creationTime'), args.reportPeriod.startDate),
+        q.lte(q.field('_creationTime'), args.reportPeriod.endDate)
       )
     );
   }
@@ -653,7 +642,7 @@ async function gatherBuyerReportData(ctx: any, args: any) {
   const purchases = await purchasesQuery.collect();
 
   // Get unique projects from purchases
-  const projectIds = [...new Set(purchases.map((p) => p.projectId))];
+  const projectIds = [...new Set(purchases.map((p: any) => p.projectId))];
   const projects = await Promise.all(projectIds.map((id) => ctx.db.get(id)));
 
   // Get progress updates for these projects
@@ -661,7 +650,7 @@ async function gatherBuyerReportData(ctx: any, args: any) {
     projectIds.map(async (projectId) => {
       return await ctx.db
         .query('progressUpdates')
-        .withIndex('by_project', (q) => q.eq('projectId', projectId))
+        .withIndex('by_project', (q: any) => q.eq('projectId', projectId))
         .order('desc')
         .take(5);
     })
@@ -740,7 +729,7 @@ async function buildPortfolioSummary(
   ctx: any,
   purchases: any[]
 ): Promise<BuyerPortfolio> {
-  const totalCredits = purchases.reduce((sum, p) => sum + p.creditsAmount, 0);
+  const totalCredits = purchases.reduce((sum, p) => sum + p.creditAmount, 0);
   const totalInvestment = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
 
   // Get unique projects
@@ -808,7 +797,7 @@ function generateProjectSummaries(
     const latestUpdate = projectUpdates[0];
 
     const totalCredits = projectPurchases.reduce(
-      (sum, p) => sum + p.creditsAmount,
+      (sum, p) => sum + p.creditAmount,
       0
     );
     const totalInvestment = projectPurchases.reduce(
@@ -822,7 +811,7 @@ function generateProjectSummaries(
       projectName: project.title,
       projectType: project.projectType,
       creditsOwned: totalCredits,
-      purchaseDate: Math.min(...projectPurchases.map((p) => p.purchaseDate)),
+      _creationTime: Math.min(...projectPurchases.map((p) => p._creationTime)),
       purchasePrice: averagePrice,
       currentStatus: project.status,
       impactMetrics: {
@@ -934,12 +923,12 @@ function groupPurchasesByType(
     }
 
     const data = typeMap.get(type);
-    data.creditsOwned += purchase.creditsAmount;
+    data.creditsOwned += purchase.creditAmount;
     data.totalInvestment += purchase.totalAmount;
     data.projectIds.add(purchase.projectId);
   });
 
-  const totalCredits = purchases.reduce((sum, p) => sum + p.creditsAmount, 0);
+  const totalCredits = purchases.reduce((sum, p) => sum + p.creditAmount, 0);
 
   return Array.from(typeMap.values()).map((data) => ({
     type: data.type,
@@ -973,11 +962,11 @@ function groupPurchasesByGeography(
     }
 
     const data = geoMap.get(key);
-    data.creditsOwned += purchase.creditsAmount;
+    data.creditsOwned += purchase.creditAmount;
     data.projectIds.add(purchase.projectId);
   });
 
-  const totalCredits = purchases.reduce((sum, p) => sum + p.creditsAmount, 0);
+  const totalCredits = purchases.reduce((sum, p) => sum + p.creditAmount, 0);
 
   return Array.from(geoMap.values()).map((data) => ({
     region: data.region,
@@ -993,7 +982,7 @@ function groupPurchasesByVintage(purchases: any[]): VintageBreakdown[] {
   const vintageMap = new Map<number, any>();
 
   purchases.forEach((purchase) => {
-    const year = new Date(purchase.purchaseDate).getFullYear();
+    const year = new Date(purchase._creationTime).getFullYear();
     if (!vintageMap.has(year)) {
       vintageMap.set(year, {
         year,
@@ -1005,7 +994,7 @@ function groupPurchasesByVintage(purchases: any[]): VintageBreakdown[] {
     }
 
     const data = vintageMap.get(year);
-    data.creditsOwned += purchase.creditsAmount;
+    data.creditsOwned += purchase.creditAmount;
     data.totalAmount += purchase.totalAmount;
     data.projectIds.add(purchase.projectId);
   });
@@ -1057,7 +1046,7 @@ function calculatePortfolioPerformance(
   projects: any[]
 ): PortfolioPerformance {
   const totalInvestment = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
-  const totalCredits = purchases.reduce((sum, p) => sum + p.creditsAmount, 0);
+  const totalCredits = purchases.reduce((sum, p) => sum + p.creditAmount, 0);
 
   return {
     totalReturn: 0, // Would need market pricing
@@ -1214,8 +1203,8 @@ function calculateEconomicImpact(
 function calculateTimespan(projectSummaries: ProjectImpactSummary[]): number {
   if (projectSummaries.length === 0) return 0;
 
-  const earliest = Math.min(...projectSummaries.map((p) => p.purchaseDate));
-  const latest = Math.max(...projectSummaries.map((p) => p.purchaseDate));
+  const earliest = Math.min(...projectSummaries.map((p) => p._creationTime));
+  const latest = Math.max(...projectSummaries.map((p) => p._creationTime));
 
   return Math.ceil((latest - earliest) / (365 * 24 * 60 * 60 * 1000)); // Years
 }
@@ -1240,7 +1229,7 @@ async function generateImpactCertificates(
   purchases: any[]
 ): Promise<ImpactCertificate[]> {
   // Generate a carbon offset certificate
-  const totalOffset = purchases.reduce((sum, p) => sum + p.creditsAmount, 0);
+  const totalOffset = purchases.reduce((sum, p) => sum + p.creditAmount, 0);
 
   if (totalOffset === 0) return [];
 
@@ -1289,8 +1278,8 @@ function generateBuyerRecommendations(
   if (portfolio.projectTypes.length < 3) {
     recommendations.push({
       id: crypto.randomUUID(),
-      type: 'diversification',
-      priority: 'high',
+      type: 'diversification' as const,
+      priority: 'high' as const,
       title: 'Increase Portfolio Diversification',
       description:
         'Your portfolio is concentrated in few project types. Consider diversifying to reduce risk.',
@@ -1369,19 +1358,19 @@ async function generateCertificate(
 ): Promise<ImpactCertificate> {
   // Get purchase data for certificate generation
   const purchases = await ctx.db
-    .query('creditPurchases')
-    .withIndex('by_buyer', (q) => q.eq('buyerId', args.buyerId))
-    .filter((q) => q.eq(q.field('status'), 'completed'))
+    .query('transactions')
+    .withIndex('by_buyer', (q: any) => q.eq('buyerId', args.buyerId))
+    .filter((q: any) => q.eq(q.field('paymentStatus'), 'completed'))
     .collect();
 
   const totalQuantification = purchases
-    .filter((p) => !args.projectIds || args.projectIds.includes(p.projectId))
-    .reduce((sum, p) => sum + p.creditsAmount, 0);
+    .filter((p: any) => !args.projectIds || args.projectIds.includes(p.projectId))
+    .reduce((sum: number, p: any) => sum + p.creditAmount, 0);
 
   return {
     id: crypto.randomUUID(),
     type: args.certificateType,
-    title: `${args.certificateType.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())} Certificate`,
+    title: `${args.certificateType.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())} Certificate`,
     description: `This certificate verifies ${totalQuantification} tons of CO2 equivalent offset`,
     quantification: totalQuantification,
     unit: 'tons CO2e',
@@ -1389,7 +1378,7 @@ async function generateCertificate(
     issueDate: Date.now(),
     validUntil: Date.now() + 5 * 365 * 24 * 60 * 60 * 1000,
     certificateUrl: `https://certificates.echosprout.com/${crypto.randomUUID()}`,
-    projects: args.projectIds || purchases.map((p) => p.projectId),
+    projects: args.projectIds || purchases.map((p: any) => p.projectId),
     metadata: {
       serialNumber: `EC-${Date.now()}-${args.buyerId.slice(-6)}`,
       issuer: 'Echo Sprout Platform',
@@ -1421,8 +1410,8 @@ function calculateImpactTrends(
       metric: 'Carbon Impact',
       timeframe,
       data: purchases.map((p) => ({
-        date: p.purchaseDate,
-        value: p.creditsAmount,
+        date: p._creationTime,
+        value: p.creditAmount,
       })),
       trend: 'increasing',
       changePercent: 15.2,
