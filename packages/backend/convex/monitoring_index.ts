@@ -27,7 +27,7 @@ export {
   initializeDefaultConfigs,
   getConfigValue,
   validateMetricValue,
-} from './monitoring-config';
+} from './monitoring_config';
 
 export {
   getCurrentUserWithRole,
@@ -42,7 +42,7 @@ export {
   validateMonitoringSession,
   grantMonitoringAccess,
   revokeMonitoringAccess,
-} from './monitoring-auth';
+} from './monitoring_auth';
 
 export {
   validateProgressUpdate,
@@ -53,28 +53,28 @@ export {
   getNextMilestoneDeadline,
   analyzeProgressTrends,
   compareProjectPerformance as utilsCompareProjectPerformance,
-} from './monitoring-utils';
+} from './monitoring_utils';
 
 export {
   submitProgressUpdate,
-} from './progress-updates';
+} from './progress_updates';
 
 export {
   internal as progressValidationInternal,
-} from './progress-validation';
+} from './progress_validation';
 
 export {
   generateAlert,
-} from './alert-generation';
+} from './alert_generation';
 
 export {
   getAlerts,
   updateAlert,
-} from './alert-management';
+} from './alert_management';
 
 export {
   processEscalation,
-} from './alert-escalation';
+} from './alert_escalation';
 
 export {
   getNotificationStats,
@@ -89,11 +89,11 @@ export {
 } from './notifications';
 
 // Environmental Impact Validation System - export types separately
-export type { ValidationResult as ImpactValidationResult } from './impact-validation';
+export type { ValidationResult as ImpactValidationResult } from './impact_validation';
 
 export {
   validateEnvironmentalMetrics,
-} from './impact-validation';
+} from './impact_validation';
 
 // Re-export types
 export * from '../types/monitoring-types';
@@ -110,37 +110,37 @@ export * from '../types/monitoring-types';
  *    - Notification processing
  *    - Analytics generation
  *
- * 2. CONFIGURATION MANAGEMENT (monitoring-config.ts)
+ * 2. CONFIGURATION MANAGEMENT (monitoring_config.ts)
  *    - Project-type specific configurations
  *    - Monitoring thresholds and rules
  *    - Default configuration initialization
  *    - Dynamic configuration updates
  *
- * 3. AUTHENTICATION & AUTHORIZATION (monitoring-auth.ts)
+ * 3. AUTHENTICATION & AUTHORIZATION (monitoring_auth.ts)
  *    - Role-based permission system
  *    - Project access control
  *    - Alert management permissions
  *    - Audit logging
  *
- * 4. UTILITIES & HELPERS (monitoring-utils.ts)
+ * 4. UTILITIES & HELPERS (monitoring_utils.ts)
  *    - Data validation functions
  *    - Metric calculations and analysis
  *    - Progress trend analysis
  *    - Performance comparison tools
  *
- * 5. ALERT GENERATION SYSTEM (alert-generation.ts)
+ * 5. ALERT GENERATION SYSTEM (alert_generation.ts)
  *    - Dynamic alert creation with severity classification
  *    - Alert deduplication and consolidation
  *    - Context-aware alert enrichment
  *    - Performance-optimized alert processing
  *
- * 6. ALERT MANAGEMENT API (alert-management.ts)
+ * 6. ALERT MANAGEMENT API (alert_management.ts)
  *    - CRUD operations for alerts
  *    - Role-based alert access control
  *    - Alert lifecycle management
  *    - Bulk operations for efficiency
  *
- * 7. ALERT ESCALATION SYSTEM (alert-escalation.ts)
+ * 7. ALERT ESCALATION SYSTEM (alert_escalation.ts)
  *    - Time-based escalation with severity consideration
  *    - Priority management and dynamic adjustment
  *    - Escalation chain management
@@ -152,25 +152,25 @@ export * from '../types/monitoring-types';
  *    - User preference management
  *    - Notification queue and delivery tracking
  *
- * 9. ENVIRONMENTAL IMPACT VALIDATION (impact-validation.ts)
+ * 9. ENVIRONMENTAL IMPACT VALIDATION (impact_validation.ts)
  *    - Comprehensive metric validation framework
  *    - Project-type specific validation algorithms
  *    - Range checking and anomaly detection
  *    - Historical data validation and comparison
  *
- * 10. PROJECT-SPECIFIC VALIDATORS (project-validators.ts)
+ * 10. PROJECT-SPECIFIC VALIDATORS (project_validators.ts)
  *    - Advanced reforestation validation with survival rates
  *    - Solar energy validation with weather factors
  *    - Wind, biogas, waste management validators
  *    - Seasonal and location-based adjustments
  *
- * 11. TREND ANALYSIS ENGINE (trend-analysis.ts)
+ * 11. TREND ANALYSIS ENGINE (trend_analysis.ts)
  *    - Statistical trend analysis and forecasting
  *    - Anomaly detection and pattern recognition
  *    - Performance benchmarking against similar projects
  *    - Data quality assessment and recommendations
  *
- * 12. THIRD-PARTY VALIDATION (third-party-validation.ts)
+ * 12. THIRD-PARTY VALIDATION (third_party_validation.ts)
  *    - Satellite imagery validation integration
  *    - Weather data cross-referencing
  *    - Carbon registry verification

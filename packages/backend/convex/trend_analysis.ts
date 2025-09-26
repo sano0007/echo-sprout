@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { query, mutation } from './_generated/server';
 import type { Doc } from './_generated/dataModel';
-import type { EnvironmentalMetrics } from './impact-validation';
+import type { EnvironmentalMetrics } from './impact_validation';
 
 // ============= TREND ANALYSIS TYPES =============
 
@@ -12,7 +12,7 @@ export interface TrendDataPoint {
   metadata?: Record<string, any>;
 }
 
-export interface TrendAnalysis {
+export interface Trend_analysis {
   metric: string;
   projectId: string;
   timeframe: string; // 'daily', 'weekly', 'monthly', 'quarterly'
@@ -109,7 +109,7 @@ export const analyzeProjectTrend = mutation({
     ),
     includeForecasting: v.optional(v.boolean()),
   },
-  handler: async (ctx, args): Promise<TrendAnalysis> => {
+  handler: async (ctx, args): Promise<Trend_analysis> => {
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       throw new Error('Project not found');
@@ -441,7 +441,7 @@ async function performTrendAnalysis(
   timeframe: string,
   dataPoints: TrendDataPoint[],
   projectType: string
-): Promise<TrendAnalysis> {
+): Promise<Trend_analysis> {
   if (dataPoints.length < 2) {
     return {
       metric,
@@ -488,7 +488,7 @@ async function performTrendAnalysis(
   const correlation = calculateCorrelation(timestamps, values);
   const trendStrength = Math.abs(correlation);
 
-  let trend: TrendAnalysis['trend'];
+  let trend: Trend_analysis['trend'];
   if (trendStrength < 0.3) {
     trend = coefficientOfVariation > 0.5 ? 'volatile' : 'stable';
   } else {
@@ -612,7 +612,7 @@ function assessDataQuality(
   dataPoints: TrendDataPoint[],
   projectType: string,
   timeframe: string
-): TrendAnalysis['dataQuality'] {
+): Trend_analysis['dataQuality'] {
   // Completeness: How complete is the data based on expected reporting frequency
   const expectedIntervalMs = {
     daily: 24 * 60 * 60 * 1000,
@@ -657,7 +657,7 @@ function assessDataQuality(
 
 function generateForecast(
   dataPoints: TrendDataPoint[]
-): TrendAnalysis['forecast'] {
+): Trend_analysis['forecast'] {
   if (dataPoints.length < 3) return undefined;
 
   const values = dataPoints.map((p) => p.value);

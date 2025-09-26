@@ -4,7 +4,7 @@ import type {
   ValidationResult,
   EnvironmentalMetrics,
   ValidationContext,
-} from './impact-validation';
+} from './impact_validation';
 
 // ============= ADVANCED PROJECT-SPECIFIC VALIDATORS =============
 

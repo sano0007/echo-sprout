@@ -4,7 +4,7 @@ import type { Id } from './_generated/dataModel';
 import type {
   ValidationResult,
   EnvironmentalMetrics,
-} from './impact-validation';
+} from './impact_validation';
 
 // ============= THIRD-PARTY VALIDATION TYPES =============
 

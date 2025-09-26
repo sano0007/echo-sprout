@@ -4,7 +4,7 @@ import type { Id } from './_generated/dataModel';
 import type {
   CreditBatch,
   CreditCalculationResult,
-} from './credit-calculation';
+} from './credit_calculation';
 
 // ============= CREDIT BATCH MANAGEMENT TYPES =============
 

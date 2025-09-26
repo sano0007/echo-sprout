@@ -9,16 +9,16 @@ import type { Id } from './_generated/dataModel';
 import {
   validateEnvironmentalMetrics,
   getValidationConfig,
-} from './impact-validation';
-import { runProjectValidation } from './project-validators';
+} from './impact_validation';
+import { runProjectValidation } from './project_validators';
 import {
   analyzeProjectTrend,
   compareProjectPerformance,
-} from './trend-analysis';
+} from './trend_analysis';
 import {
   orchestrateThirdPartyValidation,
   registerValidationProvider,
-} from './third-party-validation';
+} from './third_party_validation';
 
 // ============= EXAMPLE USAGE SCENARIOS =============
 

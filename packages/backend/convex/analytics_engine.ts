@@ -3,7 +3,7 @@ import { mutation, query, internalMutation } from './_generated/server';
 import { Doc, Id } from './_generated/dataModel';
 
 // Analytics engine interfaces
-export interface AnalyticsEngine {
+export interface Analytics_engine {
   dataAggregation: DataAggregationService;
   performanceMetrics: PerformanceMetricsService;
   predictiveAnalytics: PredictiveAnalyticsService;
