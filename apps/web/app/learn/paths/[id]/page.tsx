@@ -64,7 +64,7 @@ export default function LearningPathDetailsPage() {
       if (from === 'learn') {
         recordedRef.current = true;
         // Record exactly once for this entry (view + course start), then strip the query param
-        recordEntry({ source: 'learn' } as any)
+        recordEntry({ source: 'learn', pathId: String(id) } as any)
           .catch(() => {})
           .finally(() => {
             try {

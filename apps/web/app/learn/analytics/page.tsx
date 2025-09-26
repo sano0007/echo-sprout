@@ -8,6 +8,9 @@ export default function LearnAnalyticsPage() {
   const learningPaths = useQuery(api.learn.listLearningPaths);
   const allTopics = useQuery((api as any).forum.listAllTopics, {});
   const views = useQuery(api.learn.totalPathsEntries);
+  const topByViews = useQuery(api.learn.pathsByViews);
+  const topByEngagement = useQuery(api.learn.pathsByEngagement);
+  const engagement = useQuery(api.learn.engagementPercent);
   const contributors = useQuery((api as any).forum.replyContributors, {});
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -29,7 +32,12 @@ export default function LearnAnalyticsPage() {
           <div className="text-sm text-gray-500">Views</div>
           <div className="text-2xl font-semibold">{typeof views === 'number' ? views : '—'}</div>
         </div>
-        <KpiCard title="Engagement" value="—" />
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="text-sm text-gray-500">Engagement</div>
+          <div className="text-2xl font-semibold">
+            {typeof engagement === 'number' ? `${engagement}%` : '—'}
+          </div>
+        </div>
       </div>
 
       {/* Trends (static placeholders) */}
@@ -52,8 +60,50 @@ export default function LearnAnalyticsPage() {
       {/* Lists */}
       <Section title="Top Content">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <PlaceholderList title="Top by Views" />
-          <PlaceholderList title="Top by Engagement" />
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="font-medium mb-2">Top by Views</div>
+            <ul className="divide-y">
+              {topByViews === undefined ? (
+                <>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                </>
+              ) : (Array.isArray(topByViews) && (topByViews as any[]).length > 0 ? (
+                (topByViews as any[]).map((r: any) => (
+                  <li key={r.id} className="py-2">
+                    <div className="text-sm font-medium text-gray-900 truncate">{r.title}</div>
+                    <div className="text-xs text-gray-500">{r.views} views</div>
+                  </li>
+                ))
+              ) : (
+                <li className="py-2 text-sm text-gray-500">No data</li>
+              ))}
+            </ul>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="font-medium mb-2">Top by Engagement</div>
+            <ul className="divide-y">
+              {topByEngagement === undefined ? (
+                <>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                </>
+              ) : (Array.isArray(topByEngagement) && (topByEngagement as any[]).length > 0 ? (
+                (topByEngagement as any[]).map((r: any) => (
+                  <li key={r.id} className="py-2">
+                    <div className="text-sm font-medium text-gray-900 truncate">{r.title}</div>
+                    <div className="text-xs text-gray-500">{r.engagement}% engagement</div>
+                  </li>
+                ))
+              ) : (
+                <li className="py-2 text-sm text-gray-500">No data</li>
+              ))}
+            </ul>
+          </div>
         </div>
       </Section>
 

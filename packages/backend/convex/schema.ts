@@ -472,6 +472,7 @@ export default defineSchema({
   })
     .index('by_user_path', ['userId', 'pathId'])
     .index('by_user_lesson', ['userId', 'lessonId'])
+    .index('by_user', ['userId'])
     .index('by_unique_key', [
       'userId',
       'pathId',

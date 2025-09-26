@@ -786,14 +786,19 @@ export const deleteLesson = mutation({
 
 // ============ SIMPLE ANALYTICS: LEARN PATH ENTRY VIEWS ============
 export const recordPathsEntry = mutation({
-  args: { source: v.optional(v.string()) },
-  async handler(ctx, { source }) {
+  args: { source: v.optional(v.string()), pathId: v.optional(v.string()) },
+  async handler(ctx, { source, pathId }) {
+    const user = await UserService.getCurrentUser(ctx);
     // Write a simple event row into analytics table
     await ctx.db.insert('analytics', {
       metric: 'learn_paths_entry',
       value: 1,
       date: Date.now(),
-      metadata: source ? { source } : undefined,
+      metadata: {
+        ...(source ? { source } : {}),
+        ...(user ? { userId: user._id } : {}),
+        ...(pathId ? { pathId } : {}),
+      } as any,
     } as any);
   },
 });
@@ -841,30 +846,155 @@ export const recordCourseStart = mutation({
 export const engagementPercent = query({
   args: {},
   async handler(ctx) {
-    const enters = await ctx.db
+    // Users who viewed any courses
+    const entryRows = await ctx.db
       .query('analytics')
-      .withIndex('by_metric', (q) => q.eq('metric', 'learn_page_enter_user'))
+      .withIndex('by_metric', (q) => q.eq('metric', 'learn_paths_entry'))
       .collect();
-    const starts = await ctx.db
+    // Also include course starts as "viewed" in case entries lacked userId in earlier versions
+    const startRows = await ctx.db
       .query('analytics')
       .withIndex('by_metric', (q) => q.eq('metric', 'learn_course_start_user'))
       .collect();
 
-    const enterUsers = new Set<string>();
-    for (const r of enters as any[]) {
+    const viewers = new Set<string>();
+    for (const r of entryRows as any[]) {
       const key = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
-      if (key) enterUsers.add(key);
+      if (key) viewers.add(key);
     }
-    const startUsers = new Set<string>();
-    for (const r of starts as any[]) {
+    for (const r of startRows as any[]) {
       const key = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
-      if (key) startUsers.add(key);
+      if (key) viewers.add(key);
     }
 
-    const denom = enterUsers.size || 0;
-    const num = startUsers.size || 0;
+    const denom = viewers.size || 0;
     if (denom === 0) return 0;
+
+    // Users who have any completed progress
+    const progressRows = await ctx.db
+      .query('learningProgress')
+      .collect();
+    const progressedViewerUsers = new Set<string>();
+    for (const r of progressRows as any[]) {
+      if (!r.completed) continue;
+      const key = (r.userId?.id as unknown as string) || String(r.userId ?? '');
+      if (key && viewers.has(key)) progressedViewerUsers.add(key);
+    }
+
+    const num = progressedViewerUsers.size || 0;
     const pct = Math.round((num / denom) * 100);
     return pct;
+  },
+});
+
+// Top courses by views (descending)
+export const pathsByViews = query({
+  args: {},
+  async handler(ctx) {
+    const rows = await ctx.db
+      .query('analytics')
+      .withIndex('by_metric', (q) => q.eq('metric', 'learn_paths_entry'))
+      .collect();
+
+    const counts = new Map<string, number>();
+    for (const r of rows as any[]) {
+      const pid = (r.metadata?.pathId?.id as unknown as string) || String(r.metadata?.pathId ?? '');
+      if (!pid) continue;
+      counts.set(pid, (counts.get(pid) ?? 0) + (r.value ?? 0));
+    }
+
+    const result: { id: string; title: string; views: number }[] = [];
+    for (const [pid, views] of counts) {
+      const normalized = await ctx.db.normalizeId('learningPaths', pid);
+      let title = 'Unknown';
+      if (normalized) {
+        const doc = await ctx.db.get(normalized);
+        if (doc) title = doc.title;
+      }
+      result.push({ id: pid, title, views });
+    }
+
+    result.sort((a, b) => (b.views - a.views) || a.title.localeCompare(b.title));
+    return result;
+  },
+});
+
+// Top courses by engagement (progressed viewers / viewers)
+export const pathsByEngagement = query({
+  args: {},
+  async handler(ctx) {
+    // Build viewers per path from analytics
+    const [entryRows, startRows] = await Promise.all([
+      ctx.db
+        .query('analytics')
+        .withIndex('by_metric', (q) => q.eq('metric', 'learn_paths_entry'))
+        .collect(),
+      ctx.db
+        .query('analytics')
+        .withIndex('by_metric', (q) => q.eq('metric', 'learn_course_start_user'))
+        .collect(),
+    ]);
+
+    const viewersByPath = new Map<string, Set<string>>();
+    const addViewer = (pid: string, uid: string) => {
+      if (!pid || !uid) return;
+      let set = viewersByPath.get(pid);
+      if (!set) {
+        set = new Set<string>();
+        viewersByPath.set(pid, set);
+      }
+      set.add(uid);
+    };
+
+    for (const r of entryRows as any[]) {
+      const pid = (r.metadata?.pathId?.id as unknown as string) || String(r.metadata?.pathId ?? '');
+      const uid = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      if (pid && uid) addViewer(pid, uid);
+    }
+    for (const r of startRows as any[]) {
+      const pid = (r.metadata?.pathId?.id as unknown as string) || String(r.metadata?.pathId ?? '');
+      const uid = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      if (pid && uid) addViewer(pid, uid);
+    }
+
+    if (viewersByPath.size === 0) return [] as { id: string; title: string; engagement: number; viewers: number; progressed: number }[];
+
+    // Build progressed users per path from learningProgress
+    const progressRows = await ctx.db.query('learningProgress').collect();
+    const progressedByPath = new Map<string, Set<string>>();
+    for (const r of progressRows as any[]) {
+      if (!r.completed) continue;
+      const pid = (r.pathId?.id as unknown as string) || String(r.pathId ?? '');
+      const uid = (r.userId?.id as unknown as string) || String(r.userId ?? '');
+      if (!pid || !uid) continue;
+      let set = progressedByPath.get(pid);
+      if (!set) {
+        set = new Set<string>();
+        progressedByPath.set(pid, set);
+      }
+      set.add(uid);
+    }
+
+    const result: { id: string; title: string; engagement: number; viewers: number; progressed: number }[] = [];
+    for (const [pid, viewers] of viewersByPath.entries()) {
+      const progressedSet = progressedByPath.get(pid) || new Set<string>();
+      let progressedCount = 0;
+      for (const u of viewers) if (progressedSet.has(u)) progressedCount++;
+      const denom = viewers.size || 0;
+      const pct = denom === 0 ? 0 : Math.round((progressedCount / denom) * 100);
+
+      // Fetch title
+      let title = 'Unknown';
+      const normalized = await ctx.db.normalizeId('learningPaths', pid);
+      if (normalized) {
+        const doc = await ctx.db.get(normalized);
+        if (doc) title = doc.title;
+      }
+
+      result.push({ id: pid, title, engagement: pct, viewers: denom, progressed: progressedCount });
+    }
+
+    result.sort((a, b) => (b.engagement - a.engagement) || (b.viewers - a.viewers) || a.title.localeCompare(b.title));
+    return result;
   },
 });
