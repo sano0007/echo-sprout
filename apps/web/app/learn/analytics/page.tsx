@@ -116,10 +116,10 @@ export default function LearnAnalyticsPage() {
                 (() => {
                   const filtered = (allTopics as any[]).filter((t: any) => (t.replies ?? 0) === 0);
                   return filtered.length ? (
-                    filtered.map((t: any) => (
+                    filtered.slice(0, 5).map((t: any) => (
                       <li key={t.id as any} className="py-2">
                         <div className="text-sm font-medium text-gray-900 truncate">{t.title}</div>
-                        <div className="text-xs text-gray-500">{t.views ?? 0} views • {t.replies ?? 0} replies</div>
+                        <div className="text-xs text-gray-500">{t.views ?? 0} views</div>
                       </li>
                     ))
                   ) : (
