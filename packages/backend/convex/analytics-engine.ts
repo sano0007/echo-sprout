@@ -767,7 +767,7 @@ export const aggregateProjectData = query({
     // Verify admin access
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -812,7 +812,7 @@ export const aggregateUserData = query({
     // Verify admin access
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -854,7 +854,7 @@ export const aggregateTransactionData = query({
     // Verify admin access
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -900,7 +900,7 @@ export const aggregateImpactData = query({
     // Verify admin access
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -923,7 +923,14 @@ export const calculateProjectPerformance = query({
       v.object({
         startDate: v.number(),
         endDate: v.number(),
-        granularity: v.string(),
+        granularity: v.union(
+          v.literal('hourly'),
+          v.literal('daily'),
+          v.literal('weekly'),
+          v.literal('monthly'),
+          v.literal('quarterly'),
+          v.literal('yearly')
+        ),
       })
     ),
   },
@@ -947,7 +954,7 @@ export const calculateProjectPerformance = query({
       // For platform-wide metrics, require admin access
       const user = await ctx.db
         .query('users')
-        .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+        .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
         .first();
 
       if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -969,7 +976,14 @@ export const calculatePlatformPerformance = query({
       v.object({
         startDate: v.number(),
         endDate: v.number(),
-        granularity: v.string(),
+        granularity: v.union(
+          v.literal('hourly'),
+          v.literal('daily'),
+          v.literal('weekly'),
+          v.literal('monthly'),
+          v.literal('quarterly'),
+          v.literal('yearly')
+        ),
       })
     ),
   },
@@ -982,7 +996,7 @@ export const calculatePlatformPerformance = query({
     // Verify admin access
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -1026,7 +1040,7 @@ export const predictMarketTrends = query({
     // Verify admin access
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -1051,7 +1065,7 @@ export const predictUserBehavior = query({
     // Users can access their own predictions, admins can access all
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     const canAccess =
@@ -1106,7 +1120,7 @@ export const getSystemHealth = query({
     // Verify admin access for system health
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -1242,11 +1256,11 @@ async function performTransactionDataAggregation(
 ): Promise<AggregatedTransactionData> {
   // Get transactions within timeframe
   const transactions = await ctx.db
-    .query('creditPurchases')
+    .query('transactions')
     .filter((q: any) =>
       q.and(
-        q.gte(q.field('purchaseDate'), timeframe.startDate),
-        q.lte(q.field('purchaseDate'), timeframe.endDate)
+        q.gte(q.field('_creationTime'), timeframe.startDate),
+        q.lte(q.field('_creationTime'), timeframe.endDate)
       )
     )
     .collect();
@@ -1295,23 +1309,23 @@ async function performImpactDataAggregation(
     .query('progressUpdates')
     .filter((q: any) =>
       q.and(
-        q.gte(q.field('submittedAt'), timeframe.startDate),
-        q.lte(q.field('submittedAt'), timeframe.endDate)
+        q.gte(q.field('reportingDate'), timeframe.startDate),
+        q.lte(q.field('reportingDate'), timeframe.endDate)
       )
     )
     .collect();
 
   // Apply filters and calculate impact metrics
   const totalCarbonOffset = progressUpdates.reduce(
-    (sum, u) => sum + (u.carbonImpactToDate || 0),
+    (sum: number, u: any) => sum + (u.carbonImpactToDate || 0),
     0
   );
   const totalTreesPlanted = progressUpdates.reduce(
-    (sum, u) => sum + (u.treesPlanted || 0),
+    (sum: number, u: any) => sum + (u.treesPlanted || 0),
     0
   );
   const totalEnergyGenerated = progressUpdates.reduce(
-    (sum, u) => sum + (u.energyGenerated || 0),
+    (sum: number, u: any) => sum + (u.energyGenerated || 0),
     0
   );
 
@@ -1534,7 +1548,7 @@ async function generateMarketPrediction(
   timeHorizon: number
 ): Promise<MarketPrediction> {
   // Get historical transaction data
-  const transactions = await ctx.db.query('creditPurchases').collect();
+  const transactions = await ctx.db.query('transactions').collect();
   const projects = await ctx.db.query('projects').collect();
 
   // Generate demand forecast
@@ -1581,7 +1595,7 @@ async function generateUserPrediction(
   // Get user data
   const user = await ctx.db
     .query('users')
-    .withIndex('by_userId', (q: any) => q.eq('userId', userId))
+    .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', userId))
     .first();
 
   if (!user) {
@@ -1590,13 +1604,13 @@ async function generateUserPrediction(
 
   // Get user activity data (purchases, project creation, etc.)
   const purchases = await ctx.db
-    .query('creditPurchases')
+    .query('transactions')
     .withIndex('by_buyer', (q: any) => q.eq('buyerId', userId))
     .collect();
 
   const projects = await ctx.db
     .query('projects')
-    .filter((q: any) => q.eq(q.field('createdBy'), userId))
+    .filter((q: any) => q.eq(q.field('creatorId'), userId))
     .collect();
 
   // Calculate churn probability
@@ -1653,9 +1667,9 @@ async function fetchRealTimeMetrics(ctx: any): Promise<RealTimeMetrics> {
 
   // Get recent transactions
   const recentTransactions = await ctx.db
-    .query('creditPurchases')
+    .query('transactions')
     .filter((q: any) =>
-      q.gte(q.field('purchaseDate'), Date.now() - 24 * 60 * 60 * 1000)
+      q.gte(q.field('_creationTime'), Date.now() - 24 * 60 * 60 * 1000)
     ) // Last 24 hours
     .collect();
 
@@ -1711,10 +1725,10 @@ async function assessSystemHealth(ctx: any): Promise<SystemHealth> {
     .collect();
 
   const criticalAlerts = recentAlerts.filter(
-    (alert) => alert.severity === 'critical'
+    (alert: any) => alert.severity === 'critical'
   ).length;
   const highAlerts = recentAlerts.filter(
-    (alert) => alert.severity === 'high'
+    (alert: any) => alert.severity === 'high'
   ).length;
 
   // Calculate overall health score
@@ -1803,7 +1817,7 @@ async function assessSystemHealth(ctx: any): Promise<SystemHealth> {
   return {
     overall,
     components,
-    alerts: recentAlerts.map((alert) => ({
+    alerts: recentAlerts.map((alert: any) => ({
       id: alert._id,
       type: alert.alertType,
       severity: alert.severity,
@@ -1894,7 +1908,7 @@ async function verifyProjectAccess(
 
   // Check if user is a buyer of this project's credits
   const purchases = await ctx.db
-    .query('creditPurchases')
+    .query('transactions')
     .withIndex('by_buyer', (q: any) => q.eq('buyerId', userId))
     .filter((q: any) => q.eq(q.field('projectId'), projectId))
     .collect();
@@ -1904,7 +1918,7 @@ async function verifyProjectAccess(
   // Check if user has admin/verifier role
   const user = await ctx.db
     .query('users')
-    .withIndex('by_userId', (q: any) => q.eq('userId', userId))
+    .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', userId))
     .first();
 
   return user?.role === 'admin' || user?.role === 'verifier';
@@ -2170,7 +2184,7 @@ async function generateProjectTimeSeries(
   // Group projects by time periods based on granularity
   const groupedData = groupByTimePeriod(projects, timeframe.granularity);
 
-  for (const [timestamp, projectsInPeriod] of groupedData) {
+  for (const [timestamp, projectsInPeriod] of Array.from(groupedData.entries())) {
     points.push({
       timestamp,
       value: projectsInPeriod.length,
@@ -2384,7 +2398,7 @@ async function generateUserTimeSeries(
   const grouped = groupByTimePeriod(users, timeframe.granularity);
   const points: TimeSeriesPoint[] = [];
 
-  for (const [timestamp, usersInPeriod] of grouped) {
+  for (const [timestamp, usersInPeriod] of Array.from(grouped.entries())) {
     points.push({
       timestamp,
       value: usersInPeriod.length,
@@ -2403,7 +2417,7 @@ async function generateTransactionTimeSeries(
   const grouped = groupByTimePeriod(transactions, timeframe.granularity);
   const points: TimeSeriesPoint[] = [];
 
-  for (const [timestamp, transactionsInPeriod] of grouped) {
+  for (const [timestamp, transactionsInPeriod] of Array.from(grouped.entries())) {
     const totalVolume = transactionsInPeriod.reduce(
       (sum, t) => sum + t.totalAmount,
       0
@@ -2596,7 +2610,7 @@ async function generateImpactTimeSeries(
   const grouped = groupByTimePeriod(progressUpdates, timeframe.granularity);
   const points: TimeSeriesPoint[] = [];
 
-  for (const [timestamp, updatesInPeriod] of grouped) {
+  for (const [timestamp, updatesInPeriod] of Array.from(grouped.entries())) {
     const carbonImpact = updatesInPeriod.reduce(
       (sum, u) => sum + (u.carbonImpactToDate || 0),
       0
@@ -3513,7 +3527,7 @@ export const generateAnalyticsReport = mutation({
 
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -3598,7 +3612,7 @@ export const getAnalyticsReport = query({
     if (!report.isPublic) {
       const user = await ctx.db
         .query('users')
-        .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+        .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
         .first();
 
       const hasAccess =
@@ -3677,7 +3691,7 @@ export const calculateCohortAnalysis = query({
 
     const user = await ctx.db
       .query('users')
-      .withIndex('by_userId', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', identity.subject))
       .first();
 
     if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -3837,7 +3851,7 @@ async function computeAdvancedProjectMetrics(
 ) {
   const baseMetrics = await computeProjectPerformanceMetrics(ctx, projectId);
 
-  const advanced = {
+  const advanced: any = {
     ...baseMetrics,
     riskAnalysis: await calculateProjectRisks(ctx, projectId),
     qualityAnalysis: await calculateQualityAnalysis(ctx, projectId),
@@ -3870,7 +3884,7 @@ async function performCohortAnalysis(
     const cohortAnalysis = {
       cohortPeriod: cohort.period,
       cohortSize: cohort.users.length,
-      metrics: {},
+      metrics: {} as Record<string, any>,
     };
 
     for (const metric of metrics) {
@@ -3962,7 +3976,7 @@ function calculateProjectRiskScore(project: any): number {
   }
 
   // Complexity risk (based on project type)
-  const complexityMap = {
+  const complexityMap: Record<string, number> = {
     reforestation: 10,
     solar: 15,
     wind: 20,
