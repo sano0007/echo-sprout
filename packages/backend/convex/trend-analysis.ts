@@ -137,7 +137,7 @@ export const analyzeProjectTrend = mutation({
             updateType: update.updateType,
             progressPercentage: update.progressPercentage,
           },
-        };
+        } as TrendDataPoint;
       })
       .filter((point): point is TrendDataPoint => point !== null);
 
@@ -417,7 +417,7 @@ function groupDataPointsByTimeframe(
 
   // Aggregate points within each period
   const aggregated: TrendDataPoint[] = [];
-  for (const [periodStart, points] of grouped.entries()) {
+  Array.from(grouped.entries()).forEach(([periodStart, points]) => {
     const maxValue = Math.max(...points.map((p) => p.value));
     const allVerified = points.every((p) => p.verified);
 
@@ -430,7 +430,7 @@ function groupDataPointsByTimeframe(
         sourcePoints: points.map((p) => p.metadata?.updateId),
       },
     });
-  }
+  });
 
   return aggregated.sort((a, b) => a.timestamp - b.timestamp);
 }
