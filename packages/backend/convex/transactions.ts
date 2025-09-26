@@ -23,6 +23,7 @@ export const createTransactionFromStripe = internalMutation({
 
     const credits = parseFloat(metadata.credits || '0');
     const originalAmount = parseFloat(metadata.amount || '0');
+    const projectId = metadata.projectId || null;
 
     if (!credits || !originalAmount) {
       throw new ConvexError('Missing credits or amount in session metadata');
@@ -39,11 +40,37 @@ export const createTransactionFromStripe = internalMutation({
 
     const unitPrice = originalAmount / credits;
 
+    // If projectId is provided, validate it exists and update project credits
+    if (projectId) {
+      const project = await ctx.db
+        .query('projects')
+        .filter((q) => q.eq(q.field('_id'), projectId))
+        .first();
+
+      if (!project) {
+        throw new ConvexError(`Project with ID ${projectId} not found`);
+      }
+
+      // Check if enough credits are available
+      if (project.creditsAvailable < credits) {
+        throw new ConvexError(
+          `Not enough credits available. Only ${project.creditsAvailable} credits available.`
+        );
+      }
+
+      // Update project credits
+      await ctx.db.patch(project._id, {
+        creditsAvailable: project.creditsAvailable - credits,
+        creditsSold: project.creditsSold + credits,
+      });
+    }
+
     // Generate transaction reference
     const transactionReference = `TXN-${Date.now()}-${sessionId.slice(-8)}`;
 
     const transactionId = await ctx.db.insert('transactions', {
       buyerId: buyer._id,
+      projectId: projectId || undefined,
       creditAmount: credits,
       unitPrice,
       totalAmount: originalAmount,

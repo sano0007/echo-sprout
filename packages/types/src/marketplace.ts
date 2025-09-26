@@ -1,5 +1,7 @@
+import { Id } from "@packages/backend/convex/_generated/dataModel";
+
 export interface MarketplaceProject {
-  id: number;
+  id: Id<"projects">; // Convex ID
   name: string;
   type: string;
   location: string;

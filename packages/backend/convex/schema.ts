@@ -119,6 +119,7 @@ export default defineSchema({
     // todo: replace when auth is set up
     // buyerId: v.id('users'),
     buyerId: v.string(), // Clerk user ID of the buyer
+    projectId: v.optional(v.id('projects')), // Link to specific project for project-specific purchases
     creditAmount: v.number(),
     unitPrice: v.number(),
     totalAmount: v.number(),
@@ -137,6 +138,7 @@ export default defineSchema({
     transactionReference: v.string(), // Unique transaction reference
   })
     .index('by_buyer', ['buyerId'])
+    .index('by_project', ['projectId'])
     .index('by_payment_status', ['paymentStatus'])
     .index('by_reference', ['transactionReference']),
 

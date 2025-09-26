@@ -15,6 +15,7 @@ import type {
 } from 'convex/server';
 import type * as http from '../http.js';
 import type * as marketplace from '../marketplace.js';
+import type * as projects from '../projects.js';
 import type * as transactions from '../transactions.js';
 import type * as users from '../users.js';
 
@@ -29,6 +30,7 @@ import type * as users from '../users.js';
 declare const fullApi: ApiFromModules<{
   http: typeof http;
   marketplace: typeof marketplace;
+  projects: typeof projects;
   transactions: typeof transactions;
   users: typeof users;
 }>;

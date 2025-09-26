@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { amount, credits } = await request.json();
+    const { amount, credits, projectId, projectName } = await request.json();
 
     if (!amount || !credits) {
       return NextResponse.json(
@@ -49,7 +49,9 @@ export async function POST(request: NextRequest) {
     const session = await stripeService.createCheckoutSession(
       amount,
       credits,
-      userEmail
+      userEmail,
+      projectId,
+      projectName
     );
 
     return NextResponse.json({
