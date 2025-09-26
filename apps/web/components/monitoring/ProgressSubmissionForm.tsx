@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { CloudArrowUpIcon, PlusIcon, XMarkIcon, PhotoIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import {
+  CloudArrowUpIcon,
+  PlusIcon,
+  XMarkIcon,
+  PhotoIcon,
+  MapPinIcon,
+} from '@heroicons/react/24/outline';
 
 interface ProgressSubmissionFormProps {
   projectId: string;
@@ -35,7 +41,7 @@ export default function ProgressSubmissionForm({
   projectId,
   projectType,
   onSubmit,
-  onCancel
+  onCancel,
 }: ProgressSubmissionFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<ProgressUpdateData>({
@@ -46,7 +52,7 @@ export default function ProgressSubmissionForm({
     measurementData: {},
     photos: [],
     nextSteps: '',
-    challenges: ''
+    challenges: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
@@ -57,80 +63,80 @@ export default function ProgressSubmissionForm({
     { value: 'milestone', label: 'Milestone Achievement', icon: '🎯' },
     { value: 'photo', label: 'Photo Documentation', icon: '📸' },
     { value: 'issue', label: 'Issue Report', icon: '⚠️' },
-    { value: 'completion', label: 'Project Completion', icon: '✅' }
+    { value: 'completion', label: 'Project Completion', icon: '✅' },
   ];
 
   const measurementFields = {
     reforestation: [
       { key: 'treesPlanted', label: 'Trees Planted', unit: 'trees' },
-      { key: 'carbonImpactToDate', label: 'CO2 Sequestered', unit: 'tons CO2' }
+      { key: 'carbonImpactToDate', label: 'CO2 Sequestered', unit: 'tons CO2' },
     ],
     solar: [
       { key: 'energyGenerated', label: 'Energy Generated', unit: 'kWh' },
-      { key: 'carbonImpactToDate', label: 'CO2 Avoided', unit: 'tons CO2' }
+      { key: 'carbonImpactToDate', label: 'CO2 Avoided', unit: 'tons CO2' },
     ],
     wind: [
       { key: 'energyGenerated', label: 'Energy Generated', unit: 'kWh' },
-      { key: 'carbonImpactToDate', label: 'CO2 Avoided', unit: 'tons CO2' }
+      { key: 'carbonImpactToDate', label: 'CO2 Avoided', unit: 'tons CO2' },
     ],
     waste_management: [
       { key: 'wasteProcessed', label: 'Waste Processed', unit: 'tons' },
-      { key: 'carbonImpactToDate', label: 'CO2 Impact', unit: 'tons CO2' }
+      { key: 'carbonImpactToDate', label: 'CO2 Impact', unit: 'tons CO2' },
     ],
     biogas: [
       { key: 'energyGenerated', label: 'Gas Generated', unit: 'cubic meters' },
-      { key: 'carbonImpactToDate', label: 'CO2 Impact', unit: 'tons CO2' }
+      { key: 'carbonImpactToDate', label: 'CO2 Impact', unit: 'tons CO2' },
     ],
     mangrove_restoration: [
       { key: 'treesPlanted', label: 'Mangroves Planted', unit: 'plants' },
-      { key: 'carbonImpactToDate', label: 'CO2 Sequestered', unit: 'tons CO2' }
-    ]
+      { key: 'carbonImpactToDate', label: 'CO2 Sequestered', unit: 'tons CO2' },
+    ],
   };
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleMeasurementChange = (field: string, value: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       measurementData: {
         ...prev.measurementData,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const newPhotos = [...formData.photos, ...files];
-    setFormData(prev => ({ ...prev, photos: newPhotos }));
+    setFormData((prev) => ({ ...prev, photos: newPhotos }));
 
     // Create preview URLs
-    const newPreviews = files.map(file => URL.createObjectURL(file));
-    setPreviewPhotos(prev => [...prev, ...newPreviews]);
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setPreviewPhotos((prev) => [...prev, ...newPreviews]);
   };
 
   const removePhoto = (index: number) => {
     const newPhotos = formData.photos.filter((_, i) => i !== index);
     const newPreviews = previewPhotos.filter((_, i) => i !== index);
-    setFormData(prev => ({ ...prev, photos: newPhotos }));
+    setFormData((prev) => ({ ...prev, photos: newPhotos }));
     setPreviewPhotos(newPreviews);
   };
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           location: {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
-            address: 'Current Location'
-          }
+            address: 'Current Location',
+          },
         }));
       });
     }
@@ -166,7 +172,7 @@ export default function ProgressSubmissionForm({
     'Basic Information',
     'Progress & Measurements',
     'Documentation',
-    'Review & Submit'
+    'Review & Submit',
   ];
 
   return (
@@ -187,15 +193,19 @@ export default function ProgressSubmissionForm({
                   index + 1 < currentStep
                     ? 'bg-green-500 text-white'
                     : index + 1 === currentStep
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-300 text-gray-600'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-300 text-gray-600'
                 }`}
               >
                 {index + 1}
               </div>
-              <span className={`ml-2 text-sm ${
-                index + 1 === currentStep ? 'text-blue-600 font-medium' : 'text-gray-600'
-              }`}>
+              <span
+                className={`ml-2 text-sm ${
+                  index + 1 === currentStep
+                    ? 'text-blue-600 font-medium'
+                    : 'text-gray-600'
+                }`}
+              >
                 {title}
               </span>
               {index < stepTitles.length - 1 && (
@@ -233,7 +243,9 @@ export default function ProgressSubmissionForm({
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => handleInputChange('updateType', option.value)}
+                    onClick={() =>
+                      handleInputChange('updateType', option.value)
+                    }
                     className={`p-4 border rounded-lg text-left transition-colors ${
                       formData.updateType === option.value
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -255,7 +267,9 @@ export default function ProgressSubmissionForm({
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('description', e.target.value)
+                }
                 placeholder="Describe the progress made, activities completed, and any important updates..."
                 rows={4}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -277,7 +291,12 @@ export default function ProgressSubmissionForm({
                   min="0"
                   max="100"
                   value={formData.progressPercentage}
-                  onChange={(e) => handleInputChange('progressPercentage', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleInputChange(
+                      'progressPercentage',
+                      parseInt(e.target.value)
+                    )
+                  }
                   className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
                 <span className="text-lg font-semibold text-blue-600 w-12">
@@ -297,7 +316,11 @@ export default function ProgressSubmissionForm({
                 Environmental Measurements
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {(measurementFields[projectType as keyof typeof measurementFields] || []).map((field) => (
+                {(
+                  measurementFields[
+                    projectType as keyof typeof measurementFields
+                  ] || []
+                ).map((field) => (
                   <div key={field.key}>
                     <label className="block text-sm font-medium text-gray-600 mb-1">
                       {field.label} ({field.unit})
@@ -305,8 +328,17 @@ export default function ProgressSubmissionForm({
                     <input
                       type="number"
                       step="0.01"
-                      value={formData.measurementData[field.key as keyof typeof formData.measurementData] || ''}
-                      onChange={(e) => handleMeasurementChange(field.key, parseFloat(e.target.value) || 0)}
+                      value={
+                        formData.measurementData[
+                          field.key as keyof typeof formData.measurementData
+                        ] || ''
+                      }
+                      onChange={(e) =>
+                        handleMeasurementChange(
+                          field.key,
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       placeholder="0.00"
                     />
@@ -322,7 +354,9 @@ export default function ProgressSubmissionForm({
                 </label>
                 <textarea
                   value={formData.nextSteps}
-                  onChange={(e) => handleInputChange('nextSteps', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('nextSteps', e.target.value)
+                  }
                   placeholder="Outline planned activities for the next reporting period..."
                   rows={3}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -335,7 +369,9 @@ export default function ProgressSubmissionForm({
                 </label>
                 <textarea
                   value={formData.challenges}
-                  onChange={(e) => handleInputChange('challenges', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('challenges', e.target.value)
+                  }
                   placeholder="Describe any challenges encountered or issues that need attention..."
                   rows={3}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -358,9 +394,12 @@ export default function ProgressSubmissionForm({
                 className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors"
               >
                 <CloudArrowUpIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-lg font-medium text-gray-700">Upload Photos</p>
+                <p className="text-lg font-medium text-gray-700">
+                  Upload Photos
+                </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Drag and drop or click to select files (JPG, PNG, max 10MB each)
+                  Drag and drop or click to select files (JPG, PNG, max 10MB
+                  each)
                 </p>
               </div>
 
@@ -409,7 +448,9 @@ export default function ProgressSubmissionForm({
                 </button>
                 {formData.location && (
                   <div className="text-sm text-gray-600">
-                    📍 Location captured ({formData.location.latitude.toFixed(4)}, {formData.location.longitude.toFixed(4)})
+                    📍 Location captured (
+                    {formData.location.latitude.toFixed(4)},{' '}
+                    {formData.location.longitude.toFixed(4)})
                   </div>
                 )}
               </div>
@@ -420,43 +461,67 @@ export default function ProgressSubmissionForm({
         {/* Step 4: Review & Submit */}
         {currentStep === 4 && (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800">Review Your Submission</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Review Your Submission
+            </h3>
 
             <div className="bg-gray-50 rounded-lg p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Title</label>
+                  <label className="text-sm font-medium text-gray-600">
+                    Title
+                  </label>
                   <p className="text-gray-800">{formData.title}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Update Type</label>
-                  <p className="text-gray-800 capitalize">{formData.updateType.replace('_', ' ')}</p>
+                  <label className="text-sm font-medium text-gray-600">
+                    Update Type
+                  </label>
+                  <p className="text-gray-800 capitalize">
+                    {formData.updateType.replace('_', ' ')}
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Progress</label>
-                  <p className="text-gray-800">{formData.progressPercentage}%</p>
+                  <label className="text-sm font-medium text-gray-600">
+                    Progress
+                  </label>
+                  <p className="text-gray-800">
+                    {formData.progressPercentage}%
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Photos</label>
-                  <p className="text-gray-800">{formData.photos.length} photo(s)</p>
+                  <label className="text-sm font-medium text-gray-600">
+                    Photos
+                  </label>
+                  <p className="text-gray-800">
+                    {formData.photos.length} photo(s)
+                  </p>
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-600">Description</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Description
+                </label>
                 <p className="text-gray-800 mt-1">{formData.description}</p>
               </div>
 
               {Object.keys(formData.measurementData).length > 0 && (
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Measurements</label>
+                  <label className="text-sm font-medium text-gray-600">
+                    Measurements
+                  </label>
                   <div className="grid grid-cols-2 gap-2 mt-1">
-                    {Object.entries(formData.measurementData).map(([key, value]) => (
-                      <div key={key} className="text-sm">
-                        <span className="text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1')}: </span>
-                        <span className="text-gray-800">{value}</span>
-                      </div>
-                    ))}
+                    {Object.entries(formData.measurementData).map(
+                      ([key, value]) => (
+                        <div key={key} className="text-sm">
+                          <span className="text-gray-600 capitalize">
+                            {key.replace(/([A-Z])/g, ' $1')}:{' '}
+                          </span>
+                          <span className="text-gray-800">{value}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               )}

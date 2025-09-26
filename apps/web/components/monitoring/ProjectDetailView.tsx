@@ -18,18 +18,23 @@ import {
   ArrowDownTrayIcon,
   ShareIcon,
   HeartIcon,
-  EyeIcon
+  EyeIcon,
 } from '@heroicons/react/24/outline';
 import {
   HeartIcon as HeartSolid,
-  StarIcon as StarSolid
+  StarIcon as StarSolid,
 } from '@heroicons/react/24/solid';
 
 interface ProjectDetailData {
   id: string;
   title: string;
   description: string;
-  type: 'reforestation' | 'renewable_energy' | 'waste_management' | 'water_conservation' | 'biodiversity';
+  type:
+    | 'reforestation'
+    | 'renewable_energy'
+    | 'waste_management'
+    | 'water_conservation'
+    | 'biodiversity';
   status: 'planning' | 'active' | 'completed' | 'verified' | 'suspended';
   location: {
     country: string;
@@ -136,14 +141,23 @@ export default function ProjectDetailView({
   onFavorite,
   onRate,
   onShare,
-  onDownloadReport
+  onDownloadReport,
 }: ProjectDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'impact' | 'verification' | 'financials' | 'documents'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    | 'overview'
+    | 'timeline'
+    | 'impact'
+    | 'verification'
+    | 'financials'
+    | 'documents'
+  >('overview');
   const [investmentAmount, setInvestmentAmount] = useState<number>(100);
   const [creditsToInvest, setCreditsToInvest] = useState<number>(1);
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  const [userRating, setUserRating] = useState(project.metadata.userRating || 0);
+  const [userRating, setUserRating] = useState(
+    project.metadata.userRating || 0
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -182,8 +196,9 @@ export default function ProjectDetailView({
   };
 
   const getRiskColor = (risk: { likelihood: string; impact: string }) => {
-    const riskScore = (risk.likelihood === 'high' ? 3 : risk.likelihood === 'medium' ? 2 : 1) +
-                     (risk.impact === 'high' ? 3 : risk.impact === 'medium' ? 2 : 1);
+    const riskScore =
+      (risk.likelihood === 'high' ? 3 : risk.likelihood === 'medium' ? 2 : 1) +
+      (risk.impact === 'high' ? 3 : risk.impact === 'medium' ? 2 : 1);
 
     if (riskScore >= 5) return 'border-red-500 bg-red-50';
     if (riskScore >= 3) return 'border-yellow-500 bg-yellow-50';
@@ -195,7 +210,7 @@ export default function ProjectDetailView({
       style: 'currency',
       currency,
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -205,11 +220,13 @@ export default function ProjectDetailView({
     { key: 'impact', label: 'Impact', icon: GlobeAltIcon },
     { key: 'verification', label: 'Verification', icon: CheckCircleIcon },
     { key: 'financials', label: 'Financials', icon: CurrencyDollarIcon },
-    { key: 'documents', label: 'Documents', icon: PhotoIcon }
+    { key: 'documents', label: 'Documents', icon: PhotoIcon },
   ];
 
   useEffect(() => {
-    setCreditsToInvest(Math.floor(investmentAmount / project.financials.pricePerCredit));
+    setCreditsToInvest(
+      Math.floor(investmentAmount / project.financials.pricePerCredit)
+    );
   }, [investmentAmount, project.financials.pricePerCredit]);
 
   return (
@@ -232,7 +249,9 @@ export default function ProjectDetailView({
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
                   <span className="text-3xl">{getTypeIcon(project.type)}</span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}
+                  >
                     {project.status.replace('_', ' ').toUpperCase()}
                   </span>
                   {project.creator.verification === 'verified' && (
@@ -243,18 +262,24 @@ export default function ProjectDetailView({
                 <div className="flex items-center space-x-4 text-sm">
                   <div className="flex items-center space-x-1">
                     <MapPinIcon className="h-4 w-4" />
-                    <span>{project.location.region}, {project.location.country}</span>
+                    <span>
+                      {project.location.region}, {project.location.country}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <UserGroupIcon className="h-4 w-4" />
                     <span>{project.creator.name}</span>
                     {project.creator.organization && (
-                      <span className="text-gray-300">• {project.creator.organization}</span>
+                      <span className="text-gray-300">
+                        • {project.creator.organization}
+                      </span>
                     )}
                   </div>
                   <div className="flex items-center space-x-1">
                     <EyeIcon className="h-4 w-4" />
-                    <span>{project.metadata.viewCount.toLocaleString()} views</span>
+                    <span>
+                      {project.metadata.viewCount.toLocaleString()} views
+                    </span>
                   </div>
                 </div>
               </div>
@@ -281,14 +306,15 @@ export default function ProjectDetailView({
                   <span className="text-sm">Share</span>
                 </button>
 
-                {userRole === 'buyer' && project.financials.availableCredits > 0 && (
-                  <button
-                    onClick={() => setShowInvestModal(true)}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-                  >
-                    Invest Now
-                  </button>
-                )}
+                {userRole === 'buyer' &&
+                  project.financials.availableCredits > 0 && (
+                    <button
+                      onClick={() => setShowInvestModal(true)}
+                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                    >
+                      Invest Now
+                    </button>
+                  )}
               </div>
             </div>
           </div>
@@ -301,7 +327,9 @@ export default function ProjectDetailView({
               <div className="text-2xl font-bold text-green-600">
                 {project.impact.co2Offset.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-600">{project.impact.co2OffsetUnit} CO₂ Offset</div>
+              <div className="text-sm text-gray-600">
+                {project.impact.co2OffsetUnit} CO₂ Offset
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -322,7 +350,9 @@ export default function ProjectDetailView({
                 </div>
                 <StarSolid className="h-6 w-6 text-yellow-400" />
               </div>
-              <div className="text-sm text-gray-600">{project.community.totalReviews} reviews</div>
+              <div className="text-sm text-gray-600">
+                {project.community.totalReviews} reviews
+              </div>
             </div>
           </div>
         </div>
@@ -354,72 +384,96 @@ export default function ProjectDetailView({
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Project Description</h3>
-              <p className="text-gray-600 leading-relaxed">{project.description}</p>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Project Description
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {project.description}
+              </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Project Details */}
               <div>
-                <h4 className="font-medium text-gray-800 mb-3">Project Details</h4>
+                <h4 className="font-medium text-gray-800 mb-3">
+                  Project Details
+                </h4>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Type:</span>
-                    <span className="font-medium capitalize">{project.type.replace('_', ' ')}</span>
+                    <span className="font-medium capitalize">
+                      {project.type.replace('_', ' ')}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Duration:</span>
                     <span className="font-medium">
-                      {new Date(project.timeline.startDate).getFullYear()} - {new Date(project.timeline.endDate).getFullYear()}
+                      {new Date(project.timeline.startDate).getFullYear()} -{' '}
+                      {new Date(project.timeline.endDate).getFullYear()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Current Phase:</span>
-                    <span className="font-medium">{project.timeline.currentPhase}</span>
+                    <span className="font-medium">
+                      {project.timeline.currentPhase}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Next Milestone:</span>
-                    <span className="font-medium">{project.timeline.nextMilestone}</span>
+                    <span className="font-medium">
+                      {project.timeline.nextMilestone}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Impact Metrics */}
               <div>
-                <h4 className="font-medium text-gray-800 mb-3">Impact Metrics</h4>
+                <h4 className="font-medium text-gray-800 mb-3">
+                  Impact Metrics
+                </h4>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">CO₂ Offset:</span>
                     <span className="font-medium">
-                      {project.impact.co2Offset.toLocaleString()} {project.impact.co2OffsetUnit}
+                      {project.impact.co2Offset.toLocaleString()}{' '}
+                      {project.impact.co2OffsetUnit}
                     </span>
                   </div>
                   {project.impact.biodiversityScore && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Biodiversity Score:</span>
-                      <span className="font-medium">{project.impact.biodiversityScore}/100</span>
+                      <span className="font-medium">
+                        {project.impact.biodiversityScore}/100
+                      </span>
                     </div>
                   )}
                   {project.impact.communityImpact && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Community Impact:</span>
-                      <span className="font-medium">{project.impact.communityImpact} beneficiaries</span>
+                      <span className="font-medium">
+                        {project.impact.communityImpact} beneficiaries
+                      </span>
                     </div>
                   )}
                 </div>
 
                 {project.impact.additionalBenefits.length > 0 && (
                   <div className="mt-4">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Additional Benefits:</h5>
+                    <h5 className="text-sm font-medium text-gray-700 mb-2">
+                      Additional Benefits:
+                    </h5>
                     <div className="flex flex-wrap gap-2">
-                      {project.impact.additionalBenefits.map((benefit, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
-                        >
-                          {benefit}
-                        </span>
-                      ))}
+                      {project.impact.additionalBenefits.map(
+                        (benefit, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                          >
+                            {benefit}
+                          </span>
+                        )
+                      )}
                     </div>
                   </div>
                 )}
@@ -429,7 +483,9 @@ export default function ProjectDetailView({
             {/* Risk Assessment */}
             {project.risks.length > 0 && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-3">Risk Assessment</h4>
+                <h4 className="font-medium text-gray-800 mb-3">
+                  Risk Assessment
+                </h4>
                 <div className="grid gap-3">
                   {project.risks.map((risk) => (
                     <div
@@ -437,25 +493,37 @@ export default function ProjectDetailView({
                       className={`p-4 rounded-lg border-l-4 ${getRiskColor(risk)}`}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <h5 className="font-medium text-gray-800 capitalize">{risk.type} Risk</h5>
+                        <h5 className="font-medium text-gray-800 capitalize">
+                          {risk.type} Risk
+                        </h5>
                         <div className="flex space-x-2">
-                          <span className={`px-2 py-1 text-xs rounded ${
-                            risk.likelihood === 'high' ? 'bg-red-100 text-red-600' :
-                            risk.likelihood === 'medium' ? 'bg-yellow-100 text-yellow-600' :
-                            'bg-green-100 text-green-600'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 text-xs rounded ${
+                              risk.likelihood === 'high'
+                                ? 'bg-red-100 text-red-600'
+                                : risk.likelihood === 'medium'
+                                  ? 'bg-yellow-100 text-yellow-600'
+                                  : 'bg-green-100 text-green-600'
+                            }`}
+                          >
                             {risk.likelihood} likelihood
                           </span>
-                          <span className={`px-2 py-1 text-xs rounded ${
-                            risk.impact === 'high' ? 'bg-red-100 text-red-600' :
-                            risk.impact === 'medium' ? 'bg-yellow-100 text-yellow-600' :
-                            'bg-green-100 text-green-600'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 text-xs rounded ${
+                              risk.impact === 'high'
+                                ? 'bg-red-100 text-red-600'
+                                : risk.impact === 'medium'
+                                  ? 'bg-yellow-100 text-yellow-600'
+                                  : 'bg-green-100 text-green-600'
+                            }`}
+                          >
                             {risk.impact} impact
                           </span>
                         </div>
                       </div>
-                      <p className="text-gray-600 text-sm mb-2">{risk.description}</p>
+                      <p className="text-gray-600 text-sm mb-2">
+                        {risk.description}
+                      </p>
                       <p className="text-gray-700 text-sm">
                         <span className="font-medium">Mitigation: </span>
                         {risk.mitigation}
@@ -472,11 +540,19 @@ export default function ProjectDetailView({
         {activeTab === 'timeline' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Project Timeline</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Project Timeline
+              </h3>
               <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <span>Started: {new Date(project.timeline.startDate).toLocaleDateString()}</span>
+                <span>
+                  Started:{' '}
+                  {new Date(project.timeline.startDate).toLocaleDateString()}
+                </span>
                 <span>•</span>
-                <span>Expected End: {new Date(project.timeline.endDate).toLocaleDateString()}</span>
+                <span>
+                  Expected End:{' '}
+                  {new Date(project.timeline.endDate).toLocaleDateString()}
+                </span>
               </div>
             </div>
 
@@ -508,17 +584,33 @@ export default function ProjectDetailView({
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-800">Verification Status</h4>
-                  <p className={`text-sm ${getStatusColor(project.verification.status).split(' ')[0]}`}>
-                    {project.verification.status.replace('_', ' ').toUpperCase()}
+                  <h4 className="font-medium text-gray-800">
+                    Verification Status
+                  </h4>
+                  <p
+                    className={`text-sm ${getStatusColor(project.verification.status).split(' ')[0]}`}
+                  >
+                    {project.verification.status
+                      .replace('_', ' ')
+                      .toUpperCase()}
                   </p>
                 </div>
                 <div className="text-right text-sm text-gray-600">
                   {project.verification.lastVerified && (
-                    <div>Last verified: {new Date(project.verification.lastVerified).toLocaleDateString()}</div>
+                    <div>
+                      Last verified:{' '}
+                      {new Date(
+                        project.verification.lastVerified
+                      ).toLocaleDateString()}
+                    </div>
                   )}
                   {project.verification.nextVerification && (
-                    <div>Next verification: {new Date(project.verification.nextVerification).toLocaleDateString()}</div>
+                    <div>
+                      Next verification:{' '}
+                      {new Date(
+                        project.verification.nextVerification
+                      ).toLocaleDateString()}
+                    </div>
                   )}
                 </div>
               </div>
@@ -529,7 +621,9 @@ export default function ProjectDetailView({
         {/* Impact Tab */}
         {activeTab === 'impact' && (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800">Environmental Impact</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Environmental Impact
+            </h3>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-green-50 p-6 rounded-lg">
@@ -537,15 +631,21 @@ export default function ProjectDetailView({
                   <GlobeAltIcon className="h-8 w-8 text-green-600" />
                   <div>
                     <h4 className="font-semibold text-green-800">CO₂ Impact</h4>
-                    <p className="text-green-600">Primary environmental benefit</p>
+                    <p className="text-green-600">
+                      Primary environmental benefit
+                    </p>
                   </div>
                 </div>
                 <div className="text-3xl font-bold text-green-700 mb-2">
                   {project.impact.co2Offset.toLocaleString()}
-                  <span className="text-lg ml-1">{project.impact.co2OffsetUnit}</span>
+                  <span className="text-lg ml-1">
+                    {project.impact.co2OffsetUnit}
+                  </span>
                 </div>
                 <p className="text-green-600 text-sm">
-                  Equivalent to removing {Math.round(project.impact.co2Offset / 4.6)} cars from the road for a year
+                  Equivalent to removing{' '}
+                  {Math.round(project.impact.co2Offset / 4.6)} cars from the
+                  road for a year
                 </p>
               </div>
 
@@ -554,7 +654,9 @@ export default function ProjectDetailView({
                   <div className="flex items-center space-x-3 mb-4">
                     <BeakerIcon className="h-8 w-8 text-purple-600" />
                     <div>
-                      <h4 className="font-semibold text-purple-800">Biodiversity</h4>
+                      <h4 className="font-semibold text-purple-800">
+                        Biodiversity
+                      </h4>
                       <p className="text-purple-600">Ecosystem health score</p>
                     </div>
                   </div>
@@ -574,10 +676,15 @@ export default function ProjectDetailView({
 
             {project.impact.additionalBenefits.length > 0 && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-3">Additional Environmental Benefits</h4>
+                <h4 className="font-medium text-gray-800 mb-3">
+                  Additional Environmental Benefits
+                </h4>
                 <div className="grid md:grid-cols-2 gap-3">
                   {project.impact.additionalBenefits.map((benefit, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
+                    >
                       <CheckCircleIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
                       <span className="text-gray-700">{benefit}</span>
                     </div>
@@ -589,7 +696,9 @@ export default function ProjectDetailView({
             {/* Measurement Data */}
             {project.documentation.measurements.length > 0 && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-3">Latest Measurements</h4>
+                <h4 className="font-medium text-gray-800 mb-3">
+                  Latest Measurements
+                </h4>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -609,30 +718,32 @@ export default function ProjectDetailView({
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {project.documentation.measurements.slice(0, 5).map((measurement) => (
-                        <tr key={measurement.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {measurement.type}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {measurement.value} {measurement.unit}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(measurement.date).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {measurement.verified ? (
-                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Verified
-                              </span>
-                            ) : (
-                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Pending
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                      {project.documentation.measurements
+                        .slice(0, 5)
+                        .map((measurement) => (
+                          <tr key={measurement.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {measurement.type}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {measurement.value} {measurement.unit}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(measurement.date).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {measurement.verified ? (
+                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                  Verified
+                                </span>
+                              ) : (
+                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                  Pending
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                 </div>
@@ -644,13 +755,17 @@ export default function ProjectDetailView({
         {/* Verification Tab */}
         {activeTab === 'verification' && (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800">Verification & Compliance</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Verification & Compliance
+            </h3>
 
             {/* Verification Status */}
             <div className="bg-gray-50 p-6 rounded-lg">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStatusColor(project.verification.status)}`}>
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center ${getStatusColor(project.verification.status)}`}
+                  >
                     {project.verification.status === 'verified' ? (
                       <CheckCircleIcon className="h-6 w-6" />
                     ) : project.verification.status === 'in_progress' ? (
@@ -663,20 +778,34 @@ export default function ProjectDetailView({
                   </div>
                   <div>
                     <h4 className="font-semibold text-gray-800">
-                      {project.verification.status.replace('_', ' ').toUpperCase()}
+                      {project.verification.status
+                        .replace('_', ' ')
+                        .toUpperCase()}
                     </h4>
                     {project.verification.verifier && (
-                      <p className="text-gray-600">Verified by {project.verification.verifier}</p>
+                      <p className="text-gray-600">
+                        Verified by {project.verification.verifier}
+                      </p>
                     )}
                   </div>
                 </div>
 
                 <div className="text-right text-sm text-gray-600">
                   {project.verification.lastVerified && (
-                    <div>Last verified: {new Date(project.verification.lastVerified).toLocaleDateString()}</div>
+                    <div>
+                      Last verified:{' '}
+                      {new Date(
+                        project.verification.lastVerified
+                      ).toLocaleDateString()}
+                    </div>
                   )}
                   {project.verification.nextVerification && (
-                    <div>Next verification: {new Date(project.verification.nextVerification).toLocaleDateString()}</div>
+                    <div>
+                      Next verification:{' '}
+                      {new Date(
+                        project.verification.nextVerification
+                      ).toLocaleDateString()}
+                    </div>
                   )}
                 </div>
               </div>
@@ -685,10 +814,15 @@ export default function ProjectDetailView({
             {/* Certifications */}
             {project.verification.certifications.length > 0 && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-3">Certifications & Standards</h4>
+                <h4 className="font-medium text-gray-800 mb-3">
+                  Certifications & Standards
+                </h4>
                 <div className="grid md:grid-cols-2 gap-3">
                   {project.verification.certifications.map((cert, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg"
+                    >
                       <TrophyIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
                       <span className="text-blue-700 font-medium">{cert}</span>
                     </div>
@@ -699,16 +833,23 @@ export default function ProjectDetailView({
 
             {/* Verification Reports */}
             <div>
-              <h4 className="font-medium text-gray-800 mb-3">Verification Reports</h4>
+              <h4 className="font-medium text-gray-800 mb-3">
+                Verification Reports
+              </h4>
               <div className="space-y-3">
                 {project.documentation.reports
-                  .filter(report => report.type === 'verification')
+                  .filter((report) => report.type === 'verification')
                   .map((report) => (
-                    <div key={report.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div
+                      key={report.id}
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                    >
                       <div className="flex items-center space-x-3">
                         <DocumentTextIcon className="h-5 w-5 text-gray-400" />
                         <div>
-                          <h5 className="font-medium text-gray-800">{report.title}</h5>
+                          <h5 className="font-medium text-gray-800">
+                            {report.title}
+                          </h5>
                           <p className="text-sm text-gray-600">
                             {new Date(report.date).toLocaleDateString()}
                           </p>
@@ -731,19 +872,27 @@ export default function ProjectDetailView({
         {/* Financials Tab */}
         {activeTab === 'financials' && (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800">Financial Overview</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Financial Overview
+            </h3>
 
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-green-50 p-6 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-2">Total Credits</h4>
+                <h4 className="font-semibold text-green-800 mb-2">
+                  Total Credits
+                </h4>
                 <div className="text-2xl font-bold text-green-700">
                   {project.financials.totalCredits.toLocaleString()}
                 </div>
-                <p className="text-green-600 text-sm">Total carbon credits generated</p>
+                <p className="text-green-600 text-sm">
+                  Total carbon credits generated
+                </p>
               </div>
 
               <div className="bg-blue-50 p-6 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-2">Available Credits</h4>
+                <h4 className="font-semibold text-blue-800 mb-2">
+                  Available Credits
+                </h4>
                 <div className="text-2xl font-bold text-blue-700">
                   {project.financials.availableCredits.toLocaleString()}
                 </div>
@@ -751,7 +900,9 @@ export default function ProjectDetailView({
               </div>
 
               <div className="bg-purple-50 p-6 rounded-lg">
-                <h4 className="font-semibold text-purple-800 mb-2">Price per Credit</h4>
+                <h4 className="font-semibold text-purple-800 mb-2">
+                  Price per Credit
+                </h4>
                 <div className="text-2xl font-bold text-purple-700">
                   {formatCurrency(project.financials.pricePerCredit)}
                 </div>
@@ -762,9 +913,12 @@ export default function ProjectDetailView({
             {/* Funding Progress */}
             <div className="bg-gray-50 p-6 rounded-lg">
               <div className="flex justify-between items-center mb-4">
-                <h4 className="font-semibold text-gray-800">Funding Progress</h4>
+                <h4 className="font-semibold text-gray-800">
+                  Funding Progress
+                </h4>
                 <span className="text-sm text-gray-600">
-                  {formatCurrency(project.financials.totalRaised)} of {formatCurrency(project.financials.targetAmount)}
+                  {formatCurrency(project.financials.totalRaised)} of{' '}
+                  {formatCurrency(project.financials.targetAmount)}
                 </span>
               </div>
 
@@ -772,89 +926,120 @@ export default function ProjectDetailView({
                 <div
                   className="bg-gradient-to-r from-green-500 to-blue-500 h-4 rounded-full transition-all duration-500"
                   style={{
-                    width: `${Math.min((project.financials.totalRaised / project.financials.targetAmount) * 100, 100)}%`
+                    width: `${Math.min((project.financials.totalRaised / project.financials.targetAmount) * 100, 100)}%`,
                   }}
                 />
               </div>
 
               <div className="flex justify-between text-sm text-gray-600">
                 <span>
-                  {((project.financials.totalRaised / project.financials.targetAmount) * 100).toFixed(1)}% funded
+                  {(
+                    (project.financials.totalRaised /
+                      project.financials.targetAmount) *
+                    100
+                  ).toFixed(1)}
+                  % funded
                 </span>
-                <span>
-                  {project.community.backers} backers
-                </span>
+                <span>{project.community.backers} backers</span>
               </div>
             </div>
 
             {/* Investment Opportunity */}
-            {userRole === 'buyer' && project.financials.availableCredits > 0 && (
-              <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
-                <h4 className="font-semibold text-gray-800 mb-4">Investment Opportunity</h4>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Investment Amount ({project.financials.currency})
-                    </label>
-                    <input
-                      type="number"
-                      value={investmentAmount}
-                      onChange={(e) => setInvestmentAmount(Number(e.target.value))}
-                      min="1"
-                      max={project.financials.availableCredits * project.financials.pricePerCredit}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+            {userRole === 'buyer' &&
+              project.financials.availableCredits > 0 && (
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
+                  <h4 className="font-semibold text-gray-800 mb-4">
+                    Investment Opportunity
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Investment Amount ({project.financials.currency})
+                      </label>
+                      <input
+                        type="number"
+                        value={investmentAmount}
+                        onChange={(e) =>
+                          setInvestmentAmount(Number(e.target.value))
+                        }
+                        min="1"
+                        max={
+                          project.financials.availableCredits *
+                          project.financials.pricePerCredit
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Credits to Purchase
+                      </label>
+                      <input
+                        type="number"
+                        value={creditsToInvest}
+                        onChange={(e) => {
+                          const credits = Number(e.target.value);
+                          setCreditsToInvest(credits);
+                          setInvestmentAmount(
+                            credits * project.financials.pricePerCredit
+                          );
+                        }}
+                        min="1"
+                        max={project.financials.availableCredits}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Credits to Purchase
-                    </label>
-                    <input
-                      type="number"
-                      value={creditsToInvest}
-                      onChange={(e) => {
-                        const credits = Number(e.target.value);
-                        setCreditsToInvest(credits);
-                        setInvestmentAmount(credits * project.financials.pricePerCredit);
-                      }}
-                      min="1"
-                      max={project.financials.availableCredits}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+                  <div className="mt-4 p-3 bg-white rounded-lg">
+                    <div className="flex justify-between text-sm">
+                      <span>CO₂ Offset:</span>
+                      <span className="font-medium">
+                        {(
+                          creditsToInvest *
+                          (project.impact.co2Offset /
+                            project.financials.totalCredits)
+                        ).toFixed(2)}{' '}
+                        {project.impact.co2OffsetUnit}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Total Cost:</span>
+                      <span className="font-medium">
+                        {formatCurrency(
+                          creditsToInvest * project.financials.pricePerCredit
+                        )}
+                      </span>
+                    </div>
                   </div>
+                  <button
+                    onClick={() =>
+                      onInvest?.(investmentAmount, creditsToInvest)
+                    }
+                    className="w-full mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                  >
+                    Invest{' '}
+                    {formatCurrency(
+                      creditsToInvest * project.financials.pricePerCredit
+                    )}
+                  </button>
                 </div>
-                <div className="mt-4 p-3 bg-white rounded-lg">
-                  <div className="flex justify-between text-sm">
-                    <span>CO₂ Offset:</span>
-                    <span className="font-medium">
-                      {(creditsToInvest * (project.impact.co2Offset / project.financials.totalCredits)).toFixed(2)} {project.impact.co2OffsetUnit}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Total Cost:</span>
-                    <span className="font-medium">{formatCurrency(creditsToInvest * project.financials.pricePerCredit)}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => onInvest?.(investmentAmount, creditsToInvest)}
-                  className="w-full mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-                >
-                  Invest {formatCurrency(creditsToInvest * project.financials.pricePerCredit)}
-                </button>
-              </div>
-            )}
+              )}
           </div>
         )}
 
         {/* Documents Tab */}
         {activeTab === 'documents' && (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800">Project Documentation</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Project Documentation
+            </h3>
 
             {/* Photo Gallery */}
             {project.documentation.photos.length > 0 && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-3">Photo Gallery</h4>
+                <h4 className="font-medium text-gray-800 mb-3">
+                  Photo Gallery
+                </h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {project.documentation.photos.map((photo, index) => (
                     <div
@@ -875,24 +1060,38 @@ export default function ProjectDetailView({
 
             {/* Reports */}
             <div>
-              <h4 className="font-medium text-gray-800 mb-3">Reports & Documents</h4>
+              <h4 className="font-medium text-gray-800 mb-3">
+                Reports & Documents
+              </h4>
               <div className="space-y-3">
                 {project.documentation.reports.map((report) => (
-                  <div key={report.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                  <div
+                    key={report.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                  >
                     <div className="flex items-center space-x-3">
                       <DocumentTextIcon className="h-5 w-5 text-gray-400" />
                       <div>
-                        <h5 className="font-medium text-gray-800">{report.title}</h5>
+                        <h5 className="font-medium text-gray-800">
+                          {report.title}
+                        </h5>
                         <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            report.type === 'verification' ? 'bg-green-100 text-green-700' :
-                            report.type === 'progress' ? 'bg-blue-100 text-blue-700' :
-                            report.type === 'impact' ? 'bg-purple-100 text-purple-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${
+                              report.type === 'verification'
+                                ? 'bg-green-100 text-green-700'
+                                : report.type === 'progress'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : report.type === 'impact'
+                                    ? 'bg-purple-100 text-purple-700'
+                                    : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
                             {report.type}
                           </span>
-                          <span>{new Date(report.date).toLocaleDateString()}</span>
+                          <span>
+                            {new Date(report.date).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -913,7 +1112,9 @@ export default function ProjectDetailView({
 
       {/* Community & Rating */}
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Community & Reviews</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          Community & Reviews
+        </h3>
 
         <div className="grid md:grid-cols-2 gap-6">
           <div>
@@ -921,11 +1122,15 @@ export default function ProjectDetailView({
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Followers:</span>
-                <span className="font-medium">{project.community.followers.toLocaleString()}</span>
+                <span className="font-medium">
+                  {project.community.followers.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Backers:</span>
-                <span className="font-medium">{project.community.backers.toLocaleString()}</span>
+                <span className="font-medium">
+                  {project.community.backers.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Updates:</span>
@@ -934,9 +1139,13 @@ export default function ProjectDetailView({
               <div className="flex justify-between">
                 <span className="text-gray-600">Average Rating:</span>
                 <div className="flex items-center space-x-1">
-                  <span className="font-medium">{project.community.averageRating.toFixed(1)}</span>
+                  <span className="font-medium">
+                    {project.community.averageRating.toFixed(1)}
+                  </span>
                   <StarSolid className="h-4 w-4 text-yellow-400" />
-                  <span className="text-sm text-gray-500">({project.community.totalReviews})</span>
+                  <span className="text-sm text-gray-500">
+                    ({project.community.totalReviews})
+                  </span>
                 </div>
               </div>
             </div>
@@ -944,7 +1153,9 @@ export default function ProjectDetailView({
 
           {userRole !== 'visitor' && (
             <div>
-              <h4 className="font-medium text-gray-800 mb-3">Rate this Project</h4>
+              <h4 className="font-medium text-gray-800 mb-3">
+                Rate this Project
+              </h4>
               <div className="flex items-center space-x-2 mb-3">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -984,8 +1195,18 @@ export default function ProjectDetailView({
               onClick={() => setSelectedPhoto(null)}
               className="absolute top-4 right-4 text-white hover:text-gray-300"
             >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>

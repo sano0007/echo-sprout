@@ -6,7 +6,7 @@ import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   CalendarDaysIcon,
-  AdjustmentsHorizontalIcon
+  AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
 
 interface MetricCard {
@@ -42,10 +42,14 @@ export default function MetricsDashboard({
   projectType,
   metrics,
   chartData,
-  onMetricUpdate
+  onMetricUpdate,
 }: MetricsDashboardProps) {
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'environmental' | 'progress' | 'quality' | 'financial'>('all');
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
+  const [selectedCategory, setSelectedCategory] = useState<
+    'all' | 'environmental' | 'progress' | 'quality' | 'financial'
+  >('all');
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>(
+    '30d'
+  );
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
   const [showTargets, setShowTargets] = useState(true);
 
@@ -54,12 +58,13 @@ export default function MetricsDashboard({
     { key: 'environmental', label: 'Environmental', icon: '🌱' },
     { key: 'progress', label: 'Progress', icon: '📈' },
     { key: 'quality', label: 'Quality', icon: '⭐' },
-    { key: 'financial', label: 'Financial', icon: '💰' }
+    { key: 'financial', label: 'Financial', icon: '💰' },
   ];
 
-  const filteredMetrics = selectedCategory === 'all'
-    ? metrics
-    : metrics.filter(metric => metric.category === selectedCategory);
+  const filteredMetrics =
+    selectedCategory === 'all'
+      ? metrics
+      : metrics.filter((metric) => metric.category === selectedCategory);
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {
@@ -72,9 +77,13 @@ export default function MetricsDashboard({
     }
   };
 
-  const getTrendColor = (trend: 'up' | 'down' | 'stable', isPositive: boolean = true) => {
+  const getTrendColor = (
+    trend: 'up' | 'down' | 'stable',
+    isPositive: boolean = true
+  ) => {
     if (trend === 'stable') return 'text-gray-600';
-    const isGood = (trend === 'up' && isPositive) || (trend === 'down' && !isPositive);
+    const isGood =
+      (trend === 'up' && isPositive) || (trend === 'down' && !isPositive);
     return isGood ? 'text-green-600' : 'text-red-600';
   };
 
@@ -92,14 +101,20 @@ export default function MetricsDashboard({
       environmental: 'from-green-500 to-green-600',
       progress: 'from-blue-500 to-blue-600',
       quality: 'from-purple-500 to-purple-600',
-      financial: 'from-yellow-500 to-yellow-600'
+      financial: 'from-yellow-500 to-yellow-600',
     };
     return colors[category] || 'from-gray-500 to-gray-600';
   };
 
-  const SimpleLineChart = ({ data, color = '#3B82F6' }: { data: ChartData[], color?: string }) => {
-    const maxValue = Math.max(...data.map(d => d.value));
-    const minValue = Math.min(...data.map(d => d.value));
+  const SimpleLineChart = ({
+    data,
+    color = '#3B82F6',
+  }: {
+    data: ChartData[];
+    color?: string;
+  }) => {
+    const maxValue = Math.max(...data.map((d) => d.value));
+    const minValue = Math.min(...data.map((d) => d.value));
     const range = maxValue - minValue;
 
     return (
@@ -109,16 +124,20 @@ export default function MetricsDashboard({
             fill="none"
             stroke={color}
             strokeWidth="2"
-            points={data.map((point, index) => {
-              const x = (index / (data.length - 1)) * 100;
-              const y = range === 0 ? 50 : ((maxValue - point.value) / range) * 100;
-              return `${x},${y}`;
-            }).join(' ')}
+            points={data
+              .map((point, index) => {
+                const x = (index / (data.length - 1)) * 100;
+                const y =
+                  range === 0 ? 50 : ((maxValue - point.value) / range) * 100;
+                return `${x},${y}`;
+              })
+              .join(' ')}
           />
           {/* Dots for data points */}
           {data.map((point, index) => {
             const x = (index / (data.length - 1)) * 100;
-            const y = range === 0 ? 50 : ((maxValue - point.value) / range) * 100;
+            const y =
+              range === 0 ? 50 : ((maxValue - point.value) / range) * 100;
             return (
               <circle
                 key={index}
@@ -141,8 +160,12 @@ export default function MetricsDashboard({
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-start">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Environmental Metrics Dashboard</h2>
-            <p className="text-gray-600 mt-1">Track and monitor project performance indicators</p>
+            <h2 className="text-2xl font-bold text-gray-800">
+              Environmental Metrics Dashboard
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Track and monitor project performance indicators
+            </p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
@@ -193,7 +216,11 @@ export default function MetricsDashboard({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredMetrics.map((metric) => {
           const chartDataForMetric = chartData[metric.id] || [];
-          const isPositiveTrend = ['environmental', 'progress', 'quality'].includes(metric.category);
+          const isPositiveTrend = [
+            'environmental',
+            'progress',
+            'quality',
+          ].includes(metric.category);
 
           return (
             <div
@@ -201,15 +228,23 @@ export default function MetricsDashboard({
               className={`bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-105 ${
                 selectedMetric === metric.id ? 'ring-2 ring-blue-500' : ''
               }`}
-              onClick={() => setSelectedMetric(selectedMetric === metric.id ? null : metric.id)}
+              onClick={() =>
+                setSelectedMetric(
+                  selectedMetric === metric.id ? null : metric.id
+                )
+              }
             >
               {/* Metric Header */}
-              <div className={`bg-gradient-to-r ${getCategoryColor(metric.category)} text-white p-4`}>
+              <div
+                className={`bg-gradient-to-r ${getCategoryColor(metric.category)} text-white p-4`}
+              >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{metric.title}</h3>
                     {metric.description && (
-                      <p className="text-sm opacity-90 mt-1">{metric.description}</p>
+                      <p className="text-sm opacity-90 mt-1">
+                        {metric.description}
+                      </p>
                     )}
                   </div>
                   <ChartBarIcon className="h-6 w-6 opacity-75" />
@@ -226,10 +261,15 @@ export default function MetricsDashboard({
                     {metric.previousValue && (
                       <div className="flex items-center space-x-2 mt-1">
                         {getTrendIcon(metric.trend)}
-                        <span className={`text-sm font-medium ${getTrendColor(metric.trend, isPositiveTrend)}`}>
-                          {metric.trendPercentage > 0 ? '+' : ''}{metric.trendPercentage.toFixed(1)}%
+                        <span
+                          className={`text-sm font-medium ${getTrendColor(metric.trend, isPositiveTrend)}`}
+                        >
+                          {metric.trendPercentage > 0 ? '+' : ''}
+                          {metric.trendPercentage.toFixed(1)}%
                         </span>
-                        <span className="text-xs text-gray-500">vs previous period</span>
+                        <span className="text-xs text-gray-500">
+                          vs previous period
+                        </span>
                       </div>
                     )}
                   </div>
@@ -240,7 +280,9 @@ export default function MetricsDashboard({
                   <div className="mb-4">
                     <div className="flex justify-between text-sm text-gray-600 mb-1">
                       <span>Progress to Target</span>
-                      <span>{((metric.value / metric.target) * 100).toFixed(1)}%</span>
+                      <span>
+                        {((metric.value / metric.target) * 100).toFixed(1)}%
+                      </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
@@ -248,10 +290,12 @@ export default function MetricsDashboard({
                           metric.value >= metric.target
                             ? 'bg-green-500'
                             : metric.value >= metric.target * 0.8
-                            ? 'bg-yellow-500'
-                            : 'bg-red-500'
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
                         }`}
-                        style={{ width: `${Math.min((metric.value / metric.target) * 100, 100)}%` }}
+                        style={{
+                          width: `${Math.min((metric.value / metric.target) * 100, 100)}%`,
+                        }}
                       />
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
@@ -269,7 +313,13 @@ export default function MetricsDashboard({
                     </div>
                     <SimpleLineChart
                       data={chartDataForMetric}
-                      color={metric.trend === 'up' ? '#10B981' : metric.trend === 'down' ? '#EF4444' : '#6B7280'}
+                      color={
+                        metric.trend === 'up'
+                          ? '#10B981'
+                          : metric.trend === 'down'
+                            ? '#EF4444'
+                            : '#6B7280'
+                      }
                     />
                   </div>
                 )}
@@ -277,7 +327,9 @@ export default function MetricsDashboard({
                 {/* Last Updated */}
                 <div className="flex items-center text-xs text-gray-500 mt-4">
                   <CalendarDaysIcon className="h-4 w-4 mr-1" />
-                  <span>Updated {new Date(metric.lastUpdated).toLocaleDateString()}</span>
+                  <span>
+                    Updated {new Date(metric.lastUpdated).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
 
@@ -286,24 +338,40 @@ export default function MetricsDashboard({
                 <div className="border-t bg-gray-50 p-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <label className="font-medium text-gray-700">Current Value</label>
-                      <p className="text-gray-600">{formatValue(metric.value, metric.unit)}</p>
+                      <label className="font-medium text-gray-700">
+                        Current Value
+                      </label>
+                      <p className="text-gray-600">
+                        {formatValue(metric.value, metric.unit)}
+                      </p>
                     </div>
                     {metric.previousValue && (
                       <div>
-                        <label className="font-medium text-gray-700">Previous Value</label>
-                        <p className="text-gray-600">{formatValue(metric.previousValue, metric.unit)}</p>
+                        <label className="font-medium text-gray-700">
+                          Previous Value
+                        </label>
+                        <p className="text-gray-600">
+                          {formatValue(metric.previousValue, metric.unit)}
+                        </p>
                       </div>
                     )}
                     {metric.target && (
                       <div>
-                        <label className="font-medium text-gray-700">Target</label>
-                        <p className="text-gray-600">{formatValue(metric.target, metric.unit)}</p>
+                        <label className="font-medium text-gray-700">
+                          Target
+                        </label>
+                        <p className="text-gray-600">
+                          {formatValue(metric.target, metric.unit)}
+                        </p>
                       </div>
                     )}
                     <div>
-                      <label className="font-medium text-gray-700">Category</label>
-                      <p className="text-gray-600 capitalize">{metric.category}</p>
+                      <label className="font-medium text-gray-700">
+                        Category
+                      </label>
+                      <p className="text-gray-600 capitalize">
+                        {metric.category}
+                      </p>
                     </div>
                   </div>
 
@@ -312,7 +380,9 @@ export default function MetricsDashboard({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          const newValue = prompt(`Enter new value for ${metric.title}:`);
+                          const newValue = prompt(
+                            `Enter new value for ${metric.title}:`
+                          );
                           if (newValue && !isNaN(parseFloat(newValue))) {
                             onMetricUpdate(metric.id, parseFloat(newValue));
                           }
@@ -333,29 +403,33 @@ export default function MetricsDashboard({
       {/* Summary Statistics */}
       {filteredMetrics.length > 0 && (
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Summary Statistics</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Summary Statistics
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {filteredMetrics.filter(m => m.trend === 'up').length}
+                {filteredMetrics.filter((m) => m.trend === 'up').length}
               </div>
               <div className="text-sm text-gray-600">Improving Metrics</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
-                {filteredMetrics.filter(m => m.trend === 'down').length}
+                {filteredMetrics.filter((m) => m.trend === 'down').length}
               </div>
               <div className="text-sm text-gray-600">Declining Metrics</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-600">
-                {filteredMetrics.filter(m => m.trend === 'stable').length}
+                {filteredMetrics.filter((m) => m.trend === 'stable').length}
               </div>
               <div className="text-sm text-gray-600">Stable Metrics</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {showTargets && filteredMetrics.filter(m => m.target && m.value >= m.target).length}
+                {showTargets &&
+                  filteredMetrics.filter((m) => m.target && m.value >= m.target)
+                    .length}
               </div>
               <div className="text-sm text-gray-600">Targets Met</div>
             </div>

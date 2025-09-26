@@ -15,14 +15,20 @@ import {
   PresentationChartBarIcon,
   ClockIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
 interface ReportTemplate {
   id: string;
   name: string;
   description: string;
-  category: 'project' | 'portfolio' | 'impact' | 'financial' | 'verification' | 'custom';
+  category:
+    | 'project'
+    | 'portfolio'
+    | 'impact'
+    | 'financial'
+    | 'verification'
+    | 'custom';
   sections: string[];
   estimatedTime: string;
   format: 'pdf' | 'excel' | 'csv' | 'json';
@@ -66,7 +72,11 @@ interface ReportGenerationProps {
     region: string;
     creator: string;
   }>;
-  onGenerateReport?: (template: string, filters: ReportFilter, customSections?: string[]) => void;
+  onGenerateReport?: (
+    template: string,
+    filters: ReportFilter,
+    customSections?: string[]
+  ) => void;
   onDownloadReport?: (reportId: string) => void;
   onDeleteReport?: (reportId: string) => void;
 }
@@ -76,24 +86,28 @@ export default function ReportGeneration({
   availableProjects,
   onGenerateReport,
   onDownloadReport,
-  onDeleteReport
+  onDeleteReport,
 }: ReportGenerationProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [customSections, setCustomSections] = useState<string[]>([]);
   const [filters, setFilters] = useState<ReportFilter>({
     dateRange: {
-      start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0],
       end: new Date().toISOString().split('T')[0],
-      preset: '30d'
+      preset: '30d',
     },
     projects: [],
     projectTypes: [],
     status: [],
     verificationStatus: [],
     regions: [],
-    creators: []
+    creators: [],
   });
-  const [activeTab, setActiveTab] = useState<'templates' | 'custom' | 'history'>('templates');
+  const [activeTab, setActiveTab] = useState<
+    'templates' | 'custom' | 'history'
+  >('templates');
   const [showPreview, setShowPreview] = useState(false);
   const [generatedReports] = useState<GeneratedReport[]>([
     {
@@ -105,7 +119,7 @@ export default function ReportGeneration({
       createdAt: '2024-11-01T10:00:00Z',
       completedAt: '2024-11-01T10:05:00Z',
       fileSize: '2.4 MB',
-      downloadUrl: '/reports/portfolio-nov-2024.pdf'
+      downloadUrl: '/reports/portfolio-nov-2024.pdf',
     },
     {
       id: '2',
@@ -116,7 +130,7 @@ export default function ReportGeneration({
       createdAt: '2024-10-15T14:30:00Z',
       completedAt: '2024-10-15T14:45:00Z',
       fileSize: '5.1 MB',
-      downloadUrl: '/reports/impact-q3-2024.pdf'
+      downloadUrl: '/reports/impact-q3-2024.pdf',
     },
     {
       id: '3',
@@ -124,81 +138,122 @@ export default function ReportGeneration({
       template: 'project_performance',
       status: 'generating',
       progress: 65,
-      createdAt: '2024-11-25T09:00:00Z'
-    }
+      createdAt: '2024-11-25T09:00:00Z',
+    },
   ]);
 
   const reportTemplates: ReportTemplate[] = [
     {
       id: 'project_summary',
       name: 'Project Summary Report',
-      description: 'Comprehensive overview of project progress, metrics, and impact',
+      description:
+        'Comprehensive overview of project progress, metrics, and impact',
       category: 'project',
-      sections: ['Project Overview', 'Timeline & Milestones', 'Environmental Impact', 'Financial Performance', 'Verification Status'],
+      sections: [
+        'Project Overview',
+        'Timeline & Milestones',
+        'Environmental Impact',
+        'Financial Performance',
+        'Verification Status',
+      ],
       estimatedTime: '3-5 minutes',
       format: 'pdf',
-      isCustom: false
+      isCustom: false,
     },
     {
       id: 'portfolio_summary',
       name: 'Portfolio Summary',
-      description: 'Overview of all investments and carbon credit portfolio performance',
+      description:
+        'Overview of all investments and carbon credit portfolio performance',
       category: 'portfolio',
-      sections: ['Portfolio Overview', 'Asset Allocation', 'Performance Metrics', 'Impact Summary', 'ROI Analysis'],
+      sections: [
+        'Portfolio Overview',
+        'Asset Allocation',
+        'Performance Metrics',
+        'Impact Summary',
+        'ROI Analysis',
+      ],
       estimatedTime: '2-4 minutes',
       format: 'pdf',
-      isCustom: false
+      isCustom: false,
     },
     {
       id: 'impact_assessment',
       name: 'Environmental Impact Assessment',
-      description: 'Detailed analysis of environmental benefits and CO2 offset achievements',
+      description:
+        'Detailed analysis of environmental benefits and CO2 offset achievements',
       category: 'impact',
-      sections: ['CO2 Offset Summary', 'Biodiversity Impact', 'Additional Benefits', 'Measurement Data', 'Projections'],
+      sections: [
+        'CO2 Offset Summary',
+        'Biodiversity Impact',
+        'Additional Benefits',
+        'Measurement Data',
+        'Projections',
+      ],
       estimatedTime: '5-8 minutes',
       format: 'pdf',
-      isCustom: false
+      isCustom: false,
     },
     {
       id: 'financial_report',
       name: 'Financial Performance Report',
-      description: 'Detailed financial analysis including ROI, costs, and revenue projections',
+      description:
+        'Detailed financial analysis including ROI, costs, and revenue projections',
       category: 'financial',
-      sections: ['Revenue Analysis', 'Cost Breakdown', 'ROI Metrics', 'Cash Flow', 'Financial Projections'],
+      sections: [
+        'Revenue Analysis',
+        'Cost Breakdown',
+        'ROI Metrics',
+        'Cash Flow',
+        'Financial Projections',
+      ],
       estimatedTime: '4-6 minutes',
       format: 'excel',
-      isCustom: false
+      isCustom: false,
     },
     {
       id: 'verification_report',
       name: 'Verification Status Report',
       description: 'Compliance and verification status across all projects',
       category: 'verification',
-      sections: ['Verification Overview', 'Compliance Status', 'Audit Results', 'Certification Status', 'Risk Assessment'],
+      sections: [
+        'Verification Overview',
+        'Compliance Status',
+        'Audit Results',
+        'Certification Status',
+        'Risk Assessment',
+      ],
       estimatedTime: '3-5 minutes',
       format: 'pdf',
-      isCustom: false
+      isCustom: false,
     },
     {
       id: 'project_performance',
       name: 'Project Performance Dashboard',
       description: 'Real-time performance metrics and KPI tracking',
       category: 'project',
-      sections: ['KPI Dashboard', 'Progress Tracking', 'Alert Summary', 'Trend Analysis', 'Recommendations'],
+      sections: [
+        'KPI Dashboard',
+        'Progress Tracking',
+        'Alert Summary',
+        'Trend Analysis',
+        'Recommendations',
+      ],
       estimatedTime: '2-3 minutes',
       format: 'pdf',
-      isCustom: false
+      isCustom: false,
     },
     {
       id: 'custom_report',
       name: 'Custom Report',
-      description: 'Create a personalized report with your selected sections and filters',
+      description:
+        'Create a personalized report with your selected sections and filters',
       category: 'custom',
       sections: [],
       estimatedTime: 'Varies',
       format: 'pdf',
-      isCustom: true
-    }
+      isCustom: true,
+    },
   ];
 
   const availableSections = [
@@ -231,7 +286,7 @@ export default function ReportGeneration({
     'Progress Tracking',
     'Alert Summary',
     'Trend Analysis',
-    'Recommendations'
+    'Recommendations',
   ];
 
   const getCategoryIcon = (category: string) => {
@@ -306,20 +361,20 @@ export default function ReportGeneration({
         return;
     }
 
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       dateRange: {
         start: start.toISOString().split('T')[0],
         end: now.toISOString().split('T')[0],
-        preset: preset as any
-      }
+        preset: preset as any,
+      },
     }));
   };
 
   const handleGenerateReport = () => {
     if (!selectedTemplate) return;
 
-    const template = reportTemplates.find(t => t.id === selectedTemplate);
+    const template = reportTemplates.find((t) => t.id === selectedTemplate);
     if (!template) return;
 
     onGenerateReport?.(
@@ -329,7 +384,9 @@ export default function ReportGeneration({
     );
   };
 
-  const selectedTemplateData = reportTemplates.find(t => t.id === selectedTemplate);
+  const selectedTemplateData = reportTemplates.find(
+    (t) => t.id === selectedTemplate
+  );
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -337,8 +394,12 @@ export default function ReportGeneration({
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-start">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Report Generation</h2>
-            <p className="text-gray-600 mt-1">Generate comprehensive reports for your projects and portfolio</p>
+            <h2 className="text-2xl font-bold text-gray-800">
+              Report Generation
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Generate comprehensive reports for your projects and portfolio
+            </p>
           </div>
           <div className="flex items-center space-x-3">
             <button
@@ -374,43 +435,53 @@ export default function ReportGeneration({
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Template Selection */}
           <div className="lg:col-span-2 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800">Choose Report Template</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Choose Report Template
+            </h3>
             <div className="grid gap-4">
-              {reportTemplates.filter(t => !t.isCustom).map((template) => (
-                <div
-                  key={template.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                    selectedTemplate === template.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setSelectedTemplate(template.id)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      <div className={`p-2 rounded-lg ${getCategoryColor(template.category)}`}>
-                        {getCategoryIcon(template.category)}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-800">{template.name}</h4>
-                        <p className="text-gray-600 text-sm mt-1">{template.description}</p>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                          <span>⏱ {template.estimatedTime}</span>
-                          <span>📄 {template.format.toUpperCase()}</span>
-                          <span>📊 {template.sections.length} sections</span>
+              {reportTemplates
+                .filter((t) => !t.isCustom)
+                .map((template) => (
+                  <div
+                    key={template.id}
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      selectedTemplate === template.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setSelectedTemplate(template.id)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <div
+                          className={`p-2 rounded-lg ${getCategoryColor(template.category)}`}
+                        >
+                          {getCategoryIcon(template.category)}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-800">
+                            {template.name}
+                          </h4>
+                          <p className="text-gray-600 text-sm mt-1">
+                            {template.description}
+                          </p>
+                          <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                            <span>⏱ {template.estimatedTime}</span>
+                            <span>📄 {template.format.toUpperCase()}</span>
+                            <span>📊 {template.sections.length} sections</span>
+                          </div>
                         </div>
                       </div>
+                      <input
+                        type="radio"
+                        name="template"
+                        checked={selectedTemplate === template.id}
+                        onChange={() => setSelectedTemplate(template.id)}
+                        className="mt-1"
+                      />
                     </div>
-                    <input
-                      type="radio"
-                      name="template"
-                      checked={selectedTemplate === template.id}
-                      onChange={() => setSelectedTemplate(template.id)}
-                      className="mt-1"
-                    />
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
 
@@ -426,7 +497,9 @@ export default function ReportGeneration({
               {/* Date Range */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date Range
+                  </label>
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     {(['7d', '30d', '90d', '1y'] as const).map((preset) => (
                       <button
@@ -438,9 +511,13 @@ export default function ReportGeneration({
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
-                        {preset === '7d' ? '7 days' :
-                         preset === '30d' ? '30 days' :
-                         preset === '90d' ? '90 days' : '1 year'}
+                        {preset === '7d'
+                          ? '7 days'
+                          : preset === '30d'
+                            ? '30 days'
+                            : preset === '90d'
+                              ? '90 days'
+                              : '1 year'}
                       </button>
                     ))}
                   </div>
@@ -448,19 +525,31 @@ export default function ReportGeneration({
                     <input
                       type="date"
                       value={filters.dateRange.start}
-                      onChange={(e) => setFilters(prev => ({
-                        ...prev,
-                        dateRange: { ...prev.dateRange, start: e.target.value, preset: 'custom' }
-                      }))}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          dateRange: {
+                            ...prev.dateRange,
+                            start: e.target.value,
+                            preset: 'custom',
+                          },
+                        }))
+                      }
                       className="px-3 py-2 border border-gray-300 rounded text-sm"
                     />
                     <input
                       type="date"
                       value={filters.dateRange.end}
-                      onChange={(e) => setFilters(prev => ({
-                        ...prev,
-                        dateRange: { ...prev.dateRange, end: e.target.value, preset: 'custom' }
-                      }))}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          dateRange: {
+                            ...prev.dateRange,
+                            end: e.target.value,
+                            preset: 'custom',
+                          },
+                        }))
+                      }
                       className="px-3 py-2 border border-gray-300 rounded text-sm"
                     />
                   </div>
@@ -468,14 +557,21 @@ export default function ReportGeneration({
 
                 {/* Project Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Projects</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Projects
+                  </label>
                   <select
                     multiple
                     value={filters.projects}
-                    onChange={(e) => setFilters(prev => ({
-                      ...prev,
-                      projects: Array.from(e.target.selectedOptions, option => option.value)
-                    }))}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        projects: Array.from(
+                          e.target.selectedOptions,
+                          (option) => option.value
+                        ),
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded text-sm h-24"
                   >
                     {availableProjects.map((project) => (
@@ -484,34 +580,48 @@ export default function ReportGeneration({
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Hold Ctrl/Cmd to select multiple
+                  </p>
                 </div>
 
                 {/* Project Types */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Project Types</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Project Types
+                  </label>
                   <div className="space-y-2">
-                    {['reforestation', 'renewable_energy', 'waste_management', 'water_conservation', 'biodiversity'].map((type) => (
+                    {[
+                      'reforestation',
+                      'renewable_energy',
+                      'waste_management',
+                      'water_conservation',
+                      'biodiversity',
+                    ].map((type) => (
                       <label key={type} className="flex items-center space-x-2">
                         <input
                           type="checkbox"
                           checked={filters.projectTypes.includes(type)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setFilters(prev => ({
+                              setFilters((prev) => ({
                                 ...prev,
-                                projectTypes: [...prev.projectTypes, type]
+                                projectTypes: [...prev.projectTypes, type],
                               }));
                             } else {
-                              setFilters(prev => ({
+                              setFilters((prev) => ({
                                 ...prev,
-                                projectTypes: prev.projectTypes.filter(t => t !== type)
+                                projectTypes: prev.projectTypes.filter(
+                                  (t) => t !== type
+                                ),
                               }));
                             }
                           }}
                           className="rounded"
                         />
-                        <span className="text-sm capitalize">{type.replace('_', ' ')}</span>
+                        <span className="text-sm capitalize">
+                          {type.replace('_', ' ')}
+                        </span>
                       </label>
                     ))}
                   </div>
@@ -519,23 +629,34 @@ export default function ReportGeneration({
 
                 {/* Status Filters */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Project Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Project Status
+                  </label>
                   <div className="space-y-2">
-                    {['planning', 'active', 'completed', 'verified', 'suspended'].map((status) => (
-                      <label key={status} className="flex items-center space-x-2">
+                    {[
+                      'planning',
+                      'active',
+                      'completed',
+                      'verified',
+                      'suspended',
+                    ].map((status) => (
+                      <label
+                        key={status}
+                        className="flex items-center space-x-2"
+                      >
                         <input
                           type="checkbox"
                           checked={filters.status.includes(status)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setFilters(prev => ({
+                              setFilters((prev) => ({
                                 ...prev,
-                                status: [...prev.status, status]
+                                status: [...prev.status, status],
                               }));
                             } else {
-                              setFilters(prev => ({
+                              setFilters((prev) => ({
                                 ...prev,
-                                status: prev.status.filter(s => s !== status)
+                                status: prev.status.filter((s) => s !== status),
                               }));
                             }
                           }}
@@ -552,22 +673,35 @@ export default function ReportGeneration({
             {/* Template Preview */}
             {selectedTemplateData && (
               <div className="bg-white rounded-lg shadow-lg p-6">
-                <h4 className="font-semibold text-gray-800 mb-4">Template Preview</h4>
+                <h4 className="font-semibold text-gray-800 mb-4">
+                  Template Preview
+                </h4>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <div className={`p-2 rounded ${getCategoryColor(selectedTemplateData.category)}`}>
+                    <div
+                      className={`p-2 rounded ${getCategoryColor(selectedTemplateData.category)}`}
+                    >
                       {getCategoryIcon(selectedTemplateData.category)}
                     </div>
                     <div>
-                      <h5 className="font-medium">{selectedTemplateData.name}</h5>
-                      <p className="text-xs text-gray-600">{selectedTemplateData.estimatedTime}</p>
+                      <h5 className="font-medium">
+                        {selectedTemplateData.name}
+                      </h5>
+                      <p className="text-xs text-gray-600">
+                        {selectedTemplateData.estimatedTime}
+                      </p>
                     </div>
                   </div>
                   <div>
-                    <h6 className="text-sm font-medium text-gray-700 mb-2">Included Sections:</h6>
+                    <h6 className="text-sm font-medium text-gray-700 mb-2">
+                      Included Sections:
+                    </h6>
                     <div className="space-y-1">
                       {selectedTemplateData.sections.map((section, index) => (
-                        <div key={index} className="flex items-center space-x-2 text-sm">
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 text-sm"
+                        >
                           <CheckCircleIcon className="h-4 w-4 text-green-500" />
                           <span>{section}</span>
                         </div>
@@ -593,22 +727,31 @@ export default function ReportGeneration({
       {/* Custom Report Tab */}
       {activeTab === 'custom' && (
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Create Custom Report</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Create Custom Report
+          </h3>
 
           <div className="grid lg:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium text-gray-800 mb-3">Available Sections</h4>
+              <h4 className="font-medium text-gray-800 mb-3">
+                Available Sections
+              </h4>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {availableSections.map((section) => (
-                  <label key={section} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                  <label
+                    key={section}
+                    className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded"
+                  >
                     <input
                       type="checkbox"
                       checked={customSections.includes(section)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setCustomSections(prev => [...prev, section]);
+                          setCustomSections((prev) => [...prev, section]);
                         } else {
-                          setCustomSections(prev => prev.filter(s => s !== section));
+                          setCustomSections((prev) =>
+                            prev.filter((s) => s !== section)
+                          );
                         }
                       }}
                       className="rounded"
@@ -620,17 +763,28 @@ export default function ReportGeneration({
             </div>
 
             <div>
-              <h4 className="font-medium text-gray-800 mb-3">Selected Sections ({customSections.length})</h4>
+              <h4 className="font-medium text-gray-800 mb-3">
+                Selected Sections ({customSections.length})
+              </h4>
               <div className="border border-gray-200 rounded-lg p-4 min-h-96 max-h-96 overflow-y-auto">
                 {customSections.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No sections selected. Choose sections from the left panel.</p>
+                  <p className="text-gray-500 text-sm">
+                    No sections selected. Choose sections from the left panel.
+                  </p>
                 ) : (
                   <div className="space-y-2">
                     {customSections.map((section, index) => (
-                      <div key={section} className="flex items-center justify-between p-2 bg-blue-50 rounded">
+                      <div
+                        key={section}
+                        className="flex items-center justify-between p-2 bg-blue-50 rounded"
+                      >
                         <span className="text-sm">{section}</span>
                         <button
-                          onClick={() => setCustomSections(prev => prev.filter(s => s !== section))}
+                          onClick={() =>
+                            setCustomSections((prev) =>
+                              prev.filter((s) => s !== section)
+                            )
+                          }
                           className="text-red-600 hover:text-red-700 text-sm"
                         >
                           Remove
@@ -645,7 +799,11 @@ export default function ReportGeneration({
                 <button
                   onClick={() => {
                     setSelectedTemplate('custom_report');
-                    onGenerateReport?.('custom_report', filters, customSections);
+                    onGenerateReport?.(
+                      'custom_report',
+                      filters,
+                      customSections
+                    );
                   }}
                   className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2"
                 >
@@ -662,8 +820,12 @@ export default function ReportGeneration({
       {activeTab === 'history' && (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="p-6 border-b">
-            <h3 className="text-lg font-semibold text-gray-800">Report History</h3>
-            <p className="text-gray-600 text-sm mt-1">View and download your previously generated reports</p>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Report History
+            </h3>
+            <p className="text-gray-600 text-sm mt-1">
+              View and download your previously generated reports
+            </p>
           </div>
 
           <div className="divide-y divide-gray-200">
@@ -673,11 +835,16 @@ export default function ReportGeneration({
                   <div className="flex items-center space-x-4">
                     {getStatusIcon(report.status)}
                     <div>
-                      <h4 className="font-medium text-gray-800">{report.name}</h4>
+                      <h4 className="font-medium text-gray-800">
+                        {report.name}
+                      </h4>
                       <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
                         <span>Template: {report.template}</span>
                         <span>•</span>
-                        <span>Created: {new Date(report.createdAt).toLocaleDateString()}</span>
+                        <span>
+                          Created:{' '}
+                          {new Date(report.createdAt).toLocaleDateString()}
+                        </span>
                         {report.fileSize && (
                           <>
                             <span>•</span>
@@ -697,7 +864,9 @@ export default function ReportGeneration({
                             style={{ width: `${report.progress}%` }}
                           />
                         </div>
-                        <span className="text-sm text-gray-600">{report.progress}%</span>
+                        <span className="text-sm text-gray-600">
+                          {report.progress}%
+                        </span>
                       </div>
                     )}
 
@@ -721,8 +890,18 @@ export default function ReportGeneration({
                       onClick={() => onDeleteReport?.(report.id)}
                       className="text-gray-400 hover:text-red-600"
                     >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>

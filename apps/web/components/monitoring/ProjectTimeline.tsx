@@ -7,7 +7,7 @@ import {
   ExclamationTriangleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  CalendarDaysIcon
+  CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 
 interface Milestone {
@@ -17,7 +17,14 @@ interface Milestone {
   plannedDate: string;
   actualDate?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'delayed' | 'skipped';
-  type: 'setup' | 'progress_25' | 'progress_50' | 'progress_75' | 'impact_first' | 'verification' | 'completion';
+  type:
+    | 'setup'
+    | 'progress_25'
+    | 'progress_50'
+    | 'progress_75'
+    | 'impact_first'
+    | 'verification'
+    | 'completion';
   delayReason?: string;
   impactOnTimeline?: string;
   dependencies?: string[];
@@ -29,7 +36,11 @@ interface ProjectTimelineProps {
   milestones: Milestone[];
   currentProgress: number;
   estimatedCompletion: string;
-  onMilestoneUpdate?: (milestoneId: string, status: string, notes?: string) => void;
+  onMilestoneUpdate?: (
+    milestoneId: string,
+    status: string,
+    notes?: string
+  ) => void;
 }
 
 export default function ProjectTimeline({
@@ -37,10 +48,14 @@ export default function ProjectTimeline({
   milestones,
   currentProgress,
   estimatedCompletion,
-  onMilestoneUpdate
+  onMilestoneUpdate,
 }: ProjectTimelineProps) {
-  const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'timeline' | 'gantt' | 'list'>('timeline');
+  const [expandedMilestone, setExpandedMilestone] = useState<string | null>(
+    null
+  );
+  const [viewMode, setViewMode] = useState<'timeline' | 'gantt' | 'list'>(
+    'timeline'
+  );
 
   const getStatusIcon = (status: Milestone['status']) => {
     switch (status) {
@@ -51,7 +66,9 @@ export default function ProjectTimeline({
       case 'delayed':
         return <ExclamationTriangleIcon className="h-6 w-6 text-red-500" />;
       default:
-        return <div className="h-6 w-6 rounded-full border-2 border-gray-300" />;
+        return (
+          <div className="h-6 w-6 rounded-full border-2 border-gray-300" />
+        );
     }
   };
 
@@ -78,7 +95,7 @@ export default function ProjectTimeline({
       progress_75: '75% Milestone',
       impact_first: 'First Impact',
       verification: 'Verification',
-      completion: 'Completion'
+      completion: 'Completion',
     };
     return labels[type] || type;
   };
@@ -93,11 +110,14 @@ export default function ProjectTimeline({
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   };
 
-  const sortedMilestones = [...milestones].sort((a, b) =>
-    new Date(a.plannedDate).getTime() - new Date(b.plannedDate).getTime()
+  const sortedMilestones = [...milestones].sort(
+    (a, b) =>
+      new Date(a.plannedDate).getTime() - new Date(b.plannedDate).getTime()
   );
 
-  const completedMilestones = milestones.filter(m => m.status === 'completed').length;
+  const completedMilestones = milestones.filter(
+    (m) => m.status === 'completed'
+  ).length;
   const totalMilestones = milestones.length;
   const timelineProgress = (completedMilestones / totalMilestones) * 100;
 
@@ -113,7 +133,9 @@ export default function ProjectTimeline({
             </p>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold">{Math.round(timelineProgress)}%</div>
+            <div className="text-2xl font-bold">
+              {Math.round(timelineProgress)}%
+            </div>
             <div className="text-blue-100 text-sm">Timeline Progress</div>
           </div>
         </div>
@@ -122,7 +144,10 @@ export default function ProjectTimeline({
         <div className="mt-4">
           <div className="flex justify-between text-sm text-blue-100 mb-2">
             <span>Progress</span>
-            <span>Est. Completion: {new Date(estimatedCompletion).toLocaleDateString()}</span>
+            <span>
+              Est. Completion:{' '}
+              {new Date(estimatedCompletion).toLocaleDateString()}
+            </span>
           </div>
           <div className="w-full bg-blue-500 rounded-full h-2">
             <div
@@ -165,7 +190,9 @@ export default function ProjectTimeline({
                 <div key={milestone.id} className="relative flex items-start">
                   {/* Timeline Node */}
                   <div className="relative z-10 flex items-center">
-                    <div className={`w-12 h-12 rounded-full border-4 border-white shadow-md flex items-center justify-center ${getStatusColor(milestone.status)}`}>
+                    <div
+                      className={`w-12 h-12 rounded-full border-4 border-white shadow-md flex items-center justify-center ${getStatusColor(milestone.status)}`}
+                    >
                       {getStatusIcon(milestone.status)}
                     </div>
                   </div>
@@ -176,72 +203,94 @@ export default function ProjectTimeline({
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3">
-                            <h4 className="font-semibold text-gray-800">{milestone.title}</h4>
+                            <h4 className="font-semibold text-gray-800">
+                              {milestone.title}
+                            </h4>
                             <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
                               {getTypeLabel(milestone.type)}
                             </span>
-                            {isOverdue(milestone) && milestone.status !== 'completed' && (
-                              <span className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full">
-                                Overdue
-                              </span>
-                            )}
+                            {isOverdue(milestone) &&
+                              milestone.status !== 'completed' && (
+                                <span className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full">
+                                  Overdue
+                                </span>
+                              )}
                           </div>
-                          <p className="text-gray-600 mt-1">{milestone.description}</p>
+                          <p className="text-gray-600 mt-1">
+                            {milestone.description}
+                          </p>
 
                           {/* Dates */}
                           <div className="flex items-center space-x-4 mt-3 text-sm">
                             <div className="flex items-center space-x-1">
                               <CalendarDaysIcon className="h-4 w-4 text-gray-400" />
                               <span className="text-gray-600">
-                                Planned: {new Date(milestone.plannedDate).toLocaleDateString()}
+                                Planned:{' '}
+                                {new Date(
+                                  milestone.plannedDate
+                                ).toLocaleDateString()}
                               </span>
                             </div>
                             {milestone.actualDate && (
                               <div className="flex items-center space-x-1">
                                 <CalendarDaysIcon className="h-4 w-4 text-green-400" />
                                 <span className="text-gray-600">
-                                  Actual: {new Date(milestone.actualDate).toLocaleDateString()}
+                                  Actual:{' '}
+                                  {new Date(
+                                    milestone.actualDate
+                                  ).toLocaleDateString()}
                                 </span>
                               </div>
                             )}
-                            {!milestone.actualDate && milestone.status !== 'completed' && (
-                              <span className={`text-sm ${
-                                getDaysFromNow(milestone.plannedDate) < 0
-                                  ? 'text-red-600'
-                                  : getDaysFromNow(milestone.plannedDate) < 7
-                                  ? 'text-yellow-600'
-                                  : 'text-gray-600'
-                              }`}>
-                                {getDaysFromNow(milestone.plannedDate) < 0
-                                  ? `${Math.abs(getDaysFromNow(milestone.plannedDate))} days overdue`
-                                  : `${getDaysFromNow(milestone.plannedDate)} days remaining`
-                                }
-                              </span>
-                            )}
+                            {!milestone.actualDate &&
+                              milestone.status !== 'completed' && (
+                                <span
+                                  className={`text-sm ${
+                                    getDaysFromNow(milestone.plannedDate) < 0
+                                      ? 'text-red-600'
+                                      : getDaysFromNow(milestone.plannedDate) <
+                                          7
+                                        ? 'text-yellow-600'
+                                        : 'text-gray-600'
+                                  }`}
+                                >
+                                  {getDaysFromNow(milestone.plannedDate) < 0
+                                    ? `${Math.abs(getDaysFromNow(milestone.plannedDate))} days overdue`
+                                    : `${getDaysFromNow(milestone.plannedDate)} days remaining`}
+                                </span>
+                              )}
                           </div>
 
                           {/* Progress Bar for In-Progress Milestones */}
-                          {milestone.status === 'in_progress' && milestone.progressPercentage !== undefined && (
-                            <div className="mt-3">
-                              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                <span>Progress</span>
-                                <span>{milestone.progressPercentage}%</span>
+                          {milestone.status === 'in_progress' &&
+                            milestone.progressPercentage !== undefined && (
+                              <div className="mt-3">
+                                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                  <span>Progress</span>
+                                  <span>{milestone.progressPercentage}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div
+                                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                                    style={{
+                                      width: `${milestone.progressPercentage}%`,
+                                    }}
+                                  />
+                                </div>
                               </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                                  style={{ width: `${milestone.progressPercentage}%` }}
-                                />
-                              </div>
-                            </div>
-                          )}
+                            )}
 
                           {/* Expandable Details */}
-                          {(milestone.delayReason || milestone.dependencies?.length) && (
+                          {(milestone.delayReason ||
+                            milestone.dependencies?.length) && (
                             <button
-                              onClick={() => setExpandedMilestone(
-                                expandedMilestone === milestone.id ? null : milestone.id
-                              )}
+                              onClick={() =>
+                                setExpandedMilestone(
+                                  expandedMilestone === milestone.id
+                                    ? null
+                                    : milestone.id
+                                )
+                              }
                               className="flex items-center space-x-1 mt-3 text-sm text-blue-600 hover:text-blue-700"
                             >
                               {expandedMilestone === milestone.id ? (
@@ -258,19 +307,29 @@ export default function ProjectTimeline({
                             <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
                               {milestone.delayReason && (
                                 <div>
-                                  <label className="text-sm font-medium text-gray-700">Delay Reason:</label>
-                                  <p className="text-sm text-gray-600">{milestone.delayReason}</p>
+                                  <label className="text-sm font-medium text-gray-700">
+                                    Delay Reason:
+                                  </label>
+                                  <p className="text-sm text-gray-600">
+                                    {milestone.delayReason}
+                                  </p>
                                 </div>
                               )}
                               {milestone.impactOnTimeline && (
                                 <div>
-                                  <label className="text-sm font-medium text-gray-700">Timeline Impact:</label>
-                                  <p className="text-sm text-gray-600">{milestone.impactOnTimeline}</p>
+                                  <label className="text-sm font-medium text-gray-700">
+                                    Timeline Impact:
+                                  </label>
+                                  <p className="text-sm text-gray-600">
+                                    {milestone.impactOnTimeline}
+                                  </p>
                                 </div>
                               )}
                               {milestone.dependencies?.length && (
                                 <div>
-                                  <label className="text-sm font-medium text-gray-700">Dependencies:</label>
+                                  <label className="text-sm font-medium text-gray-700">
+                                    Dependencies:
+                                  </label>
                                   <ul className="text-sm text-gray-600 list-disc list-inside">
                                     {milestone.dependencies.map((dep, i) => (
                                       <li key={i}>{dep}</li>
@@ -283,16 +342,19 @@ export default function ProjectTimeline({
                         </div>
 
                         {/* Actions */}
-                        {onMilestoneUpdate && milestone.status !== 'completed' && (
-                          <div className="ml-4">
-                            <button
-                              onClick={() => onMilestoneUpdate(milestone.id, 'completed')}
-                              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                            >
-                              Mark Complete
-                            </button>
-                          </div>
-                        )}
+                        {onMilestoneUpdate &&
+                          milestone.status !== 'completed' && (
+                            <div className="ml-4">
+                              <button
+                                onClick={() =>
+                                  onMilestoneUpdate(milestone.id, 'completed')
+                                }
+                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                              >
+                                Mark Complete
+                              </button>
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -357,31 +419,47 @@ export default function ProjectTimeline({
         <div className="p-6">
           <div className="space-y-4">
             {sortedMilestones.map((milestone) => (
-              <div key={milestone.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+              <div
+                key={milestone.id}
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+              >
                 <div className="flex items-center space-x-4">
                   {getStatusIcon(milestone.status)}
                   <div>
-                    <h4 className="font-medium text-gray-800">{milestone.title}</h4>
+                    <h4 className="font-medium text-gray-800">
+                      {milestone.title}
+                    </h4>
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <span>{getTypeLabel(milestone.type)}</span>
-                      <span>Due: {new Date(milestone.plannedDate).toLocaleDateString()}</span>
-                      {milestone.status === 'completed' && milestone.actualDate && (
-                        <span>Completed: {new Date(milestone.actualDate).toLocaleDateString()}</span>
-                      )}
+                      <span>
+                        Due:{' '}
+                        {new Date(milestone.plannedDate).toLocaleDateString()}
+                      </span>
+                      {milestone.status === 'completed' &&
+                        milestone.actualDate && (
+                          <span>
+                            Completed:{' '}
+                            {new Date(
+                              milestone.actualDate
+                            ).toLocaleDateString()}
+                          </span>
+                        )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    milestone.status === 'completed'
-                      ? 'bg-green-100 text-green-800'
-                      : milestone.status === 'in_progress'
-                      ? 'bg-blue-100 text-blue-800'
-                      : milestone.status === 'delayed'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      milestone.status === 'completed'
+                        ? 'bg-green-100 text-green-800'
+                        : milestone.status === 'in_progress'
+                          ? 'bg-blue-100 text-blue-800'
+                          : milestone.status === 'delayed'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
                     {milestone.status.replace('_', ' ').toUpperCase()}
                   </span>
 
@@ -402,25 +480,25 @@ export default function ProjectTimeline({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
             <div className="text-2xl font-bold text-green-600">
-              {milestones.filter(m => m.status === 'completed').length}
+              {milestones.filter((m) => m.status === 'completed').length}
             </div>
             <div className="text-sm text-gray-600">Completed</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-blue-600">
-              {milestones.filter(m => m.status === 'in_progress').length}
+              {milestones.filter((m) => m.status === 'in_progress').length}
             </div>
             <div className="text-sm text-gray-600">In Progress</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-red-600">
-              {milestones.filter(m => m.status === 'delayed').length}
+              {milestones.filter((m) => m.status === 'delayed').length}
             </div>
             <div className="text-sm text-gray-600">Delayed</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-gray-600">
-              {milestones.filter(m => m.status === 'pending').length}
+              {milestones.filter((m) => m.status === 'pending').length}
             </div>
             <div className="text-sm text-gray-600">Pending</div>
           </div>

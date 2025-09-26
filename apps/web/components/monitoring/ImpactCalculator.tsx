@@ -14,7 +14,7 @@ import {
   InformationCircleIcon,
   ShareIcon,
   BookmarkIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 
 interface CarbonCalculation {
@@ -30,7 +30,12 @@ interface CarbonCalculation {
 interface OffsetProject {
   id: string;
   title: string;
-  type: 'reforestation' | 'renewable_energy' | 'waste_management' | 'water_conservation' | 'biodiversity';
+  type:
+    | 'reforestation'
+    | 'renewable_energy'
+    | 'waste_management'
+    | 'water_conservation'
+    | 'biodiversity';
   pricePerTon: number;
   availableTons: number;
   location: string;
@@ -41,18 +46,27 @@ interface OffsetProject {
 
 interface ImpactCalculatorProps {
   availableProjects: OffsetProject[];
-  onPurchaseCredits?: (projectId: string, tons: number, totalCost: number) => void;
+  onPurchaseCredits?: (
+    projectId: string,
+    tons: number,
+    totalCost: number
+  ) => void;
   onSaveCalculation?: (calculation: CarbonCalculation[]) => void;
-  onShareCalculation?: (calculation: CarbonCalculation[], totalEmissions: number) => void;
+  onShareCalculation?: (
+    calculation: CarbonCalculation[],
+    totalEmissions: number
+  ) => void;
 }
 
 export default function ImpactCalculator({
   availableProjects,
   onPurchaseCredits,
   onSaveCalculation,
-  onShareCalculation
+  onShareCalculation,
 }: ImpactCalculatorProps) {
-  const [activeCategory, setActiveCategory] = useState<'transportation' | 'energy' | 'lifestyle' | 'business'>('transportation');
+  const [activeCategory, setActiveCategory] = useState<
+    'transportation' | 'energy' | 'lifestyle' | 'business'
+  >('transportation');
   const [calculations, setCalculations] = useState<CarbonCalculation[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [offsetPercentage, setOffsetPercentage] = useState(100);
@@ -60,19 +74,29 @@ export default function ImpactCalculator({
 
   // Transportation inputs
   const [carMiles, setCarMiles] = useState<number>(0);
-  const [carType, setCarType] = useState<'gasoline' | 'hybrid' | 'electric'>('gasoline');
+  const [carType, setCarType] = useState<'gasoline' | 'hybrid' | 'electric'>(
+    'gasoline'
+  );
   const [flightHours, setFlightHours] = useState<number>(0);
-  const [flightType, setFlightType] = useState<'domestic' | 'international'>('domestic');
+  const [flightType, setFlightType] = useState<'domestic' | 'international'>(
+    'domestic'
+  );
   const [publicTransportHours, setPublicTransportHours] = useState<number>(0);
 
   // Energy inputs
   const [electricityKwh, setElectricityKwh] = useState<number>(0);
   const [gasUsage, setGasUsage] = useState<number>(0);
-  const [heatingType, setHeatingType] = useState<'gas' | 'electric' | 'oil' | 'renewable'>('gas');
+  const [heatingType, setHeatingType] = useState<
+    'gas' | 'electric' | 'oil' | 'renewable'
+  >('gas');
 
   // Lifestyle inputs
-  const [dietType, setDietType] = useState<'omnivore' | 'vegetarian' | 'vegan'>('omnivore');
-  const [shoppingFrequency, setShoppingFrequency] = useState<'low' | 'medium' | 'high'>('medium');
+  const [dietType, setDietType] = useState<'omnivore' | 'vegetarian' | 'vegan'>(
+    'omnivore'
+  );
+  const [shoppingFrequency, setShoppingFrequency] = useState<
+    'low' | 'medium' | 'high'
+  >('medium');
   const [wasteReduction, setWasteReduction] = useState<number>(50);
 
   // Business inputs
@@ -85,13 +109,13 @@ export default function ImpactCalculator({
       car: {
         gasoline: 0.411, // kg CO2 per mile
         hybrid: 0.255,
-        electric: 0.123
+        electric: 0.123,
       },
       flight: {
         domestic: 0.255, // kg CO2 per mile (avg 2hr flight = 500 miles)
-        international: 0.298
+        international: 0.298,
       },
-      publicTransport: 0.045 // kg CO2 per mile (avg speed 25mph)
+      publicTransport: 0.045, // kg CO2 per mile (avg speed 25mph)
     },
     energy: {
       electricity: 0.5, // kg CO2 per kWh (US average)
@@ -101,27 +125,27 @@ export default function ImpactCalculator({
         gas: 0.184, // kg CO2 per sq ft per year
         electric: 0.092,
         oil: 0.265,
-        renewable: 0.02
-      }
+        renewable: 0.02,
+      },
     },
     lifestyle: {
       diet: {
         omnivore: 2200, // kg CO2 per year
         vegetarian: 1650,
-        vegan: 1000
+        vegan: 1000,
       },
       shopping: {
         low: 500, // kg CO2 per year
         medium: 1200,
-        high: 2000
+        high: 2000,
       },
-      wasteBase: 500 // kg CO2 per year baseline
+      wasteBase: 500, // kg CO2 per year baseline
     },
     business: {
       employeeBase: 4000, // kg CO2 per employee per year
       officeSpace: 0.027, // kg CO2 per sq ft per year
-      businessTravel: 0.5 // kg CO2 per dollar spent
-    }
+      businessTravel: 0.5, // kg CO2 per dollar spent
+    },
   };
 
   const calculateEmissions = useMemo(() => {
@@ -137,7 +161,7 @@ export default function ImpactCalculator({
         amount: carMiles,
         unit: 'miles/year',
         co2Equivalent: co2,
-        description: `Annual car travel in ${carType} vehicle`
+        description: `Annual car travel in ${carType} vehicle`,
       });
     }
 
@@ -151,7 +175,7 @@ export default function ImpactCalculator({
         amount: flightHours,
         unit: 'hours/year',
         co2Equivalent: co2,
-        description: `Annual ${flightType} flight travel`
+        description: `Annual ${flightType} flight travel`,
       });
     }
 
@@ -165,7 +189,7 @@ export default function ImpactCalculator({
         amount: publicTransportHours,
         unit: 'hours/year',
         co2Equivalent: co2,
-        description: 'Annual public transportation use'
+        description: 'Annual public transportation use',
       });
     }
 
@@ -179,7 +203,7 @@ export default function ImpactCalculator({
         amount: electricityKwh,
         unit: 'kWh/month',
         co2Equivalent: co2 * 12, // annual
-        description: 'Annual electricity consumption'
+        description: 'Annual electricity consumption',
       });
     }
 
@@ -192,7 +216,7 @@ export default function ImpactCalculator({
         amount: gasUsage,
         unit: 'therms/month',
         co2Equivalent: co2 * 12, // annual
-        description: 'Annual natural gas consumption'
+        description: 'Annual natural gas consumption',
       });
     }
 
@@ -205,7 +229,7 @@ export default function ImpactCalculator({
       amount: 1,
       unit: 'person/year',
       co2Equivalent: dietCo2,
-      description: `Annual food consumption (${dietType} diet)`
+      description: `Annual food consumption (${dietType} diet)`,
     });
 
     const shoppingCo2 = emissionFactors.lifestyle.shopping[shoppingFrequency];
@@ -216,10 +240,11 @@ export default function ImpactCalculator({
       amount: 1,
       unit: 'person/year',
       co2Equivalent: shoppingCo2,
-      description: `Annual consumer goods purchases`
+      description: `Annual consumer goods purchases`,
     });
 
-    const wasteCo2 = emissionFactors.lifestyle.wasteBase * (1 - wasteReduction / 100);
+    const wasteCo2 =
+      emissionFactors.lifestyle.wasteBase * (1 - wasteReduction / 100);
     newCalculations.push({
       id: 'waste',
       category: 'lifestyle',
@@ -227,7 +252,7 @@ export default function ImpactCalculator({
       amount: wasteReduction,
       unit: '% reduction',
       co2Equivalent: wasteCo2,
-      description: `Annual waste generation with ${wasteReduction}% reduction`
+      description: `Annual waste generation with ${wasteReduction}% reduction`,
     });
 
     // Business calculations
@@ -240,7 +265,7 @@ export default function ImpactCalculator({
         amount: employees,
         unit: 'employees',
         co2Equivalent: co2,
-        description: 'Annual emissions from employee operations'
+        description: 'Annual emissions from employee operations',
       });
     }
 
@@ -253,7 +278,7 @@ export default function ImpactCalculator({
         amount: officeSpace,
         unit: 'sq ft',
         co2Equivalent: co2,
-        description: 'Annual emissions from office operations'
+        description: 'Annual emissions from office operations',
       });
     }
 
@@ -266,35 +291,52 @@ export default function ImpactCalculator({
         amount: businessTravel,
         unit: 'USD/year',
         co2Equivalent: co2,
-        description: 'Annual business travel emissions'
+        description: 'Annual business travel emissions',
       });
     }
 
     return newCalculations;
   }, [
-    carMiles, carType, flightHours, flightType, publicTransportHours,
-    electricityKwh, gasUsage, heatingType,
-    dietType, shoppingFrequency, wasteReduction,
-    employees, officeSpace, businessTravel
+    carMiles,
+    carType,
+    flightHours,
+    flightType,
+    publicTransportHours,
+    electricityKwh,
+    gasUsage,
+    heatingType,
+    dietType,
+    shoppingFrequency,
+    wasteReduction,
+    employees,
+    officeSpace,
+    businessTravel,
   ]);
 
   useEffect(() => {
     setCalculations(calculateEmissions);
   }, [calculateEmissions]);
 
-  const totalEmissions = calculations.reduce((sum, calc) => sum + calc.co2Equivalent, 0);
+  const totalEmissions = calculations.reduce(
+    (sum, calc) => sum + calc.co2Equivalent,
+    0
+  );
   const emissionsInTons = totalEmissions / 1000;
   const offsetTons = (emissionsInTons * offsetPercentage) / 100;
 
-  const selectedProjectData = availableProjects.find(p => p.id === selectedProject);
-  const offsetCost = selectedProjectData ? offsetTons * selectedProjectData.pricePerTon : 0;
+  const selectedProjectData = availableProjects.find(
+    (p) => p.id === selectedProject
+  );
+  const offsetCost = selectedProjectData
+    ? offsetTons * selectedProjectData.pricePerTon
+    : 0;
 
   const getEquivalents = (kgCo2: number) => {
     return {
       cars: Math.round(kgCo2 / 4600), // avg car emits 4.6 tons per year
       trees: Math.round(kgCo2 / 22), // one tree absorbs ~22kg CO2 per year
       flights: Math.round(kgCo2 / 255), // avg domestic flight emits ~255kg CO2
-      homes: Math.round(kgCo2 / 7300) // avg home emits ~7.3 tons per year
+      homes: Math.round(kgCo2 / 7300), // avg home emits ~7.3 tons per year
     };
   };
 
@@ -319,7 +361,7 @@ export default function ImpactCalculator({
     { key: 'transportation', label: 'Transportation', icon: TruckIcon },
     { key: 'energy', label: 'Energy', icon: BoltIcon },
     { key: 'lifestyle', label: 'Lifestyle', icon: HomeIcon },
-    { key: 'business', label: 'Business', icon: ChartBarIcon }
+    { key: 'business', label: 'Business', icon: ChartBarIcon },
   ];
 
   return (
@@ -332,7 +374,9 @@ export default function ImpactCalculator({
               <CalculatorIcon className="h-8 w-8 text-blue-600" />
               <span>Carbon Impact Calculator</span>
             </h2>
-            <p className="text-gray-600 mt-1">Calculate your carbon footprint and find offset opportunities</p>
+            <p className="text-gray-600 mt-1">
+              Calculate your carbon footprint and find offset opportunities
+            </p>
           </div>
           <div className="flex items-center space-x-3">
             <button
@@ -376,14 +420,18 @@ export default function ImpactCalculator({
         <div className="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center space-x-2">
             {getCategoryIcon(activeCategory)}
-            <span>{categories.find(c => c.key === activeCategory)?.label} Inputs</span>
+            <span>
+              {categories.find((c) => c.key === activeCategory)?.label} Inputs
+            </span>
           </h3>
 
           {/* Transportation Inputs */}
           {activeCategory === 'transportation' && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Car Travel</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Car Travel
+                </label>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <input
@@ -407,7 +455,9 @@ export default function ImpactCalculator({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Air Travel</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Air Travel
+                </label>
                 <div className="grid grid-cols-2 gap-4">
                   <input
                     type="number"
@@ -428,12 +478,16 @@ export default function ImpactCalculator({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Public Transportation</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Public Transportation
+                </label>
                 <input
                   type="number"
                   placeholder="Hours per year"
                   value={publicTransportHours || ''}
-                  onChange={(e) => setPublicTransportHours(Number(e.target.value))}
+                  onChange={(e) =>
+                    setPublicTransportHours(Number(e.target.value))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -444,7 +498,9 @@ export default function ImpactCalculator({
           {activeCategory === 'energy' && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Electricity Usage</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Electricity Usage
+                </label>
                 <input
                   type="number"
                   placeholder="kWh per month"
@@ -452,11 +508,15 @@ export default function ImpactCalculator({
                   onChange={(e) => setElectricityKwh(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">Average US household uses 877 kWh/month</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Average US household uses 877 kWh/month
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Natural Gas Usage</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Natural Gas Usage
+                </label>
                 <input
                   type="number"
                   placeholder="Therms per month"
@@ -464,11 +524,15 @@ export default function ImpactCalculator({
                   onChange={(e) => setGasUsage(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">Average US household uses 72 therms/month</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Average US household uses 72 therms/month
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Heating Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Heating Type
+                </label>
                 <select
                   value={heatingType}
                   onChange={(e) => setHeatingType(e.target.value as any)}
@@ -487,7 +551,9 @@ export default function ImpactCalculator({
           {activeCategory === 'lifestyle' && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Diet Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Diet Type
+                </label>
                 <select
                   value={dietType}
                   onChange={(e) => setDietType(e.target.value as any)}
@@ -500,7 +566,9 @@ export default function ImpactCalculator({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Shopping Frequency</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Shopping Frequency
+                </label>
                 <select
                   value={shoppingFrequency}
                   onChange={(e) => setShoppingFrequency(e.target.value as any)}
@@ -536,7 +604,9 @@ export default function ImpactCalculator({
           {activeCategory === 'business' && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Number of Employees</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Employees
+                </label>
                 <input
                   type="number"
                   placeholder="Total employees"
@@ -547,7 +617,9 @@ export default function ImpactCalculator({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Office Space</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Office Space
+                </label>
                 <input
                   type="number"
                   placeholder="Square feet"
@@ -558,7 +630,9 @@ export default function ImpactCalculator({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Annual Business Travel Budget</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Annual Business Travel Budget
+                </label>
                 <input
                   type="number"
                   placeholder="USD per year"
@@ -586,12 +660,15 @@ export default function ImpactCalculator({
             <div className="flex items-center space-x-3 mb-4">
               <GlobeAltIcon className="h-8 w-8 text-red-600" />
               <div>
-                <h3 className="font-semibold text-gray-800">Total Annual Emissions</h3>
+                <h3 className="font-semibold text-gray-800">
+                  Total Annual Emissions
+                </h3>
                 <p className="text-sm text-gray-600">Your carbon footprint</p>
               </div>
             </div>
             <div className="text-3xl font-bold text-red-700 mb-2">
-              {emissionsInTons.toFixed(2)} <span className="text-lg">tons CO₂</span>
+              {emissionsInTons.toFixed(2)}{' '}
+              <span className="text-lg">tons CO₂</span>
             </div>
             <div className="text-sm text-red-600">
               {totalEmissions.toFixed(0)} kg CO₂ equivalent per year
@@ -601,12 +678,19 @@ export default function ImpactCalculator({
           {/* Breakdown */}
           {calculations.length > 0 && (
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h4 className="font-semibold text-gray-800 mb-4">Emissions Breakdown</h4>
+              <h4 className="font-semibold text-gray-800 mb-4">
+                Emissions Breakdown
+              </h4>
               <div className="space-y-3">
                 {calculations.map((calc) => (
-                  <div key={calc.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div
+                    key={calc.id}
+                    className="flex justify-between items-center p-3 bg-gray-50 rounded"
+                  >
                     <div>
-                      <div className="font-medium text-sm text-gray-800">{calc.subcategory}</div>
+                      <div className="font-medium text-sm text-gray-800">
+                        {calc.subcategory}
+                      </div>
                       <div className="text-xs text-gray-600">
                         {calc.amount} {calc.unit}
                       </div>
@@ -616,7 +700,10 @@ export default function ImpactCalculator({
                         {(calc.co2Equivalent / 1000).toFixed(2)} tons
                       </div>
                       <div className="text-xs text-gray-600">
-                        {((calc.co2Equivalent / totalEmissions) * 100).toFixed(1)}%
+                        {((calc.co2Equivalent / totalEmissions) * 100).toFixed(
+                          1
+                        )}
+                        %
                       </div>
                     </div>
                   </div>
@@ -627,23 +714,39 @@ export default function ImpactCalculator({
 
           {/* Equivalents */}
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h4 className="font-semibold text-gray-800 mb-4">That's Equivalent To...</h4>
+            <h4 className="font-semibold text-gray-800 mb-4">
+              That's Equivalent To...
+            </h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-3 bg-blue-50 rounded">
-                <div className="text-2xl font-bold text-blue-700">{equivalents.cars}</div>
-                <div className="text-xs text-blue-600">cars driven for a year</div>
+                <div className="text-2xl font-bold text-blue-700">
+                  {equivalents.cars}
+                </div>
+                <div className="text-xs text-blue-600">
+                  cars driven for a year
+                </div>
               </div>
               <div className="text-center p-3 bg-green-50 rounded">
-                <div className="text-2xl font-bold text-green-700">{equivalents.trees}</div>
-                <div className="text-xs text-green-600">trees needed to offset</div>
+                <div className="text-2xl font-bold text-green-700">
+                  {equivalents.trees}
+                </div>
+                <div className="text-xs text-green-600">
+                  trees needed to offset
+                </div>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded">
-                <div className="text-2xl font-bold text-purple-700">{equivalents.flights}</div>
+                <div className="text-2xl font-bold text-purple-700">
+                  {equivalents.flights}
+                </div>
                 <div className="text-xs text-purple-600">domestic flights</div>
               </div>
               <div className="text-center p-3 bg-yellow-50 rounded">
-                <div className="text-2xl font-bold text-yellow-700">{equivalents.homes}</div>
-                <div className="text-xs text-yellow-600">average homes per year</div>
+                <div className="text-2xl font-bold text-yellow-700">
+                  {equivalents.homes}
+                </div>
+                <div className="text-xs text-yellow-600">
+                  average homes per year
+                </div>
               </div>
             </div>
           </div>
@@ -653,7 +756,9 @@ export default function ImpactCalculator({
       {/* Offset Section */}
       {totalEmissions > 0 && (
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Offset Your Impact</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Offset Your Impact
+          </h3>
 
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Offset Controls */}
@@ -679,7 +784,9 @@ export default function ImpactCalculator({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Offset Project</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Offset Project
+                </label>
                 <select
                   value={selectedProject}
                   onChange={(e) => setSelectedProject(e.target.value)}
@@ -688,7 +795,8 @@ export default function ImpactCalculator({
                   <option value="">Choose a project...</option>
                   {availableProjects.map((project) => (
                     <option key={project.id} value={project.id}>
-                      {project.title} - ${project.pricePerTon}/ton ({project.location})
+                      {project.title} - ${project.pricePerTon}/ton (
+                      {project.location})
                     </option>
                   ))}
                 </select>
@@ -698,21 +806,36 @@ export default function ImpactCalculator({
                 <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="font-medium text-green-800">{selectedProjectData.title}</h4>
-                      <p className="text-sm text-green-600 mt-1">{selectedProjectData.location}</p>
+                      <h4 className="font-medium text-green-800">
+                        {selectedProjectData.title}
+                      </h4>
+                      <p className="text-sm text-green-600 mt-1">
+                        {selectedProjectData.location}
+                      </p>
                       <div className="flex items-center space-x-4 mt-2 text-sm">
-                        <span className="text-green-700">⭐ {selectedProjectData.rating}/5</span>
-                        <span className="text-green-700">✓ {selectedProjectData.verification}</span>
+                        <span className="text-green-700">
+                          ⭐ {selectedProjectData.rating}/5
+                        </span>
+                        <span className="text-green-700">
+                          ✓ {selectedProjectData.verification}
+                        </span>
                       </div>
                       {selectedProjectData.additionalBenefits.length > 0 && (
                         <div className="mt-2">
-                          <div className="text-xs text-green-700 font-medium">Additional Benefits:</div>
+                          <div className="text-xs text-green-700 font-medium">
+                            Additional Benefits:
+                          </div>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {selectedProjectData.additionalBenefits.slice(0, 3).map((benefit, index) => (
-                              <span key={index} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
-                                {benefit}
-                              </span>
-                            ))}
+                            {selectedProjectData.additionalBenefits
+                              .slice(0, 3)
+                              .map((benefit, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded"
+                                >
+                                  {benefit}
+                                </span>
+                              ))}
                           </div>
                         </div>
                       )}
@@ -724,21 +847,31 @@ export default function ImpactCalculator({
 
             {/* Offset Summary */}
             <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg p-6 border border-green-200">
-              <h4 className="font-semibold text-gray-800 mb-4">Offset Summary</h4>
+              <h4 className="font-semibold text-gray-800 mb-4">
+                Offset Summary
+              </h4>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Emissions to offset:</span>
-                  <span className="font-medium">{offsetTons.toFixed(2)} tons</span>
+                  <span className="font-medium">
+                    {offsetTons.toFixed(2)} tons
+                  </span>
                 </div>
                 {selectedProjectData && (
                   <>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Price per ton:</span>
-                      <span className="font-medium">${selectedProjectData.pricePerTon}</span>
+                      <span className="font-medium">
+                        ${selectedProjectData.pricePerTon}
+                      </span>
                     </div>
                     <div className="flex justify-between border-t pt-2">
-                      <span className="font-medium text-gray-800">Total Cost:</span>
-                      <span className="font-bold text-green-700">${offsetCost.toFixed(2)}</span>
+                      <span className="font-medium text-gray-800">
+                        Total Cost:
+                      </span>
+                      <span className="font-bold text-green-700">
+                        ${offsetCost.toFixed(2)}
+                      </span>
                     </div>
                     <div className="text-xs text-gray-600">
                       Available: {selectedProjectData.availableTons} tons
@@ -747,29 +880,37 @@ export default function ImpactCalculator({
                 )}
               </div>
 
-              {selectedProjectData && offsetTons <= selectedProjectData.availableTons && (
-                <button
-                  onClick={() => onPurchaseCredits?.(selectedProject, offsetTons, offsetCost)}
-                  className="w-full mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center justify-center space-x-2"
-                >
-                  <TreePineIcon className="h-4 w-4" />
-                  <span>Purchase Credits</span>
-                </button>
-              )}
+              {selectedProjectData &&
+                offsetTons <= selectedProjectData.availableTons && (
+                  <button
+                    onClick={() =>
+                      onPurchaseCredits?.(
+                        selectedProject,
+                        offsetTons,
+                        offsetCost
+                      )
+                    }
+                    className="w-full mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center justify-center space-x-2"
+                  >
+                    <TreePineIcon className="h-4 w-4" />
+                    <span>Purchase Credits</span>
+                  </button>
+                )}
 
               {offsetPercentage >= 100 && (
                 <div className="mt-4 p-3 bg-green-100 rounded-lg">
                   <div className="flex items-center space-x-2">
                     <CheckCircleIcon className="h-5 w-5 text-green-600" />
                     <span className="text-sm font-medium text-green-800">
-                      {offsetPercentage === 100 ? 'Carbon Neutral!' : 'Carbon Negative!'}
+                      {offsetPercentage === 100
+                        ? 'Carbon Neutral!'
+                        : 'Carbon Negative!'}
                     </span>
                   </div>
                   <p className="text-xs text-green-700 mt-1">
                     {offsetPercentage === 100
                       ? 'You will have net zero carbon emissions'
-                      : `You will remove ${((offsetPercentage - 100) / 100 * emissionsInTons).toFixed(2)} extra tons of CO₂`
-                    }
+                      : `You will remove ${(((offsetPercentage - 100) / 100) * emissionsInTons).toFixed(2)} extra tons of CO₂`}
                   </p>
                 </div>
               )}
