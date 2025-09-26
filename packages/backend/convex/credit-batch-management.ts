@@ -248,7 +248,7 @@ export const verifyCreditBatch = mutation({
     }
 
     // Update batch with verification results
-    batch.status = args.verified ? 'verified' : 'rejected';
+    batch.status = args.verified ? 'verified' : 'cancelled';
     batch.verifierId = args.verifierId;
     batch.verificationDate = Date.now();
     batch.qualityMetrics = args.qualityAssessment;
@@ -668,7 +668,7 @@ async function assignVerifier(
 
   // Find verifier with matching specialty or general verifier
   const suitableVerifier = verifiers.find(
-    (v) =>
+    (v: any) =>
       v.verifierSpecialty?.includes(project.projectType) ||
       v.verifierSpecialty?.includes('general')
   );
