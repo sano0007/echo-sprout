@@ -2,6 +2,8 @@ import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { VerifierAssignmentService } from '../services/verifier-assignment-service';
 import { UserService } from '../services/user-service';
+import { WorkflowService } from '../services/workflow-service';
+import { VerificationService } from '../services/verification-service';
 
 // Get optimal verifier for a project
 export const getOptimalVerifier = query({
@@ -106,7 +108,6 @@ export const autoAssignVerifier = mutation({
 
     if (verificationId) {
       // Trigger workflow assignment
-      const { WorkflowService } = await import('../services/workflow-service');
       await WorkflowService.handleVerificationAssignment(
         ctx,
         verificationId,
@@ -149,9 +150,6 @@ export const manualAssignVerifier = mutation({
     const dueDate = args.dueDate || Date.now() + 14 * 24 * 60 * 60 * 1000; // 2 weeks default
 
     // Create verification using the standard service
-    const { VerificationService } = await import(
-      '../services/verification-service'
-    );
     const verificationId = await VerificationService.createVerification(ctx, {
       projectId: args.projectId,
       verifierId: args.verifierId,
@@ -160,7 +158,6 @@ export const manualAssignVerifier = mutation({
     });
 
     // Trigger workflow assignment
-    const { WorkflowService } = await import('../services/workflow-service');
     await WorkflowService.handleVerificationAssignment(
       ctx,
       verificationId,
@@ -266,10 +263,6 @@ export const batchAssignProjects = mutation({
     }
 
     const results = [];
-    const { VerificationService } = await import(
-      '../services/verification-service'
-    );
-    const { WorkflowService } = await import('../services/workflow-service');
 
     for (const assignment of args.assignments) {
       try {
@@ -361,9 +354,6 @@ export const getVerifierCapacity = query({
       throw new Error('Verifier not found');
     }
 
-    const { VerificationService } = await import(
-      '../services/verification-service'
-    );
     const stats = await VerificationService.getVerifierStats(
       ctx,
       targetVerifierId

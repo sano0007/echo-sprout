@@ -42,7 +42,10 @@ declare const fullApi: ApiFromModules<{
   verifier_assignment: typeof verifier_assignment;
   workflow: typeof workflow;
 }>;
-export declare const api: FilterApi<typeof fullApi, FunctionReference<any, 'public'>>;
+export declare const api: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, 'public'>
+>;
 export declare const internal: FilterApi<
   typeof fullApi,
   FunctionReference<any, 'internal'>

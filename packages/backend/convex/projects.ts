@@ -1,5 +1,7 @@
 import { v } from 'convex/values';
 import { action, mutation, query } from './_generated/server';
+import { WorkflowService } from '../services/workflow-service';
+import { VerifierAssignmentService } from '../services/verifier-assignment-service';
 
 export const generateUploadUrl = action({
   args: {},
@@ -280,8 +282,51 @@ export const updateProject = mutation({
     if (args.requiredDocuments !== undefined)
       updateData.requiredDocuments = args.requiredDocuments;
 
+    // Check if status is changing to 'under_review' (submitted for verification)
+    const isSubmittingForReview =
+      args.status === 'under_review' && project.status === 'draft';
+
     // Update the project
     await ctx.db.patch(args.projectId, updateData);
+
+    // Trigger verification workflow if project is being submitted for review
+    if (isSubmittingForReview) {
+      try {
+        // Update project status for submission workflow
+        await ctx.db.patch(args.projectId, {
+          verificationStatus: 'pending',
+        });
+
+        // Trigger workflow system for project submission
+        await WorkflowService.handleProjectSubmission(ctx, args.projectId);
+
+        // Try automatic verifier assignment if enabled
+        const verificationId =
+          await VerifierAssignmentService.autoAssignVerifier(
+            ctx,
+            args.projectId,
+            {
+              requireSpecialty: true,
+              maxWorkload: 8,
+              priorityBoost: false,
+            },
+            undefined, // Use default due date
+            'normal' // Default priority
+          );
+
+        if (verificationId) {
+          // Update project with verification assignment
+          await ctx.db.patch(args.projectId, {
+            verificationStatus: 'in_progress',
+          });
+        }
+      } catch (error) {
+        console.error('Error in verification workflow:', error);
+        // Don't fail the entire update, but log the error
+        // The project status will still be updated to under_review
+        // Manual assignment can be done later by admin
+      }
+    }
 
     return args.projectId;
   },
@@ -317,5 +362,256 @@ export const deleteProject = mutation({
     await ctx.db.delete(args.projectId);
 
     return args.projectId;
+  },
+});
+
+// Get project verification status and details
+export const getProjectVerificationStatus = query({
+  args: {
+    projectId: v.id('projects'),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Get the project
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // Verify the user owns the project or is the assigned verifier
+    const user = await ctx.db
+      .query('users')
+      .filter((q) => q.eq(q.field('clerkId'), identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const canView =
+      project.creatorId === user._id ||
+      project.assignedVerifierId === user._id ||
+      user.role === 'admin';
+
+    if (!canView) {
+      throw new Error('Unauthorized to view this project verification status');
+    }
+
+    // Get verification record if exists
+    const verification = await ctx.db
+      .query('verifications')
+      .withIndex('by_project', (q) => q.eq('projectId', args.projectId))
+      .unique();
+
+    // Get assigned verifier details if exists
+    let assignedVerifier = null;
+    if (project.assignedVerifierId) {
+      assignedVerifier = await ctx.db.get(project.assignedVerifierId);
+    }
+
+    // Get verification messages if verification exists
+    let messages: any[] = [];
+    if (verification) {
+      messages = await ctx.db
+        .query('verificationMessages')
+        .withIndex('by_verification', (q) =>
+          q.eq('verificationId', verification._id)
+        )
+        .order('desc')
+        .take(10); // Latest 10 messages
+    }
+
+    // Get project documents
+    const documents = await ctx.db
+      .query('documents')
+      .withIndex('by_entity', (q) =>
+        q.eq('entityId', args.projectId).eq('entityType', 'project')
+      )
+      .collect();
+
+    return {
+      project: {
+        ...project,
+        verification,
+        assignedVerifier: assignedVerifier
+          ? {
+              _id: assignedVerifier._id,
+              firstName: assignedVerifier.firstName,
+              lastName: assignedVerifier.lastName,
+              email: assignedVerifier.email,
+              verifierSpecialty: assignedVerifier.verifierSpecialty,
+            }
+          : null,
+        recentMessages: messages,
+        documents,
+      },
+      canModify: project.creatorId === user._id,
+      canVerify: project.assignedVerifierId === user._id,
+      isAdmin: user.role === 'admin',
+    };
+  },
+});
+
+// Submit project for verification (alternative to status update)
+export const submitProjectForVerification = mutation({
+  args: {
+    projectId: v.id('projects'),
+    priority: v.optional(
+      v.union(
+        v.literal('low'),
+        v.literal('normal'),
+        v.literal('high'),
+        v.literal('urgent')
+      )
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Get the project
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // Verify the user owns the project
+    const user = await ctx.db
+      .query('users')
+      .filter((q) => q.eq(q.field('clerkId'), identity.subject))
+      .first();
+
+    if (!user || project.creatorId !== user._id) {
+      throw new Error('Unauthorized to submit this project');
+    }
+
+    // Check if project is in correct status
+    if (project.status !== 'draft') {
+      throw new Error(
+        'Project must be in draft status to submit for verification'
+      );
+    }
+
+    // Update project status
+    await ctx.db.patch(args.projectId, {
+      status: 'under_review',
+      verificationStatus: 'pending',
+    });
+
+    // Trigger verification workflow
+    await WorkflowService.handleProjectSubmission(ctx, args.projectId);
+
+    // Try automatic verifier assignment
+    const verificationId = await VerifierAssignmentService.autoAssignVerifier(
+      ctx,
+      args.projectId,
+      {
+        requireSpecialty: true,
+        maxWorkload: 8,
+        priorityBoost: args.priority === 'urgent',
+      },
+      undefined, // Use default due date
+      args.priority || 'normal'
+    );
+
+    if (verificationId) {
+      // Update project with verification assignment
+      await ctx.db.patch(args.projectId, {
+        verificationStatus: 'in_progress',
+      });
+
+      return {
+        success: true,
+        verificationId,
+        message: 'Project submitted and automatically assigned to verifier',
+      };
+    } else {
+      return {
+        success: true,
+        verificationId: null,
+        message: 'Project submitted, pending manual verifier assignment',
+      };
+    }
+  },
+});
+
+// Get project timeline and verification events
+export const getProjectTimeline = query({
+  args: {
+    projectId: v.id('projects'),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Get the project
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // Verify access
+    const user = await ctx.db
+      .query('users')
+      .filter((q) => q.eq(q.field('clerkId'), identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const canView =
+      project.creatorId === user._id ||
+      project.assignedVerifierId === user._id ||
+      user.role === 'admin';
+
+    if (!canView) {
+      throw new Error('Unauthorized to view this project timeline');
+    }
+
+    // Get workflow events for this project
+    const workflowEvents = await ctx.db
+      .query('auditLogs')
+      .withIndex('by_entity', (q) =>
+        q.eq('entityType', 'workflow').eq('entityId', args.projectId)
+      )
+      .order('desc')
+      .collect();
+
+    // Get verification events if verification exists
+    const verification = await ctx.db
+      .query('verifications')
+      .withIndex('by_project', (q) => q.eq('projectId', args.projectId))
+      .unique();
+
+    let verificationEvents: any[] = [];
+    if (verification) {
+      verificationEvents = await ctx.db
+        .query('auditLogs')
+        .withIndex('by_entity', (q) =>
+          q.eq('entityType', 'verification').eq('entityId', verification._id)
+        )
+        .order('desc')
+        .collect();
+    }
+
+    // Combine and sort all events
+    const allEvents = [...workflowEvents, ...verificationEvents].sort(
+      (a, b) => (b._creationTime || 0) - (a._creationTime || 0)
+    );
+
+    return {
+      project,
+      verification,
+      timeline: allEvents,
+    };
   },
 });

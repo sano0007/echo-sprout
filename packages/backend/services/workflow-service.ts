@@ -334,14 +334,13 @@ export class WorkflowService {
       entityType: 'workflow' as const,
       entityId: data.projectId,
       action: data.event,
-      description: data.description,
-      performedBy: data.triggeredBy,
+      userId: data.triggeredBy,
       metadata: {
+        description: data.description,
         verificationId: data.verificationId,
         event: data.event,
         ...data.metadata,
       },
-      _creationTime: Date.now(),
     };
 
     return await ctx.db.insert('auditLogs', auditLogData);
