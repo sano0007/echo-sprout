@@ -596,7 +596,7 @@ async function getValidatorConfig(
 ): Promise<ValidatorConfiguration> {
   const config = await ctx.db
     .query('monitoringConfig')
-    .withIndex('by_project_type_key', (q) =>
+    .withIndex('by_project_type_key', (q: any) =>
       q.eq('projectType', projectType).eq('configKey', 'validator_config')
     )
     .first();
