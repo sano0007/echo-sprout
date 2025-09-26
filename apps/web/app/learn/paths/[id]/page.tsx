@@ -25,18 +25,36 @@ export default function LearningPathDetailsPage() {
   const deleteLesson = useMutation(api.learn.deleteLesson);
   const recordEntry = useMutation(api.learn.recordPathsEntry);
   const recordStart = useMutation(api.learn.recordCourseStart);
+  const progress = useQuery(api.learn.getPathProgress, { pathId: id ?? '' } as any);
+  const setProgress = useMutation(api.learn.setPathProgress);
 
   const [editingPath, setEditingPath] = useState(false);
   const [pathForm, setPathForm] = useState<any>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Local-only checkboxes
+  // Progress checkboxes (persisted in Convex)
   const [pdfChecked, setPdfChecked] = useState<Record<string, boolean>>({});
-  const togglePdf = (key: string) =>
-    setPdfChecked((c) => ({ ...c, [key]: !c[key] }));
   const [videoChecked, setVideoChecked] = useState<Record<string, boolean>>({});
-  const toggleVideo = (key: string) =>
-    setVideoChecked((c) => ({ ...c, [key]: !c[key] }));
+
+  // Sync local state from persisted progress
+  useEffect(() => {
+    if (!progress) return;
+    try {
+      const v: Record<string, boolean> = {};
+      const p: Record<string, boolean> = {};
+      for (const row of progress as any[]) {
+        const lid = String((row.lessonId as any)?._id ?? row.lessonId);
+        if (row.itemType === 'video') {
+          v[`v:${lid}`] = !!row.completed;
+        } else if (row.itemType === 'pdf') {
+          const idx = Number(row.itemIndex ?? 0);
+          p[`p:${lid}:${idx}`] = !!row.completed;
+        }
+      }
+      setVideoChecked(v);
+      setPdfChecked(p);
+    } catch {}
+  }, [progress]);
 
   const recordedRef = useRef(false);
   useEffect(() => {
@@ -180,20 +198,41 @@ export default function LearningPathDetailsPage() {
         </div>
       </div>
 
-      {/* Progress bar (UI-only) */}
+      {/* Progress bar */}
       <div className="mb-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span>Progress</span>
-          <span>0%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-blue-600 h-2 rounded-full"
-            style={{ width: '0%' }}
-          ></div>
-        </div>
+        {(() => {
+          const ls = Array.isArray(lessons) ? lessons : [];
+          let total = 0;
+          let done = 0;
+          for (const L of ls) {
+            const lid = String((L as any).id ?? L);
+            if (L.videoUrl) {
+              total += 1;
+              if (videoChecked[`v:${lid}`]) done += 1;
+            }
+            const pdfs = Array.isArray(L.pdfUrls) ? L.pdfUrls : [];
+            total += pdfs.length;
+            for (let i = 0; i < pdfs.length; i++) {
+              if (pdfChecked[`p:${lid}:${i}`]) done += 1;
+            }
+          }
+          const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          return (
+            <>
+              <div className="flex justify-between text-sm mb-1">
+                <span>Progress</span>
+                <span>{pct}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: `${pct}%` }}
+                ></div>
+              </div>
+            </>
+          );
+        })()}
       </div>
-
       <div className="text-gray-600 mb-6">
         <span className="mr-4">
           Level: <strong>{cap(data.level)}</strong>
@@ -472,7 +511,21 @@ export default function LearningPathDetailsPage() {
                         <input
                           type="checkbox"
                           checked={!!videoChecked[`v:${String(L.id)}`]}
-                          onChange={() => toggleVideo(`v:${String(L.id)}`)}
+                          onChange={async () => {
+                            const lid = String(L.id);
+                            const key = `v:${lid}`;
+                            const next = !videoChecked[key];
+                            setVideoChecked((c) => ({ ...c, [key]: next }));
+                            try {
+                              await setProgress({
+                                pathId: String(id),
+                                lessonId: lid,
+                                itemType: 'video',
+                                itemIndex: 0,
+                                completed: next,
+                              } as any);
+                            } catch {}
+                          }}
                         />
                         <svg
                           className="h-5 w-5 text-blue-600"
@@ -552,7 +605,20 @@ export default function LearningPathDetailsPage() {
                                   <input
                                     type="checkbox"
                                     checked={!!pdfChecked[key]}
-                                    onChange={() => togglePdf(key)}
+                                    onChange={async () => {
+                                      const lid = String(L.id);
+                                      const next = !pdfChecked[key];
+                                      setPdfChecked((c) => ({ ...c, [key]: next }));
+                                      try {
+                                        await setProgress({
+                                          pathId: String(id),
+                                          lessonId: lid,
+                                          itemType: 'pdf',
+                                          itemIndex: i,
+                                          completed: next,
+                                        } as any);
+                                      } catch {}
+                                    }}
                                   />
                                   <svg
                                     className="h-4 w-4 text-red-600"

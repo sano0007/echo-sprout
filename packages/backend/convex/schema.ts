@@ -460,6 +460,26 @@ export default defineSchema({
     .index('by_topic', ['topicId'])
     .index('by_author', ['authorId']),
 
+  // ============= LEARN: USER PROGRESS =============
+  learningProgress: defineTable({
+    userId: v.id('users'),
+    pathId: v.id('learningPaths'),
+    lessonId: v.id('learningPathLessons'),
+    itemType: v.union(v.literal('video'), v.literal('pdf')),
+    itemIndex: v.number(),
+    completed: v.boolean(),
+    completedAt: v.optional(v.float64()),
+  })
+    .index('by_user_path', ['userId', 'pathId'])
+    .index('by_user_lesson', ['userId', 'lessonId'])
+    .index('by_unique_key', [
+      'userId',
+      'pathId',
+      'lessonId',
+      'itemType',
+      'itemIndex',
+    ]),
+
   forumReplyVotes: defineTable({
     replyId: v.id('forumReplies'),
     userId: v.id('users'),

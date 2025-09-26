@@ -491,6 +491,77 @@ export const listLessonsForPath = query({
   },
 });
 
+// ============ USER PROGRESS: PERSIST CHECKBOXES ============
+export const getPathProgress = query({
+  args: { pathId: v.string() },
+  async handler(ctx, { pathId }) {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) return [];
+    const normalizedPath = await ctx.db.normalizeId('learningPaths', pathId);
+    if (!normalizedPath) return [];
+    const rows = await ctx.db
+      .query('learningProgress')
+      .withIndex('by_user_path', (q) => q.eq('userId', user._id).eq('pathId', normalizedPath))
+      .collect();
+    return rows.map((r) => ({
+      lessonId: r.lessonId,
+      itemType: r.itemType,
+      itemIndex: r.itemIndex,
+      completed: r.completed,
+    }));
+  },
+});
+
+export const setPathProgress = mutation({
+  args: {
+    pathId: v.string(),
+    lessonId: v.string(),
+    itemType: v.union(v.literal('video'), v.literal('pdf')),
+    itemIndex: v.optional(v.number()),
+    completed: v.boolean(),
+  },
+  async handler(ctx, { pathId, lessonId, itemType, itemIndex, completed }) {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) throw new Error('Not authenticated');
+
+    const normalizedPath = await ctx.db.normalizeId('learningPaths', pathId);
+    if (!normalizedPath) throw new Error('Invalid path id');
+    const normalizedLesson = await ctx.db.normalizeId('learningPathLessons', lessonId);
+    if (!normalizedLesson) throw new Error('Invalid lesson id');
+
+    const idx = typeof itemIndex === 'number' ? itemIndex : 0;
+
+    const existing = await ctx.db
+      .query('learningProgress')
+      .withIndex('by_unique_key', (q) =>
+        q
+          .eq('userId', user._id)
+          .eq('pathId', normalizedPath)
+          .eq('lessonId', normalizedLesson)
+          .eq('itemType', itemType)
+          .eq('itemIndex', idx)
+      )
+      .unique();
+
+    if (!existing) {
+      await ctx.db.insert('learningProgress', {
+        userId: user._id,
+        pathId: normalizedPath,
+        lessonId: normalizedLesson,
+        itemType,
+        itemIndex: idx,
+        completed,
+        completedAt: completed ? Date.now() : undefined,
+      } as any);
+    } else {
+      await ctx.db.patch(existing._id, {
+        completed,
+        completedAt: completed ? Date.now() : undefined,
+      });
+    }
+  },
+});
+
 export const updateLearningPath = mutation({
   args: {
     id: v.string(),
