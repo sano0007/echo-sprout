@@ -476,25 +476,6 @@ export default function CommunityForum() {
             </nav>
           </div>
 
-          {/* Top Contributors */}
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="font-semibold mb-4">Top Contributors</h3>
-            <div className="space-y-3">
-              {(topContributors || [])
-                .slice(0, 4)
-                .map((contributor: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <p className="font-medium text-sm">{contributor.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {contributor.posts} posts
-                    </p>
-                  </div>
-                ))}
-            </div>
-          </div>
         </div>
 
         {/* Main Content */}
