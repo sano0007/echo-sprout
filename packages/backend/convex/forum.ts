@@ -173,39 +173,7 @@ export const listAllTopics = query({
   },
 });
 
-export const getTopContributors = query({
-  args: {},
-  handler: async (ctx) => {
-    const items = await ctx.db.query('forumTopics').collect();
-    const map = new Map<
-      string,
-      { name: string; posts: number; reputation: number }
-    >();
-    for (const t of items) {
-      let entry = map.get(t.authorId as any);
-      if (!entry) {
-        const a = await ctx.db.get(t.authorId);
-        const name = a ? `${a.firstName} ${a.lastName}` : 'Unknown';
-        entry = { name, posts: 0, reputation: 0 };
-        map.set(t.authorId as any, entry);
-      }
-      entry.posts += 1;
-      entry.reputation += 10; // naive reputation
-    }
-    return Array.from(map.values())
-      .sort((a, b) => b.posts - a.posts)
-      .slice(0, 5);
-  },
-});
-
-export const getActiveUsersCount = query({
-  args: {},
-  handler: async (ctx) => {
-    const items = await ctx.db.query('forumTopics').collect();
-    const set = new Set(items.map((t) => String(t.authorId)));
-    return set.size;
-  },
-});
+// (removed duplicate definitions of getTopContributors and getActiveUsersCount)
 
 export const getTopicById = query({
   args: { id: v.id('forumTopics') },
