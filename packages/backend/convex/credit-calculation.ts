@@ -398,10 +398,10 @@ function calculateHybridCredits(
 
   // Apply weights to individual breakdowns
   Object.keys(creditBreakdown).forEach((key) => {
-    if (impactResult.creditBreakdown[key]) {
+    if (impactResult.creditBreakdown[key] && creditBreakdown[key]) {
       creditBreakdown[key].credits *= impactWeight;
     }
-    if (activityResult.creditBreakdown[key]) {
+    if (activityResult.creditBreakdown[key] && creditBreakdown[key]) {
       creditBreakdown[key].credits *= activityWeight;
     }
   });
@@ -645,7 +645,11 @@ function getDefaultMethodology(projectType: string): CreditMethodology {
     },
   };
 
-  return methodologies[projectType] || methodologies.reforestation;
+  const methodology = methodologies[projectType] || methodologies.reforestation;
+  if (!methodology) {
+    throw new Error(`No methodology available for project type: ${projectType}`);
+  }
+  return methodology;
 }
 
 function getGridEmissionFactor(location: {
@@ -713,10 +717,13 @@ export const getCreditCalculationHistory = query({
   handler: async (ctx, args) => {
     const history = await ctx.db
       .query('auditLogs')
-      .withIndex('by_entity', (q: any) =>
-        q.eq('entityType', 'project').eq('entityId', args.projectId)
+      .filter((q: any) =>
+        q.and(
+          q.eq(q.field('entityType'), 'project'),
+          q.eq(q.field('entityId'), args.projectId),
+          q.eq(q.field('action'), 'carbon_credit_calculation')
+        )
       )
-      .filter((q: any) => q.eq(q.field('action'), 'carbon_credit_calculation'))
       .order('desc')
       .take(20);
 
