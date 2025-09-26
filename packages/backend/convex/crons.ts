@@ -20,7 +20,7 @@ crons.daily(
     hourUTC: 6, // 6:00 AM UTC
     minuteUTC: 0,
   },
-  internal.automatedMonitoring.enhancedDailyMonitoring
+  internal['automated-monitoring'].enhancedDailyMonitoring
 );
 
 // Hourly urgent monitoring - runs every hour
@@ -52,23 +52,24 @@ crons.daily(
     hourUTC: 14, // 2:00 PM UTC
     minuteUTC: 30,
   },
-  internal.automatedMonitoring.processHighPriorityNotifications
+  internal['automated-monitoring'].processHighPriorityNotifications
 );
 
 // Milestone risk assessment - runs every 6 hours
 crons.interval(
   'Milestone Risk Assessment',
   { hours: 6 }, // Every 6 hours
-  internal.automatedMonitoring.monitorMilestoneDelays
+  internal['automated-monitoring'].monitorMilestoneDelays
 );
 
 // Alert escalation processing - runs every hour
-crons.hourly(
-  'Alert Escalation Processing',
-  {
-    minuteUTC: 5, // Run at 5 minutes past each hour to avoid conflicts
-  },
-  internal.alertEscalation.batchProcessEscalations
-);
+// TODO: Implement batchProcessEscalations function in alert-escalation module
+// crons.hourly(
+//   'Alert Escalation Processing',
+//   {
+//     minuteUTC: 5, // Run at 5 minutes past each hour to avoid conflicts
+//   },
+//   internal['alert-escalation'].batchProcessEscalations
+// );
 
 export default crons;
