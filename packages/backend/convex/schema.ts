@@ -504,25 +504,25 @@ export default defineSchema({
     ),
   }),
 
-  // System notifications
+  // Comprehensive notification system
   notifications: defineTable({
     recipientId: v.id('users'),
-    type: v.union(
-      v.literal('verification_assigned'),
-      v.literal('verification_started'),
-      v.literal('verification_completed'),
-      v.literal('project_approved'),
-      v.literal('project_rejected'),
-      v.literal('revision_required'),
-      v.literal('message_received'),
-      v.literal('deadline_approaching'),
-      v.literal('deadline_overdue'),
-      v.literal('document_uploaded'),
-      v.literal('document_verified'),
-      v.literal('quality_score_updated')
-    ),
-    title: v.string(),
+    senderId: v.optional(v.id('users')),
+    subject: v.string(),
     message: v.string(),
+    type: v.string(),
+    severity: v.optional(v.string()),
+    category: v.optional(v.string()),
+    channels: v.array(v.string()),
+    scheduledAt: v.optional(v.number()),
+    sentAt: v.optional(v.number()),
+    deliveredAt: v.optional(v.number()),
+    readAt: v.optional(v.number()),
+    retryCount: v.number(),
+    deliveryStatus: v.string(),
+    failureReason: v.optional(v.string()),
+    template: v.optional(v.string()),
+    templateData: v.optional(v.any()),
     priority: v.union(
       v.literal('low'),
       v.literal('normal'),
@@ -535,21 +535,85 @@ export default defineSchema({
         v.literal('project'),
         v.literal('verification'),
         v.literal('document'),
-        v.literal('message')
+        v.literal('message'),
+        v.literal('alert'),
+        v.literal('escalation')
       )
     ),
     actionUrl: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
+    metadata: v.optional(v.any()),
     isRead: v.boolean(),
-    readAt: v.optional(v.float64()),
-    isEmailSent: v.boolean(),
-    isPushSent: v.boolean(),
-    expiresAt: v.optional(v.float64()),
-    metadata: v.optional(v.any()), // Additional data (JSON)
+    isArchived: v.optional(v.boolean()),
+    tags: v.optional(v.array(v.string())),
+    batchId: v.optional(v.string()),
+    parentNotificationId: v.optional(v.id('notifications')),
+    isTest: v.optional(v.boolean()),
   })
     .index('by_recipient', ['recipientId'])
     .index('by_unread', ['recipientId', 'isRead'])
     .index('by_type', ['type'])
-    .index('by_priority', ['priority']),
+    .index('by_priority', ['priority'])
+    .index('by_scheduled', ['scheduledAt'])
+    .index('by_sent', ['sentAt'])
+    .index('by_status', ['deliveryStatus'])
+    .index('by_category', ['category'])
+    .index('by_severity', ['severity'])
+    .index('by_entity', ['relatedEntityType', 'relatedEntityId'])
+    .index('by_batch', ['batchId'])
+    .index('by_parent', ['parentNotificationId'])
+    .index('by_test', ['isTest']),
+
+  // Notification templates for reusable messaging
+  notificationTemplates: defineTable({
+    name: v.string(),
+    subject: v.string(),
+    message: v.string(),
+    type: v.string(),
+    category: v.string(),
+    defaultChannels: v.array(v.string()),
+    variables: v.array(v.string()),
+    isActive: v.boolean(),
+    createdBy: v.id('users'),
+    lastModifiedBy: v.id('users'),
+    version: v.number(),
+  })
+    .index('by_name', ['name'])
+    .index('by_type', ['type'])
+    .index('by_category', ['category'])
+    .index('by_active', ['isActive']),
+
+  // User notification preferences
+  userNotificationPreferences: defineTable({
+    userId: v.id('users'),
+    channels: v.array(v.string()),
+    alertTypes: v.object({
+      progress_reminders: v.boolean(),
+      milestone_delays: v.boolean(),
+      system_alerts: v.boolean(),
+      escalations: v.boolean(),
+      weekly_reports: v.boolean(),
+      verification_updates: v.boolean(),
+      project_updates: v.boolean(),
+      transaction_notifications: v.boolean(),
+    }),
+    quietHours: v.optional(
+      v.object({
+        enabled: v.boolean(),
+        start: v.string(),
+        end: v.string(),
+        timezone: v.string(),
+      })
+    ),
+    frequency: v.object({
+      immediate: v.boolean(),
+      hourly: v.boolean(),
+      daily: v.boolean(),
+      weekly: v.boolean(),
+    }),
+    lastUpdated: v.number(),
+  })
+    .index('by_user', ['userId']),
 
   // ============= ANALYTICS & REPORTING =============
   analytics: defineTable({
