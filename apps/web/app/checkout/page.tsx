@@ -205,18 +205,18 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between text-sm text-gray-600">
                 <span>
-                  {orderSummary.quantity} credits × $
-                  {orderSummary.pricePerCredit}
+                  {orderSummary.quantity} credits × Rs.
+                  {orderSummary.pricePerCredit.toFixed(2)}
                 </span>
-                <span>${orderSummary.subtotal}</span>
+                <span>Rs. {orderSummary.subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Processing fees</span>
-                <span>${orderSummary.fees}</span>
+                <span>Rs. {orderSummary.fees.toFixed(2)}</span>
               </div>
               <div className="border-t pt-3 flex justify-between font-semibold text-lg">
                 <span>Total</span>
-                <span>${orderSummary.total}</span>
+                <span>Rs. {orderSummary.total.toFixed(2)}</span>
               </div>
             </div>
 

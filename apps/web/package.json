@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.28.1",
     "@echo-sprout/types": "*",
+    "@packages/backend": "^1.0.0",
     "@repo/ui": "*",
     "@types/react-pdf": "^7.0.0",
     "@types/uuid": "^11.0.0",

@@ -1,6 +1,5 @@
 'use client';
 
-import { api } from '@packages/backend/convex/_generated/api';
 import type { Id } from '@packages/backend/convex/_generated/dataModel';
 import { useMutation, useQuery } from 'convex/react';
 import { useParams, useRouter } from 'next/navigation';
@@ -10,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import type { Annotation } from '@/components/pdf';
 
 import { PDFViewer } from '../../../../components/pdf';
+import { api } from '@packages/backend';
 
 export default function ProjectReview() {
   const params = useParams();

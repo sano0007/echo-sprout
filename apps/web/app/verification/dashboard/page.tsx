@@ -3,8 +3,7 @@
 import { useQuery } from 'convex/react';
 import Link from 'next/link';
 import { useState } from 'react';
-
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 
 export default function VerificationDashboard() {
   const [activeTab, setActiveTab] = useState('pending');
