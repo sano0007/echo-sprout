@@ -100,15 +100,31 @@ export const validateImpactMetrics = query({
     const warnings: string[] = [];
 
     // Get project-specific thresholds
-    const config = await ctx.runQuery(
-      internal.monitoringConfig.getMonitoringConfig,
-      {
-        projectType,
-        configKey: 'impact_thresholds',
-      }
-    );
+    const config = await ctx.db
+      .query('monitoringConfig')
+      .withIndex('by_project_type_key', (q) =>
+        q.eq('projectType', projectType).eq('configKey', 'impact_thresholds')
+      )
+      .filter((q) => q.eq(q.field('isActive'), true))
+      .unique();
 
-    const thresholds = config?.configValue || {};
+    let configValue = {};
+    if (config) {
+      configValue = config.configValue;
+    } else {
+      // Try to get global config
+      const globalConfig = await ctx.db
+        .query('monitoringConfig')
+        .withIndex('by_project_type_key', (q) =>
+          q.eq('projectType', 'all').eq('configKey', 'impact_thresholds')
+        )
+        .filter((q) => q.eq(q.field('isActive'), true))
+        .unique();
+
+      configValue = globalConfig ? globalConfig.configValue : {};
+    }
+
+    const thresholds: any = configValue || {};
 
     // Validate each metric against thresholds
     for (const [metricName, value] of Object.entries(metrics)) {
@@ -304,12 +320,18 @@ export const getNextMilestoneDeadline = query({
       (a, b) => a.plannedDate - b.plannedDate
     )[0];
 
-    const daysUntil = await ctx.runQuery(
-      internal.monitoringUtils.calculateDaysUntilDeadline,
-      {
-        deadline: new Date(nextMilestone.plannedDate).toISOString(),
-      }
-    );
+    const deadlineDate = new Date(nextMilestone.plannedDate);
+    const now = new Date();
+    const diffTime = deadlineDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const daysUntil = {
+      days: diffDays,
+      isOverdue: diffDays < 0,
+      isUrgent: diffDays <= 3 && diffDays >= 0,
+      isApproaching: diffDays <= 7 && diffDays > 3,
+      deadline: deadlineDate.toISOString(),
+    };
 
     return {
       milestone: nextMilestone,
@@ -429,23 +451,84 @@ export const compareProjectPerformance = query({
     }
 
     // Calculate scores for all projects
-    const projectScore = await ctx.runQuery(
-      internal.monitoringUtils.calculateProjectProgressScore,
-      {
-        projectId,
-      }
+    // Get recent progress updates for the main project
+    const recentUpdates = await ctx.db
+      .query('progressUpdates')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .order('desc')
+      .take(10);
+
+    // Get project milestones for the main project
+    const milestones = await ctx.db
+      .query('projectMilestones')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+
+    // Calculate various score components
+    const timelineScore = calculateTimelineCompliance(project, milestones);
+    const updateFrequencyScore = calculateUpdateFrequency(recentUpdates);
+    const impactScore = calculateImpactAchievement(recentUpdates, project);
+    const qualityScore = calculateUpdateQuality(recentUpdates);
+
+    // Weighted overall score
+    const overallScore = Math.round(
+      timelineScore * 0.3 +
+        updateFrequencyScore * 0.2 +
+        impactScore * 0.3 +
+        qualityScore * 0.2
     );
+
+    const projectScore = {
+      overallScore: Math.max(0, Math.min(100, overallScore)),
+      breakdown: {
+        timeline: timelineScore,
+        updateFrequency: updateFrequencyScore,
+        impact: impactScore,
+        quality: qualityScore,
+      },
+      factors: {
+        totalUpdates: recentUpdates.length,
+        completedMilestones: milestones.filter((m) => m.status === 'completed')
+          .length,
+        totalMilestones: milestones.length,
+        daysActive: Math.floor(
+          (Date.now() - new Date(project.startDate).getTime()) /
+            (1000 * 60 * 60 * 24)
+        ),
+      },
+    };
 
     const similarScores = [];
     for (const similarProject of similarProjects) {
       try {
-        const score = await ctx.runQuery(
-          internal.monitoringUtils.calculateProjectProgressScore,
-          {
-            projectId: similarProject._id,
-          }
+        // Get recent progress updates for similar project
+        const similarUpdates = await ctx.db
+          .query('progressUpdates')
+          .withIndex('by_project', (q) => q.eq('projectId', similarProject._id))
+          .order('desc')
+          .take(10);
+
+        // Get project milestones for similar project
+        const similarMilestones = await ctx.db
+          .query('projectMilestones')
+          .withIndex('by_project', (q) => q.eq('projectId', similarProject._id))
+          .collect();
+
+        // Calculate score components
+        const timelineScore = calculateTimelineCompliance(similarProject, similarMilestones);
+        const updateFrequencyScore = calculateUpdateFrequency(similarUpdates);
+        const impactScore = calculateImpactAchievement(similarUpdates, similarProject);
+        const qualityScore = calculateUpdateQuality(similarUpdates);
+
+        // Weighted overall score
+        const overallScore = Math.round(
+          timelineScore * 0.3 +
+            updateFrequencyScore * 0.2 +
+            impactScore * 0.3 +
+            qualityScore * 0.2
         );
-        similarScores.push(score.overallScore);
+
+        similarScores.push(Math.max(0, Math.min(100, overallScore)));
       } catch (error) {
         // Skip projects that can't be scored
         continue;
@@ -641,12 +724,10 @@ function calculateLinearTrend(data: { x: number; y: number }[]) {
   return { slope, intercept, correlation };
 }
 
-// Export internal functions
-export const internal = {
-  monitoringUtils: {
-    calculateDaysUntilDeadline,
-    calculateProjectProgressScore,
-    validateProgressUpdate,
-    validateImpactMetrics,
-  },
+// Export internal functions for use by other modules
+export const monitoringUtilsInternal = {
+  calculateDaysUntilDeadline,
+  calculateProjectProgressScore,
+  validateProgressUpdate,
+  validateImpactMetrics,
 };
