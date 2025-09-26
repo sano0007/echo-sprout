@@ -12,6 +12,17 @@ import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
+} from "convex/server";
+import type * as documents from "../documents.js";
+import type * as http from "../http.js";
+import type * as marketplace from "../marketplace.js";
+import type * as notifications from "../notifications.js";
+import type * as permissions from "../permissions.js";
+import type * as users from "../users.js";
+import type * as verificationMessages from "../verificationMessages.js";
+import type * as verifications from "../verifications.js";
+import type * as verifier_assignment from "../verifier_assignment.js";
+import type * as workflow from "../workflow.js";
 } from 'convex/server';
 import type * as alert_escalation from '../alert-escalation.js';
 import type * as alert_generation from '../alert-generation.js';
@@ -46,6 +57,7 @@ import type * as validation_examples from '../validation-examples.js';
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  documents: typeof documents;
   'alert-escalation': typeof alert_escalation;
   'alert-generation': typeof alert_generation;
   'alert-management': typeof alert_management;
@@ -54,6 +66,8 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   'impact-validation': typeof impact_validation;
   marketplace: typeof marketplace;
+  notifications: typeof notifications;
+  permissions: typeof permissions;
   'monitoring-admin': typeof monitoring_admin;
   'monitoring-auth': typeof monitoring_auth;
   'monitoring-config': typeof monitoring_config;
@@ -68,6 +82,10 @@ declare const fullApi: ApiFromModules<{
   'third-party-validation': typeof third_party_validation;
   'trend-analysis': typeof trend_analysis;
   users: typeof users;
+  verificationMessages: typeof verificationMessages;
+  verifications: typeof verifications;
+  verifier_assignment: typeof verifier_assignment;
+  workflow: typeof workflow;
   'validation-examples': typeof validation_examples;
 }>;
 export declare const api: FilterApi<

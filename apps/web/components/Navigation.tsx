@@ -158,14 +158,8 @@ export default function Navigation() {
             </SignedIn>
 
             <SignedOut>
-              <Link
-                href="/auth/register"
-                className="hidden md:inline-flex bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Sign Up
-              </Link>
               <SignInButton mode="modal">
-                <button className="text-gray-700 hover:text-blue-600 transition-colors">
+                <button className="hidden md:inline-flex bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
                   Sign In
                 </button>
               </SignInButton>
