@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import type React from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
@@ -99,6 +99,7 @@ export default function LearnHub() {
   const guidesData = useQuery(api.learn.listGuides);
   const learningPaths = useQuery(api.learn.listLearningPaths);
   const createBlog = useMutation(api.learn.createBlog);
+  const recordLearnEnter = useMutation(api.learn.recordLearnPageEnter);
   const { isSignedIn } = useUser();
   const [isPublishing, setIsPublishing] = useState(false);
   const [toast, setToast] = useState<null | {
@@ -127,6 +128,16 @@ export default function LearnHub() {
     const dd = String(d.getDate()).padStart(2, '0');
     return `${d.getFullYear()}-${mm}-${dd}`;
   }, []);
+
+  // Record unique-user entry to Learn hub (one-time per mount)
+  const enteredRef = useRef(false);
+  useEffect(() => {
+    if (enteredRef.current) return;
+    enteredRef.current = true;
+    try {
+      recordLearnEnter({} as any).catch(() => {});
+    } catch {}
+  }, [recordLearnEnter]);
 
   const openModal = () => {
     setNewArticle((prev) => ({
@@ -270,7 +281,7 @@ export default function LearnHub() {
                 </p>
               </div>
 
-              {/* Create Learning Path CTA (placeholder for future CRUD page) */}
+              {/* Create Learning Path CTA (no analytics counting here) */}
               <div className="flex justify-end">
                 <Link
                   href="/learn/paths"
@@ -337,7 +348,7 @@ export default function LearnHub() {
                             alert('Please sign in to start the course.');
                             return;
                           }
-                          router.push(`/learn/paths/${module.id}`);
+                          router.push(`/learn/paths/${module.id}?from=learn`);
                         }}
                       >
                         {module.progress === 0

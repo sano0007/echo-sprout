@@ -641,3 +641,88 @@ export const deleteLesson = mutation({
     });
   },
 });
+
+// ============ SIMPLE ANALYTICS: LEARN PATH ENTRY VIEWS ============
+export const recordPathsEntry = mutation({
+  args: { source: v.optional(v.string()) },
+  async handler(ctx, { source }) {
+    // Write a simple event row into analytics table
+    await ctx.db.insert('analytics', {
+      metric: 'learn_paths_entry',
+      value: 1,
+      date: Date.now(),
+      metadata: source ? { source } : undefined,
+    } as any);
+  },
+});
+
+export const totalPathsEntries = query({
+  args: {},
+  async handler(ctx) {
+    const rows = await ctx.db
+      .query('analytics')
+      .withIndex('by_metric', (q) => q.eq('metric', 'learn_paths_entry'))
+      .collect();
+    return rows.reduce((sum, r: any) => sum + (r.value ?? 0), 0);
+  },
+});
+
+// Unique-user engagement metrics
+export const recordLearnPageEnter = mutation({
+  args: {},
+  async handler(ctx) {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) return;
+    await ctx.db.insert('analytics', {
+      metric: 'learn_page_enter_user',
+      value: 1,
+      date: Date.now(),
+      metadata: { userId: user._id },
+    } as any);
+  },
+});
+
+export const recordCourseStart = mutation({
+  args: { pathId: v.optional(v.string()) },
+  async handler(ctx, { pathId }) {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) return;
+    await ctx.db.insert('analytics', {
+      metric: 'learn_course_start_user',
+      value: 1,
+      date: Date.now(),
+      metadata: { userId: user._id, pathId },
+    } as any);
+  },
+});
+
+export const engagementPercent = query({
+  args: {},
+  async handler(ctx) {
+    const enters = await ctx.db
+      .query('analytics')
+      .withIndex('by_metric', (q) => q.eq('metric', 'learn_page_enter_user'))
+      .collect();
+    const starts = await ctx.db
+      .query('analytics')
+      .withIndex('by_metric', (q) => q.eq('metric', 'learn_course_start_user'))
+      .collect();
+
+    const enterUsers = new Set<string>();
+    for (const r of enters as any[]) {
+      const key = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      if (key) enterUsers.add(key);
+    }
+    const startUsers = new Set<string>();
+    for (const r of starts as any[]) {
+      const key = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      if (key) startUsers.add(key);
+    }
+
+    const denom = enterUsers.size || 0;
+    const num = startUsers.size || 0;
+    if (denom === 0) return 0;
+    const pct = Math.round((num / denom) * 100);
+    return pct;
+  },
+});

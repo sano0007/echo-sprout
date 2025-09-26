@@ -44,6 +44,8 @@ export default function LearningPathsCreatePage() {
     lessons: [],
   });
 
+  // Note: We intentionally do NOT record views on the paths index page.
+
   const update = (name: keyof FormState, value: string | number | boolean) =>
     setForm((f) => ({ ...f, [name]: value }));
 

@@ -425,3 +425,27 @@ export const downvoteReply = mutation({
     }
   },
 });
+
+// List all users who have replied at least once, with reply counts
+export const replyContributors = query({
+  args: {},
+  handler: async (ctx) => {
+    const replies = await ctx.db.query('forumReplies').collect();
+    const counts = new Map<string, { userId: any; count: number }>();
+    for (const r of replies as any[]) {
+      const key = (r.authorId?.id as unknown as string) || String(r.authorId);
+      const cur = counts.get(key) ?? { userId: r.authorId, count: 0 };
+      cur.count += 1;
+      counts.set(key, cur);
+    }
+    const entries = Array.from(counts.values());
+    const users = await Promise.all(entries.map((e) => ctx.db.get(e.userId)));
+    const result = entries.map((e, i) => {
+      const u = users[i] as any;
+      const name = u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || u.email : 'Unknown';
+      return { userId: (e.userId?.id as unknown as string) || String(e.userId), name, replies: e.count };
+    });
+    result.sort((a, b) => b.replies - a.replies);
+    return result;
+  },
+});

@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import Link from 'next/link';
 
 export default function LearningPathDetailsPage() {
   const params = useParams();
+  const search = useSearchParams();
+  const router = useRouter();
   const id = useMemo(
     () => (Array.isArray(params?.id) ? params.id[0] : (params?.id as string)),
     [params]
@@ -21,6 +23,8 @@ export default function LearningPathDetailsPage() {
   const deletePath = useMutation(api.learn.deleteLearningPath);
   const updateLesson = useMutation(api.learn.updateLesson);
   const deleteLesson = useMutation(api.learn.deleteLesson);
+  const recordEntry = useMutation(api.learn.recordPathsEntry);
+  const recordStart = useMutation(api.learn.recordCourseStart);
 
   const [editingPath, setEditingPath] = useState(false);
   const [pathForm, setPathForm] = useState<any>(null);
@@ -33,6 +37,27 @@ export default function LearningPathDetailsPage() {
   const [videoChecked, setVideoChecked] = useState<Record<string, boolean>>({});
   const toggleVideo = (key: string) =>
     setVideoChecked((c) => ({ ...c, [key]: !c[key] }));
+
+  const recordedRef = useRef(false);
+  useEffect(() => {
+    if (recordedRef.current) return;
+    try {
+      const from = search?.get('from');
+      if (from === 'learn') {
+        recordedRef.current = true;
+        // Record exactly once for this entry (view + course start), then strip the query param
+        recordEntry({ source: 'learn' } as any)
+          .catch(() => {})
+          .finally(() => {
+            try {
+              router.replace(`/learn/paths/${id}`);
+            } catch {}
+          });
+        recordStart({ pathId: String(id) } as any).catch(() => {});
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!id) {
     return (

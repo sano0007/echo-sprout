@@ -7,6 +7,8 @@ import { api } from '@packages/backend/convex/_generated/api';
 export default function LearnAnalyticsPage() {
   const learningPaths = useQuery(api.learn.listLearningPaths);
   const allTopics = useQuery((api as any).forum.listAllTopics, {});
+  const views = useQuery(api.learn.totalPathsEntries);
+  const contributors = useQuery((api as any).forum.replyContributors, {});
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -23,7 +25,10 @@ export default function LearnAnalyticsPage() {
           <div className="text-2xl font-semibold">{learningPaths ? learningPaths.length : '—'}</div>
         </div>
         <KpiCard title="Published" value="—" />
-        <KpiCard title="Views" value="—" />
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="text-sm text-gray-500">Views</div>
+          <div className="text-2xl font-semibold">{typeof views === 'number' ? views : '—'}</div>
+        </div>
         <KpiCard title="Engagement" value="—" />
       </div>
 
@@ -81,7 +86,32 @@ export default function LearnAnalyticsPage() {
               )}
             </ul>
           </div>
-          <PlaceholderList title="Top Contributors" />
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="font-medium mb-2">Top Contributors</div>
+            <ul className="divide-y">
+              {contributors ? (
+                (contributors as any[]).length ? (
+                  (contributors as any[])
+                    .slice(0, 5)
+                    .map((c: any) => (
+                    <li key={c.userId} className="py-2">
+                      <div className="text-sm font-medium text-gray-900 truncate">{c.name}</div>
+                      <div className="text-xs text-gray-500">{c.replies} replies</div>
+                    </li>
+                  ))
+                ) : (
+                  <li className="py-2 text-sm text-gray-500">No contributors yet</li>
+                )
+              ) : (
+                <>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
+                </>
+              )}
+            </ul>
+          </div>
         </div>
       </Section>
     </div>
