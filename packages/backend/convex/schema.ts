@@ -93,7 +93,12 @@ export default defineSchema({
     .index('by_type', ['projectType'])
     .index('by_verification_status', ['verificationStatus'])
     .index('by_verifier', ['assignedVerifierId'])
-    .index('by_credits_available', ['status', 'creditsAvailable']),
+    .index('by_credits_available', ['status', 'creditsAvailable'])
+    // Enhanced indexes for monitoring
+    .index('by_creator_status', ['creatorId', 'status'])
+    .index('by_type_status', ['projectType', 'status'])
+    .index('by_status_completion', ['status', 'expectedCompletionDate'])
+    .index('by_verifier_status', ['assignedVerifierId', 'status']),
 
   // ============= CARBON CREDITS & TRADING =============
   carbonCredits: defineTable({
@@ -308,7 +313,12 @@ export default defineSchema({
     .index('by_reporter', ['reportedBy'])
     .index('by_date', ['reportingDate'])
     .index('by_type', ['updateType'])
-    .index('by_verification', ['isVerified']),
+    .index('by_verification', ['isVerified'])
+    // Enhanced indexes for monitoring
+    .index('by_project_date', ['projectId', 'reportingDate'])
+    .index('by_project_type', ['projectId', 'updateType'])
+    .index('by_project_verified', ['projectId', 'isVerified'])
+    .index('by_date_type', ['reportingDate', 'updateType']),
 
   // ============= EDUCATIONAL CONTENT =============
   educationalContent: defineTable({
@@ -447,17 +457,23 @@ export default defineSchema({
     entityId: v.string(), // ID of the affected entity
     oldValues: v.optional(v.any()), // Previous state (JSON)
     newValues: v.optional(v.any()), // New state (JSON)
-    metadata: v.optional(v.any()), // Additional context (JSON)(
-    //     v.literal("info"),
-    //     v.literal("warning"),
-    //     v.literal("error"),
-    //     v.literal("critical")
-    // )
-    // severity: v.union,
+    metadata: v.optional(v.any()), // Additional context (JSON)
+    severity: v.optional(
+      v.union(
+        v.literal('info'),
+        v.literal('warning'),
+        v.literal('error'),
+        v.literal('critical')
+      )
+    ),
   })
     .index('by_user', ['userId'])
     .index('by_entity', ['entityType', 'entityId'])
-    .index('by_action', ['action']),
+    .index('by_action', ['action'])
+    // Enhanced indexes for monitoring
+    .index('by_user_action', ['userId', 'action'])
+    .index('by_severity', ['severity'])
+    .index('by_entity_time', ['entityType', 'entityId', '_creationTime']),
 
   // System notifications
   // notifications: defineTable({
@@ -491,8 +507,99 @@ export default defineSchema({
     value: v.number(),
     date: v.float64(),
     metadata: v.optional(v.any()), // Context data (JSON)
+    // Additional fields for monitoring analytics
+    projectId: v.optional(v.id('projects')), // For project-specific metrics
+    category: v.optional(v.string()), // "monitoring", "performance", "impact", etc.
   })
     .index('by_metric', ['metric'])
     .index('by_date', ['date'])
-    .index('by_metric_date', ['metric', 'date']),
+    .index('by_metric_date', ['metric', 'date'])
+    // Enhanced indexes for monitoring analytics
+    .index('by_category', ['category'])
+    .index('by_project', ['projectId'])
+    .index('by_project_metric', ['projectId', 'metric'])
+    .index('by_category_date', ['category', 'date']),
+
+  // ============= MONITORING & TRACKING SYSTEM =============
+  projectMilestones: defineTable({
+    projectId: v.id('projects'),
+    milestoneType: v.union(
+      v.literal('setup'),
+      v.literal('progress_25'),
+      v.literal('progress_50'),
+      v.literal('progress_75'),
+      v.literal('impact_first'),
+      v.literal('verification'),
+      v.literal('completion')
+    ),
+    title: v.string(),
+    description: v.string(),
+    plannedDate: v.float64(),
+    actualDate: v.optional(v.float64()),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('in_progress'),
+      v.literal('completed'),
+      v.literal('delayed'),
+      v.literal('skipped')
+    ),
+    delayReason: v.optional(v.string()),
+    impactOnTimeline: v.optional(v.string()),
+    order: v.number(), // For milestone ordering
+    isRequired: v.boolean(), // Is this milestone mandatory
+  })
+    .index('by_project', ['projectId'])
+    .index('by_project_status', ['projectId', 'status'])
+    .index('by_project_order', ['projectId', 'order'])
+    .index('by_milestone_type', ['milestoneType'])
+    .index('by_planned_date', ['plannedDate'])
+    .index('by_status_date', ['status', 'plannedDate']),
+
+  systemAlerts: defineTable({
+    projectId: v.id('projects'),
+    alertType: v.union(
+      v.literal('progress_reminder'),
+      v.literal('overdue_warning'),
+      v.literal('milestone_delay'),
+      v.literal('impact_shortfall'),
+      v.literal('quality_concern'),
+      v.literal('document_missing'),
+      v.literal('verification_overdue')
+    ),
+    severity: v.union(
+      v.literal('low'),
+      v.literal('medium'),
+      v.literal('high'),
+      v.literal('critical')
+    ),
+    title: v.string(),
+    message: v.string(),
+    targetUserId: v.optional(v.id('users')), // Specific user this alert is for
+    isResolved: v.boolean(),
+    resolvedAt: v.optional(v.float64()),
+    resolvedBy: v.optional(v.id('users')),
+    resolutionNotes: v.optional(v.string()),
+    notificationsSent: v.array(v.id('users')),
+    escalationLevel: v.number(), // 0-3 (0=initial, 3=final warning)
+    nextEscalationAt: v.optional(v.float64()),
+    metadata: v.optional(v.any()), // Additional context data
+  })
+    .index('by_project', ['projectId'])
+    .index('by_project_severity', ['projectId', 'severity'])
+    .index('by_alert_type', ['alertType'])
+    .index('by_severity', ['severity'])
+    .index('by_unresolved', ['isResolved'])
+    .index('by_target_user', ['targetUserId'])
+    .index('by_escalation', ['nextEscalationAt']),
+
+  monitoringConfig: defineTable({
+    projectType: v.string(),
+    configKey: v.string(), // "reminder_schedule", "thresholds", etc.
+    configValue: v.any(), // JSON configuration data
+    isActive: v.boolean(),
+    description: v.optional(v.string()),
+  })
+    .index('by_project_type', ['projectType'])
+    .index('by_project_type_key', ['projectType', 'configKey'])
+    .index('by_active', ['isActive']),
 });
