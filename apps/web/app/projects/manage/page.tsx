@@ -9,6 +9,9 @@ export default function ManageProjects() {
   const projects = useQuery(api.projects.getUserProjects);
   const updateProject = useMutation(api.projects.updateProject);
   const deleteProject = useMutation(api.projects.deleteProject);
+  const submitForVerification = useMutation(
+    api.projects.submitProjectForVerification
+  );
 
   // Details modal state
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -66,7 +69,6 @@ export default function ManageProjects() {
       case 'approved':
         return 'bg-green-100 text-green-800';
       case 'under_review':
-      case 'submitted':
         return 'bg-yellow-100 text-yellow-800';
       case 'draft':
         return 'bg-gray-100 text-gray-800';
@@ -81,14 +83,29 @@ export default function ManageProjects() {
     }
   };
 
+  const getVerificationStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-orange-100 text-orange-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'verified':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'revision_required':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'approved':
         return 'Approved';
       case 'under_review':
         return 'Under Review';
-      case 'submitted':
-        return 'Submitted';
       case 'draft':
         return 'Draft';
       case 'rejected':
@@ -183,14 +200,19 @@ export default function ManageProjects() {
 
   const handleSubmitForReview = async (projectId: Id<'projects'>) => {
     try {
-      await updateProject({
+      const result = await submitForVerification({
         projectId,
-        status: 'submitted',
+        priority: 'normal',
       });
-      alert('Project submitted for review successfully!');
+
+      if (result.success) {
+        alert(
+          result.message || 'Project submitted for verification successfully!'
+        );
+      }
     } catch (error) {
-      console.error('Error submitting project for review:', error);
-      alert('Failed to submit project for review. Please try again.');
+      console.error('Error submitting project for verification:', error);
+      alert('Failed to submit project for verification. Please try again.');
     }
   };
 
@@ -303,11 +325,22 @@ export default function ManageProjects() {
                       {project.creator.lastName}
                     </p>
                   </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}
-                  >
-                    {getStatusText(project.status)}
-                  </span>
+                  <div className="flex flex-col gap-2">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}
+                    >
+                      {getStatusText(project.status)}
+                    </span>
+                    {project.verificationStatus &&
+                      project.status !== 'draft' && (
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getVerificationStatusColor(project.verificationStatus)}`}
+                        >
+                          Verification:{' '}
+                          {project.verificationStatus.replace('_', ' ')}
+                        </span>
+                      )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -392,8 +425,16 @@ export default function ManageProjects() {
                         }
                         className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
                       >
-                        Submit for Review
+                        Submit for Verification
                       </button>
+                    )}
+                    {project.verificationStatus === 'in_progress' && (
+                      <a
+                        href={`/verification/review/${project._id}`}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                      >
+                        View Verification
+                      </a>
                     )}
                     <button
                       onClick={() =>
