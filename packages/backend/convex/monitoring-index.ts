@@ -5,25 +5,95 @@
  * and serves as the main entry point for the monitoring functionality.
  */
 
-// Re-export all monitoring functions
-export * from './monitoring';
-export * from './monitoring-config';
-export * from './monitoring-auth';
-export * from './monitoring-utils';
-export * from './progress-updates';
-export * from './progress-validation';
-export * from './automated-monitoring';
-export * from './monitoring-admin';
-export * from './alert-generation';
-export * from './alert-management';
-export * from './alert-escalation';
-export * from './notifications';
+// Re-export monitoring functions with explicit naming to avoid conflicts
+export {
+  monitorProjectProgress as coreMonitorProjectProgress,
+  sendAlertNotification as coreSendAlertNotification,
+  dailyProjectMonitoring,
+  hourlyUrgentMonitoring,
+  weeklyReportGeneration,
+  getActiveProjects,
+  getCriticalAlerts,
+  getProjectProgressUpdates,
+  checkOverdueMilestones,
+  processAlertNotifications,
+  generateWeeklyAnalytics,
+  sendWeeklyReports,
+} from './monitoring';
 
-// Environmental Impact Validation System
-export * from './impact-validation';
-export * from './project-validators';
-export * from './trend-analysis';
-export * from './third-party-validation';
+export {
+  getMonitoringConfig,
+  setMonitoringConfig,
+  initializeDefaultConfigs,
+  getConfigValue,
+  validateMetricValue,
+} from './monitoring-config';
+
+export {
+  getCurrentUserWithRole,
+  hasMonitoringPermission,
+  requireMonitoringPermission,
+  canAccessProjectForMonitoring,
+  canManageAlert,
+  getMonitoringAccessLevel,
+  getAccessibleProjectsForMonitoring,
+  getAccessibleAlerts,
+  logMonitoringAction,
+  validateMonitoringSession,
+  grantMonitoringAccess,
+  revokeMonitoringAccess,
+} from './monitoring-auth';
+
+export {
+  validateProgressUpdate,
+  validateImpactMetrics,
+  calculateProjectProgressScore,
+  calculateCreditPotential,
+  calculateDaysUntilDeadline,
+  getNextMilestoneDeadline,
+  analyzeProgressTrends,
+  compareProjectPerformance as utilsCompareProjectPerformance,
+} from './monitoring-utils';
+
+export {
+  submitProgressUpdate,
+} from './progress-updates';
+
+export {
+  internal as progressValidationInternal,
+} from './progress-validation';
+
+export {
+  generateAlert,
+} from './alert-generation';
+
+export {
+  getAlerts,
+  updateAlert,
+} from './alert-management';
+
+export {
+  processEscalation,
+} from './alert-escalation';
+
+export {
+  getNotificationStats,
+  updateNotificationPreferences,
+  sendImmediateAlert,
+  sendEscalationNotification,
+  sendProgressReminders,
+  sendWeeklyReport,
+  getUserNotifications,
+  markAsRead,
+  markAllAsRead,
+} from './notifications';
+
+// Environmental Impact Validation System - export types separately
+export type { ValidationResult as ImpactValidationResult } from './impact-validation';
+
+export {
+  validateEnvironmentalMetrics,
+} from './impact-validation';
 
 // Re-export types
 export * from '../types/monitoring-types';
