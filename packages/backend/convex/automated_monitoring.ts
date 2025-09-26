@@ -45,7 +45,7 @@ export const enhancedDailyMonitoring = internalAction({
         delayedMilestones: number;
         activeAlerts: number;
         criticalAlerts: number;
-      } = await ctx.runQuery(internal['automated-monitoring'].getMonitoringStats);
+      } = await ctx.runQuery(internal.automated_monitoring.getMonitoringStats);
       console.log(
         `📊 Monitoring overview: ${stats.activeProjects} active, ${stats.overdueReports} overdue reports, ${stats.delayedMilestones} delayed milestones`
       );
@@ -53,17 +53,17 @@ export const enhancedDailyMonitoring = internalAction({
       // Run monitoring tasks in parallel for better performance
       const [projectAlerts, milestoneAlerts, reportAlerts, anomalyAlerts]: number[] =
         await Promise.all([
-          ctx.runMutation(internal['automated-monitoring'].monitorProjectProgress),
-          ctx.runMutation(internal['automated-monitoring'].monitorMilestoneDelays),
-          ctx.runMutation(internal['automated-monitoring'].monitorReportDeadlines),
-          ctx.runMutation(internal['automated-monitoring'].detectProjectAnomalies),
+          ctx.runMutation(internal.automated_monitoring.monitorProjectProgress),
+          ctx.runMutation(internal.automated_monitoring.monitorMilestoneDelays),
+          ctx.runMutation(internal.automated_monitoring.monitorReportDeadlines),
+          ctx.runMutation(internal.automated_monitoring.detectProjectAnomalies),
         ]);
 
       const totalAlerts: number =
         projectAlerts + milestoneAlerts + reportAlerts + anomalyAlerts;
 
       // Generate daily monitoring report
-      await ctx.runMutation(internal['automated-monitoring'].generateDailyMonitoringReport, {
+      await ctx.runMutation(internal.automated_monitoring.generateDailyMonitoringReport, {
         stats: {
           ...stats,
           alertsGenerated: totalAlerts,
@@ -73,7 +73,7 @@ export const enhancedDailyMonitoring = internalAction({
 
       // Process notifications for high-priority alerts
       if (totalAlerts > 0) {
-        await ctx.runAction(internal['automated-monitoring'].processHighPriorityNotifications);
+        await ctx.runAction(internal.automated_monitoring.processHighPriorityNotifications);
       }
 
       const duration = (Date.now() - startTime) / 1000;
@@ -93,7 +93,7 @@ export const enhancedDailyMonitoring = internalAction({
       console.error('❌ Enhanced daily monitoring failed:', error);
 
       // Log the failure for analysis
-      await ctx.runMutation(internal['automated-monitoring'].logMonitoringFailure, {
+      await ctx.runMutation(internal.automated_monitoring.logMonitoringFailure, {
         errorMessage: (error as Error).message,
         processingTime: Date.now() - startTime,
       });
@@ -545,7 +545,6 @@ export const monitorReportDeadlines = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
-    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
     let alertsGenerated = 0;
 
     // Get all active projects
@@ -895,7 +894,7 @@ function detectProgressAnomalies(progressValues: number[]): any {
 /**
  * Detect metric anomalies
  */
-function detectMetricAnomalies(updates: any[], projectType: string): any {
+function detectMetricAnomalies(updates: any[], _projectType: string): any {
   // Focus on cumulative metrics that shouldn't decrease
   const cumulativeMetrics = [
     'carbonImpactToDate',
@@ -988,8 +987,7 @@ export const getUrgentAlerts = internalQuery({
           q.or(
             q.eq(q.field('severity'), 'high'),
             q.eq(q.field('severity'), 'critical')
-          ),
-          q.eq(q.field('metadata'), undefined)
+          )
         )
       )
       .collect();
@@ -1003,11 +1001,11 @@ export const processHighPriorityNotifications = internalAction({
   args: {},
   handler: async (ctx) => {
     // Get high and critical severity alerts that haven't been notified
-    const urgentAlerts = await ctx.runQuery(internal['automated-monitoring'].getUrgentAlerts);
+    const urgentAlerts = await ctx.runQuery(internal.automated_monitoring.getUrgentAlerts);
 
     // Process notifications for each alert
     for (const alert of urgentAlerts) {
-      await ctx.runMutation(internal['automated-monitoring'].sendAlertNotification, {
+      await ctx.runMutation(internal.automated_monitoring.sendAlertNotification, {
         alertId: alert._id,
       });
     }
