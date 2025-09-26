@@ -8,6 +8,8 @@ export const handleStripeWebhook = httpAction(
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');
 
+    console.log('🥳🥳🥳 Received Stripe webhook request');
+
     if (!signature) {
       console.error('Missing stripe-signature header');
       return new Response('Missing stripe-signature header', { status: 400 });
@@ -17,7 +19,7 @@ export const handleStripeWebhook = httpAction(
     const stripe = StripeService.getStripeInstance();
 
     try {
-      event = stripe.webhooks.constructEvent(
+      event = await stripe.webhooks.constructEventAsync(
         body,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!

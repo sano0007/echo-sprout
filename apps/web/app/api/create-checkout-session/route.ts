@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StripeService } from '@packages/backend/services/stripe-service';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 
 export async function POST(request: NextRequest) {
   try {
+    // Get authenticated user from Clerk
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized - please sign in' },
+        { status: 401 }
+      );
+    }
+
     const { amount, credits } = await request.json();
 
     if (!amount || !credits) {
@@ -19,8 +30,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get user details from Clerk to extract email
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+
+    const userEmail = user.emailAddresses.find((email) => email.id === user.primaryEmailAddressId)?.emailAddress;
+
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: 'User email not found' },
+        { status: 400 }
+      );
+    }
+
     const stripeService = new StripeService();
-    const session = await stripeService.createCheckoutSession(amount, credits);
+    const session = await stripeService.createCheckoutSession(amount, credits, userEmail);
 
     return NextResponse.json({
       success: true,

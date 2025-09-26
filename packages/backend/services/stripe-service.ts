@@ -21,7 +21,7 @@ export class StripeService {
   public async createCheckoutSession(
     amount: number,
     credits: number,
-    projectId?: string
+    email: string
   ) {
     const stripe = StripeService.getStripeInstance();
 
@@ -32,6 +32,7 @@ export class StripeService {
     return await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
+      customer_email: email,
       line_items: [
         {
           price_data: {
