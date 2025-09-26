@@ -1,63 +1,74 @@
-'use client';
+
+
+"use client";
 
 import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 
 export default function LearnAnalyticsPage() {
   const learningPaths = useQuery(api.learn.listLearningPaths);
-  const allTopics = useQuery((api as any).forum.listAllTopics, {});
   const views = useQuery(api.learn.totalPathsEntries);
+  const engagement = useQuery(api.learn.engagementPercent);
+  const totalUsers = useQuery((api as any).users.totalUsers, {});
+
+  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const defaultFromIso = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 29);
+    return d.toISOString().slice(0, 10);
+  }, []);
+
+  const [viewsFromIso, setViewsFromIso] = useState<string>(defaultFromIso);
+  const [viewsToIso, setViewsToIso] = useState<string>(todayIso);
+  const [topicsFromIso, setTopicsFromIso] = useState<string>(defaultFromIso);
+  const [topicsToIso, setTopicsToIso] = useState<string>(todayIso);
+  const [viewsEngFromIso, setViewsEngFromIso] = useState<string>(defaultFromIso);
+  const [viewsEngToIso, setViewsEngToIso] = useState<string>(todayIso);
+
+  const viewsRange = useQuery(api.learn.viewsByDateRange, { from: viewsFromIso, to: viewsToIso });
+  const topicsRange = useQuery((api as any).forum.topicsByDateRange, { from: topicsFromIso, to: topicsToIso });
+  const viewsEngRange = useQuery(api.learn.viewsAndEngagementByRange, { from: viewsEngFromIso, to: viewsEngToIso });
   const topByViews = useQuery(api.learn.pathsByViews);
   const topByEngagement = useQuery(api.learn.pathsByEngagement);
-  const engagement = useQuery(api.learn.engagementPercent);
+  const allTopics = useQuery((api as any).forum.listAllTopics, {});
   const contributors = useQuery((api as any).forum.replyContributors, {});
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-3xl font-bold">Education & Forum Analytics</h1>
-        <Link href="/learn" className="text-blue-600 hover:underline">
-          Back to Learn
-        </Link>
+        <Link href="/learn" className="text-blue-600 hover:underline">Back to Learn</Link>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Total Content</div>
-          <div className="text-2xl font-semibold">{learningPaths ? learningPaths.length : '—'}</div>
-        </div>
-        <KpiCard title="Published" value="—" />
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Views</div>
-          <div className="text-2xl font-semibold">{typeof views === 'number' ? views : '—'}</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-500">Engagement</div>
-          <div className="text-2xl font-semibold">
-            {typeof engagement === 'number' ? `${engagement}%` : '—'}
-          </div>
-        </div>
+        <Kpi title="Total Content" value={learningPaths ? (learningPaths as any[])?.length ?? '—' : '—'} />
+        <Kpi title="Total Users" value={typeof totalUsers === 'number' ? totalUsers : '—'} />
+        <Kpi title="Views" value={typeof views === 'number' ? views : '—'} />
+        <Kpi title="Engagement" value={typeof engagement === 'number' ? `${engagement}%` : '—'} />
       </div>
 
-      {/* Trends (static placeholders) */}
       <Section title="Trends (Last 30 Days)">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <PlaceholderChart title="Content Views" />
-          <PlaceholderChart title="Forum Topics" />
+          <div className="space-y-3">
+            <DateRangePicker from={viewsFromIso} to={viewsToIso} onChange={(f,t)=>{setViewsFromIso(f);setViewsToIso(t);}} />
+            <ViewsLineChart data={viewsRange} />
+          </div>
+          <div className="space-y-3">
+            <DateRangePicker from={topicsFromIso} to={topicsToIso} onChange={(f,t)=>{setTopicsFromIso(f);setTopicsToIso(t);}} />
+            <ForumTopicsChart data={topicsRange} />
+          </div>
         </div>
       </Section>
 
-      {/* Content Mix (static placeholders) */}
-      <Section title="Content Mix">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <PlaceholderBars title="By Category" />
-          <PlaceholderBars title="By Type" />
-          <PlaceholderBars title="By Difficulty" />
+      <Section title="Views vs Engagements">
+        <div className="space-y-3">
+          <DateRangePicker from={viewsEngFromIso} to={viewsEngToIso} onChange={(f,t)=>{setViewsEngFromIso(f);setViewsEngToIso(t);}} />
+          <ViewsEngagementsAreaChart data={viewsEngRange} />
         </div>
       </Section>
 
-      {/* Lists */}
       <Section title="Top Content">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
@@ -65,7 +76,6 @@ export default function LearnAnalyticsPage() {
             <ul className="divide-y">
               {topByViews === undefined ? (
                 <>
-                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
@@ -87,7 +97,6 @@ export default function LearnAnalyticsPage() {
             <ul className="divide-y">
               {topByEngagement === undefined ? (
                 <>
-                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
@@ -114,7 +123,7 @@ export default function LearnAnalyticsPage() {
             <ul className="divide-y">
               {allTopics ? (
                 (() => {
-                  const filtered = (allTopics as any[]).filter((t: any) => (t.replies ?? 0) === 0);
+                  const filtered = (allTopics as any[]).filter((t: any) => (t.replyCount ?? 0) === 0);
                   return filtered.length ? (
                     filtered.slice(0, 5).map((t: any) => (
                       <li key={t.id as any} className="py-2">
@@ -128,8 +137,6 @@ export default function LearnAnalyticsPage() {
                 })()
               ) : (
                 <>
-                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
-                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                 </>
@@ -156,8 +163,6 @@ export default function LearnAnalyticsPage() {
                 <>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
-                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
-                  <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                 </>
               )}
             </ul>
@@ -168,7 +173,7 @@ export default function LearnAnalyticsPage() {
   );
 }
 
-function KpiCard({ title, value }: { title: string; value: string | number }) {
+function Kpi({ title, value }: { title: string; value: string | number }) {
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <div className="text-sm text-gray-500">{title}</div>
@@ -186,41 +191,108 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function PlaceholderChart({ title }: { title: string }) {
+function DateRangePicker({ from, to, onChange }: { from: string; to: string; onChange: (f:string,t:string)=>void }){
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <div className="font-medium mb-2">{title}</div>
-      <div className="h-48 w-full bg-gray-100 rounded animate-pulse" />
-    </div>
-  );
-}
-
-function PlaceholderBars({ title }: { title: string }) {
-  return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <div className="font-medium mb-2">{title}</div>
-      <div className="space-y-2">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="w-full bg-gray-100 rounded h-3 animate-pulse" />
-        ))}
+      <div className="font-medium mb-2">Date Range</div>
+      <div className="flex items-center gap-3">
+        <input type="date" className="border rounded px-2 py-1 text-sm" value={from} max={to} onChange={(e)=>onChange(e.target.value,to)} />
+        <span className="text-gray-500">to</span>
+        <input type="date" className="border rounded px-2 py-1 text-sm" value={to} min={from} max={new Date().toISOString().slice(0,10)} onChange={(e)=>onChange(from,e.target.value)} />
       </div>
     </div>
   );
 }
 
-function PlaceholderList({ title }: { title: string }) {
+function ViewsLineChart({ data }: { data: { date: string; value: number }[] | undefined }) {
+  const Recharts = require('recharts') as typeof import('recharts');
+  const items = Array.isArray(data) ? data : [];
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <div className="font-medium mb-2">{title}</div>
-      <ul className="divide-y">
-        {[0, 1, 2, 3].map((i) => (
-          <li key={i} className="py-2">
-            <div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse" />
-            <div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse" />
-          </li>
-        ))}
-      </ul>
+      <div className="font-medium mb-2">Content Views</div>
+      <div className="h-64">
+        {data === undefined ? (
+          <div className="h-full w-full bg-gray-100 rounded animate-pulse" />
+        ) : items.length === 0 ? (
+          <div className="text-sm text-gray-500">No data</div>
+        ) : (
+          <Recharts.ResponsiveContainer width="100%" height="100%">
+            <Recharts.LineChart data={items} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
+              <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <Recharts.XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6B7280' }} tickMargin={8} minTickGap={24} />
+              <Recharts.YAxis tick={{ fontSize: 12, fill: '#6B7280' }} width={40} allowDecimals={false} />
+              <Recharts.Tooltip contentStyle={{ fontSize: 12 }} labelStyle={{ fontWeight: 600 }} />
+              <Recharts.Line type="monotone" dataKey="value" stroke="#2563EB" strokeWidth={2} dot={false} />
+            </Recharts.LineChart>
+          </Recharts.ResponsiveContainer>
+        )}
+      </div>
     </div>
   );
 }
 
+function ForumTopicsChart({ data }: { data: { date: string; value: number }[] | undefined }) {
+  const Recharts = require('recharts') as typeof import('recharts');
+  const items = Array.isArray(data) ? data : [];
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <div className="font-medium mb-2">Forum Topics</div>
+      <div className="h-64">
+        {data === undefined ? (
+          <div className="h-full w-full bg-gray-100 rounded animate-pulse" />
+        ) : items.length === 0 ? (
+          <div className="text-sm text-gray-500">No data</div>
+        ) : (
+          <Recharts.ResponsiveContainer width="100%" height="100%">
+            <Recharts.LineChart data={items} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
+              <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <Recharts.XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6B7280' }} tickMargin={8} minTickGap={24} />
+              <Recharts.YAxis tick={{ fontSize: 12, fill: '#6B7280' }} width={40} allowDecimals={false} />
+              <Recharts.Tooltip contentStyle={{ fontSize: 12 }} labelStyle={{ fontWeight: 600 }} />
+              <Recharts.Line type="monotone" dataKey="value" stroke="#10B981" strokeWidth={2} dot={false} />
+            </Recharts.LineChart>
+          </Recharts.ResponsiveContainer>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ViewsEngagementsAreaChart({ data }: { data: { date: string; views: number; engagement: number }[] | undefined }) {
+  const Recharts = require('recharts') as typeof import('recharts');
+  const items = Array.isArray(data) ? data : [];
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <div className="font-medium mb-2">Views vs Engagements</div>
+      <div className="h-72">
+        {data === undefined ? (
+          <div className="h-full w-full bg-gray-100 rounded animate-pulse" />
+        ) : items.length === 0 ? (
+          <div className="text-sm text-gray-500">No data</div>
+        ) : (
+          <Recharts.ResponsiveContainer width="100%" height="100%">
+            <Recharts.AreaChart data={items} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
+              <defs>
+                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorEng" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <Recharts.CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <Recharts.XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6B7280' }} tickMargin={8} minTickGap={24} />
+              <Recharts.YAxis tick={{ fontSize: 12, fill: '#6B7280' }} width={40} allowDecimals={false} />
+              <Recharts.Tooltip contentStyle={{ fontSize: 12 }} labelStyle={{ fontWeight: 600 }} />
+              <Recharts.Area type="monotone" dataKey="views" stroke="#2563EB" fillOpacity={1} fill="url(#colorViews)" strokeWidth={2} />
+              <Recharts.Area type="monotone" dataKey="engagement" stroke="#10B981" fillOpacity={1} fill="url(#colorEng)" strokeWidth={2} />
+              <Recharts.Legend />
+            </Recharts.AreaChart>
+          </Recharts.ResponsiveContainer>
+        )}
+      </div>
+    </div>
+  );
+}

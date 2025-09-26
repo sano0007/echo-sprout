@@ -449,3 +449,39 @@ export const replyContributors = query({
     return result;
   },
 });
+
+// Forum topics created per day for a given date range
+export const topicsByDateRange = query({
+  args: { from: v.string(), to: v.string() },
+  handler: async (ctx, { from, to }) => {
+    const fromDate = new Date(from + 'T00:00:00.000Z');
+    const toDate = new Date(to + 'T23:59:59.999Z');
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return [] as { date: string; value: number }[];
+    if (fromDate.getTime() > toDate.getTime()) return [] as { date: string; value: number }[];
+
+    const topics = await ctx.db.query('forumTopics').collect();
+    const byDay = new Map<string, number>();
+    for (const t of topics as any[]) {
+      const ts = typeof t._creationTime === 'number' ? t._creationTime : Number(t._creationTime ?? 0);
+      if (!ts) continue;
+      if (ts < fromDate.getTime() || ts > toDate.getTime()) continue;
+      const d = new Date(ts);
+      d.setUTCHours(0, 0, 0, 0);
+      const key = d.toISOString().slice(0, 10);
+      byDay.set(key, (byDay.get(key) ?? 0) + 1);
+    }
+
+    const result: { date: string; value: number }[] = [];
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const start = new Date(fromDate);
+    start.setUTCHours(0, 0, 0, 0);
+    const end = new Date(toDate);
+    end.setUTCHours(0, 0, 0, 0);
+    for (let t = start.getTime(); t <= end.getTime(); t += msPerDay) {
+      const d = new Date(t);
+      const key = d.toISOString().slice(0, 10);
+      result.push({ date: key, value: byDay.get(key) ?? 0 });
+    }
+    return result;
+  },
+});

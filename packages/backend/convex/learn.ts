@@ -998,3 +998,159 @@ export const pathsByEngagement = query({
     return result;
   },
 });
+
+// Views of learn paths for the last 30 days (daily counts)
+export const viewsLast30Days = query({
+  args: {},
+  async handler(ctx) {
+    const now = Date.now();
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const start = new Date(now - 29 * msPerDay);
+    start.setHours(0, 0, 0, 0);
+
+    const rows = await ctx.db
+      .query('analytics')
+      .withIndex('by_metric', (q) => q.eq('metric', 'learn_paths_entry'))
+      .collect();
+
+    const byDay = new Map<string, number>();
+    for (const r of rows as any[]) {
+      const ts = typeof r.date === 'number' ? r.date : Number(r.date ?? 0);
+      if (!ts) continue;
+      if (ts < start.getTime()) continue;
+      const d = new Date(ts);
+      d.setHours(0, 0, 0, 0);
+      const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+      byDay.set(key, (byDay.get(key) ?? 0) + (r.value ?? 0));
+    }
+
+    const result: { date: string; value: number }[] = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(start.getTime() + i * msPerDay);
+      const key = d.toISOString().slice(0, 10);
+      result.push({ date: key, value: byDay.get(key) ?? 0 });
+    }
+    return result;
+  },
+});
+
+// Views of learn paths for a given date range (inclusive), daily bucketed
+export const viewsByDateRange = query({
+  args: { from: v.string(), to: v.string() },
+  async handler(ctx, { from, to }) {
+    // Expect YYYY-MM-DD; normalize to UTC midnight bounds
+    const fromDate = new Date(from + 'T00:00:00.000Z');
+    const toDate = new Date(to + 'T23:59:59.999Z');
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return [] as { date: string; value: number }[];
+    if (fromDate.getTime() > toDate.getTime()) return [] as { date: string; value: number }[];
+
+    const rows = await ctx.db
+      .query('analytics')
+      .withIndex('by_metric', (q) => q.eq('metric', 'learn_paths_entry'))
+      .collect();
+
+    const byDay = new Map<string, number>();
+    for (const r of rows as any[]) {
+      const ts = typeof r.date === 'number' ? r.date : Number(r.date ?? 0);
+      if (!ts) continue;
+      if (ts < fromDate.getTime() || ts > toDate.getTime()) continue;
+      const d = new Date(ts);
+      d.setUTCHours(0, 0, 0, 0);
+      const key = d.toISOString().slice(0, 10);
+      byDay.set(key, (byDay.get(key) ?? 0) + (r.value ?? 0));
+    }
+
+    const result: { date: string; value: number }[] = [];
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const start = new Date(fromDate);
+    start.setUTCHours(0, 0, 0, 0);
+    const end = new Date(toDate);
+    end.setUTCHours(0, 0, 0, 0);
+    for (let t = start.getTime(); t <= end.getTime(); t += msPerDay) {
+      const d = new Date(t);
+      const key = d.toISOString().slice(0, 10);
+      result.push({ date: key, value: byDay.get(key) ?? 0 });
+    }
+    return result;
+  },
+});
+
+// Views and engagement by date range (daily)
+export const viewsAndEngagementByRange = query({
+  args: { from: v.string(), to: v.string() },
+  async handler(ctx, { from, to }) {
+    const fromDate = new Date(from + 'T00:00:00.000Z');
+    const toDate = new Date(to + 'T23:59:59.999Z');
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return [] as { date: string; views: number; engagement: number }[];
+    if (fromDate.getTime() > toDate.getTime()) return [] as { date: string; views: number; engagement: number }[];
+
+    // Views per day from analytics metric
+    const analytics = await ctx.db
+      .query('analytics')
+      .withIndex('by_metric', (q) => q.eq('metric', 'learn_paths_entry'))
+      .collect();
+    const viewsByDay = new Map<string, number>();
+    for (const r of analytics as any[]) {
+      const ts = typeof r.date === 'number' ? r.date : Number(r.date ?? 0);
+      if (!ts) continue;
+      if (ts < fromDate.getTime() || ts > toDate.getTime()) continue;
+      const d = new Date(ts);
+      d.setUTCHours(0, 0, 0, 0);
+      const key = d.toISOString().slice(0, 10);
+      viewsByDay.set(key, (viewsByDay.get(key) ?? 0) + (r.value ?? 0));
+    }
+
+    // Engagement percent per day: progressed viewers / viewers that day
+    // Build viewers that day from analytics (user-level entries)
+    const entryRows = await ctx.db
+      .query('analytics')
+      .withIndex('by_metric', (q) => q.eq('metric', 'learn_paths_entry'))
+      .collect();
+    const viewersByDay = new Map<string, Set<string>>();
+    for (const r of entryRows as any[]) {
+      const ts = typeof r.date === 'number' ? r.date : Number(r.date ?? 0);
+      if (!ts) continue;
+      if (ts < fromDate.getTime() || ts > toDate.getTime()) continue;
+      const d = new Date(ts);
+      d.setUTCHours(0, 0, 0, 0);
+      const key = d.toISOString().slice(0, 10);
+      const uid = (r.metadata?.userId?.id as unknown as string) || String(r.metadata?.userId ?? '');
+      if (!uid) continue;
+      let set = viewersByDay.get(key);
+      if (!set) { set = new Set<string>(); viewersByDay.set(key, set); }
+      set.add(uid);
+    }
+
+    const progressRows = await ctx.db.query('learningProgress').collect();
+    const progressedByDay = new Map<string, Set<string>>();
+    for (const r of progressRows as any[]) {
+      if (!r.completed) continue;
+      const ts = typeof r._creationTime === 'number' ? r._creationTime : Number(r._creationTime ?? 0);
+      if (!ts) continue;
+      if (ts < fromDate.getTime() || ts > toDate.getTime()) continue;
+      const d = new Date(ts);
+      d.setUTCHours(0, 0, 0, 0);
+      const key = d.toISOString().slice(0, 10);
+      const uid = (r.userId?.id as unknown as string) || String(r.userId ?? '');
+      if (!uid) continue;
+      let set = progressedByDay.get(key);
+      if (!set) { set = new Set<string>(); progressedByDay.set(key, set); }
+      set.add(uid);
+    }
+
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const start = new Date(fromDate); start.setUTCHours(0,0,0,0);
+    const end = new Date(toDate); end.setUTCHours(0,0,0,0);
+    const result: { date: string; views: number; engagement: number }[] = [];
+    for (let t = start.getTime(); t <= end.getTime(); t += msPerDay) {
+      const d = new Date(t);
+      const key = d.toISOString().slice(0, 10);
+      const views = viewsByDay.get(key) ?? 0;
+      const viewers = viewersByDay.get(key)?.size ?? 0;
+      const progressed = progressedByDay.get(key)?.size ?? 0;
+      const engagement = viewers === 0 ? 0 : Math.round((progressed / viewers) * 100);
+      result.push({ date: key, views, engagement });
+    }
+    return result;
+  },
+});

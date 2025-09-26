@@ -27,5 +27,10 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@react-pdf/renderer": "^4.3.1",
+    "html-to-image": "^1.11.13",
+    "recharts": "^3.2.1"
+  }
 }
