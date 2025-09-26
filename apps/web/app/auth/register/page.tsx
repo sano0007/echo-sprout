@@ -1,7 +1,6 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
-import { api } from '@packages/backend/convex/_generated/api';
 import { useMutation, useQuery } from 'convex/react';
 import { useEffect, useState } from 'react';
 
@@ -11,6 +10,7 @@ import {
   validateRegistrationStep2,
   validateRegistrationStep3,
 } from '@/lib/validation/user-schema';
+import { api } from '@packages/backend';
 
 export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);

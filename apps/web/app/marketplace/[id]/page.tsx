@@ -159,7 +159,7 @@ export default function ProjectDetail() {
           <div className="bg-white p-6 rounded-lg shadow-md mb-6 sticky top-6">
             <div className="text-center mb-6">
               <p className="text-3xl font-bold text-green-600">
-                ${project.price}
+                Rs. {project.price.toFixed(2)}
               </p>
               <p className="text-gray-600">per credit</p>
             </div>
