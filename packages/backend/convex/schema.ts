@@ -813,4 +813,101 @@ export default defineSchema({
   })
     .index('by_alert', ['alertId'])
     .index('by_type', ['type']),
+
+  // ============= ANALYTICS ENGINE =============
+  analyticsSnapshots: defineTable({
+    date: v.number(),
+    type: v.union(
+      v.literal('daily'),
+      v.literal('weekly'),
+      v.literal('monthly'),
+      v.literal('quarterly')
+    ),
+    projectData: v.any(), // AggregatedProjectData
+    userData: v.any(), // AggregatedUserData
+    transactionData: v.any(), // AggregatedTransactionData
+    impactData: v.any(), // AggregatedImpactData
+    timestamp: v.number(),
+  })
+    .index('by_date', ['date'])
+    .index('by_type', ['type'])
+    .index('by_timestamp', ['timestamp']),
+
+  performanceMetrics: defineTable({
+    timestamp: v.number(),
+    metrics: v.any(), // ProjectPerformanceMetrics | PlatformPerformanceMetrics
+    type: v.union(
+      v.literal('project'),
+      v.literal('platform'),
+      v.literal('user'),
+      v.literal('financial')
+    ),
+    projectId: v.optional(v.id('projects')), // For project-specific metrics
+  })
+    .index('by_timestamp', ['timestamp'])
+    .index('by_type', ['type'])
+    .index('by_project', ['projectId']),
+
+  projectPredictions: defineTable({
+    projectId: v.id('projects'),
+    prediction: v.any(), // ProjectPrediction
+    timestamp: v.number(),
+    version: v.string(),
+    accuracy: v.optional(v.number()), // To track prediction accuracy over time
+  })
+    .index('by_project', ['projectId'])
+    .index('by_timestamp', ['timestamp'])
+    .index('by_version', ['version']),
+
+  realTimeMetrics: defineTable({
+    timestamp: v.number(),
+    metrics: v.any(), // RealTimeMetrics
+    systemHealth: v.optional(v.any()), // SystemHealth
+  }).index('by_timestamp', ['timestamp']),
+
+  marketPredictions: defineTable({
+    timeHorizon: v.number(),
+    prediction: v.any(), // MarketPrediction
+    timestamp: v.number(),
+    version: v.string(),
+    accuracy: v.optional(v.number()),
+  })
+    .index('by_timestamp', ['timestamp'])
+    .index('by_horizon', ['timeHorizon']),
+
+  userPredictions: defineTable({
+    userId: v.string(),
+    prediction: v.any(), // UserPrediction
+    timestamp: v.number(),
+    segment: v.optional(v.string()),
+    accuracy: v.optional(v.number()),
+  })
+    .index('by_user', ['userId'])
+    .index('by_timestamp', ['timestamp'])
+    .index('by_segment', ['segment']),
+
+  analyticsReports: defineTable({
+    reportType: v.union(
+      v.literal('project_performance'),
+      v.literal('platform_analytics'),
+      v.literal('impact_summary'),
+      v.literal('user_engagement'),
+      v.literal('financial_metrics')
+    ),
+    title: v.string(),
+    description: v.string(),
+    reportData: v.any(),
+    generatedBy: v.id('users'),
+    generatedAt: v.number(),
+    filters: v.optional(v.any()), // DataFilters used
+    timeframe: v.any(), // TimeFrame
+    format: v.union(v.literal('json'), v.literal('pdf'), v.literal('csv')),
+    downloadUrl: v.optional(v.string()),
+    isPublic: v.boolean(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index('by_type', ['reportType'])
+    .index('by_user', ['generatedBy'])
+    .index('by_date', ['generatedAt'])
+    .index('by_public', ['isPublic']),
 });
