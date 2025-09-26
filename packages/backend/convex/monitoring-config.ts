@@ -471,27 +471,42 @@ export const validateMetricValue = query({
     value: v.number(),
   },
   handler: async (ctx, { projectType, metricName, value }) => {
-    const thresholds = await ctx.runQuery(
-      internal.monitoringConfig.getConfigValue,
-      {
-        projectType,
-        configKey: 'impact_thresholds',
-        fallbackValue: {},
-      }
-    );
+    // Get configuration directly from the database
+    const config = await ctx.db
+      .query('monitoringConfig')
+      .withIndex('by_project_type_key', (q) =>
+        q.eq('projectType', projectType).eq('configKey', 'impact_thresholds')
+      )
+      .filter((q) => q.eq(q.field('isActive'), true))
+      .unique();
 
-    const metricThreshold = thresholds[metricName];
+    let thresholds: any = {};
+    if (config) {
+      thresholds = config.configValue;
+    } else {
+      // Try to get global config
+      const globalConfig = await ctx.db
+        .query('monitoringConfig')
+        .withIndex('by_project_type_key', (q) =>
+          q.eq('projectType', 'all').eq('configKey', 'impact_thresholds')
+        )
+        .filter((q) => q.eq(q.field('isActive'), true))
+        .unique();
+
+      thresholds = globalConfig ? globalConfig.configValue : {};
+    }
+
+    const metricThreshold: any = thresholds[metricName];
     if (!metricThreshold) {
       return { valid: true, message: 'No threshold defined' };
     }
 
-    const { min, max } = metricThreshold;
+    const { min, max }: { min: number; max: number } = metricThreshold;
 
     if (value < min) {
       return {
         valid: false,
         message: `Value ${value} is below minimum threshold of ${min}`,
-        severity: 'medium',
       };
     }
 
@@ -499,7 +514,6 @@ export const validateMetricValue = query({
       return {
         valid: false,
         message: `Value ${value} exceeds maximum threshold of ${max}`,
-        severity: 'high',
       };
     }
 
@@ -507,10 +521,4 @@ export const validateMetricValue = query({
   },
 });
 
-// Export internal functions
-export const internal = {
-  monitoringConfig: {
-    getConfigValue,
-    validateMetricValue,
-  },
-};
+// Internal functions are automatically exported by Convex
