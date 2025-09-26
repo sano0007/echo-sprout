@@ -126,6 +126,8 @@ export default function ProjectRegister() {
             'CO2 reduction must be greater than 0';
         if (formData.budget <= 0)
           newErrors.budget = 'Budget must be greater than 0';
+        if (formData.pricePerCredit <= 0)
+          newErrors.pricePerCredit = 'Price per credit must be greater than 0';
         break;
     }
 
@@ -473,7 +475,7 @@ export default function ProjectRegister() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Project Budget ($)
+                  Project Budget (Rs.)
                 </label>
                 <input
                   type="number"
@@ -486,6 +488,24 @@ export default function ProjectRegister() {
                 />
                 {errors.budget && (
                   <p className="text-red-500 text-sm mt-1">{errors.budget}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Price per Credit (Rs.)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Price per Credit"
+                  value={formData.pricePerCredit || ''}
+                  onChange={(e) =>
+                    handleInputChange('pricePerCredit', parseFloat(e.target.value) || 0)
+                  }
+                  className={`w-full p-3 border rounded ${errors.pricePerCredit ? 'border-red-500' : ''}`}
+                />
+                {errors.pricePerCredit && (
+                  <p className="text-red-500 text-sm mt-1">{errors.pricePerCredit}</p>
                 )}
               </div>
             </div>

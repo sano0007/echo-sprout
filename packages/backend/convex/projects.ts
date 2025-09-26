@@ -232,6 +232,7 @@ export const updateProject = mutation({
     expectedCompletionDate: v.optional(v.string()),
     totalCarbonCredits: v.optional(v.number()),
     pricePerCredit: v.optional(v.number()),
+    status: v.optional(v.string()),
     requiredDocuments: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
@@ -275,6 +276,7 @@ export const updateProject = mutation({
       updateData.totalCarbonCredits = args.totalCarbonCredits;
     if (args.pricePerCredit !== undefined)
       updateData.pricePerCredit = args.pricePerCredit;
+    if (args.status !== undefined) updateData.status = args.status;
     if (args.requiredDocuments !== undefined)
       updateData.requiredDocuments = args.requiredDocuments;
 
@@ -285,19 +287,9 @@ export const updateProject = mutation({
   },
 });
 
-export const updateProjectStatus = mutation({
+export const deleteProject = mutation({
   args: {
     projectId: v.id('projects'),
-    status: v.union(
-      v.literal('draft'),
-      v.literal('submitted'),
-      v.literal('under_review'),
-      v.literal('approved'),
-      v.literal('rejected'),
-      v.literal('active'),
-      v.literal('completed'),
-      v.literal('suspended')
-    ),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -311,10 +303,18 @@ export const updateProjectStatus = mutation({
       throw new Error('Project not found');
     }
 
-    // Update the project status
-    await ctx.db.patch(args.projectId, {
-      status: args.status,
-    });
+    // Verify the user owns the project
+    const user = await ctx.db
+      .query('users')
+      .filter((q) => q.eq(q.field('clerkId'), identity.subject))
+      .first();
+
+    if (!user || project.creatorId !== user._id) {
+      throw new Error('Unauthorized to delete this project');
+    }
+
+    // Delete the project
+    await ctx.db.delete(args.projectId);
 
     return args.projectId;
   },

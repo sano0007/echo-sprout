@@ -9,11 +9,14 @@ import { Project } from '@echo-sprout/types';
 export default function ManageProjects() {
   const projects = useQuery(api.projects.getUserProjects);
   const updateProject = useMutation(api.projects.updateProject);
-  const updateProjectStatus = useMutation(api.projects.updateProjectStatus);
+  const deleteProject = useMutation(api.projects.deleteProject);
 
   // Details modal state
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -102,6 +105,22 @@ export default function ManageProjects() {
     }
   };
 
+  // Filter projects based on search query
+  const filteredProjects = projects.filter((project: Project) => {
+    if (!searchQuery) return true;
+
+    const query = searchQuery.toLowerCase();
+    return (
+      project.title.toLowerCase().includes(query) ||
+      project.description.toLowerCase().includes(query) ||
+      project.projectType.toLowerCase().includes(query) ||
+      project.location.name.toLowerCase().includes(query) ||
+      project.status.toLowerCase().includes(query) ||
+      project.creator.firstName.toLowerCase().includes(query) ||
+      project.creator.lastName.toLowerCase().includes(query)
+    );
+  });
+
   const handleEditProject = (project: Project) => {
     setEditingProject(project);
     setEditFormData({
@@ -165,7 +184,7 @@ export default function ManageProjects() {
 
   const handleSubmitForReview = async (projectId: Id<'projects'>) => {
     try {
-      await updateProjectStatus({
+      await updateProject({
         projectId,
         status: 'submitted',
       });
@@ -176,145 +195,203 @@ export default function ManageProjects() {
     }
   };
 
+  const handleDeleteProject = async (projectId: Id<'projects'>) => {
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deleteProject({ projectId });
+      alert('Project deleted successfully!');
+      // The page will automatically re-render with updated data
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      alert('Failed to delete project. Please try again.');
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Manage Projects</h1>
-        <a
-          href="/projects/register"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-        >
-          + New Project
-        </a>
-      </div>
-
-      {projects.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">📁</div>
-          <h3 className="text-xl font-semibold mb-2">No Projects Yet</h3>
-          <p className="text-gray-600 mb-6">
-            Start by creating your first carbon credit project
-          </p>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search projects..."
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
           <a
             href="/projects/register"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-block"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
           >
-            Create Your First Project
+            + New Project
           </a>
         </div>
-      ) : (
-        <div className="grid gap-6">
-          {projects.map((project: Project) => (
-            <div
-              key={project._id}
-              className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
+      </div>
+
+      {filteredProjects.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">📁</div>
+          <h3 className="text-xl font-semibold mb-2">
+            {searchQuery ? 'No Projects Found' : 'No Projects Yet'}
+          </h3>
+          <p className="text-gray-600 mb-6">
+            {searchQuery
+              ? `No projects match your search for "${searchQuery}"`
+              : 'Start by creating your first carbon credit project'}
+          </p>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-blue-600 hover:text-blue-800 underline"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {project.title}
-                  </h3>
-                  <p className="text-gray-600 mt-1">{project.projectType}</p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Created by: {project.creator.firstName}{' '}
-                    {project.creator.lastName}
-                  </p>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}
-                >
-                  {getStatusText(project.status)}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <p className="text-sm text-gray-600">Expected Credits</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {project.totalCarbonCredits.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Available Credits</p>
-                  <p className="text-lg font-semibold text-blue-600">
-                    {project.creditsAvailable.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Budget</p>
-                  <p className="text-lg font-semibold text-green-600">
-                    ${project.budget.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">CO2 Reduction</p>
-                  <p className="text-lg font-semibold text-purple-600">
-                    {project.estimatedCO2Reduction.toLocaleString()} tons/year
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <p className="text-sm text-gray-600">Location</p>
-                  <p className="text-sm font-medium">{project.location.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Area Size</p>
-                  <p className="text-sm font-medium">
-                    {project.areaSize} hectares
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Progress</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.min((project.creditsSold / project.totalCarbonCredits) * 100, 100)}%`,
-                      }}
-                    ></div>
-                  </div>
-                  <p className="text-xs mt-1 text-gray-500">
-                    {project.creditsSold} / {project.totalCarbonCredits} credits
-                    sold
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                <div className="text-sm text-gray-500">
-                  Created:{' '}
-                  {new Date(project._creationTime).toLocaleDateString()}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditProject(project)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleViewDetails(project)}
-                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition-colors"
-                  >
-                    View Details
-                  </button>
-                  {project.status === 'draft' && (
-                    <button
-                      onClick={() =>
-                        handleSubmitForReview(project._id as Id<'projects'>)
-                      }
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
-                    >
-                      Submit for Review
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+              Clear search
+            </button>
+          )}
+          {!searchQuery && (
+            <a
+              href="/projects/register"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors inline-block"
+            >
+              Create Your First Project
+            </a>
+          )}
         </div>
+      ) : (
+        <>
+          <div className="mb-4">
+            <p className="text-sm text-gray-600">
+              Showing {filteredProjects.length} of {projects.length} projects
+            </p>
+          </div>
+          <div className="grid gap-6">
+            {filteredProjects.map((project: Project) => (
+              <div
+                key={project._id}
+                className="bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {project.title}
+                    </h3>
+                    <p className="text-gray-600 mt-1">{project.projectType}</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Created by: {project.creator.firstName}{' '}
+                      {project.creator.lastName}
+                    </p>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}
+                  >
+                    {getStatusText(project.status)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Expected Credits</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {project.totalCarbonCredits.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Available Credits</p>
+                    <p className="text-lg font-semibold text-blue-600">
+                      {project.creditsAvailable.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Budget</p>
+                    <p className="text-lg font-semibold text-green-600">
+                      Rs. {project.budget.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">CO2 Reduction</p>
+                    <p className="text-lg font-semibold text-purple-600">
+                      {project.estimatedCO2Reduction.toLocaleString()} tons/year
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="text-sm font-medium">{project.location.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Area Size</p>
+                    <p className="text-sm font-medium">
+                      {project.areaSize} hectares
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Progress</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${Math.min((project.creditsSold / project.totalCarbonCredits) * 100, 100)}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <p className="text-xs mt-1 text-gray-500">
+                      {project.creditsSold} / {project.totalCarbonCredits} credits
+                      sold
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-500">
+                    Created:{' '}
+                    {new Date(project._creationTime).toLocaleDateString()}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditProject(project)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleViewDetails(project)}
+                      className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition-colors"
+                    >
+                      View Details
+                    </button>
+                    {project.status === 'draft' && (
+                      <button
+                        onClick={() =>
+                          handleSubmitForReview(project._id as Id<'projects'>)
+                        }
+                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+                      >
+                        Submit for Review
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteProject(project._id as Id<'projects'>)}
+                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Edit Project Modal */}
@@ -447,7 +524,7 @@ export default function ManageProjects() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Budget ($)
+                      Budget (LKR)
                     </label>
                     <input
                       type="number"
@@ -604,7 +681,7 @@ export default function ManageProjects() {
                     Price per Credit
                   </h4>
                   <p className="text-2xl font-bold text-orange-900">
-                    ${selectedProject.pricePerCredit || 0}
+                    Rs. {selectedProject.pricePerCredit?.toFixed(2) || 0}
                   </p>
                 </div>
               </div>
@@ -639,7 +716,7 @@ export default function ManageProjects() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Budget:</span>
                       <span className="font-medium">
-                        ${selectedProject.budget?.toLocaleString() || 0}
+                        Rs. {selectedProject.budget?.toFixed(2) || 0}
                       </span>
                     </div>
                   </div>
@@ -783,6 +860,15 @@ export default function ManageProjects() {
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   Edit Project
+                </button>
+                <button
+                  onClick={() => {
+                    setIsDetailsModalOpen(false);
+                    handleDeleteProject(selectedProject._id as Id<'projects'>);
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Delete Project
                 </button>
               </div>
             </div>
