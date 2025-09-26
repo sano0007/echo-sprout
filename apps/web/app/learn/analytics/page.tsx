@@ -71,7 +71,7 @@ export default function LearnAnalyticsPage() {
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                 </>
               ) : (Array.isArray(topByViews) && (topByViews as any[]).length > 0 ? (
-                (topByViews as any[]).map((r: any) => (
+                (topByViews as any[]).slice(0, 5).map((r: any) => (
                   <li key={r.id} className="py-2">
                     <div className="text-sm font-medium text-gray-900 truncate">{r.title}</div>
                     <div className="text-xs text-gray-500">{r.views} views</div>
@@ -93,7 +93,7 @@ export default function LearnAnalyticsPage() {
                   <li className="py-2"><div className="h-4 bg-gray-100 rounded w-2/3 mb-1 animate-pulse"></div><div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div></li>
                 </>
               ) : (Array.isArray(topByEngagement) && (topByEngagement as any[]).length > 0 ? (
-                (topByEngagement as any[]).map((r: any) => (
+                (topByEngagement as any[]).slice(0, 5).map((r: any) => (
                   <li key={r.id} className="py-2">
                     <div className="text-sm font-medium text-gray-900 truncate">{r.title}</div>
                     <div className="text-xs text-gray-500">{r.engagement}% engagement</div>
