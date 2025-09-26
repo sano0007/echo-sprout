@@ -10,6 +10,8 @@ export * from './monitoring';
 export * from './monitoring-config';
 export * from './monitoring-auth';
 export * from './monitoring-utils';
+export * from './progress-updates';
+export * from './progress-validation';
 
 // Re-export types
 export * from '../types/monitoring-types';

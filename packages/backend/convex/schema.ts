@@ -87,6 +87,9 @@ export default defineSchema({
     requiredDocuments: v.array(v.string()), // todo: enum of document types
     submittedDocuments: v.array(v.string()), // todo: enum of document types
     isDocumentationComplete: v.boolean(),
+    // Progress tracking
+    progressPercentage: v.optional(v.number()), // 0-100
+    lastProgressUpdate: v.optional(v.number()), // timestamp
   })
     .index('by_creator', ['creatorId'])
     .index('by_status', ['status'])
