@@ -2,6 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
+/* React PDF TextLayer styles - Required to prevent TextLayer warnings */
+.react-pdf__Page__textContent {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    overflow: hidden !important;
+    opacity: 0.2 !important;
+    line-height: 1 !important;
+    user-select: text !important;
+    pointer-events: auto !important;
+    z-index: 1 !important;
+}
+
+.react-pdf__Page__textContent span {
+    color: transparent !important;
+    position: absolute !important;
+    white-space: pre !important;
+    cursor: text !important;
+    transform-origin: 0% 0% !important;
+}
+
+.react-pdf__Page__textContent::selection {
+    background: rgba(59, 130, 246, 0.3) !important;
+}
+
+.react-pdf__Page__textContent span::selection {
+    background: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* React PDF AnnotationLayer styles */
+.react-pdf__Page__annotations {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+.react-pdf__Page__annotations .annotationLayer {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.react-pdf__Page {
+    position: relative !important;
+}
+
+/* Custom PDF viewer enhancements */
+.pdf-document {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.pdf-page {
+    margin-bottom: 20px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+/* Ensure annotation layers are visible */
+.react-pdf__Page {
+    position: relative !important;
+}
+
+.react-pdf__Page > div[class*="annotation"] {
+    z-index: 10 !important;
+}
+
+/* Custom annotation layer styling */
+.annotation-layer {
+    z-index: 10 !important;
+    pointer-events: auto !important;
+}
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -44,6 +126,65 @@ body {
 
 .text-white {
     color: #ffffff !important;
+}
+
+/* PDF Viewer Styles - Fix text layer display issues */
+.react-pdf__Page {
+    position: relative !important;
+}
+
+.react-pdf__Page__textContent {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    overflow: hidden !important;
+    opacity: 0.2 !important; /* Make text layer semi-transparent for selection but not visible */
+    line-height: 1 !important;
+    pointer-events: auto !important; /* Allow text selection */
+    user-select: text !important; /* Enable text selection */
+}
+
+.react-pdf__Page__textContent span {
+    color: transparent !important; /* Hide the actual text rendering */
+    position: absolute !important;
+    white-space: pre !important;
+    cursor: text !important;
+    transform-origin: 0% 0% !important;
+}
+
+/* Ensure text layer doesn't interfere with annotations */
+.react-pdf__Page__textContent span:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important; /* Light blue highlight on hover */
+}
+
+/* Fix for annotation layer positioning */
+.react-pdf__Page__annotations {
+    display: none !important; /* Hide default PDF annotations */
+}
+
+/* Enhanced PDF container styles */
+.pdf-document {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.pdf-page {
+    margin-bottom: 20px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+/* Prevent text selection artifacts */
+.react-pdf__Page__textContent::selection {
+    background: rgba(59, 130, 246, 0.3) !important;
+}
+
+.react-pdf__Page__textContent span::selection {
+    background: rgba(59, 130, 246, 0.3) !important;
 }
 
 * {
