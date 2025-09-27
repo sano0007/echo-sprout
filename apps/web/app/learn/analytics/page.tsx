@@ -513,12 +513,13 @@ function DateRangePicker({
   onChange: (f: string, t: string) => void;
 }) {
   return (
-    <div className="bg-white rounded-lg shadow p-4" data-report-exclude>
-      <div className="font-medium mb-2">Date Range</div>
+    <div className=" rounded-lg shadow p-4" data-report-exclude>
+      <div className="font-medium  mb-2">Date Range</div>
       <div className="flex items-center gap-3">
         <input
           type="date"
-          className="border rounded px-2 py-1 text-sm"
+          className="border rounded bg-white px-2 py-1 text-sm dark:[color-scheme:dark]"
+
           value={from}
           max={to}
           onChange={(e) => onChange(e.target.value, to)}
@@ -526,7 +527,7 @@ function DateRangePicker({
         <span className="text-gray-500">to</span>
         <input
           type="date"
-          className="border rounded px-2 py-1 text-sm"
+          className="border rounded bg-white px-2 py-1 text-sm "
           value={to}
           min={from}
           max={new Date().toISOString().slice(0, 10)}
