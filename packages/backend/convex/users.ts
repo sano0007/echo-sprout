@@ -122,6 +122,18 @@ export const getCurrentUser = query({
   },
 });
 
+export const totalUsers = query({
+  args: {},
+  async handler(ctx) {
+    const users = await ctx.db.query('users').collect();
+    let count = 0;
+    for (const user of users as any[]) {
+      if (user.isActive !== false) count += 1;
+    }
+    return count;
+  },
+});
+
 export const getUsersByIds = query({
   args: { ids: v.array(v.id('users')) },
   handler: async (ctx, { ids }) => {
