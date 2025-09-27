@@ -413,6 +413,7 @@ export default defineSchema({
     ),
     category: v.string(),
     tags: v.array(v.string()),
+    images: v.optional(v.array(v.string())),
     authorId: v.id('users'),
     status: v.union(
       v.literal('draft'),
@@ -446,6 +447,57 @@ export default defineSchema({
     .index('by_published', ['isPublished'])
     .index('by_type', ['contentType'])
     .index('by_review', ['status', 'reviewedBy']),
+
+  // ============= LEARNING PATHS =============
+  learningPaths: defineTable({
+    title: v.string(),
+    description: v.string(),
+    objectives: v.optional(v.array(v.string())),
+    level: v.union(
+      v.literal('beginner'),
+      v.literal('intermediate'),
+      v.literal('advanced')
+    ),
+    estimatedDuration: v.number(), // in minutes
+    tags: v.array(v.string()),
+    visibility: v.union(
+      v.literal('public'),
+      v.literal('private'),
+      v.literal('unlisted')
+    ),
+    coverImageUrl: v.optional(v.string()),
+    createdBy: v.id('users'),
+    status: v.union(
+      v.literal('draft'),
+      v.literal('published'),
+      v.literal('archived')
+    ),
+    isPublished: v.boolean(),
+    publishedAt: v.optional(v.float64()),
+    lastUpdatedAt: v.float64(),
+    moduleCount: v.number(),
+    enrollmentCount: v.number(),
+  })
+    .index('by_creator', ['createdBy'])
+    .index('by_status', ['status'])
+    .index('by_visibility', ['visibility'])
+    .index('by_published', ['isPublished'])
+    .index('by_level', ['level']),
+
+  // ============= LEARNING PATH LESSONS =============
+  learningPathLessons: defineTable({
+    pathId: v.id('learningPaths'),
+    title: v.string(),
+    description: v.optional(v.string()),
+    videoUrl: v.optional(v.string()),
+    pdfUrls: v.array(v.string()),
+    order: v.number(),
+    estimatedDuration: v.optional(v.number()),
+    createdBy: v.id('users'),
+    lastUpdatedAt: v.float64(),
+  })
+    .index('by_path', ['pathId'])
+    .index('by_path_order', ['pathId', 'order']),
 
   // ============= FORUM SYSTEM =============
   forumTopics: defineTable({
@@ -499,6 +551,36 @@ export default defineSchema({
   })
     .index('by_topic', ['topicId'])
     .index('by_author', ['authorId']),
+
+  // ============= LEARN: USER PROGRESS =============
+  learningProgress: defineTable({
+    userId: v.id('users'),
+    pathId: v.id('learningPaths'),
+    lessonId: v.id('learningPathLessons'),
+    itemType: v.union(v.literal('video'), v.literal('pdf')),
+    itemIndex: v.number(),
+    completed: v.boolean(),
+    completedAt: v.optional(v.float64()),
+  })
+    .index('by_user_path', ['userId', 'pathId'])
+    .index('by_user_lesson', ['userId', 'lessonId'])
+    .index('by_user', ['userId'])
+    .index('by_unique_key', [
+      'userId',
+      'pathId',
+      'lessonId',
+      'itemType',
+      'itemIndex',
+    ]),
+
+  forumReplyVotes: defineTable({
+    replyId: v.id('forumReplies'),
+    userId: v.id('users'),
+    value: v.union(v.literal(1), v.literal(-1)),
+  })
+    .index('by_reply', ['replyId'])
+    .index('by_user', ['userId'])
+    .index('by_reply_user', ['replyId', 'userId']),
   // .index("by_parent", ["parentReplyId"]),
   // .index("by_accepted", ["isAcceptedAnswer"]),
 
