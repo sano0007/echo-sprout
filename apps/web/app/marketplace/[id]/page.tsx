@@ -1,21 +1,62 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useQuery } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import { Id } from '@packages/backend/convex/_generated/dataModel';
+import { toast } from 'react-toastify';
 
 export default function ProjectDetail() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const projectId = params.id as Id<'projects'>;
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [creditQuantity, setCreditQuantity] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const project = useQuery(api.marketplace.getProjectById, {
     projectId,
   });
+
+  // Check for payment success/failure on component mount
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    const sessionId = searchParams.get('session_id');
+
+    if (success === 'true' && sessionId) {
+      toast.success(
+        '🎉 Payment successful! Thank you for your contribution to this project.',
+        {
+          position: 'top-right',
+          autoClose: 7000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+
+      // Clean up URL parameters
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    } else if (canceled === 'true') {
+      toast.error('❌ Payment was canceled. You can try again anytime.', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // Clean up URL parameters
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, [searchParams]);
 
   const handlePurchase = async () => {
     if (!project || creditQuantity <= 0) return;
@@ -40,14 +81,37 @@ export default function ProjectDetail() {
       const data = await response.json();
 
       if (data.success && data.url) {
+        // Show loading toast while redirecting to Stripe
+        toast.info('🔄 Redirecting to payment...', {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         window.location.href = data.url;
       } else {
         console.error('Failed to create checkout session:', data.error);
-        alert('Failed to create checkout session. Please try again.');
+        toast.error('❌ Failed to create checkout session. Please try again.', {
+          position: 'top-right',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
-      alert('An error occurred. Please try again.');
+      toast.error('⚠️ An error occurred. Please try again.', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -70,19 +134,98 @@ export default function ProjectDetail() {
         <div className="lg:col-span-2">
           {/* Image Gallery */}
           <div className="mb-6">
-            <div className="w-full h-96 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-              <p className="text-gray-500">Project Image</p>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[1, 2, 3].map((img, index) => (
-                <div
-                  key={index}
-                  className="h-24 bg-gray-200 rounded flex items-center justify-center"
-                >
-                  <p className="text-xs text-gray-500">Image {index + 2}</p>
+            {project.images && project.images.length > 0 ? (
+              <>
+                {/* Main Image with Navigation */}
+                <div className="relative w-full h-96 bg-gray-200 rounded-lg mb-4 overflow-hidden">
+                  <img
+                    src={project.images[currentImageIndex]}
+                    alt={`${project.title} - Image ${currentImageIndex + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg';
+                    }}
+                  />
+
+                  {/* Navigation Arrows */}
+                  {project.images.length > 1 && (
+                    <>
+                      <button
+                        onClick={() =>
+                          setCurrentImageIndex(
+                            currentImageIndex === 0
+                              ? project.images!.length - 1
+                              : currentImageIndex - 1
+                          )
+                        }
+                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity"
+                      >
+                        ←
+                      </button>
+                      <button
+                        onClick={() =>
+                          setCurrentImageIndex(
+                            currentImageIndex === project.images!.length - 1
+                              ? 0
+                              : currentImageIndex + 1
+                          )
+                        }
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity"
+                      >
+                        →
+                      </button>
+                    </>
+                  )}
+
+                  {/* Image Counter */}
+                  {project.images.length > 1 && (
+                    <div className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                      {currentImageIndex + 1} / {project.images.length}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+
+                {/* Thumbnail Navigation */}
+                {project.images.length > 1 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {project.images.slice(0, 3).map((image, index) => (
+                      <div
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`h-24 rounded cursor-pointer overflow-hidden border-2 transition-all ${
+                          currentImageIndex === index
+                            ? 'border-blue-500 opacity-100'
+                            : 'border-gray-200 opacity-75 hover:opacity-100'
+                        }`}
+                      >
+                        <img
+                          src={image}
+                          alt={`${project.title} - Thumbnail ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg';
+                          }}
+                        />
+                      </div>
+                    ))}
+                    {project.images.length > 3 && (
+                      <div
+                        onClick={() => setCurrentImageIndex(3)}
+                        className="h-24 bg-gray-800 bg-opacity-75 rounded cursor-pointer flex items-center justify-center text-white font-semibold hover:bg-opacity-60 transition-all"
+                      >
+                        +{project.images.length - 3}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="w-full h-96 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                <p className="text-gray-500">No images available</p>
+              </div>
+            )}
           </div>
 
           {/* Project Info */}
@@ -225,9 +368,6 @@ export default function ProjectDetail() {
                   </span>
                 )}
               </div>
-              <button className="text-blue-600 hover:underline">
-                Contact Creator
-              </button>
             </div>
           </div>
         </div>

@@ -82,11 +82,11 @@ export default defineSchema({
     assignedVerifierId: v.optional(v.id('users')),
     verificationStartedAt: v.optional(v.float64()),
     verificationCompletedAt: v.optional(v.float64()),
-    qualityScore: v.optional(v.number()), // 1-10 scale
-    // Document requirements tracking
+    qualityScore: v.optional(v.number()),
     requiredDocuments: v.array(v.string()), // todo: enum of document types
     submittedDocuments: v.array(v.string()), // todo: enum of document types
     isDocumentationComplete: v.boolean(),
+    images: v.optional(v.array(v.string())), // Array of image URLs
   })
     .index('by_creator', ['creatorId'])
     .index('by_status', ['status'])

@@ -51,12 +51,12 @@ export class StripeService {
     }
 
     const successUrl = projectId
-      ? `${process.env.NEXT_PUBLIC_SITE_URL}/marketplace/${projectId}?payment=success`
-      : `${process.env.NEXT_PUBLIC_SITE_URL}/marketplace?payment=success`;
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/marketplace/${projectId}?success=true&session_id={CHECKOUT_SESSION_ID}`
+      : `${process.env.NEXT_PUBLIC_SITE_URL}/marketplace?success=true&session_id={CHECKOUT_SESSION_ID}`;
 
     const cancelUrl = projectId
-      ? `${process.env.NEXT_PUBLIC_SITE_URL}/marketplace/${projectId}?payment=cancelled`
-      : `${process.env.NEXT_PUBLIC_SITE_URL}/marketplace?payment=cancelled`;
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/marketplace/${projectId}?canceled=true`
+      : `${process.env.NEXT_PUBLIC_SITE_URL}/marketplace?canceled=true`;
 
     return await stripe.checkout.sessions.create({
       mode: 'payment',

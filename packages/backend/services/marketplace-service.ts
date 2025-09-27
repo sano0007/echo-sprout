@@ -39,7 +39,10 @@ export class MarketplaceService {
           location: project.location.name,
           price: project.pricePerCredit,
           credits: project.creditsAvailable,
-          image: '/api/placeholder/300/200', // TODO: get from documents
+          image:
+            project.images?.[0] ||
+            'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg',
+          images: project.images || [],
           creator:
             creator?.organizationName ||
             `${creator?.firstName} ${creator?.lastName}` ||

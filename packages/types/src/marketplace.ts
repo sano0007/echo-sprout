@@ -8,6 +8,7 @@ export interface MarketplaceProject {
   price: number;
   credits: number;
   image: string;
+  images?: string[];
   creator: string;
   rating: number;
 }

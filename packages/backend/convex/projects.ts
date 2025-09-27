@@ -124,6 +124,7 @@ export const createProjectForSeeding = internalMutation({
     requiredDocuments: v.array(v.string()),
     submittedDocuments: v.array(v.string()),
     isDocumentationComplete: v.boolean(),
+    images: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const projectId = await ctx.db.insert('projects', {
@@ -151,6 +152,7 @@ export const createProjectForSeeding = internalMutation({
       requiredDocuments: args.requiredDocuments,
       submittedDocuments: args.submittedDocuments,
       isDocumentationComplete: args.isDocumentationComplete,
+      images: args.images,
     });
 
     return projectId;
