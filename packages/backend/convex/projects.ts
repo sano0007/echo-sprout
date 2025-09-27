@@ -206,6 +206,9 @@ export const uploadProjectDocument = mutation({
 
     // Create a document record in the documents table
     const documentId = await ctx.db.insert('documents', {
+      entityId: args.projectId
+        ? (args.projectId as unknown as string)
+        : undefined,
       entityType: 'project',
       fileName: args.storageId, // Using storageId as filename since it's unique
       originalName: args.fileName,
@@ -221,6 +224,30 @@ export const uploadProjectDocument = mutation({
       isRequired: false,
       isVerified: false,
     });
+
+    // Audit log for document upload (no secrets recorded)
+    try {
+      await ctx.db.insert('auditLogs', {
+        userId: user._id,
+        action: 'document_uploaded',
+        entityType: 'project',
+        entityId: (args.projectId as unknown as string) || 'unknown',
+        oldValues: undefined,
+        newValues: {
+          documentId,
+          storageId: args.storageId,
+          originalName: args.fileName,
+          fileType: args.fileType,
+          fileUrl,
+        },
+        metadata: {
+          source: 'projects.uploadProjectDocument',
+          timestamp: Date.now(),
+        },
+      });
+    } catch (e) {
+      console.error('Failed to write audit log for document upload', e);
+    }
 
     return { documentId, storageId: args.storageId, fileUrl };
   },
