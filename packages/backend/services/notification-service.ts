@@ -86,7 +86,7 @@ export class NotificationService {
     await ctx.db.patch(notificationId, {
       channels,
       deliveryStatus: 'sent',
-      sentAt: currentTime,
+      sentAt: Date.now(),
     });
 
     return notificationId;
