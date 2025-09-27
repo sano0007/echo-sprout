@@ -93,14 +93,8 @@ export default function EditProject() {
         estimatedCO2Reduction: projectData.estimatedCO2Reduction || 0,
         totalCarbonCredits: projectData.totalCarbonCredits || 0,
         pricePerCredit: projectData.pricePerCredit || 0,
-        startDate: projectData.startDate
-          ? new Date(projectData.startDate).toISOString().split('T')[0]
-          : '',
-        expectedCompletionDate: projectData.expectedCompletionDate
-          ? new Date(projectData.expectedCompletionDate)
-              .toISOString()
-              .split('T')[0]
-          : '',
+        startDate: projectData.startDate,
+        expectedCompletionDate: projectData.expectedCompletionDate,
       });
 
       // Populate images and documents
@@ -167,6 +161,10 @@ export default function EditProject() {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    console.log(
+      'dhfuijkashjkfhjkadshfkhsadjkfhsjkadhlfhasdjkfhkjasdhfkjshdakjfhjkasdghfkjasdhjkfhsdajkfhksadhfsdkalfhj'
+    );
+
     setIsUploading(true);
     try {
       for (const file of Array.from(files)) {
@@ -188,16 +186,12 @@ export default function EditProject() {
 
         const { storageId } = await response.json();
 
-        if (type === 'image') {
-          // Upload image
-          await uploadImageMutation({
-            projectId: projectId as Id<'projects'>,
-            fileName: file.name,
-            fileType: file.type,
-            storageId,
-          });
-        } else if (type === 'document') {
-          // Upload document
+        if (type === 'image' || type === 'document') {
+          console.log(
+            'dhfuijkashjkfhjkadshfkhsadjkfhsjkadhlfhasdjkfhkjasdhfkjshdakjfhjkasdghfkjasdhjkfhsdajkfhksadhfsdkalfhj'
+          );
+
+          // Upload image or document
           await uploadDocumentMutation({
             projectId: projectId as Id<'projects'>,
             fileName: file.name,

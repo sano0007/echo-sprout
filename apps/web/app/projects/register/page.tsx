@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAction, useMutation } from 'convex/react';
-import { api } from '@packages/backend';
+import { api, Id } from '@packages/backend';
 import FileUpload from '../../components/FileUpload';
 
 interface ProjectFormData {
@@ -52,6 +52,11 @@ const steps = [
 export default function ProjectRegister() {
   const [currentStep, setCurrentStep] = useState(0);
   const [tempUploadedFiles, setTempUploadedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const generateUploadUrlAction = useAction(api.projects.generateUploadUrl);
+  const uploadDocumentMutation = useMutation(
+    api.projects.uploadProjectDocument
+  );
   const [projectImages, setProjectImages] = useState<
     Array<{
       cloudinary_public_id: string;
@@ -120,13 +125,24 @@ export default function ProjectRegister() {
     }
   };
 
-  const handleImageUpload = async (files: File[]) => {
-    try {
-      const uploadPromises = files.map(async (file) => {
-        // Get upload URL
-        const uploadUrl = await generateUploadUrl();
+  const handleFileUpload = async (
+    event: File[],
+    type: 'image' | 'document'
+  ) => {
+    const files = event;
+    if (!files || files.length === 0) return;
 
-        // Upload file
+    console.log(
+      'dhfuijkashjkfhjkadshfkhsadjkfhsjkadhlfhasdjkfhkjasdhfkjshdakjfhjkasdghfkjasdhjkfhsdajkfhksadhfsdkalfhj'
+    );
+
+    setIsUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        // Generate upload URL
+        const uploadUrl = await generateUploadUrlAction();
+
+        // Upload file to storage
         const response = await fetch(uploadUrl, {
           method: 'POST',
           body: file,
@@ -136,36 +152,34 @@ export default function ProjectRegister() {
         });
 
         if (!response.ok) {
-          throw new Error(`Upload failed: ${response.statusText}`);
+          throw new Error('Failed to upload file');
         }
 
         const { storageId } = await response.json();
 
-        // Generate the file URL (this would typically come from your storage provider)
-        const fileUrl = `https://your-storage-provider.com/${storageId}`;
+        if (type === 'image' || type === 'document') {
+          console.log(
+            'dhfuijkashjkfhjkadshfkhsadjkfhsjkadhlfhasdjkfhkjasdhfkjshdakjfhjkasdghfkjasdhjkfhsdajkfhksadhfsdkalfhj'
+          );
 
-        return {
-          cloudinary_public_id: storageId,
-          cloudinary_url: fileUrl,
-          caption: '',
-          isPrimary: projectImages.length === 0, // First image is primary by default
-          uploadDate: Date.now(),
-        };
-      });
-
-      const newImages = await Promise.all(uploadPromises);
-      setProjectImages((prev) => [...prev, ...newImages]);
-
-      // Set the first image as featured if none is set
-      if (!featuredImage && newImages.length > 0) {
-        setFeaturedImage({
-          cloudinary_public_id: newImages[0]!.cloudinary_public_id,
-          cloudinary_url: newImages[0]!.cloudinary_url,
-        });
+          // Upload image or document
+          const {
+            storageId: convexStorageId,
+            fileUrl,
+            documentId,
+          } = await uploadDocumentMutation({
+            fileName: file.name,
+            fileType: file.type,
+            storageId,
+          });
+          console.log('XXXXXXXXXXXXX', convexStorageId, fileUrl, documentId);
+        }
       }
     } catch (error) {
-      console.error('Error uploading images:', error);
-      alert('Failed to upload images. Please try again.');
+      console.error('Error uploading file:', error);
+      alert('Failed to upload file. Please try again.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -638,7 +652,7 @@ export default function ProjectRegister() {
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
                       if (files.length > 0) {
-                        handleImageUpload(files);
+                        handleFileUpload(files, 'image');
                       }
                     }}
                     className="hidden"

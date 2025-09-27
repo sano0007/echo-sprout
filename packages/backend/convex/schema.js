@@ -232,7 +232,7 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_unread', ['recipientId', 'isRead']),
     // ============= DOCUMENT MANAGEMENT =============
     documents: (0, server_1.defineTable)({
-        entityId: values_1.v.string(), // ID of the associated entity (project, user profile, etc.)
+        entityId: values_1.v.optional(values_1.v.string()), // ID of the associated entity (project, user profile, etc.)
         entityType: values_1.v.union(values_1.v.literal('project'), values_1.v.literal('verification'), values_1.v.literal('user_profile'), values_1.v.literal('educational_content')),
         fileName: values_1.v.string(),
         originalName: values_1.v.string(),

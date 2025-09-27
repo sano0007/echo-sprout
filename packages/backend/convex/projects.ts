@@ -155,7 +155,7 @@ export const getUserProjects = query({
 
 export const uploadProjectDocument = mutation({
   args: {
-    projectId: v.id('projects'),
+    projectId: v.optional(v.id('projects')),
     fileName: v.string(),
     fileType: v.string(),
     storageId: v.string(), // Storage ID from successful upload
@@ -166,10 +166,12 @@ export const uploadProjectDocument = mutation({
       throw new Error('Not authenticated');
     }
 
-    // Get the project to verify ownership
-    const project = await ctx.db.get(args.projectId);
-    if (!project) {
-      throw new Error('Project not found');
+    if (args.projectId) {
+      // Get the project to verify ownership
+      const project = await ctx.db.get(args.projectId);
+      if (!project) {
+        throw new Error('Project not found');
+      }
     }
 
     // Verify the user owns the project
@@ -178,7 +180,7 @@ export const uploadProjectDocument = mutation({
       .filter((q) => q.eq(q.field('clerkId'), identity.subject))
       .first();
 
-    if (!user || project.creatorId !== user._id) {
+    if (!user) {
       throw new Error('Unauthorized to upload documents for this project');
     }
 
@@ -194,7 +196,6 @@ export const uploadProjectDocument = mutation({
 
     // Create a document record in the documents table
     const documentId = await ctx.db.insert('documents', {
-      entityId: args.projectId,
       entityType: 'project',
       fileName: args.storageId, // Using storageId as filename since it's unique
       originalName: args.fileName,

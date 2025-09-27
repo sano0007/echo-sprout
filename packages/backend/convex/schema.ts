@@ -324,7 +324,7 @@ export default defineSchema({
 
   // ============= DOCUMENT MANAGEMENT =============
   documents: defineTable({
-    entityId: v.string(), // ID of the associated entity (project, user profile, etc.)
+    entityId: v.optional(v.string()), // ID of the associated entity (project, user profile, etc.)
     entityType: v.union(
       v.literal('project'),
       v.literal('verification'),
