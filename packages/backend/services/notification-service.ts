@@ -34,8 +34,6 @@ export class NotificationService {
       pushNotification?: boolean;
     }
   ) {
-    const currentTime = Date.now();
-
     const notificationData = {
       recipientId: data.recipientId,
       type: data.type,
@@ -48,7 +46,6 @@ export class NotificationService {
       isRead: false,
       isEmailSent: false,
       isPushSent: false,
-      _creationTime: currentTime,
     };
 
     const notificationId = await ctx.db.insert(

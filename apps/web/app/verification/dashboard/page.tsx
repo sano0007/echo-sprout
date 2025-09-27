@@ -1,18 +1,25 @@
 'use client';
 
-import { useQuery } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { api } from '@packages/backend';
 
 export default function VerificationDashboard() {
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState('pendingAcceptance');
 
   // Get current user permissions
   const permissions = useQuery(api.permissions.getCurrentUserPermissions);
 
   // Get verifier stats for current user
   const verifierStats = useQuery(api.verifications.getVerifierStats, {});
+
+  // Get verifier acceptance stats
+  const acceptanceStats = useQuery(
+    api.verifications.getVerifierAcceptanceStats,
+    {}
+  );
 
   // Get my verifications
   const myVerifications = useQuery(api.verifications.getMyVerifications, {
@@ -28,7 +35,7 @@ export default function VerificationDashboard() {
   );
 
   // Loading states
-  if (!permissions || !verifierStats || !myVerifications) {
+  if (!permissions || !verifierStats || !acceptanceStats || !myVerifications) {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-center h-64">
@@ -60,7 +67,8 @@ export default function VerificationDashboard() {
   // Process verifications data
   const allVerifications = myVerifications.page || [];
   const projects = {
-    pending: allVerifications.filter((v) => v.status === 'assigned'),
+    pendingAcceptance: allVerifications.filter((v) => v.status === 'assigned'),
+    accepted: allVerifications.filter((v) => v.status === 'accepted'),
     inProgress: allVerifications.filter((v) => v.status === 'in_progress'),
     completed: allVerifications.filter((v) =>
       ['completed', 'approved', 'rejected', 'revision_required'].includes(
@@ -72,10 +80,11 @@ export default function VerificationDashboard() {
   // Use real stats
   const stats = {
     totalProjects: verifierStats.totalVerifications || 0,
-    pendingReview: verifierStats.pendingVerifications || 0,
+    pendingAcceptance: acceptanceStats.pendingAcceptance || 0,
+    acceptanceRate: acceptanceStats.acceptanceRate || 0,
     inProgress: verifierStats.inProgressVerifications || 0,
     completedThisMonth: verifierStats.completedThisMonth || 0,
-    averageReviewTime: '5.2 days', // TODO: Calculate from actual data
+    averageAcceptanceTime: acceptanceStats.averageAcceptanceTimeHours || 0,
     overdueVerifications: verifierStats.overdueVerifications || 0,
     averageScore: verifierStats.averageScore
       ? verifierStats.averageScore.toFixed(1)
@@ -87,7 +96,7 @@ export default function VerificationDashboard() {
       <h1 className="text-3xl font-bold mb-8">Verification Dashboard</h1>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-2xl font-bold text-blue-600">
             {stats.totalProjects}
@@ -96,9 +105,15 @@ export default function VerificationDashboard() {
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-2xl font-bold text-orange-600">
-            {stats.pendingReview}
+            {stats.pendingAcceptance}
           </p>
-          <p className="text-sm text-gray-600">Pending Review</p>
+          <p className="text-sm text-gray-600">Pending Acceptance</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <p className="text-2xl font-bold text-teal-600">
+            {stats.acceptanceRate}%
+          </p>
+          <p className="text-sm text-gray-600">Acceptance Rate</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-2xl font-bold text-yellow-600">
@@ -113,6 +128,12 @@ export default function VerificationDashboard() {
           <p className="text-sm text-gray-600">Completed This Month</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <p className="text-2xl font-bold text-indigo-600">
+            {stats.averageAcceptanceTime}h
+          </p>
+          <p className="text-sm text-gray-600">Avg Acceptance Time</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-2xl font-bold text-red-600">
             {stats.overdueVerifications}
           </p>
@@ -122,7 +143,7 @@ export default function VerificationDashboard() {
           <p className="text-2xl font-bold text-purple-600">
             {stats.averageScore}
           </p>
-          <p className="text-sm text-gray-600">Avg Score</p>
+          <p className="text-sm text-gray-600">Avg Quality Score</p>
         </div>
       </div>
 
@@ -131,10 +152,16 @@ export default function VerificationDashboard() {
         <div className="border-b">
           <nav className="flex">
             <button
-              onClick={() => setActiveTab('pending')}
-              className={`px-6 py-4 text-sm font-medium ${activeTab === 'pending' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+              onClick={() => setActiveTab('pendingAcceptance')}
+              className={`px-6 py-4 text-sm font-medium ${activeTab === 'pendingAcceptance' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
             >
-              Pending Review ({projects.pending.length})
+              Pending Acceptance ({projects.pendingAcceptance.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('accepted')}
+              className={`px-6 py-4 text-sm font-medium ${activeTab === 'accepted' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+            >
+              Accepted ({projects.accepted.length})
             </button>
             <button
               onClick={() => setActiveTab('inProgress')}
@@ -152,19 +179,38 @@ export default function VerificationDashboard() {
         </div>
 
         <div className="p-6">
-          {/* Pending Projects */}
-          {activeTab === 'pending' && (
+          {/* Pending Acceptance Projects */}
+          {activeTab === 'pendingAcceptance' && (
             <div className="space-y-4">
-              {projects.pending.length === 0 ? (
+              {projects.pendingAcceptance.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  <p>No pending verifications assigned to you.</p>
+                  <p>No verifications pending your acceptance.</p>
                 </div>
               ) : (
-                projects.pending.map((verification) => (
+                projects.pendingAcceptance.map((verification) => (
                   <VerificationCard
                     key={verification._id}
                     verification={verification}
-                    type="pending"
+                    type="pendingAcceptance"
+                  />
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Accepted Projects */}
+          {activeTab === 'accepted' && (
+            <div className="space-y-4">
+              {projects.accepted.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <p>No accepted verifications yet.</p>
+                </div>
+              ) : (
+                projects.accepted.map((verification) => (
+                  <VerificationCard
+                    key={verification._id}
+                    verification={verification}
+                    type="accepted"
                   />
                 ))
               )}
@@ -220,7 +266,7 @@ function VerificationCard({
   type,
 }: {
   verification: any;
-  type: 'pending' | 'inProgress' | 'completed';
+  type: 'pendingAcceptance' | 'accepted' | 'inProgress' | 'completed';
 }) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -333,14 +379,21 @@ function VerificationCard({
         </div>
 
         <div className="flex gap-2">
-          {type === 'pending' && (
+          {type === 'pendingAcceptance' && (
             <>
+              <AcceptVerificationButton verification={verification} />
               <Link
                 href={`/verification/review/${verification.projectId}`}
-                className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-400"
               >
-                Start Review
+                View Details
               </Link>
+            </>
+          )}
+
+          {type === 'accepted' && (
+            <>
+              <StartVerificationButton verification={verification} />
               <Link
                 href={`/verification/review/${verification.projectId}`}
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-400"
@@ -378,5 +431,65 @@ function VerificationCard({
         </div>
       </div>
     </div>
+  );
+}
+
+// Accept Verification Button Component
+function AcceptVerificationButton({ verification }: { verification: any }) {
+  const acceptVerification = useMutation(api.verifications.acceptVerification);
+  const [isAccepting, setIsAccepting] = useState(false);
+
+  const handleAccept = async () => {
+    if (!verification?._id) return;
+
+    setIsAccepting(true);
+    try {
+      await acceptVerification({ verificationId: verification._id });
+      toast.success('Verification accepted successfully');
+    } catch (error) {
+      toast.error('Failed to accept verification');
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleAccept}
+      disabled={isAccepting}
+      className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 disabled:bg-gray-400"
+    >
+      {isAccepting ? 'Accepting...' : 'Accept Verification'}
+    </button>
+  );
+}
+
+// Start Verification Button Component
+function StartVerificationButton({ verification }: { verification: any }) {
+  const startVerification = useMutation(api.verifications.startVerification);
+  const [isStarting, setIsStarting] = useState(false);
+
+  const handleStart = async () => {
+    if (!verification?._id) return;
+
+    setIsStarting(true);
+    try {
+      await startVerification({ verificationId: verification._id });
+      toast.success('Verification started successfully');
+    } catch (error) {
+      toast.error('Failed to start verification');
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleStart}
+      disabled={isStarting}
+      className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:bg-gray-400"
+    >
+      {isStarting ? 'Starting...' : 'Start Verification'}
+    </button>
   );
 }

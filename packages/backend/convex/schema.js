@@ -111,8 +111,9 @@ exports.default = (0, server_1.defineSchema)({
     verifications: (0, server_1.defineTable)({
         projectId: values_1.v.id('projects'),
         verifierId: values_1.v.id('users'),
-        status: values_1.v.union(values_1.v.literal('assigned'), values_1.v.literal('in_progress'), values_1.v.literal('completed'), values_1.v.literal('approved'), values_1.v.literal('rejected'), values_1.v.literal('revision_required')),
+        status: values_1.v.union(values_1.v.literal('assigned'), values_1.v.literal('accepted'), values_1.v.literal('in_progress'), values_1.v.literal('completed'), values_1.v.literal('approved'), values_1.v.literal('rejected'), values_1.v.literal('revision_required')),
         assignedAt: values_1.v.float64(),
+        acceptedAt: values_1.v.optional(values_1.v.float64()),
         startedAt: values_1.v.optional(values_1.v.float64()),
         completedAt: values_1.v.optional(values_1.v.float64()),
         dueDate: values_1.v.float64(),
@@ -120,7 +121,47 @@ exports.default = (0, server_1.defineSchema)({
         verificationNotes: values_1.v.optional(values_1.v.string()),
         rejectionReason: values_1.v.optional(values_1.v.string()),
         revisionRequests: values_1.v.optional(values_1.v.string()),
-        // Checklist items
+        // Enhanced Checklist items with scores
+        environmentalImpact: values_1.v.optional(values_1.v.object({
+            carbonReductionValidated: values_1.v.optional(values_1.v.boolean()),
+            methodologyVerified: values_1.v.optional(values_1.v.boolean()),
+            calculationsAccurate: values_1.v.optional(values_1.v.boolean()),
+            score: values_1.v.optional(values_1.v.number()), // 0-100
+            notes: values_1.v.optional(values_1.v.string()),
+        })),
+        projectFeasibility: values_1.v.optional(values_1.v.object({
+            timelineAssessed: values_1.v.optional(values_1.v.boolean()),
+            budgetAnalyzed: values_1.v.optional(values_1.v.boolean()),
+            technicalApproachValid: values_1.v.optional(values_1.v.boolean()),
+            resourcesAvailable: values_1.v.optional(values_1.v.boolean()),
+            score: values_1.v.optional(values_1.v.number()), // 0-100
+            notes: values_1.v.optional(values_1.v.string()),
+        })),
+        documentationQuality: values_1.v.optional(values_1.v.object({
+            completenessCheck: values_1.v.optional(values_1.v.boolean()),
+            accuracyVerified: values_1.v.optional(values_1.v.boolean()),
+            complianceValidated: values_1.v.optional(values_1.v.boolean()),
+            formatStandards: values_1.v.optional(values_1.v.boolean()),
+            score: values_1.v.optional(values_1.v.number()), // 0-100
+            notes: values_1.v.optional(values_1.v.string()),
+        })),
+        locationVerification: values_1.v.optional(values_1.v.object({
+            geographicDataConfirmed: values_1.v.optional(values_1.v.boolean()),
+            landRightsVerified: values_1.v.optional(values_1.v.boolean()),
+            accessibilityAssessed: values_1.v.optional(values_1.v.boolean()),
+            environmentalSuitability: values_1.v.optional(values_1.v.boolean()),
+            score: values_1.v.optional(values_1.v.number()), // 0-100
+            notes: values_1.v.optional(values_1.v.string()),
+        })),
+        sustainability: values_1.v.optional(values_1.v.object({
+            longTermViabilityAnalyzed: values_1.v.optional(values_1.v.boolean()),
+            maintenancePlanReviewed: values_1.v.optional(values_1.v.boolean()),
+            stakeholderEngagement: values_1.v.optional(values_1.v.boolean()),
+            adaptabilityAssessed: values_1.v.optional(values_1.v.boolean()),
+            score: values_1.v.optional(values_1.v.number()), // 0-100
+            notes: values_1.v.optional(values_1.v.string()),
+        })),
+        // Legacy checklist items (for backward compatibility)
         timelineCompliance: values_1.v.optional(values_1.v.boolean()),
         documentationComplete: values_1.v.optional(values_1.v.boolean()),
         co2CalculationAccurate: values_1.v.optional(values_1.v.boolean()),
@@ -131,12 +172,35 @@ exports.default = (0, server_1.defineSchema)({
         // Workload management
         verifierWorkload: values_1.v.number(), // Current number of active verifications
         priority: values_1.v.union(values_1.v.literal('low'), values_1.v.literal('normal'), values_1.v.literal('high'), values_1.v.literal('urgent')),
+        // Document annotations
+        documentAnnotations: values_1.v.optional(values_1.v.array(values_1.v.object({
+            documentId: values_1.v.id('documents'),
+            annotations: values_1.v.array(values_1.v.object({
+                id: values_1.v.string(),
+                type: values_1.v.string(),
+                content: values_1.v.string(),
+                position: values_1.v.object({
+                    pageNumber: values_1.v.number(),
+                    x: values_1.v.number(),
+                    y: values_1.v.number(),
+                    width: values_1.v.optional(values_1.v.number()),
+                    height: values_1.v.optional(values_1.v.number()),
+                }),
+                author: values_1.v.string(),
+                timestamp: values_1.v.number(),
+            })),
+        }))),
+        // Overall assessment
+        overallScore: values_1.v.optional(values_1.v.number()), // Calculated from component scores
+        confidenceLevel: values_1.v.optional(values_1.v.union(values_1.v.literal('low'), values_1.v.literal('medium'), values_1.v.literal('high'))),
+        recommendationJustification: values_1.v.optional(values_1.v.string()),
     })
         .index('by_project', ['projectId'])
         .index('by_verifier', ['verifierId'])
         .index('by_status', ['status'])
         .index('by_due_date', ['dueDate'])
-        .index('by_priority', ['priority']),
+        .index('by_priority', ['priority'])
+        .index('by_accepted', ['verifierId', 'acceptedAt']),
     verificationMessages: (0, server_1.defineTable)({
         verificationId: values_1.v.id('verifications'),
         senderId: values_1.v.id('users'),
@@ -317,6 +381,41 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_buyer', ['buyerId'])
         .index('by_project', ['projectId'])
         .index('by_certificate_number', ['certificateNumber']),
+    // Verification certificates for approved projects
+    verificationCertificates: (0, server_1.defineTable)({
+        verificationId: values_1.v.id('verifications'),
+        projectId: values_1.v.id('projects'),
+        verifierId: values_1.v.id('users'),
+        certificateNumber: values_1.v.string(),
+        certificateType: values_1.v.union(values_1.v.literal('approval'), values_1.v.literal('quality_assessment'), values_1.v.literal('environmental_compliance')),
+        issueDate: values_1.v.float64(),
+        validUntil: values_1.v.optional(values_1.v.float64()),
+        certificateUrl: values_1.v.string(),
+        qrCodeUrl: values_1.v.string(),
+        digitalSignature: values_1.v.string(),
+        verificationDetails: values_1.v.object({
+            overallScore: values_1.v.number(),
+            categoryScores: values_1.v.object({
+                environmental: values_1.v.number(),
+                feasibility: values_1.v.number(),
+                documentation: values_1.v.number(),
+                location: values_1.v.number(),
+                sustainability: values_1.v.number(),
+            }),
+            verifierCredentials: values_1.v.string(),
+            verificationStandard: values_1.v.string(),
+            complianceLevel: values_1.v.union(values_1.v.literal('basic'), values_1.v.literal('standard'), values_1.v.literal('premium')),
+        }),
+        isValid: values_1.v.boolean(),
+        revokedAt: values_1.v.optional(values_1.v.float64()),
+        revokedBy: values_1.v.optional(values_1.v.id('users')),
+        revocationReason: values_1.v.optional(values_1.v.string()),
+    })
+        .index('by_verification', ['verificationId'])
+        .index('by_project', ['projectId'])
+        .index('by_verifier', ['verifierId'])
+        .index('by_certificate_number', ['certificateNumber'])
+        .index('by_issue_date', ['issueDate']),
     userWallet: (0, server_1.defineTable)({
         userId: values_1.v.id('users'),
         availableCredits: values_1.v.number(),
@@ -345,6 +444,28 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_user', ['userId'])
         .index('by_entity', ['entityType', 'entityId'])
         .index('by_action', ['action']),
+    // Enhanced verification audit trails
+    verificationAuditLogs: (0, server_1.defineTable)({
+        verificationId: values_1.v.id('verifications'),
+        verifierId: values_1.v.id('users'),
+        action: values_1.v.union(values_1.v.literal('verification_assigned'), values_1.v.literal('verification_accepted'), values_1.v.literal('verification_started'), values_1.v.literal('checklist_updated'), values_1.v.literal('document_annotated'), values_1.v.literal('score_calculated'), values_1.v.literal('message_sent'), values_1.v.literal('verification_completed'), values_1.v.literal('certificate_generated')),
+        details: values_1.v.object({
+            section: values_1.v.optional(values_1.v.string()), // Which part of verification was affected
+            previousValue: values_1.v.optional(values_1.v.any()),
+            newValue: values_1.v.optional(values_1.v.any()),
+            score: values_1.v.optional(values_1.v.number()),
+            notes: values_1.v.optional(values_1.v.string()),
+            attachments: values_1.v.optional(values_1.v.array(values_1.v.string())),
+        }),
+        ipAddress: values_1.v.optional(values_1.v.string()),
+        userAgent: values_1.v.optional(values_1.v.string()),
+        sessionId: values_1.v.optional(values_1.v.string()),
+        timestamp: values_1.v.float64(),
+    })
+        .index('by_verification', ['verificationId'])
+        .index('by_verifier', ['verifierId'])
+        .index('by_action', ['action'])
+        .index('by_timestamp', ['timestamp']),
     // System notifications
     notifications: (0, server_1.defineTable)({
         recipientId: values_1.v.id('users'),

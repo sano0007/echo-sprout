@@ -154,6 +154,7 @@ export default defineSchema({
     verifierId: v.id('users'),
     status: v.union(
       v.literal('assigned'),
+      v.literal('accepted'),
       v.literal('in_progress'),
       v.literal('completed'),
       v.literal('approved'),
@@ -161,6 +162,7 @@ export default defineSchema({
       v.literal('revision_required')
     ),
     assignedAt: v.float64(),
+    acceptedAt: v.optional(v.float64()),
     startedAt: v.optional(v.float64()),
     completedAt: v.optional(v.float64()),
     dueDate: v.float64(),
@@ -168,7 +170,63 @@ export default defineSchema({
     verificationNotes: v.optional(v.string()),
     rejectionReason: v.optional(v.string()),
     revisionRequests: v.optional(v.string()),
-    // Checklist items
+
+    // Enhanced Checklist items with scores
+    environmentalImpact: v.optional(
+      v.object({
+        carbonReductionValidated: v.optional(v.boolean()),
+        methodologyVerified: v.optional(v.boolean()),
+        calculationsAccurate: v.optional(v.boolean()),
+        score: v.optional(v.number()), // 0-100
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    projectFeasibility: v.optional(
+      v.object({
+        timelineAssessed: v.optional(v.boolean()),
+        budgetAnalyzed: v.optional(v.boolean()),
+        technicalApproachValid: v.optional(v.boolean()),
+        resourcesAvailable: v.optional(v.boolean()),
+        score: v.optional(v.number()), // 0-100
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    documentationQuality: v.optional(
+      v.object({
+        completenessCheck: v.optional(v.boolean()),
+        accuracyVerified: v.optional(v.boolean()),
+        complianceValidated: v.optional(v.boolean()),
+        formatStandards: v.optional(v.boolean()),
+        score: v.optional(v.number()), // 0-100
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    locationVerification: v.optional(
+      v.object({
+        geographicDataConfirmed: v.optional(v.boolean()),
+        landRightsVerified: v.optional(v.boolean()),
+        accessibilityAssessed: v.optional(v.boolean()),
+        environmentalSuitability: v.optional(v.boolean()),
+        score: v.optional(v.number()), // 0-100
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    sustainability: v.optional(
+      v.object({
+        longTermViabilityAnalyzed: v.optional(v.boolean()),
+        maintenancePlanReviewed: v.optional(v.boolean()),
+        stakeholderEngagement: v.optional(v.boolean()),
+        adaptabilityAssessed: v.optional(v.boolean()),
+        score: v.optional(v.number()), // 0-100
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Legacy checklist items (for backward compatibility)
     timelineCompliance: v.optional(v.boolean()),
     documentationComplete: v.optional(v.boolean()),
     co2CalculationAccurate: v.optional(v.boolean()),
@@ -176,6 +234,7 @@ export default defineSchema({
     projectFeasible: v.optional(v.boolean()),
     locationVerified: v.optional(v.boolean()),
     sustainabilityAssessed: v.optional(v.boolean()),
+
     // Workload management
     verifierWorkload: v.number(), // Current number of active verifications
     priority: v.union(
@@ -184,12 +243,45 @@ export default defineSchema({
       v.literal('high'),
       v.literal('urgent')
     ),
+
+    // Document annotations
+    documentAnnotations: v.optional(
+      v.array(
+        v.object({
+          documentId: v.id('documents'),
+          annotations: v.array(
+            v.object({
+              id: v.string(),
+              type: v.string(),
+              content: v.string(),
+              position: v.object({
+                pageNumber: v.number(),
+                x: v.number(),
+                y: v.number(),
+                width: v.optional(v.number()),
+                height: v.optional(v.number()),
+              }),
+              author: v.string(),
+              timestamp: v.number(),
+            })
+          ),
+        })
+      )
+    ),
+
+    // Overall assessment
+    overallScore: v.optional(v.number()), // Calculated from component scores
+    confidenceLevel: v.optional(
+      v.union(v.literal('low'), v.literal('medium'), v.literal('high'))
+    ),
+    recommendationJustification: v.optional(v.string()),
   })
     .index('by_project', ['projectId'])
     .index('by_verifier', ['verifierId'])
     .index('by_status', ['status'])
     .index('by_due_date', ['dueDate'])
-    .index('by_priority', ['priority']),
+    .index('by_priority', ['priority'])
+    .index('by_accepted', ['verifierId', 'acceptedAt']),
 
   verificationMessages: defineTable({
     verificationId: v.id('verifications'),
@@ -429,6 +521,50 @@ export default defineSchema({
     .index('by_project', ['projectId'])
     .index('by_certificate_number', ['certificateNumber']),
 
+  // Verification certificates for approved projects
+  verificationCertificates: defineTable({
+    verificationId: v.id('verifications'),
+    projectId: v.id('projects'),
+    verifierId: v.id('users'),
+    certificateNumber: v.string(),
+    certificateType: v.union(
+      v.literal('approval'),
+      v.literal('quality_assessment'),
+      v.literal('environmental_compliance')
+    ),
+    issueDate: v.float64(),
+    validUntil: v.optional(v.float64()),
+    certificateUrl: v.string(),
+    qrCodeUrl: v.string(),
+    digitalSignature: v.string(),
+    verificationDetails: v.object({
+      overallScore: v.number(),
+      categoryScores: v.object({
+        environmental: v.number(),
+        feasibility: v.number(),
+        documentation: v.number(),
+        location: v.number(),
+        sustainability: v.number(),
+      }),
+      verifierCredentials: v.string(),
+      verificationStandard: v.string(),
+      complianceLevel: v.union(
+        v.literal('basic'),
+        v.literal('standard'),
+        v.literal('premium')
+      ),
+    }),
+    isValid: v.boolean(),
+    revokedAt: v.optional(v.float64()),
+    revokedBy: v.optional(v.id('users')),
+    revocationReason: v.optional(v.string()),
+  })
+    .index('by_verification', ['verificationId'])
+    .index('by_project', ['projectId'])
+    .index('by_verifier', ['verifierId'])
+    .index('by_certificate_number', ['certificateNumber'])
+    .index('by_issue_date', ['issueDate']),
+
   userWallet: defineTable({
     userId: v.id('users'),
     availableCredits: v.number(),
@@ -458,6 +594,39 @@ export default defineSchema({
     .index('by_user', ['userId'])
     .index('by_entity', ['entityType', 'entityId'])
     .index('by_action', ['action']),
+
+  // Enhanced verification audit trails
+  verificationAuditLogs: defineTable({
+    verificationId: v.id('verifications'),
+    verifierId: v.id('users'),
+    action: v.union(
+      v.literal('verification_assigned'),
+      v.literal('verification_accepted'),
+      v.literal('verification_started'),
+      v.literal('checklist_updated'),
+      v.literal('document_annotated'),
+      v.literal('score_calculated'),
+      v.literal('message_sent'),
+      v.literal('verification_completed'),
+      v.literal('certificate_generated')
+    ),
+    details: v.object({
+      section: v.optional(v.string()), // Which part of verification was affected
+      previousValue: v.optional(v.any()),
+      newValue: v.optional(v.any()),
+      score: v.optional(v.number()),
+      notes: v.optional(v.string()),
+      attachments: v.optional(v.array(v.string())),
+    }),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
+    timestamp: v.float64(),
+  })
+    .index('by_verification', ['verificationId'])
+    .index('by_verifier', ['verifierId'])
+    .index('by_action', ['action'])
+    .index('by_timestamp', ['timestamp']),
 
   // System notifications
   notifications: defineTable({

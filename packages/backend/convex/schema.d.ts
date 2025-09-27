@@ -170,11 +170,51 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     verifications: import("convex/server").TableDefinition<import("convex/values").VObject<{
         qualityScore?: number | undefined;
+        acceptedAt?: number | undefined;
         startedAt?: number | undefined;
         completedAt?: number | undefined;
         verificationNotes?: string | undefined;
         rejectionReason?: string | undefined;
         revisionRequests?: string | undefined;
+        environmentalImpact?: {
+            carbonReductionValidated?: boolean | undefined;
+            methodologyVerified?: boolean | undefined;
+            calculationsAccurate?: boolean | undefined;
+            score?: number | undefined;
+            notes?: string | undefined;
+        } | undefined;
+        projectFeasibility?: {
+            score?: number | undefined;
+            notes?: string | undefined;
+            timelineAssessed?: boolean | undefined;
+            budgetAnalyzed?: boolean | undefined;
+            technicalApproachValid?: boolean | undefined;
+            resourcesAvailable?: boolean | undefined;
+        } | undefined;
+        documentationQuality?: {
+            score?: number | undefined;
+            notes?: string | undefined;
+            completenessCheck?: boolean | undefined;
+            accuracyVerified?: boolean | undefined;
+            complianceValidated?: boolean | undefined;
+            formatStandards?: boolean | undefined;
+        } | undefined;
+        locationVerification?: {
+            score?: number | undefined;
+            notes?: string | undefined;
+            geographicDataConfirmed?: boolean | undefined;
+            landRightsVerified?: boolean | undefined;
+            accessibilityAssessed?: boolean | undefined;
+            environmentalSuitability?: boolean | undefined;
+        } | undefined;
+        sustainability?: {
+            score?: number | undefined;
+            notes?: string | undefined;
+            longTermViabilityAnalyzed?: boolean | undefined;
+            maintenancePlanReviewed?: boolean | undefined;
+            stakeholderEngagement?: boolean | undefined;
+            adaptabilityAssessed?: boolean | undefined;
+        } | undefined;
         timelineCompliance?: boolean | undefined;
         documentationComplete?: boolean | undefined;
         co2CalculationAccurate?: boolean | undefined;
@@ -182,7 +222,27 @@ declare const _default: import("convex/server").SchemaDefinition<{
         projectFeasible?: boolean | undefined;
         locationVerified?: boolean | undefined;
         sustainabilityAssessed?: boolean | undefined;
-        status: "in_progress" | "rejected" | "revision_required" | "approved" | "completed" | "assigned";
+        documentAnnotations?: {
+            documentId: import("convex/values").GenericId<"documents">;
+            annotations: {
+                id: string;
+                type: string;
+                content: string;
+                position: {
+                    width?: number | undefined;
+                    height?: number | undefined;
+                    pageNumber: number;
+                    x: number;
+                    y: number;
+                };
+                author: string;
+                timestamp: number;
+            }[];
+        }[] | undefined;
+        overallScore?: number | undefined;
+        confidenceLevel?: "low" | "high" | "medium" | undefined;
+        recommendationJustification?: string | undefined;
+        status: "in_progress" | "rejected" | "revision_required" | "approved" | "completed" | "assigned" | "accepted";
         projectId: import("convex/values").GenericId<"projects">;
         verifierId: import("convex/values").GenericId<"users">;
         assignedAt: number;
@@ -192,8 +252,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {
         projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
         verifierId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        status: import("convex/values").VUnion<"in_progress" | "rejected" | "revision_required" | "approved" | "completed" | "assigned", [import("convex/values").VLiteral<"assigned", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
+        status: import("convex/values").VUnion<"in_progress" | "rejected" | "revision_required" | "approved" | "completed" | "assigned" | "accepted", [import("convex/values").VLiteral<"assigned", "required">, import("convex/values").VLiteral<"accepted", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
         assignedAt: import("convex/values").VFloat64<number, "required">;
+        acceptedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         startedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         completedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         dueDate: import("convex/values").VFloat64<number, "required">;
@@ -201,6 +262,79 @@ declare const _default: import("convex/server").SchemaDefinition<{
         verificationNotes: import("convex/values").VString<string | undefined, "optional">;
         rejectionReason: import("convex/values").VString<string | undefined, "optional">;
         revisionRequests: import("convex/values").VString<string | undefined, "optional">;
+        environmentalImpact: import("convex/values").VObject<{
+            carbonReductionValidated?: boolean | undefined;
+            methodologyVerified?: boolean | undefined;
+            calculationsAccurate?: boolean | undefined;
+            score?: number | undefined;
+            notes?: string | undefined;
+        } | undefined, {
+            carbonReductionValidated: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            methodologyVerified: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            calculationsAccurate: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            score: import("convex/values").VFloat64<number | undefined, "optional">;
+            notes: import("convex/values").VString<string | undefined, "optional">;
+        }, "optional", "carbonReductionValidated" | "methodologyVerified" | "calculationsAccurate" | "score" | "notes">;
+        projectFeasibility: import("convex/values").VObject<{
+            score?: number | undefined;
+            notes?: string | undefined;
+            timelineAssessed?: boolean | undefined;
+            budgetAnalyzed?: boolean | undefined;
+            technicalApproachValid?: boolean | undefined;
+            resourcesAvailable?: boolean | undefined;
+        } | undefined, {
+            timelineAssessed: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            budgetAnalyzed: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            technicalApproachValid: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            resourcesAvailable: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            score: import("convex/values").VFloat64<number | undefined, "optional">;
+            notes: import("convex/values").VString<string | undefined, "optional">;
+        }, "optional", "score" | "notes" | "timelineAssessed" | "budgetAnalyzed" | "technicalApproachValid" | "resourcesAvailable">;
+        documentationQuality: import("convex/values").VObject<{
+            score?: number | undefined;
+            notes?: string | undefined;
+            completenessCheck?: boolean | undefined;
+            accuracyVerified?: boolean | undefined;
+            complianceValidated?: boolean | undefined;
+            formatStandards?: boolean | undefined;
+        } | undefined, {
+            completenessCheck: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            accuracyVerified: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            complianceValidated: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            formatStandards: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            score: import("convex/values").VFloat64<number | undefined, "optional">;
+            notes: import("convex/values").VString<string | undefined, "optional">;
+        }, "optional", "score" | "notes" | "completenessCheck" | "accuracyVerified" | "complianceValidated" | "formatStandards">;
+        locationVerification: import("convex/values").VObject<{
+            score?: number | undefined;
+            notes?: string | undefined;
+            geographicDataConfirmed?: boolean | undefined;
+            landRightsVerified?: boolean | undefined;
+            accessibilityAssessed?: boolean | undefined;
+            environmentalSuitability?: boolean | undefined;
+        } | undefined, {
+            geographicDataConfirmed: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            landRightsVerified: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            accessibilityAssessed: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            environmentalSuitability: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            score: import("convex/values").VFloat64<number | undefined, "optional">;
+            notes: import("convex/values").VString<string | undefined, "optional">;
+        }, "optional", "score" | "notes" | "geographicDataConfirmed" | "landRightsVerified" | "accessibilityAssessed" | "environmentalSuitability">;
+        sustainability: import("convex/values").VObject<{
+            score?: number | undefined;
+            notes?: string | undefined;
+            longTermViabilityAnalyzed?: boolean | undefined;
+            maintenancePlanReviewed?: boolean | undefined;
+            stakeholderEngagement?: boolean | undefined;
+            adaptabilityAssessed?: boolean | undefined;
+        } | undefined, {
+            longTermViabilityAnalyzed: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            maintenancePlanReviewed: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            stakeholderEngagement: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            adaptabilityAssessed: import("convex/values").VBoolean<boolean | undefined, "optional">;
+            score: import("convex/values").VFloat64<number | undefined, "optional">;
+            notes: import("convex/values").VString<string | undefined, "optional">;
+        }, "optional", "score" | "notes" | "longTermViabilityAnalyzed" | "maintenancePlanReviewed" | "stakeholderEngagement" | "adaptabilityAssessed">;
         timelineCompliance: import("convex/values").VBoolean<boolean | undefined, "optional">;
         documentationComplete: import("convex/values").VBoolean<boolean | undefined, "optional">;
         co2CalculationAccurate: import("convex/values").VBoolean<boolean | undefined, "optional">;
@@ -210,12 +344,97 @@ declare const _default: import("convex/server").SchemaDefinition<{
         sustainabilityAssessed: import("convex/values").VBoolean<boolean | undefined, "optional">;
         verifierWorkload: import("convex/values").VFloat64<number, "required">;
         priority: import("convex/values").VUnion<"low" | "normal" | "high" | "urgent", [import("convex/values").VLiteral<"low", "required">, import("convex/values").VLiteral<"normal", "required">, import("convex/values").VLiteral<"high", "required">, import("convex/values").VLiteral<"urgent", "required">], "required", never>;
-    }, "required", "status" | "qualityScore" | "projectId" | "verifierId" | "assignedAt" | "startedAt" | "completedAt" | "dueDate" | "verificationNotes" | "rejectionReason" | "revisionRequests" | "timelineCompliance" | "documentationComplete" | "co2CalculationAccurate" | "environmentalImpactValid" | "projectFeasible" | "locationVerified" | "sustainabilityAssessed" | "verifierWorkload" | "priority">, {
+        documentAnnotations: import("convex/values").VArray<{
+            documentId: import("convex/values").GenericId<"documents">;
+            annotations: {
+                id: string;
+                type: string;
+                content: string;
+                position: {
+                    width?: number | undefined;
+                    height?: number | undefined;
+                    pageNumber: number;
+                    x: number;
+                    y: number;
+                };
+                author: string;
+                timestamp: number;
+            }[];
+        }[] | undefined, import("convex/values").VObject<{
+            documentId: import("convex/values").GenericId<"documents">;
+            annotations: {
+                id: string;
+                type: string;
+                content: string;
+                position: {
+                    width?: number | undefined;
+                    height?: number | undefined;
+                    pageNumber: number;
+                    x: number;
+                    y: number;
+                };
+                author: string;
+                timestamp: number;
+            }[];
+        }, {
+            documentId: import("convex/values").VId<import("convex/values").GenericId<"documents">, "required">;
+            annotations: import("convex/values").VArray<{
+                id: string;
+                type: string;
+                content: string;
+                position: {
+                    width?: number | undefined;
+                    height?: number | undefined;
+                    pageNumber: number;
+                    x: number;
+                    y: number;
+                };
+                author: string;
+                timestamp: number;
+            }[], import("convex/values").VObject<{
+                id: string;
+                type: string;
+                content: string;
+                position: {
+                    width?: number | undefined;
+                    height?: number | undefined;
+                    pageNumber: number;
+                    x: number;
+                    y: number;
+                };
+                author: string;
+                timestamp: number;
+            }, {
+                id: import("convex/values").VString<string, "required">;
+                type: import("convex/values").VString<string, "required">;
+                content: import("convex/values").VString<string, "required">;
+                position: import("convex/values").VObject<{
+                    width?: number | undefined;
+                    height?: number | undefined;
+                    pageNumber: number;
+                    x: number;
+                    y: number;
+                }, {
+                    pageNumber: import("convex/values").VFloat64<number, "required">;
+                    x: import("convex/values").VFloat64<number, "required">;
+                    y: import("convex/values").VFloat64<number, "required">;
+                    width: import("convex/values").VFloat64<number | undefined, "optional">;
+                    height: import("convex/values").VFloat64<number | undefined, "optional">;
+                }, "required", "pageNumber" | "x" | "y" | "width" | "height">;
+                author: import("convex/values").VString<string, "required">;
+                timestamp: import("convex/values").VFloat64<number, "required">;
+            }, "required", "id" | "type" | "content" | "position" | "author" | "timestamp" | "position.pageNumber" | "position.x" | "position.y" | "position.width" | "position.height">, "required">;
+        }, "required", "documentId" | "annotations">, "optional">;
+        overallScore: import("convex/values").VFloat64<number | undefined, "optional">;
+        confidenceLevel: import("convex/values").VUnion<"low" | "high" | "medium" | undefined, [import("convex/values").VLiteral<"low", "required">, import("convex/values").VLiteral<"medium", "required">, import("convex/values").VLiteral<"high", "required">], "optional", never>;
+        recommendationJustification: import("convex/values").VString<string | undefined, "optional">;
+    }, "required", "status" | "qualityScore" | "projectId" | "verifierId" | "assignedAt" | "acceptedAt" | "startedAt" | "completedAt" | "dueDate" | "verificationNotes" | "rejectionReason" | "revisionRequests" | "environmentalImpact" | "projectFeasibility" | "documentationQuality" | "locationVerification" | "sustainability" | "timelineCompliance" | "documentationComplete" | "co2CalculationAccurate" | "environmentalImpactValid" | "projectFeasible" | "locationVerified" | "sustainabilityAssessed" | "verifierWorkload" | "priority" | "documentAnnotations" | "overallScore" | "confidenceLevel" | "recommendationJustification" | "environmentalImpact.carbonReductionValidated" | "environmentalImpact.methodologyVerified" | "environmentalImpact.calculationsAccurate" | "environmentalImpact.score" | "environmentalImpact.notes" | "projectFeasibility.score" | "projectFeasibility.notes" | "projectFeasibility.timelineAssessed" | "projectFeasibility.budgetAnalyzed" | "projectFeasibility.technicalApproachValid" | "projectFeasibility.resourcesAvailable" | "documentationQuality.score" | "documentationQuality.notes" | "documentationQuality.completenessCheck" | "documentationQuality.accuracyVerified" | "documentationQuality.complianceValidated" | "documentationQuality.formatStandards" | "locationVerification.score" | "locationVerification.notes" | "locationVerification.geographicDataConfirmed" | "locationVerification.landRightsVerified" | "locationVerification.accessibilityAssessed" | "locationVerification.environmentalSuitability" | "sustainability.score" | "sustainability.notes" | "sustainability.longTermViabilityAnalyzed" | "sustainability.maintenancePlanReviewed" | "sustainability.stakeholderEngagement" | "sustainability.adaptabilityAssessed">, {
         by_project: ["projectId", "_creationTime"];
         by_verifier: ["verifierId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_due_date: ["dueDate", "_creationTime"];
         by_priority: ["priority", "_creationTime"];
+        by_accepted: ["verifierId", "acceptedAt", "_creationTime"];
     }, {}, {}>;
     verificationMessages: import("convex/server").TableDefinition<import("convex/values").VObject<{
         attachments?: string[] | undefined;
@@ -446,8 +665,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_type: ["topicType", "_creationTime"];
     }, {}, {}>;
     forumReplies: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        acceptedBy?: import("convex/values").GenericId<"users"> | undefined;
         acceptedAt?: number | undefined;
+        acceptedBy?: import("convex/values").GenericId<"users"> | undefined;
         content: string;
         authorId: import("convex/values").GenericId<"users">;
         upvotes: number;
@@ -463,7 +682,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         downvotes: import("convex/values").VFloat64<number, "required">;
         acceptedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
         acceptedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "content" | "authorId" | "upvotes" | "downvotes" | "topicId" | "isDeleted" | "acceptedBy" | "acceptedAt">, {
+    }, "required", "acceptedAt" | "content" | "authorId" | "upvotes" | "downvotes" | "topicId" | "isDeleted" | "acceptedBy">, {
         by_topic: ["topicId", "_creationTime"];
         by_author: ["authorId", "_creationTime"];
     }, {}, {}>;
@@ -494,6 +713,87 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_buyer: ["buyerId", "_creationTime"];
         by_project: ["projectId", "_creationTime"];
         by_certificate_number: ["certificateNumber", "_creationTime"];
+    }, {}, {}>;
+    verificationCertificates: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        validUntil?: number | undefined;
+        revokedAt?: number | undefined;
+        revokedBy?: import("convex/values").GenericId<"users"> | undefined;
+        revocationReason?: string | undefined;
+        projectId: import("convex/values").GenericId<"projects">;
+        certificateUrl: string;
+        verifierId: import("convex/values").GenericId<"users">;
+        verificationId: import("convex/values").GenericId<"verifications">;
+        certificateNumber: string;
+        issueDate: number;
+        qrCodeUrl: string;
+        isValid: boolean;
+        certificateType: "approval" | "quality_assessment" | "environmental_compliance";
+        digitalSignature: string;
+        verificationDetails: {
+            overallScore: number;
+            categoryScores: {
+                location: number;
+                sustainability: number;
+                environmental: number;
+                feasibility: number;
+                documentation: number;
+            };
+            verifierCredentials: string;
+            verificationStandard: string;
+            complianceLevel: "basic" | "standard" | "premium";
+        };
+    }, {
+        verificationId: import("convex/values").VId<import("convex/values").GenericId<"verifications">, "required">;
+        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
+        verifierId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
+        certificateNumber: import("convex/values").VString<string, "required">;
+        certificateType: import("convex/values").VUnion<"approval" | "quality_assessment" | "environmental_compliance", [import("convex/values").VLiteral<"approval", "required">, import("convex/values").VLiteral<"quality_assessment", "required">, import("convex/values").VLiteral<"environmental_compliance", "required">], "required", never>;
+        issueDate: import("convex/values").VFloat64<number, "required">;
+        validUntil: import("convex/values").VFloat64<number | undefined, "optional">;
+        certificateUrl: import("convex/values").VString<string, "required">;
+        qrCodeUrl: import("convex/values").VString<string, "required">;
+        digitalSignature: import("convex/values").VString<string, "required">;
+        verificationDetails: import("convex/values").VObject<{
+            overallScore: number;
+            categoryScores: {
+                location: number;
+                sustainability: number;
+                environmental: number;
+                feasibility: number;
+                documentation: number;
+            };
+            verifierCredentials: string;
+            verificationStandard: string;
+            complianceLevel: "basic" | "standard" | "premium";
+        }, {
+            overallScore: import("convex/values").VFloat64<number, "required">;
+            categoryScores: import("convex/values").VObject<{
+                location: number;
+                sustainability: number;
+                environmental: number;
+                feasibility: number;
+                documentation: number;
+            }, {
+                environmental: import("convex/values").VFloat64<number, "required">;
+                feasibility: import("convex/values").VFloat64<number, "required">;
+                documentation: import("convex/values").VFloat64<number, "required">;
+                location: import("convex/values").VFloat64<number, "required">;
+                sustainability: import("convex/values").VFloat64<number, "required">;
+            }, "required", "location" | "sustainability" | "environmental" | "feasibility" | "documentation">;
+            verifierCredentials: import("convex/values").VString<string, "required">;
+            verificationStandard: import("convex/values").VString<string, "required">;
+            complianceLevel: import("convex/values").VUnion<"basic" | "standard" | "premium", [import("convex/values").VLiteral<"basic", "required">, import("convex/values").VLiteral<"standard", "required">, import("convex/values").VLiteral<"premium", "required">], "required", never>;
+        }, "required", "overallScore" | "categoryScores" | "verifierCredentials" | "verificationStandard" | "complianceLevel" | "categoryScores.location" | "categoryScores.sustainability" | "categoryScores.environmental" | "categoryScores.feasibility" | "categoryScores.documentation">;
+        isValid: import("convex/values").VBoolean<boolean, "required">;
+        revokedAt: import("convex/values").VFloat64<number | undefined, "optional">;
+        revokedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
+        revocationReason: import("convex/values").VString<string | undefined, "optional">;
+    }, "required", "projectId" | "certificateUrl" | "verifierId" | "verificationId" | "certificateNumber" | "issueDate" | "qrCodeUrl" | "isValid" | "certificateType" | "validUntil" | "digitalSignature" | "verificationDetails" | "revokedAt" | "revokedBy" | "revocationReason" | "verificationDetails.overallScore" | "verificationDetails.categoryScores" | "verificationDetails.verifierCredentials" | "verificationDetails.verificationStandard" | "verificationDetails.complianceLevel" | "verificationDetails.categoryScores.location" | "verificationDetails.categoryScores.sustainability" | "verificationDetails.categoryScores.environmental" | "verificationDetails.categoryScores.feasibility" | "verificationDetails.categoryScores.documentation">, {
+        by_verification: ["verificationId", "_creationTime"];
+        by_project: ["projectId", "_creationTime"];
+        by_verifier: ["verifierId", "_creationTime"];
+        by_certificate_number: ["certificateNumber", "_creationTime"];
+        by_issue_date: ["issueDate", "_creationTime"];
     }, {}, {}>;
     userWallet: import("convex/server").TableDefinition<import("convex/values").VObject<{
         lastTransactionAt?: number | undefined;
@@ -534,6 +834,51 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_user: ["userId", "_creationTime"];
         by_entity: ["entityType", "entityId", "_creationTime"];
         by_action: ["action", "_creationTime"];
+    }, {}, {}>;
+    verificationAuditLogs: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        ipAddress?: string | undefined;
+        userAgent?: string | undefined;
+        sessionId?: string | undefined;
+        verifierId: import("convex/values").GenericId<"users">;
+        timestamp: number;
+        verificationId: import("convex/values").GenericId<"verifications">;
+        action: "verification_assigned" | "verification_accepted" | "verification_started" | "checklist_updated" | "document_annotated" | "score_calculated" | "message_sent" | "verification_completed" | "certificate_generated";
+        details: {
+            score?: number | undefined;
+            notes?: string | undefined;
+            attachments?: string[] | undefined;
+            section?: string | undefined;
+            previousValue?: any;
+            newValue?: any;
+        };
+    }, {
+        verificationId: import("convex/values").VId<import("convex/values").GenericId<"verifications">, "required">;
+        verifierId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
+        action: import("convex/values").VUnion<"verification_assigned" | "verification_accepted" | "verification_started" | "checklist_updated" | "document_annotated" | "score_calculated" | "message_sent" | "verification_completed" | "certificate_generated", [import("convex/values").VLiteral<"verification_assigned", "required">, import("convex/values").VLiteral<"verification_accepted", "required">, import("convex/values").VLiteral<"verification_started", "required">, import("convex/values").VLiteral<"checklist_updated", "required">, import("convex/values").VLiteral<"document_annotated", "required">, import("convex/values").VLiteral<"score_calculated", "required">, import("convex/values").VLiteral<"message_sent", "required">, import("convex/values").VLiteral<"verification_completed", "required">, import("convex/values").VLiteral<"certificate_generated", "required">], "required", never>;
+        details: import("convex/values").VObject<{
+            score?: number | undefined;
+            notes?: string | undefined;
+            attachments?: string[] | undefined;
+            section?: string | undefined;
+            previousValue?: any;
+            newValue?: any;
+        }, {
+            section: import("convex/values").VString<string | undefined, "optional">;
+            previousValue: import("convex/values").VAny<any, "optional", string>;
+            newValue: import("convex/values").VAny<any, "optional", string>;
+            score: import("convex/values").VFloat64<number | undefined, "optional">;
+            notes: import("convex/values").VString<string | undefined, "optional">;
+            attachments: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
+        }, "required", "score" | "notes" | "attachments" | "section" | "previousValue" | "newValue" | `previousValue.${string}` | `newValue.${string}`>;
+        ipAddress: import("convex/values").VString<string | undefined, "optional">;
+        userAgent: import("convex/values").VString<string | undefined, "optional">;
+        sessionId: import("convex/values").VString<string | undefined, "optional">;
+        timestamp: import("convex/values").VFloat64<number, "required">;
+    }, "required", "verifierId" | "timestamp" | "verificationId" | "action" | "details" | "ipAddress" | "userAgent" | "sessionId" | "details.score" | "details.notes" | "details.attachments" | "details.section" | "details.previousValue" | "details.newValue" | `details.previousValue.${string}` | `details.newValue.${string}`>, {
+        by_verification: ["verificationId", "_creationTime"];
+        by_verifier: ["verifierId", "_creationTime"];
+        by_action: ["action", "_creationTime"];
+        by_timestamp: ["timestamp", "_creationTime"];
     }, {}, {}>;
     notifications: import("convex/server").TableDefinition<import("convex/values").VObject<{
         readAt?: number | undefined;
