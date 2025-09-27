@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Edit, Plus, MoreHorizontal, Check, X, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from '@packages/backend/convex/_generated/api';
+import Link from 'next/link';
 
 interface LearningPath {
   id: string;
@@ -255,9 +256,17 @@ export default function EducationHubPage() {
           <LearningPathsTable />
         </TabsContent>
 
+
         <TabsContent value="analytics">
-          <EducationAnalytics />
+          <EducationAnalytics href="/learn/analytics"/>
         </TabsContent>
+
+        <Link
+          href="/learn/analytics"
+          className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+        >
+          Analytics
+        </Link>
 
         <TabsContent value="settings">
           <Card>

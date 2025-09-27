@@ -10,6 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 import { PlatformAnalyticsCharts } from '@/components/dashboard/admin/PlatformAnalyticsCharts';
 import { QuickActionsPanel } from '@/components/dashboard/admin/QuickActionsPanel';
@@ -23,6 +24,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { SystemOverviewMetrics } from '@/types/dashboard.types';
+import LearnAnalytics from '../../../learn/analytics/page';
 
 // Mock user data for the admin
 const mockAdminUser = {
@@ -135,6 +137,17 @@ export default function AdminDashboardPage() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          >
+            <Link href="/learn/analytics" className="flex items-center">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -186,7 +199,9 @@ export default function AdminDashboardPage() {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <PlatformAnalyticsCharts loading={loading} />
+          <div className="p-6 pt-0">
+            <LearnAnalytics />
+          </div>
         </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
