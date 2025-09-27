@@ -320,6 +320,14 @@ export const getNextMilestoneDeadline = query({
       (a, b) => a.plannedDate - b.plannedDate
     )[0];
 
+    if (!nextMilestone) {
+      return {
+        days: 0,
+        urgency: 'none' as const,
+        status: 'No upcoming milestones',
+      };
+    }
+
     const deadlineDate = new Date(nextMilestone.plannedDate);
     const now = new Date();
     const diffTime = deadlineDate.getTime() - now.getTime();
@@ -379,7 +387,16 @@ export const analyzeProgressTrends = query({
     const trend = calculateLinearTrend(progressData);
 
     // Predict completion date if trend continues
-    const currentProgress = progressData[progressData.length - 1].y;
+    const lastDataPoint = progressData[progressData.length - 1];
+    if (!lastDataPoint) {
+      return {
+        trend: 'no_data',
+        projectedCompletion: null,
+        riskLevel: 'unknown',
+        suggestions: ['No progress data available for analysis'],
+      };
+    }
+    const currentProgress = lastDataPoint.y;
     const remainingProgress = 100 - currentProgress;
     const daysPerPercent =
       trend.slope > 0 ? days / updates.length / trend.slope : null;

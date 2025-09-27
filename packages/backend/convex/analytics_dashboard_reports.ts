@@ -1966,14 +1966,17 @@ async function calculatePerformanceTrends(
     });
   }
 
+  const firstValue = data.length > 0 ? data[0]?.value : 0;
+  const lastValue = data.length > 0 ? data[data.length - 1]?.value : 0;
+
   return {
     metric,
     timeframe,
     granularity,
     data,
     trend:
-      data[data.length - 1].value > data[0].value ? 'increasing' : 'decreasing',
-    averageGrowth: data.reduce((sum, d) => sum + d.change, 0) / data.length,
+      data.length > 0 && firstValue !== undefined && lastValue !== undefined && lastValue > firstValue ? 'increasing' : 'decreasing',
+    averageGrowth: data.length > 0 ? data.reduce((sum, d) => sum + d.change, 0) / data.length : 0,
   };
 }
 

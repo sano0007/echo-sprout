@@ -107,7 +107,7 @@ export const manualEscalation = mutation({
 
     // Send notifications for manual escalation
     const recipients =
-      escalationChain[newLevel] || escalationChain[escalationChain.length - 1];
+      escalationChain[newLevel] || escalationChain[escalationChain.length - 1] || [];
     // Note: Notification sending would be implemented here
     // await sendEscalationNotification({
     //   alertId,
@@ -423,7 +423,7 @@ async function performEscalation(ctx: any, alert: any) {
 
   // Send notifications
   const recipients =
-    escalationChain[newLevel] || escalationChain[escalationChain.length - 1];
+    escalationChain[newLevel] || escalationChain[escalationChain.length - 1] || [];
   // Note: Notification sending would be implemented here
   console.log(`Sending escalation notification to ${recipients.length} recipients`);
 
@@ -494,7 +494,7 @@ function calculateNextEscalationTime(
   const severityDelays =
     delays[severity as keyof typeof delays] || delays.medium;
   const delayIndex = Math.min(currentLevel, severityDelays.length - 1);
-  const delayMinutes = severityDelays[delayIndex];
+  const delayMinutes = severityDelays[delayIndex] || 240; // Default to 4 hours if undefined
 
   return Date.now() + delayMinutes * 60 * 1000;
 }
@@ -551,13 +551,13 @@ function getDefaultEscalationConfig(severity: string) {
 
   // Adjust delays based on severity
   if (severity === 'critical') {
-    baseConfig.escalationChain[1].delayMinutes = 30;
-    baseConfig.escalationChain[2].delayMinutes = 120;
-    baseConfig.escalationChain[3].delayMinutes = 240;
+    if (baseConfig.escalationChain[1]) baseConfig.escalationChain[1].delayMinutes = 30;
+    if (baseConfig.escalationChain[2]) baseConfig.escalationChain[2].delayMinutes = 120;
+    if (baseConfig.escalationChain[3]) baseConfig.escalationChain[3].delayMinutes = 240;
   } else if (severity === 'high') {
-    baseConfig.escalationChain[1].delayMinutes = 60;
-    baseConfig.escalationChain[2].delayMinutes = 240;
-    baseConfig.escalationChain[3].delayMinutes = 480;
+    if (baseConfig.escalationChain[1]) baseConfig.escalationChain[1].delayMinutes = 60;
+    if (baseConfig.escalationChain[2]) baseConfig.escalationChain[2].delayMinutes = 240;
+    if (baseConfig.escalationChain[3]) baseConfig.escalationChain[3].delayMinutes = 480;
   }
 
   return { rules: baseConfig };

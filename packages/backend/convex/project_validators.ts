@@ -367,7 +367,7 @@ export class SolarEnergyValidator {
       0.7, // November
       0.6, // December
     ];
-    return seasonalFactors[month];
+    return seasonalFactors[month] || 1.0;
   }
 
   private validateEnergyGeneration(

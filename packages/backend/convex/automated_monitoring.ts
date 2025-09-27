@@ -60,7 +60,7 @@ export const enhancedDailyMonitoring = internalAction({
         ]);
 
       const totalAlerts: number =
-        projectAlerts + milestoneAlerts + reportAlerts + anomalyAlerts;
+        (projectAlerts || 0) + (milestoneAlerts || 0) + (reportAlerts || 0) + (anomalyAlerts || 0);
 
       // Generate daily monitoring report
       await ctx.runMutation(internal.automated_monitoring.generateDailyMonitoringReport, {
@@ -840,7 +840,8 @@ function getEscalationDelay(severity: string): number {
     high: 24 * 60 * 60 * 1000, // 1 day
     critical: 4 * 60 * 60 * 1000, // 4 hours
   };
-  return delays[severity] || delays.medium;
+  const delay = delays[severity];
+  return delay !== undefined ? delay : (delays.medium || 3 * 24 * 60 * 60 * 1000);
 }
 
 /**
@@ -865,7 +866,10 @@ function detectProgressAnomalies(progressValues: number[]): any {
 
   // Check for impossible progress jumps
   for (let i = 1; i < progressValues.length; i++) {
-    const jump = progressValues[i] - progressValues[i - 1];
+    const currentValue = progressValues[i];
+    const previousValue = progressValues[i - 1];
+    if (currentValue === undefined || previousValue === undefined) continue;
+    const jump = currentValue - previousValue;
     if (jump > 40) {
       return {
         description: `Unusually large progress increase of ${jump}% detected`,

@@ -60,11 +60,12 @@ export const validateCompleteProgressUpdate = query({
 
     // 3. Impact metrics validation
     if (updateData.measurementData) {
-      const metricsValidation = await validateImpactMetricsAdvanced(
+      const metricsValidation = await validateImpactMetricsAdvancedHelper(
         ctx,
         project.projectType,
         updateData.measurementData,
-        projectId
+        projectId,
+        true
       );
       errors.push(...metricsValidation.errors);
       warnings.push(...metricsValidation.warnings);
@@ -96,7 +97,7 @@ export const validateCompleteProgressUpdate = query({
     }
 
     // 6. Anomaly detection
-    const anomalyValidation = await detectProgressAnomalies(
+    const anomalyValidation = await detectProgressAnomaliesHelper(
       ctx,
       projectId,
       updateData
@@ -133,6 +134,100 @@ export const validateCompleteProgressUpdate = query({
 });
 
 /**
+ * Helper function for impact metrics validation
+ */
+async function validateImpactMetricsAdvancedHelper(
+  ctx: any,
+  projectType: string,
+  metrics: any,
+  projectId: string,
+  compareToHistory = true
+): Promise<{
+  errors: string[];
+  warnings: string[];
+  penalties: number;
+  score: number;
+  insights: string[];
+}> {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const insights: string[] = [];
+  let penalties = 0;
+
+  // Get project-specific thresholds
+  const thresholds = getProjectThresholds(projectType);
+
+  // Validate each metric
+  for (const [metricName, value] of Object.entries(metrics)) {
+    if (typeof value !== 'number') continue;
+
+    const threshold = thresholds[metricName];
+    if (!threshold) {
+      warnings.push(
+        `No validation threshold defined for metric: ${metricName}`
+      );
+      penalties += 2;
+      continue;
+    }
+
+    // Range validation
+    if (value < threshold.min) {
+      errors.push(
+        `${metricName} value ${value} is below minimum threshold of ${threshold.min}`
+      );
+      penalties += 15;
+    } else if (value > threshold.max) {
+      errors.push(
+        `${metricName} value ${value} exceeds maximum threshold of ${threshold.max}`
+      );
+      penalties += 10;
+    } else if (value < threshold.min * 1.2) {
+      warnings.push(
+        `${metricName} value ${value} is close to minimum threshold`
+      );
+      penalties += 3;
+    } else if (value > threshold.max * 0.8) {
+      insights.push(
+        `${metricName} value ${value} is approaching maximum expected range`
+      );
+    }
+
+    // Reasonableness checks
+    if (value === 0 && metricName !== 'treesPlanted') {
+      warnings.push(
+        `${metricName} is reported as zero - verify this is accurate`
+      );
+      penalties += 5;
+    }
+  }
+
+  // Historical comparison
+  if (compareToHistory) {
+    const historicalAnalysis = await analyzeHistoricalMetrics(
+      ctx,
+      projectId,
+      metrics
+    );
+    warnings.push(...historicalAnalysis.warnings);
+    insights.push(...historicalAnalysis.insights);
+    penalties += historicalAnalysis.penalties;
+  }
+
+  // Project-specific validations
+  const projectValidation = validateProjectSpecificMetrics(
+    projectType,
+    metrics
+  );
+  errors.push(...projectValidation.errors);
+  warnings.push(...projectValidation.warnings);
+  penalties += projectValidation.penalties;
+
+  const score = Math.max(0, 100 - penalties);
+
+  return { errors, warnings, penalties, score, insights };
+}
+
+/**
  * Advanced impact metrics validation with historical analysis
  */
 export const validateImpactMetricsAdvanced = query({
@@ -145,91 +240,115 @@ export const validateImpactMetricsAdvanced = query({
   handler: async (
     ctx,
     { projectType, metrics, projectId, compareToHistory = true }
-  ): Promise<{
-    errors: string[];
-    warnings: string[];
-    penalties: number;
-    score: number;
-    insights: string[];
-  }> => {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    const insights: string[] = [];
-    let penalties = 0;
-
-    // Get project-specific thresholds
-    const thresholds = getProjectThresholds(projectType);
-
-    // Validate each metric
-    for (const [metricName, value] of Object.entries(metrics)) {
-      if (typeof value !== 'number') continue;
-
-      const threshold = thresholds[metricName];
-      if (!threshold) {
-        warnings.push(
-          `No validation threshold defined for metric: ${metricName}`
-        );
-        penalties += 2;
-        continue;
-      }
-
-      // Range validation
-      if (value < threshold.min) {
-        errors.push(
-          `${metricName} value ${value} is below minimum threshold of ${threshold.min}`
-        );
-        penalties += 15;
-      } else if (value > threshold.max) {
-        errors.push(
-          `${metricName} value ${value} exceeds maximum threshold of ${threshold.max}`
-        );
-        penalties += 10;
-      } else if (value < threshold.min * 1.2) {
-        warnings.push(
-          `${metricName} value ${value} is close to minimum threshold`
-        );
-        penalties += 3;
-      } else if (value > threshold.max * 0.8) {
-        insights.push(
-          `${metricName} value ${value} is approaching maximum expected range`
-        );
-      }
-
-      // Reasonableness checks
-      if (value === 0 && metricName !== 'treesPlanted') {
-        warnings.push(
-          `${metricName} is reported as zero - verify this is accurate`
-        );
-        penalties += 5;
-      }
-    }
-
-    // Historical comparison
-    if (compareToHistory) {
-      const historicalAnalysis = await analyzeHistoricalMetrics(
-        ctx,
-        projectId,
-        metrics
-      );
-      warnings.push(...historicalAnalysis.warnings);
-      insights.push(...historicalAnalysis.insights);
-      penalties += historicalAnalysis.penalties;
-    }
-
-    // Project-specific validations
-    const projectValidation = validateProjectSpecificMetrics(
+  ) => {
+    return await validateImpactMetricsAdvancedHelper(
+      ctx,
       projectType,
-      metrics
+      metrics,
+      projectId,
+      compareToHistory
     );
-    errors.push(...projectValidation.errors);
-    warnings.push(...projectValidation.warnings);
-    penalties += projectValidation.penalties;
-
-    const score = Math.max(0, 100 - penalties);
-
-    return { errors, warnings, penalties, score, insights };
   },
 });
+
+/**
+ * Helper function for detecting progress anomalies
+ */
+async function detectProgressAnomaliesHelper(
+  ctx: any,
+  projectId: string,
+  newUpdateData: any
+): Promise<{
+  warnings: string[];
+  insights: string[];
+  penalties: number;
+}> {
+  const warnings: string[] = [];
+  const insights: string[] = [];
+  let penalties = 0;
+
+  // Get recent progress history
+  const recentUpdates = await ctx.db
+    .query('progressUpdates')
+    .withIndex('by_project', (q: any) => q.eq('projectId', projectId))
+    .order('desc')
+    .take(10);
+
+  if (recentUpdates.length === 0) {
+    return { warnings, insights, penalties };
+  }
+
+  const newProgress = newUpdateData.progressPercentage;
+
+  // 1. Detect unusual progress jumps
+  const lastProgress = recentUpdates[0].progressPercentage;
+  const progressDiff = newProgress - lastProgress;
+
+  if (progressDiff > 25) {
+    warnings.push(
+      `Progress increased by ${progressDiff}% in a single update. Large jumps should be accompanied by detailed explanations.`
+    );
+    penalties += 8;
+  } else if (progressDiff > 15) {
+    insights.push(
+      `Significant progress increase of ${progressDiff}%. Consider providing additional context.`
+    );
+  }
+
+  if (progressDiff < -5) {
+    warnings.push(
+      `Progress decreased by ${Math.abs(progressDiff)}%. Progress reversals require explanation.`
+    );
+    penalties += 10;
+  }
+
+  // 2. Detect stagnant progress
+  if (recentUpdates.length >= 3) {
+    const recentProgressValues = recentUpdates
+      .slice(0, 3)
+      .map((u: any) => u.progressPercentage);
+    const maxDiff =
+      Math.max(...recentProgressValues) - Math.min(...recentProgressValues);
+
+    if (maxDiff < 2 && newProgress - recentProgressValues[0] < 2) {
+      warnings.push(
+        'Progress has been stagnant for the last several updates. Consider reporting any challenges or delays.'
+      );
+      penalties += 5;
+    }
+  }
+
+  // 3. Analyze reporting frequency
+  const daysBetweenUpdates =
+    recentUpdates.length > 1
+      ? (recentUpdates[0].reportingDate - recentUpdates[1].reportingDate) /
+        (1000 * 60 * 60 * 24)
+      : 0;
+
+  if (daysBetweenUpdates < 7) {
+    insights.push(
+      'Frequent updates detected. Ensure each update provides meaningful new information.'
+    );
+  } else if (daysBetweenUpdates > 45) {
+    warnings.push(
+      'Long gap since last update. Regular reporting helps maintain project transparency.'
+    );
+    penalties += 3;
+  }
+
+  // 4. Impact metrics consistency
+  if (newUpdateData.measurementData && recentUpdates.length > 0) {
+    const metricConsistency = analyzeMetricConsistency(
+      recentUpdates,
+      newUpdateData.measurementData
+    );
+    warnings.push(...metricConsistency.warnings);
+    insights.push(...metricConsistency.insights);
+    penalties += metricConsistency.penalties;
+  }
+
+  return { warnings, insights, penalties };
+}
 
 /**
  * Detect progress anomalies and unusual patterns
@@ -240,91 +359,7 @@ export const detectProgressAnomalies = query({
     newUpdateData: v.any(),
   },
   handler: async (ctx, { projectId, newUpdateData }) => {
-    const warnings: string[] = [];
-    const insights: string[] = [];
-    let penalties = 0;
-
-    // Get recent progress history
-    const recentUpdates = await ctx.db
-      .query('progressUpdates')
-      .withIndex('by_project', (q) => q.eq('projectId', projectId))
-      .order('desc')
-      .take(10);
-
-    if (recentUpdates.length === 0) {
-      return { warnings, insights, penalties };
-    }
-
-    const newProgress = newUpdateData.progressPercentage;
-
-    // 1. Detect unusual progress jumps
-    const lastProgress = recentUpdates[0].progressPercentage;
-    const progressDiff = newProgress - lastProgress;
-
-    if (progressDiff > 25) {
-      warnings.push(
-        `Progress increased by ${progressDiff}% in a single update. Large jumps should be accompanied by detailed explanations.`
-      );
-      penalties += 8;
-    } else if (progressDiff > 15) {
-      insights.push(
-        `Significant progress increase of ${progressDiff}%. Consider providing additional context.`
-      );
-    }
-
-    if (progressDiff < -5) {
-      warnings.push(
-        `Progress decreased by ${Math.abs(progressDiff)}%. Progress reversals require explanation.`
-      );
-      penalties += 10;
-    }
-
-    // 2. Detect stagnant progress
-    if (recentUpdates.length >= 3) {
-      const recentProgressValues = recentUpdates
-        .slice(0, 3)
-        .map((u) => u.progressPercentage);
-      const maxDiff =
-        Math.max(...recentProgressValues) - Math.min(...recentProgressValues);
-
-      if (maxDiff < 2 && newProgress - recentProgressValues[0] < 2) {
-        warnings.push(
-          'Progress has been stagnant for the last several updates. Consider reporting any challenges or delays.'
-        );
-        penalties += 5;
-      }
-    }
-
-    // 3. Analyze reporting frequency
-    const daysBetweenUpdates =
-      recentUpdates.length > 1
-        ? (recentUpdates[0].reportingDate - recentUpdates[1].reportingDate) /
-          (1000 * 60 * 60 * 24)
-        : 0;
-
-    if (daysBetweenUpdates < 7) {
-      insights.push(
-        'Frequent updates detected. Ensure each update provides meaningful new information.'
-      );
-    } else if (daysBetweenUpdates > 45) {
-      warnings.push(
-        'Long gap since last update. Regular reporting helps maintain project transparency.'
-      );
-      penalties += 3;
-    }
-
-    // 4. Impact metrics consistency
-    if (newUpdateData.measurementData && recentUpdates.length > 0) {
-      const metricConsistency = analyzeMetricConsistency(
-        recentUpdates,
-        newUpdateData.measurementData
-      );
-      warnings.push(...metricConsistency.warnings);
-      insights.push(...metricConsistency.insights);
-      penalties += metricConsistency.penalties;
-    }
-
-    return { warnings, insights, penalties };
+    return await detectProgressAnomaliesHelper(ctx, projectId, newUpdateData);
   },
 });
 
@@ -586,7 +621,7 @@ async function analyzeHistoricalMetrics(
 
   const recentUpdates = await ctx.db
     .query('progressUpdates')
-    .withIndex('by_project', (q) => q.eq('projectId', projectId))
+    .withIndex('by_project', (q: any) => q.eq('projectId', projectId))
     .order('desc')
     .take(5);
 
@@ -692,14 +727,18 @@ function analyzeMetricConsistency(
   // Check for erratic metric changes
   for (const metricName of Object.keys(newMetrics)) {
     const values = recentUpdates
-      .map((u) => u.measurementData?.[metricName] || u[metricName])
+      .map((u: any) => u.measurementData?.[metricName] || u[metricName])
       .filter((v) => typeof v === 'number')
       .slice(0, 3);
 
     if (values.length >= 2) {
       const changes = [];
       for (let i = 0; i < values.length - 1; i++) {
-        changes.push(values[i] - values[i + 1]);
+        const current = values[i];
+        const next = values[i + 1];
+        if (current !== undefined && next !== undefined) {
+          changes.push(current - next);
+        }
       }
 
       // Detect erratic changes

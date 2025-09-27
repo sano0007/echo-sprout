@@ -176,7 +176,7 @@ export const submitProgressUpdate = mutation({
       .order('desc')
       .take(2);
 
-    if (recentUpdates.length > 0) {
+    if (recentUpdates.length > 0 && recentUpdates[0]) {
       const previousProgress = recentUpdates[0].progressPercentage;
       const progressJump = args.progressPercentage - previousProgress;
 
@@ -440,7 +440,7 @@ export const getProgressSummary = query({
     );
 
     const daysSinceLastUpdate =
-      recentUpdates.length > 0
+      recentUpdates.length > 0 && recentUpdates[0]
         ? Math.floor(
             (Date.now() - recentUpdates[0].reportingDate) /
               (1000 * 60 * 60 * 24)
@@ -705,7 +705,7 @@ export const analyzeProgressForAlerts = internalMutation({
 
     const alerts = [];
 
-    if (recentUpdates.length > 1) {
+    if (recentUpdates.length > 1 && recentUpdates[1]) {
       const previousProgress = recentUpdates[1].progressPercentage;
       const progressJump = newUpdate.progressPercentage - previousProgress;
 

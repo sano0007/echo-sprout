@@ -60,9 +60,9 @@ export default function VerificationDashboard() {
   // Process verifications data
   const allVerifications = myVerifications.page || [];
   const projects = {
-    pending: allVerifications.filter((v) => v.status === 'assigned'),
-    inProgress: allVerifications.filter((v) => v.status === 'in_progress'),
-    completed: allVerifications.filter((v) =>
+    pending: allVerifications.filter((v: any) => v.status === 'assigned'),
+    inProgress: allVerifications.filter((v: any) => v.status === 'in_progress'),
+    completed: allVerifications.filter((v: any) =>
       ['completed', 'approved', 'rejected', 'revision_required'].includes(
         v.status
       )
@@ -160,7 +160,7 @@ export default function VerificationDashboard() {
                   <p>No pending verifications assigned to you.</p>
                 </div>
               ) : (
-                projects.pending.map((verification) => (
+                projects.pending.map((verification: any) => (
                   <VerificationCard
                     key={verification._id}
                     verification={verification}
@@ -179,7 +179,7 @@ export default function VerificationDashboard() {
                   <p>No verifications currently in progress.</p>
                 </div>
               ) : (
-                projects.inProgress.map((verification) => (
+                projects.inProgress.map((verification: any) => (
                   <VerificationCard
                     key={verification._id}
                     verification={verification}
@@ -198,7 +198,7 @@ export default function VerificationDashboard() {
                   <p>No completed verifications yet.</p>
                 </div>
               ) : (
-                projects.completed.map((verification) => (
+                projects.completed.map((verification: any) => (
                   <VerificationCard
                     key={verification._id}
                     verification={verification}

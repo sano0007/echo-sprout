@@ -228,6 +228,9 @@ export const compareProjectPerformance = query({
       for (const metric of args.comparisonMetrics) {
         const value = metrics[metric as keyof typeof metrics];
         if (typeof value === 'number' && value > 0) {
+          if (!comparisonData[metric]) {
+            comparisonData[metric] = [];
+          }
           comparisonData[metric].push(value);
         }
       }
@@ -250,7 +253,7 @@ export const compareProjectPerformance = query({
           industryValues.reduce((sum, val) => sum + val, 0) /
           industryValues.length;
         const sortedValues = [...industryValues].sort((a, b) => a - b);
-        const median = sortedValues[Math.floor(sortedValues.length / 2)];
+        const median = sortedValues[Math.floor(sortedValues.length / 2)] || 0;
         const percentile = calculatePercentile(projectValue, industryValues);
 
         comparisonMetricsResult[metric] = {
@@ -496,11 +499,14 @@ async function performTrendAnalysis(
   }
 
   // Growth analysis
-  const totalGrowth = values[values.length - 1] - values[0];
+  const lastValue = values[values.length - 1] || 0;
+  const firstValue = values[0] || 0;
+  const totalGrowth = lastValue - firstValue;
   const averageGrowthRate = totalGrowth / (values.length - 1);
   const compoundGrowthRate =
-    Math.pow(values[values.length - 1] / values[0], 1 / (values.length - 1)) -
-    1;
+    firstValue > 0
+      ? Math.pow(lastValue / firstValue, 1 / (values.length - 1)) - 1
+      : 0;
 
   // Volatility analysis
   const volatilityScore = Math.min(coefficientOfVariation, 1);

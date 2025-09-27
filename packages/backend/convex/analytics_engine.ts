@@ -1133,6 +1133,7 @@ export const getSystemHealth = query({
 
 // Scheduled analytics processing
 export const processScheduledAnalytics = internalMutation({
+  args: {},
   handler: async (ctx) => {
     // Daily analytics processing
     await processDailyAnalytics(ctx);
@@ -2582,12 +2583,11 @@ async function calculateImpactTrends(
   );
 
   // Simple trend calculation
+  const lastImpact = impactOverTime.length > 0 ? impactOverTime[impactOverTime.length - 1]?.impact : 0;
+  const firstImpact = impactOverTime.length > 0 ? impactOverTime[0]?.impact : 0;
   const trend =
-    impactOverTime.length > 1
-      ? ((impactOverTime[impactOverTime.length - 1].impact -
-          impactOverTime[0].impact) /
-          impactOverTime[0].impact) *
-        100
+    impactOverTime.length > 1 && firstImpact && lastImpact
+      ? ((lastImpact - firstImpact) / firstImpact) * 100
       : 0;
 
   return [
