@@ -27,106 +27,24 @@ export default function EditProject() {
     expectedCompletionDate: '' as string,
   });
 
-  // Document state - for new uploads and existing documents
-  const [uploadedDocuments, setUploadedDocuments] = useState<{
-    projectProposal: Array<{
-      file: File;
-      name: string;
-      size: string;
-      type: string;
-    }>;
-    environmentalAssessment: Array<{
-      file: File;
-      name: string;
-      size: string;
-      type: string;
-    }>;
-    sitePhotographs: Array<{
-      file: File;
-      name: string;
-      size: string;
-      type: string;
-    }>;
-    legalPermits: Array<{
-      file: File;
-      name: string;
-      size: string;
-      type: string;
-    }>;
-  }>({
-    projectProposal: [],
-    environmentalAssessment: [],
-    sitePhotographs: [],
-    legalPermits: [],
-  });
-  
-  // Existing documents from database
-  const [existingDocuments, setExistingDocuments] = useState<{
-    projectProposal: Array<{
-      _id: string;
-      fileName: string;
-      originalName: string;
-      fileType: string;
-      fileSizeFormatted: string;
-      isVerified: boolean;
-      documentType: string;
-      media: {
-        cloudinary_public_id: string;
-        cloudinary_url: string;
-      };
-    }>;
-    environmentalAssessment: Array<{
-      _id: string;
-      fileName: string;
-      originalName: string;
-      fileType: string;
-      fileSizeFormatted: string;
-      isVerified: boolean;
-      documentType: string;
-      media: {
-        cloudinary_public_id: string;
-        cloudinary_url: string;
-      };
-    }>;
-    sitePhotographs: Array<{
-      _id: string;
-      fileName: string;
-      originalName: string;
-      fileType: string;
-      fileSizeFormatted: string;
-      isVerified: boolean;
-      documentType: string;
-      media: {
-        cloudinary_public_id: string;
-        cloudinary_url: string;
-      };
-    }>;
-    legalPermits: Array<{
-      _id: string;
-      fileName: string;
-      originalName: string;
-      fileType: string;
-      fileSizeFormatted: string;
-      isVerified: boolean;
-      documentType: string;
-      media: {
-        cloudinary_public_id: string;
-        cloudinary_url: string;
-      };
-    }>;
-  }>({
-    projectProposal: [],
-    environmentalAssessment: [],
-    sitePhotographs: [],
-    legalPermits: [],
-  });
-  
-  const [convexDocumentUrls, setConvexDocumentUrls] = useState<{[storageId: string]: string}>({});
-  const [loadingDocumentUrls, setLoadingDocumentUrls] = useState<{[storageId: string]: boolean}>({});
-  const [tempUploadedFiles, setTempUploadedFiles] = useState<File[]>([]);
-  const [uploadedImagePreviews, setUploadedImagePreviews] = useState<{[storageId: string]: string}>({});
-  const [convexImageUrls, setConvexImageUrls] = useState<{[storageId: string]: string}>({});
-  const [loadingImageUrls, setLoadingImageUrls] = useState<{[storageId: string]: boolean}>({});
+  const [convexDocumentUrls, setConvexDocumentUrls] = useState<{
+    [storageId: string]: string;
+  }>({});
+  const [loadingDocumentUrls, setLoadingDocumentUrls] = useState<{
+    [storageId: string]: boolean;
+  }>({});
+  const [uploadedImagePreviews, setUploadedImagePreviews] = useState<{
+    [storageId: string]: string;
+  }>({});
+  const [convexImageUrls, setConvexImageUrls] = useState<{
+    [storageId: string]: string;
+  }>({});
+  const [loadingImageUrls, setLoadingImageUrls] = useState<{
+    [storageId: string]: boolean;
+  }>({});
+  // Unified documents upload queue state
+  const [docFiles, setDocFiles] = useState<File[]>([]);
+  const [isDocsUploading, setIsDocsUploading] = useState(false);
   const [projectImages, setProjectImages] = useState<
     Array<{
       cloudinary_public_id: string;
@@ -151,19 +69,10 @@ export default function EditProject() {
     api.projects.getProjectVerificationStatus,
     projectId ? { projectId: projectId as Id<'projects'> } : 'skip'
   );
-  
-  // Get project documents
-  const projectDocuments = useQuery(
-    api.documents.getDocumentsByEntity,
-    projectId ? { 
-      entityId: projectId as string,
-      entityType: 'project' as const
-    } : 'skip'
-  );
 
   // Mutation for updating project
   const updateProjectMutation = useMutation(api.projects.updateProject);
-  
+
   // Mutation for deleting documents
   const deleteDocumentMutation = useMutation(api.documents.deleteDocument);
 
@@ -203,43 +112,54 @@ export default function EditProject() {
       // Populate images and documents
       setProjectImages(projectData.projectImages || []);
       setFeaturedImage(projectData.featuredImage || null);
-      
+
       // Load Convex URLs for existing images
       if (projectData.projectImages) {
         const loadImageUrls = async () => {
           for (const image of projectData.projectImages) {
-            if (image.cloudinary_public_id && (image.cloudinary_url.startsWith('storage://') || !image.cloudinary_url.startsWith('http'))) {
+            if (
+              image.cloudinary_public_id &&
+              (image.cloudinary_url.startsWith('storage://') ||
+                !image.cloudinary_url.startsWith('http'))
+            ) {
               try {
                 // For existing images, get the URL from Convex storage
                 const storageId = image.cloudinary_public_id;
-                
+
                 // Set loading state
-                setLoadingImageUrls(prev => ({
+                setLoadingImageUrls((prev) => ({
                   ...prev,
-                  [storageId]: true
+                  [storageId]: true,
                 }));
-                
+
                 const url = await getStorageUrl({ storageId });
                 if (url) {
-                  setConvexImageUrls(prev => ({
+                  setConvexImageUrls((prev) => ({
                     ...prev,
-                    [storageId]: url
+                    [storageId]: url,
                   }));
                 }
               } catch (error) {
-                console.error('Failed to load image URL for storageId:', image.cloudinary_public_id, error);
+                console.error(
+                  'Failed to load image URL for storageId:',
+                  image.cloudinary_public_id,
+                  error
+                );
               } finally {
                 // Clear loading state
-                setLoadingImageUrls(prev => ({
+                setLoadingImageUrls((prev) => ({
                   ...prev,
-                  [image.cloudinary_public_id]: false
+                  [image.cloudinary_public_id]: false,
                 }));
               }
-            } else if (image.cloudinary_url && image.cloudinary_url.startsWith('http')) {
+            } else if (
+              image.cloudinary_url &&
+              image.cloudinary_url.startsWith('http')
+            ) {
               // If it's already a valid URL, use it directly
-              setConvexImageUrls(prev => ({
+              setConvexImageUrls((prev) => ({
                 ...prev,
-                [image.cloudinary_public_id]: image.cloudinary_url
+                [image.cloudinary_public_id]: image.cloudinary_url,
               }));
             }
           }
@@ -248,73 +168,57 @@ export default function EditProject() {
       }
     }
   }, [project]);
-  
-  // Load and categorize existing documents
+
+  // Load document URLs for documents attached to this project
   useEffect(() => {
-    if (projectDocuments && Array.isArray(projectDocuments)) {
-      // Categorize documents by type
-      const categorizedDocs = {
-        projectProposal: [] as any[],
-        environmentalAssessment: [] as any[],
-        sitePhotographs: [] as any[],
-        legalPermits: [] as any[],
-      };
-      
-      projectDocuments.forEach((doc: any) => {
-        if (doc.documentType === 'project_plan') {
-          categorizedDocs.projectProposal.push(doc);
-        } else if (doc.documentType === 'environmental_assessment') {
-          categorizedDocs.environmentalAssessment.push(doc);
-        } else if (doc.documentType === 'photos') {
-          categorizedDocs.sitePhotographs.push(doc);
-        } else if (doc.documentType === 'permits') {
-          categorizedDocs.legalPermits.push(doc);
-        }
-      });
-      
-      setExistingDocuments(categorizedDocs);
-      
-      // Load document URLs from Convex storage
+    const docs = project?.project?.documents;
+    if (docs && Array.isArray(docs)) {
       const loadDocumentUrls = async () => {
-        for (const doc of projectDocuments) {
-          if (doc.media?.cloudinary_public_id && (doc.media.cloudinary_url.startsWith('storage://') || !doc.media.cloudinary_url.startsWith('http'))) {
+        for (const doc of docs) {
+          if (
+            doc.media?.cloudinary_public_id &&
+            (doc.media.cloudinary_url?.startsWith('storage://') ||
+              !doc.media.cloudinary_url?.startsWith('http'))
+          ) {
             try {
               const storageId = doc.media.cloudinary_public_id;
-              
-              // Set loading state
-              setLoadingDocumentUrls(prev => ({
+              setLoadingDocumentUrls((prev) => ({
                 ...prev,
-                [storageId]: true
+                [storageId]: true,
               }));
-              
               const url = await getStorageUrl({ storageId });
               if (url) {
-                setConvexDocumentUrls(prev => ({
+                setConvexDocumentUrls((prev) => ({
                   ...prev,
-                  [storageId]: url
+                  [storageId]: url,
                 }));
               }
             } catch (error) {
-              console.error('Failed to load document URL for storageId:', doc.media.cloudinary_public_id, error);
+              console.error(
+                'Failed to load document URL for storageId:',
+                doc.media?.cloudinary_public_id,
+                error
+              );
             } finally {
-              // Clear loading state
-              setLoadingDocumentUrls(prev => ({
+              setLoadingDocumentUrls((prev) => ({
                 ...prev,
-                [doc.media.cloudinary_public_id]: false
+                [doc.media?.cloudinary_public_id || '']: false,
               }));
             }
-          } else if (doc.media?.cloudinary_url && doc.media.cloudinary_url.startsWith('http')) {
-            // If it's already a valid URL, use it directly
-            setConvexDocumentUrls(prev => ({
+          } else if (
+            doc.media?.cloudinary_url &&
+            doc.media.cloudinary_url.startsWith('http')
+          ) {
+            setConvexDocumentUrls((prev) => ({
               ...prev,
-              [doc.media.cloudinary_public_id]: doc.media.cloudinary_url
+              [doc.media.cloudinary_public_id]: doc.media.cloudinary_url,
             }));
           }
         }
       };
       loadDocumentUrls();
     }
-  }, [projectDocuments, getStorageUrl]);
+  }, [project, getStorageUrl]);
 
   // Authentication check
   if (!isLoaded) {
@@ -385,7 +289,11 @@ export default function EditProject() {
   };
 
   const validateDocumentFile = (file: File): string | null => {
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
     if (!allowedTypes.includes(file.type)) {
       return 'Only PDF, DOC, and DOCX files are allowed for documents';
     }
@@ -439,17 +347,17 @@ export default function EditProject() {
           if (!response.ok) throw new Error('Failed to upload file to storage');
 
           const { storageId } = await response.json();
-          
+
           const reader = new FileReader();
           reader.onload = (e) => {
             const previewUrl = e.target?.result as string;
-            setUploadedImagePreviews(prev => ({
+            setUploadedImagePreviews((prev) => ({
               ...prev,
-              [storageId]: previewUrl
+              [storageId]: previewUrl,
             }));
           };
           reader.readAsDataURL(file);
-          
+
           const newImage = {
             cloudinary_public_id: storageId,
             cloudinary_url: `storage://${storageId}`,
@@ -457,9 +365,9 @@ export default function EditProject() {
             isPrimary: projectImages.length === 0,
             uploadDate: Date.now(),
           };
-          
-          setProjectImages(prev => [...prev, newImage]);
-          
+
+          setProjectImages((prev) => [...prev, newImage]);
+
           if (projectImages.length === 0) {
             setFeaturedImage({
               cloudinary_public_id: newImage.cloudinary_public_id,
@@ -471,7 +379,7 @@ export default function EditProject() {
           errors.push(`${file.name}: Upload failed`);
         }
       }
-      
+
       if (errors.length > 0) {
         alert('Some images failed to upload:\n' + errors.join('\n'));
       }
@@ -480,60 +388,6 @@ export default function EditProject() {
       alert('Failed to process images. Please try again.');
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const handleSpecificDocumentUpload = (
-    files: File[],
-    documentType: 'projectProposal' | 'environmentalAssessment' | 'sitePhotographs' | 'legalPermits'
-  ) => {
-    if (!files || files.length === 0) return;
-
-    const validFiles: File[] = [];
-    const errors: string[] = [];
-
-    for (const file of files) {
-      let error: string | null = null;
-      
-      if (documentType === 'sitePhotographs') {
-        error = validateImageFile2(file);
-      } else {
-        error = validateDocumentFile(file);
-      }
-      
-      if (error) {
-        errors.push(`${file.name}: ${error}`);
-      } else {
-        validFiles.push(file);
-      }
-    }
-
-    if (errors.length > 0) {
-      const documentTypeNames = {
-        projectProposal: 'Project Proposal',
-        environmentalAssessment: 'Environmental Assessment',
-        sitePhotographs: 'Site Photographs',
-        legalPermits: 'Legal Permits'
-      };
-      alert(`${documentTypeNames[documentType]} upload errors:\n` + errors.join('\n'));
-    }
-
-    if (validFiles.length > 0) {
-      setTempUploadedFiles(prev => [...prev, ...validFiles]);
-      
-      const newDocuments = validFiles.map(file => ({
-        file,
-        name: file.name,
-        size: formatFileSize(file.size),
-        type: documentType === 'sitePhotographs' 
-          ? file.type.split('/')[1]?.toUpperCase()
-          : file.type.includes('pdf') ? 'PDF' : 'DOC',
-      }));
-      
-      setUploadedDocuments(prev => ({
-        ...prev,
-        [documentType]: [...prev[documentType], ...newDocuments]
-      }));
     }
   };
 
@@ -1075,16 +929,31 @@ export default function EditProject() {
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                       </div>
-                    ) : uploadedImagePreviews[image.cloudinary_public_id] || convexImageUrls[image.cloudinary_public_id] ? (
+                    ) : uploadedImagePreviews[image.cloudinary_public_id] ||
+                      convexImageUrls[image.cloudinary_public_id] ? (
                       <img
-                        src={uploadedImagePreviews[image.cloudinary_public_id] || convexImageUrls[image.cloudinary_public_id] || image.cloudinary_url}
+                        src={
+                          uploadedImagePreviews[image.cloudinary_public_id] ||
+                          convexImageUrls[image.cloudinary_public_id] ||
+                          image.cloudinary_url
+                        }
                         alt={image.caption || `Project image ${index + 1}`}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-12 h-12 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
                     )}
@@ -1119,13 +988,18 @@ export default function EditProject() {
                               prev.filter((_, i) => i !== index)
                             );
                             // Clean up preview
-                            setUploadedImagePreviews(prev => {
+                            setUploadedImagePreviews((prev) => {
                               const newPreviews = { ...prev };
-                              delete newPreviews[imageToRemove?.cloudinary_public_id ?? ""];
+                              delete newPreviews[
+                                imageToRemove?.cloudinary_public_id ?? ''
+                              ];
                               return newPreviews;
                             });
                             // Clear featured image if it was the one being removed
-                            if (featuredImage?.cloudinary_public_id === imageToRemove?.cloudinary_public_id) {
+                            if (
+                              featuredImage?.cloudinary_public_id ===
+                              imageToRemove?.cloudinary_public_id
+                            ) {
                               setFeaturedImage(null);
                             }
                           }}
@@ -1136,7 +1010,9 @@ export default function EditProject() {
                       </div>
                     </div>
                   </div>
-                  {(image.isPrimary || featuredImage?.cloudinary_public_id === image.cloudinary_public_id) && (
+                  {(image.isPrimary ||
+                    featuredImage?.cloudinary_public_id ===
+                      image.cloudinary_public_id) && (
                     <div className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-3 py-1 rounded-full shadow-lg">
                       ⭐ Primary
                     </div>
@@ -1147,8 +1023,18 @@ export default function EditProject() {
           ) : (
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
               <div className="text-center">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  className="w-16 h-16 text-gray-400 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
                 <h4 className="text-lg font-medium text-gray-900 mb-2">
                   No project images uploaded yet
@@ -1161,380 +1047,196 @@ export default function EditProject() {
           )}
         </div>
 
-        {/* Required Documents Sections */}
+        {/* Project Documents (Unified) */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          <div className="flex items-center gap-4 mb-8">
+          <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-xl text-white">📄</span>
             </div>
             <div>
               <h4 className="text-2xl font-bold text-gray-900">
-                Required Documents
+                Project Documents
               </h4>
               <p className="text-gray-600">
-                Upload project documentation by category
+                Upload and manage all project documents (PDF, DOC, DOCX)
               </p>
             </div>
           </div>
 
-          <div className="space-y-6">
-            {/* Project Proposal Document */}
-            <div className="border rounded-lg p-4">
-              <h4 className="text-md font-medium mb-2">Project proposal document (PDF, DOC, and DOCX files)</h4>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mb-3">
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    if (files.length > 0) {
-                      handleSpecificDocumentUpload(files, 'projectProposal');
-                    }
-                  }}
-                  className="hidden"
-                  id="edit-project-proposal-upload"
+          {/* Upload area */}
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mb-3">
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) {
+                  const valid: File[] = [];
+                  const errs: string[] = [];
+                  for (const f of files) {
+                    const err = validateDocumentFile(f);
+                    if (err) errs.push(`${f.name}: ${err}`);
+                    else valid.push(f);
+                  }
+                  if (errs.length)
+                    alert('Document upload errors:\n' + errs.join('\n'));
+                  if (valid.length) setDocFiles((prev) => [...prev, ...valid]);
+                }
+              }}
+              className="hidden"
+              id="edit-documents-upload"
+            />
+            <label
+              htmlFor="edit-documents-upload"
+              className="cursor-pointer flex flex-col items-center"
+            >
+              <svg
+                className="w-8 h-8 text-gray-400 mb-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
-                <label htmlFor="edit-project-proposal-upload" className="cursor-pointer flex flex-col items-center">
-                  <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span className="text-blue-600 hover:text-blue-800 text-sm">Click to upload</span>
-                </label>
-              </div>
-              {uploadedDocuments.projectProposal.length > 0 && (
-                <div className="space-y-2">
-                  {uploadedDocuments.projectProposal.map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
-                      <div className="flex items-center space-x-2">
-                        <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                        </svg>
-                        <div>
-                          <p className="text-xs font-medium text-gray-900 truncate">{doc.name}</p>
-                          <p className="text-xs text-gray-500">{doc.type} • {doc.size}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setUploadedDocuments(prev => ({
-                            ...prev,
-                            projectProposal: prev.projectProposal.filter((_, i) => i !== index)
-                          }));
-                          setTempUploadedFiles(prev => prev.filter(file => file.name !== doc.name));
-                        }}
-                        className="text-gray-400 hover:text-red-600 p-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              </svg>
+              <span className="text-blue-600 hover:text-blue-800 text-sm">
+                Click to select documents
+              </span>
+            </label>
+          </div>
 
-              {existingDocuments.projectProposal.length > 0 && (
-                <div className="mt-3">
-                  <h5 className="text-sm font-medium text-gray-700 mb-2">Existing files</h5>
-                  <div className="space-y-2">
-                    {existingDocuments.projectProposal.map((doc: any, index: number) => (
-                      <div key={doc._id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
-                        <div className="flex items-center space-x-2">
-                          <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                          </svg>
-                          <div className="min-w-0">
-                            <a
-                              href={convexDocumentUrls[doc.media?.cloudinary_public_id] || doc.media?.cloudinary_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-medium text-blue-600 hover:underline truncate block"
-                              title={doc.originalName || doc.fileName}
-                            >
-                              {doc.originalName || doc.fileName}
-                            </a>
-                            <p className="text-[10px] text-gray-500">
-                              {doc.fileType} • {doc.fileSizeFormatted} {doc.isVerified ? '• Verified' : ''}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+          {/* Queued docs */}
+          {docFiles.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {docFiles.map((f, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+                >
+                  <div className="text-xs truncate flex-1 mr-2">{f.name}</div>
+                  <button
+                    onClick={() =>
+                      setDocFiles((prev) => prev.filter((_, i) => i !== idx))
+                    }
+                    className="text-gray-400 hover:text-red-600 p-1"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
-              )}
+              ))}
             </div>
+          )}
 
-            {/* Environmental Impact Assessment */}
-            <div className="border rounded-lg p-4">
-              <h4 className="text-md font-medium mb-2">Environmental impact assessment (PDF, DOC, and DOCX files)</h4>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mb-3">
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    if (files.length > 0) {
-                      handleSpecificDocumentUpload(files, 'environmentalAssessment');
-                    }
-                  }}
-                  className="hidden"
-                  id="edit-environmental-assessment-upload"
-                />
-                <label htmlFor="edit-environmental-assessment-upload" className="cursor-pointer flex flex-col items-center">
-                  <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span className="text-blue-600 hover:text-blue-800 text-sm">Click to upload</span>
-                </label>
-              </div>
-              {uploadedDocuments.environmentalAssessment.length > 0 && (
-                <div className="space-y-2">
-                  {uploadedDocuments.environmentalAssessment.map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              disabled={isDocsUploading || docFiles.length === 0}
+              onClick={async () => {
+                if (isDocsUploading || docFiles.length === 0) return;
+                setIsDocsUploading(true);
+                try {
+                  for (const file of docFiles) {
+                    const uploadUrl = await generateUploadUrlAction();
+                    const response = await fetch(uploadUrl, {
+                      method: 'POST',
+                      body: file,
+                      headers: { 'Content-Type': file.type },
+                    });
+                    if (!response.ok)
+                      throw new Error('Failed to upload file to storage');
+                    const { storageId } = await response.json();
+                    await uploadDocumentMutation({
+                      projectId: projectId as Id<'projects'>,
+                      fileName: file.name,
+                      fileType: file.type,
+                      storageId,
+                    } as any);
+                  }
+                  setDocFiles([]);
+                  alert('Documents uploaded successfully!');
+                } catch (err) {
+                  console.error(err);
+                  alert('Failed to upload some documents');
+                } finally {
+                  setIsDocsUploading(false);
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isDocsUploading
+                ? 'Uploading…'
+                : `Upload ${docFiles.length || ''} Document${docFiles.length === 1 ? '' : 's'}`}
+            </button>
+          </div>
+
+          {/* Existing documents (display all except photos) */}
+          <div className="mt-6">
+            <h5 className="text-md font-semibold text-gray-900 mb-3">
+              Existing Documents
+            </h5>
+            {selectedProject?.documents &&
+            selectedProject.documents.filter(
+              (d: any) => d.documentType !== 'photos'
+            ).length > 0 ? (
+              <div className="space-y-2">
+                {selectedProject.documents
+                  .filter((d: any) => d.documentType !== 'photos')
+                  .map((doc: any, index: number) => (
+                    <div
+                      key={doc._id || index}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+                    >
                       <div className="flex items-center space-x-2">
-                        <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                        </svg>
-                        <div>
-                          <p className="text-xs font-medium text-gray-900 truncate">{doc.name}</p>
-                          <p className="text-xs text-gray-500">{doc.type} • {doc.size}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setUploadedDocuments(prev => ({
-                            ...prev,
-                            environmentalAssessment: prev.environmentalAssessment.filter((_, i) => i !== index)
-                          }));
-                          setTempUploadedFiles(prev => prev.filter(file => file.name !== doc.name));
-                        }}
-                        className="text-gray-400 hover:text-red-600 p-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {existingDocuments.environmentalAssessment.length > 0 && (
-                <div className="mt-3">
-                  <h5 className="text-sm font-medium text-gray-700 mb-2">Existing files</h5>
-                  <div className="space-y-2">
-                    {existingDocuments.environmentalAssessment.map((doc: any, index: number) => (
-                      <div key={doc._id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
-                        <div className="flex items-center space-x-2">
-                          <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                          </svg>
-                          <div className="min-w-0">
-                            <a
-                              href={convexDocumentUrls[doc.media?.cloudinary_public_id] || doc.media?.cloudinary_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-medium text-blue-600 hover:underline truncate block"
-                              title={doc.originalName || doc.fileName}
-                            >
-                              {doc.originalName || doc.fileName}
-                            </a>
-                            <p className="text-[10px] text-gray-500">
-                              {doc.fileType} • {doc.fileSizeFormatted} {doc.isVerified ? '• Verified' : ''}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Site Photographs */}
-            <div className="border rounded-lg p-4">
-              <h4 className="text-md font-medium mb-2">Site photographs (Images)</h4>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mb-3">
-                <input
-                  type="file"
-                  multiple
-                  accept=".png,.jpg,.jpeg,image/png,image/jpeg,image/jpg"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    if (files.length > 0) {
-                      handleSpecificDocumentUpload(files, 'sitePhotographs');
-                    }
-                  }}
-                  className="hidden"
-                  id="edit-site-photographs-upload"
-                />
-                <label htmlFor="edit-site-photographs-upload" className="cursor-pointer flex flex-col items-center">
-                  <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-blue-600 hover:text-blue-800 text-sm">Click to upload</span>
-                </label>
-              </div>
-              {uploadedDocuments.sitePhotographs.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {uploadedDocuments.sitePhotographs.map((doc, index) => (
-                    <div key={index} className="relative group">
-                      <div className="aspect-square bg-gray-100 rounded border flex items-center justify-center">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <button
-                          onClick={() => {
-                            setUploadedDocuments(prev => ({
-                              ...prev,
-                              sitePhotographs: prev.sitePhotographs.filter((_, i) => i !== index)
-                            }));
-                            setTempUploadedFiles(prev => prev.filter(file => file.name !== doc.name));
-                          }}
-                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        <svg
+                          className="w-5 h-5 text-red-600"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                      <p className="text-xs text-center mt-1 truncate">{doc.name}</p>
-                      <p className="text-xs text-center text-gray-500">{doc.type} • {doc.size}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {existingDocuments.sitePhotographs.length > 0 && (
-                <div className="mt-3">
-                  <h5 className="text-sm font-medium text-gray-700 mb-2">Existing photographs</h5>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {existingDocuments.sitePhotographs.map((doc: any, index: number) => (
-                      <a
-                        key={doc._id || index}
-                        href={convexDocumentUrls[doc.media?.cloudinary_public_id] || doc.media?.cloudinary_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="relative group"
-                      >
-                        <div className="aspect-square bg-gray-100 rounded border overflow-hidden">
-                          {(convexDocumentUrls[doc.media?.cloudinary_public_id] || doc.media?.cloudinary_url) ? (
-                            <img
-                              src={convexDocumentUrls[doc.media?.cloudinary_public_id] || doc.media?.cloudinary_url}
-                              alt={doc.originalName || `Photo ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-center mt-1 truncate">{doc.originalName || doc.fileName}</p>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Legal Permits and Certifications */}
-            <div className="border rounded-lg p-4">
-              <h4 className="text-md font-medium mb-2">Legal permits and certifications (PDF, DOC, and DOCX files)</h4>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mb-3">
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    if (files.length > 0) {
-                      handleSpecificDocumentUpload(files, 'legalPermits');
-                    }
-                  }}
-                  className="hidden"
-                  id="edit-legal-permits-upload"
-                />
-                <label htmlFor="edit-legal-permits-upload" className="cursor-pointer flex flex-col items-center">
-                  <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span className="text-blue-600 hover:text-blue-800 text-sm">Click to upload</span>
-                </label>
-              </div>
-              {uploadedDocuments.legalPermits.length > 0 && (
-                <div className="space-y-2">
-                  {uploadedDocuments.legalPermits.map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
-                      <div className="flex items-center space-x-2">
-                        <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
                         </svg>
-                        <div>
-                          <p className="text-xs font-medium text-gray-900 truncate">{doc.name}</p>
-                          <p className="text-xs text-gray-500">{doc.type} • {doc.size}</p>
+                        <div className="min-w-0">
+                          <a
+                            href={
+                              convexDocumentUrls[
+                                doc.media?.cloudinary_public_id
+                              ] || doc.media?.cloudinary_url
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-medium text-blue-600 hover:underline truncate block"
+                            title={doc.originalName || doc.fileName}
+                          >
+                            {doc.originalName || doc.fileName}
+                          </a>
+                          <p className="text-[10px] text-gray-500">
+                            {doc.fileType} • {doc.fileSizeFormatted}{' '}
+                            {doc.isVerified ? '• Verified' : ''}
+                          </p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => {
-                          setUploadedDocuments(prev => ({
-                            ...prev,
-                            legalPermits: prev.legalPermits.filter((_, i) => i !== index)
-                          }));
-                          setTempUploadedFiles(prev => prev.filter(file => file.name !== doc.name));
-                        }}
-                        className="text-gray-400 hover:text-red-600 p-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
                     </div>
                   ))}
-                </div>
-              )}
-
-              {existingDocuments.legalPermits.length > 0 && (
-                <div className="mt-3">
-                  <h5 className="text-sm font-medium text-gray-700 mb-2">Existing files</h5>
-                  <div className="space-y-2">
-                    {existingDocuments.legalPermits.map((doc: any, index: number) => (
-                      <div key={doc._id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
-                        <div className="flex items-center space-x-2">
-                          <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                          </svg>
-                          <div className="min-w-0">
-                            <a
-                              href={convexDocumentUrls[doc.media?.cloudinary_public_id] || doc.media?.cloudinary_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-medium text-blue-600 hover:underline truncate block"
-                              title={doc.originalName || doc.fileName}
-                            >
-                              {doc.originalName || doc.fileName}
-                            </a>
-                            <p className="text-[10px] text-gray-500">
-                              {doc.fileType} • {doc.fileSizeFormatted} {doc.isVerified ? '• Verified' : ''}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Overall Upload Status */}
-            {tempUploadedFiles.length > 0 && (
-              <div className="text-sm text-green-600 p-3 bg-green-50 rounded-lg border border-green-200">
-                ✓ {tempUploadedFiles.length} file{tempUploadedFiles.length !== 1 ? 's' : ''} ready to upload
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">
+                No documents uploaded yet
               </div>
             )}
           </div>

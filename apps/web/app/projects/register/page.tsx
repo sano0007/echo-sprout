@@ -142,11 +142,11 @@ export default function ProjectRegister() {
 
         const { storageId } = await response.json();
 
-        console.log("Storage ID", storageId);
+        console.log('Storage ID', storageId);
 
         const fileUrl = await getStorageUrl({ storageId });
 
-        console.log("File URL", fileUrl);
+        console.log('File URL', fileUrl);
 
         return {
           cloudinary_public_id: storageId,

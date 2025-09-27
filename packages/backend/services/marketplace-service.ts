@@ -40,9 +40,12 @@ export class MarketplaceService {
           price: project.pricePerCredit,
           credits: project.creditsAvailable,
           image:
-            project.images?.[0] ||
+            project.featuredImage?.cloudinary_url ||
+            project.projectImages?.[0]?.cloudinary_url ||
             'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg',
-          images: project.images || [],
+          images: (project.projectImages || []).map(
+            (img) => img.cloudinary_url
+          ),
           creator:
             creator?.organizationName ||
             `${creator?.firstName} ${creator?.lastName}` ||

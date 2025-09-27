@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 import { ConvexHttpClient } from 'convex/browser';
 
 const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);

@@ -18,7 +18,8 @@ const nextConfig = {
     // Add module resolution for the backend package
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@packages/backend': path.resolve(__dirname, '../backend'),
+      // Point to the monorepo backend package correctly from apps/web
+      '@packages/backend': path.resolve(__dirname, '../../packages/backend'),
     };
     return config;
   },
