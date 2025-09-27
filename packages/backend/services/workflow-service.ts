@@ -58,7 +58,12 @@ export class WorkflowService {
 
     const project = await ctx.db.get(verification.projectId);
     if (!project) {
-      throw new Error('Project not found');
+      console.error(
+        `Orphaned verification found during assignment: ${verificationId} references non-existent project: ${verification.projectId}`
+      );
+      throw new Error(
+        'Associated project not found - cannot assign verification'
+      );
     }
 
     // Send notification to verifier
@@ -98,7 +103,22 @@ export class WorkflowService {
 
     const project = await ctx.db.get(verification.projectId);
     if (!project) {
-      throw new Error('Project not found');
+      // Log the orphaned verification and mark it as failed
+      console.error(
+        `Orphaned verification found: ${verificationId} references non-existent project: ${verification.projectId}`
+      );
+
+      // Update verification status to indicate the issue
+      await ctx.db.patch(verificationId, {
+        status: 'rejected',
+        verificationNotes:
+          'Project no longer exists - verification cannot proceed',
+        completedAt: Date.now(),
+      });
+
+      throw new Error(
+        'Associated project not found - verification has been marked as rejected'
+      );
     }
 
     // Get verifier details
@@ -143,7 +163,12 @@ export class WorkflowService {
 
     const project = await ctx.db.get(verification.projectId);
     if (!project) {
-      throw new Error('Project not found');
+      console.error(
+        `Orphaned verification found during completion: ${verificationId} references non-existent project: ${verification.projectId}`
+      );
+      throw new Error(
+        'Associated project not found - cannot complete verification'
+      );
     }
 
     // Notify project creator

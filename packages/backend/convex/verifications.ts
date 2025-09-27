@@ -2,6 +2,7 @@ import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { VerificationService } from '../services/verification-service';
 import { UserService } from '../services/user-service';
+import { WorkflowService } from '../services/workflow-service';
 import { paginationOptsValidator } from 'convex/server';
 
 // Create a new verification
@@ -181,6 +182,25 @@ export const getPendingVerifications = query({
   },
 });
 
+// Accept verification assignment
+export const acceptVerification = mutation({
+  args: { verificationId: v.id('verifications') },
+  handler: async (ctx, { verificationId }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'verifier') {
+      throw new Error('Unauthorized: Verifier access required');
+    }
+
+    const result = await VerificationService.acceptVerification(
+      ctx,
+      verificationId,
+      currentUser._id
+    );
+
+    return result;
+  },
+});
+
 // Start verification process
 export const startVerification = mutation({
   args: { verificationId: v.id('verifications') },
@@ -197,7 +217,6 @@ export const startVerification = mutation({
     );
 
     // Trigger workflow start
-    const { WorkflowService } = await import('../services/workflow-service');
     await WorkflowService.handleVerificationStart(
       ctx,
       verificationId,
@@ -244,6 +263,77 @@ export const updateVerificationChecklist = mutation({
   },
 });
 
+// Update enhanced verification checklist
+export const updateEnhancedChecklist = mutation({
+  args: {
+    verificationId: v.id('verifications'),
+    updates: v.object({
+      environmentalImpact: v.optional(
+        v.object({
+          carbonReductionValidated: v.optional(v.boolean()),
+          methodologyVerified: v.optional(v.boolean()),
+          calculationsAccurate: v.optional(v.boolean()),
+          score: v.optional(v.number()),
+          notes: v.optional(v.string()),
+        })
+      ),
+      projectFeasibility: v.optional(
+        v.object({
+          timelineAssessed: v.optional(v.boolean()),
+          budgetAnalyzed: v.optional(v.boolean()),
+          technicalApproachValid: v.optional(v.boolean()),
+          resourcesAvailable: v.optional(v.boolean()),
+          score: v.optional(v.number()),
+          notes: v.optional(v.string()),
+        })
+      ),
+      documentationQuality: v.optional(
+        v.object({
+          completenessCheck: v.optional(v.boolean()),
+          accuracyVerified: v.optional(v.boolean()),
+          complianceValidated: v.optional(v.boolean()),
+          formatStandards: v.optional(v.boolean()),
+          score: v.optional(v.number()),
+          notes: v.optional(v.string()),
+        })
+      ),
+      locationVerification: v.optional(
+        v.object({
+          geographicDataConfirmed: v.optional(v.boolean()),
+          landRightsVerified: v.optional(v.boolean()),
+          accessibilityAssessed: v.optional(v.boolean()),
+          environmentalSuitability: v.optional(v.boolean()),
+          score: v.optional(v.number()),
+          notes: v.optional(v.string()),
+        })
+      ),
+      sustainability: v.optional(
+        v.object({
+          longTermViabilityAnalyzed: v.optional(v.boolean()),
+          maintenancePlanReviewed: v.optional(v.boolean()),
+          stakeholderEngagement: v.optional(v.boolean()),
+          adaptabilityAssessed: v.optional(v.boolean()),
+          score: v.optional(v.number()),
+          notes: v.optional(v.string()),
+        })
+      ),
+    }),
+  },
+  handler: async (ctx, { verificationId, updates }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'verifier') {
+      throw new Error('Unauthorized: Verifier access required');
+    }
+
+    return await VerificationService.updateEnhancedChecklist(
+      ctx,
+      verificationId,
+      currentUser._id,
+      updates
+    );
+  },
+});
+
 // Complete verification
 export const completeVerification = mutation({
   args: {
@@ -280,7 +370,6 @@ export const completeVerification = mutation({
     );
 
     // Trigger workflow completion
-    const { WorkflowService } = await import('../services/workflow-service');
     await WorkflowService.handleVerificationCompletion(
       ctx,
       verificationId,
@@ -399,5 +488,130 @@ export const updateVerifierWorkload = mutation({
     }
 
     return await VerificationService.updateVerifierWorkload(ctx, verifierId);
+  },
+});
+
+// Save document annotations
+export const saveDocumentAnnotations = mutation({
+  args: {
+    verificationId: v.id('verifications'),
+    documentId: v.id('documents'),
+    annotations: v.array(
+      v.object({
+        id: v.string(),
+        type: v.string(),
+        content: v.string(),
+        position: v.object({
+          pageNumber: v.number(),
+          x: v.number(),
+          y: v.number(),
+          width: v.optional(v.number()),
+          height: v.optional(v.number()),
+        }),
+      })
+    ),
+  },
+  handler: async (ctx, { verificationId, documentId, annotations }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'verifier') {
+      throw new Error('Unauthorized: Verifier access required');
+    }
+
+    return await VerificationService.saveDocumentAnnotations(
+      ctx,
+      verificationId,
+      currentUser._id,
+      documentId,
+      annotations
+    );
+  },
+});
+
+// Generate verification certificate
+export const generateVerificationCertificate = mutation({
+  args: {
+    verificationId: v.id('verifications'),
+    certificateData: v.object({
+      certificateType: v.union(
+        v.literal('approval'),
+        v.literal('quality_assessment'),
+        v.literal('environmental_compliance')
+      ),
+      verifierCredentials: v.string(),
+      verificationStandard: v.string(),
+      complianceLevel: v.union(
+        v.literal('basic'),
+        v.literal('standard'),
+        v.literal('premium')
+      ),
+    }),
+  },
+  handler: async (ctx, { verificationId, certificateData }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || !['admin', 'verifier'].includes(currentUser.role)) {
+      throw new Error('Unauthorized: Admin or verifier access required');
+    }
+
+    return await VerificationService.generateVerificationCertificate(
+      ctx,
+      verificationId,
+      certificateData
+    );
+  },
+});
+
+// Get verification audit trail
+export const getVerificationAuditTrail = query({
+  args: { verificationId: v.id('verifications') },
+  handler: async (ctx, { verificationId }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || !['admin', 'verifier'].includes(currentUser.role)) {
+      throw new Error('Unauthorized: Admin or verifier access required');
+    }
+
+    // Verify access to verification
+    const verification = await ctx.db.get(verificationId);
+    if (!verification) {
+      throw new Error('Verification not found');
+    }
+
+    if (
+      currentUser.role === 'verifier' &&
+      verification.verifierId !== currentUser._id
+    ) {
+      throw new Error(
+        'Unauthorized: You can only view audit trails for your own verifications'
+      );
+    }
+
+    return await VerificationService.getVerificationAuditTrail(
+      ctx,
+      verificationId
+    );
+  },
+});
+
+// Get verifier acceptance statistics
+export const getVerifierAcceptanceStats = query({
+  args: { verifierId: v.optional(v.id('users')) },
+  handler: async (ctx, { verifierId }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('Unauthorized');
+    }
+
+    const targetVerifierId = verifierId || currentUser._id;
+
+    // Check permissions
+    if (currentUser.role !== 'admin' && targetVerifierId !== currentUser._id) {
+      throw new Error(
+        'Unauthorized: You can only view your own acceptance statistics'
+      );
+    }
+
+    return await VerificationService.getVerifierAcceptanceStats(
+      ctx,
+      targetVerifierId
+    );
   },
 });

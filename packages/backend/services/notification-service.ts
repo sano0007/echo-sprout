@@ -34,8 +34,6 @@ export class NotificationService {
       pushNotification?: boolean;
     }
   ) {
-    const currentTime = Date.now();
-
     const notificationData = {
       recipientId: data.recipientId,
       senderId: undefined,
@@ -61,11 +59,13 @@ export class NotificationService {
       expiresAt: undefined,
       metadata: undefined,
       isRead: false,
-      isArchived: false,
-      tags: undefined,
-      batchId: undefined,
-      parentNotificationId: undefined,
-      isTest: false,
+      isEmailSent: false,
+      isPushSent: false,
+        isArchived: false,
+        tags: undefined,
+        batchId: undefined,
+        parentNotificationId: undefined,
+        isTest: false,
     };
 
     const notificationId = await ctx.db.insert(

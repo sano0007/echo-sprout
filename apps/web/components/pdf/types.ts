@@ -13,6 +13,20 @@ export interface Annotation {
   author: string;
   timestamp: Date;
   selectedText?: string;
+  textRects?: DOMRect[]; // Individual text rectangles for better highlighting
+  replies?: AnnotationReply[];
+  isResolved?: boolean;
+  priority?: 'low' | 'medium' | 'high';
+  category?: string;
+  tags?: string[];
+}
+
+export interface AnnotationReply {
+  id: string;
+  content: string;
+  author: string;
+  timestamp: Date;
+  type?: 'reply' | 'resolution';
 }
 
 export interface PDFViewerProps {
