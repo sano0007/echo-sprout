@@ -317,7 +317,7 @@ export interface SustainabilityMetrics {
 // Buyer report generation functions
 export const generateBuyerImpactReport = mutation({
   args: {
-    buyerId: v.string(),
+    buyerId: v.id('users'),
     reportType: v.union(
       v.literal('portfolio_overview'),
       v.literal('individual_project'),
@@ -424,7 +424,7 @@ export const getBuyerImpactReport = query({
 });
 
 export const getBuyerPortfolio = query({
-  args: { buyerId: v.string() },
+  args: { buyerId: v.id('users') },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -453,7 +453,7 @@ export const getBuyerPortfolio = query({
 
 export const generateImpactCertificate = mutation({
   args: {
-    buyerId: v.string(),
+    buyerId: v.id('users'),
     certificateType: v.union(
       v.literal('carbon_offset'),
       v.literal('biodiversity'),
@@ -519,7 +519,7 @@ export const generateImpactCertificate = mutation({
 
 export const listBuyerReports = query({
   args: {
-    buyerId: v.string(),
+    buyerId: v.id('users'),
     reportType: v.optional(v.string()),
     limit: v.optional(v.number()),
   },
@@ -564,7 +564,7 @@ export const listBuyerReports = query({
 
 export const getBuyerImpactTrends = query({
   args: {
-    buyerId: v.string(),
+    buyerId: v.id('users'),
     timeframe: v.string(),
     metrics: v.array(v.string()),
   },
@@ -642,7 +642,7 @@ async function gatherBuyerReportData(ctx: any, args: any) {
   const purchases = await purchasesQuery.collect();
 
   // Get unique projects from purchases
-  const projectIds = [...new Set(purchases.map((p: any) => p.projectId))];
+  const projectIds = Array.from(new Set(purchases.map((p: any) => p.projectId)));
   const projects = await Promise.all(projectIds.map((id) => ctx.db.get(id)));
 
   // Get progress updates for these projects
@@ -733,7 +733,7 @@ async function buildPortfolioSummary(
   const totalInvestment = purchases.reduce((sum, p) => sum + p.totalAmount, 0);
 
   // Get unique projects
-  const uniqueProjects = [...new Set(purchases.map((p) => p.projectId))];
+  const uniqueProjects = Array.from(new Set(purchases.map((p) => p.projectId)));
   const projects = await Promise.all(
     uniqueProjects.map(async (id) => {
       const project = await ctx.db.get(id);
@@ -826,21 +826,24 @@ function generateProjectSummaries(
         onTrack: project.status === 'active',
       },
       verification: {
-        lastVerified: latestUpdate?.submittedAt || 0,
+        lastVerified: latestUpdate?.reportingDate || latestUpdate?._creationTime || 0,
         verificationStatus: 'verified',
         nextVerification: Date.now() + 30 * 24 * 60 * 60 * 1000,
         certificationLevel: 'gold',
       },
       location: {
-        country: project.location?.country || 'Unknown',
-        region: project.location?.region || 'Unknown',
-        coordinates: project.location?.coordinates,
+        country: project.location?.name || 'Unknown',
+        region: project.location?.name || 'Unknown',
+        coordinates: {
+          latitude: project.location?.lat || 0,
+          longitude: project.location?.long || 0,
+        },
       },
       timeline: {
         startDate: project.startDate || project._creationTime,
         expectedCompletion: project.expectedCompletionDate || 0,
         actualCompletion:
-          project.status === 'completed' ? project.completedAt : undefined,
+          project.status === 'completed' ? project.actualCompletionDate : undefined,
       },
       financials: {
         totalInvestment,
@@ -850,7 +853,7 @@ function generateProjectSummaries(
       },
       riskFactors: extractRiskFactors(project),
       recentUpdates: projectUpdates.slice(0, 3).map((update) => ({
-        date: update.submittedAt,
+        date: update.reportingDate || update._creationTime,
         type: 'progress',
         title: update.title,
         description: update.description,
@@ -950,11 +953,11 @@ function groupPurchasesByGeography(
     const project = projects.find((p) => p._id === purchase.projectId);
     if (!project || !project.location) return;
 
-    const key = `${project.location.country}-${project.location.region}`;
+    const key = `${project.location.name}-${project.location.name}`;
     if (!geoMap.has(key)) {
       geoMap.set(key, {
-        region: project.location.region,
-        country: project.location.country,
+        region: project.location.name,
+        country: project.location.name,
         projectCount: 0,
         creditsOwned: 0,
         projectIds: new Set(),
@@ -1424,3 +1427,350 @@ function calculateImpactTrends(
 
   return trends;
 }
+
+// ============= BUYER PROJECT TRACKING QUERIES =============
+
+/**
+ * Get project tracking data for a specific buyer
+ */
+export const getBuyerProjectTracking = query({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Verify user can access this data
+    const hasAccess = await verifyBuyerAccess(ctx, userId, identity.subject);
+    if (!hasAccess) {
+      throw new Error('Not authorized to access this data');
+    }
+
+    // Get all credit purchases by this user
+    const purchases = await ctx.db
+      .query('transactions')
+      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
+      .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
+      .collect();
+
+    const trackingData = [];
+
+    for (const purchase of purchases) {
+      const project = await ctx.db.get(purchase.projectId);
+      if (!project) continue;
+
+      // Get recent progress updates for this project
+      const recentUpdates = await ctx.db
+        .query('progressUpdates')
+        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .order('desc')
+        .take(3);
+
+      // Get project milestones
+      const milestones = await ctx.db
+        .query('projectMilestones')
+        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .order('asc')
+        .collect();
+
+      // Get active alerts for this project
+      const alerts = await ctx.db
+        .query('systemAlerts')
+        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .filter((q) => q.eq(q.field('isResolved'), false))
+        .collect();
+
+      // Calculate current progress
+      const completedMilestones = milestones.filter(m => m.status === 'completed').length;
+      const totalMilestones = milestones.length;
+      const overallProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+
+      // Get next milestone
+      const nextMilestone = milestones.find(m => m.status === 'pending' || m.status === 'in_progress');
+
+      // Calculate carbon impact to date
+      const latestUpdate = recentUpdates[0];
+      const carbonOffset = latestUpdate?.measurementData?.carbonImpactToDate ||
+                          (purchase.creditAmount * 1.5); // Fallback estimation
+
+      trackingData.push({
+        projectId: purchase.projectId,
+        projectTitle: project.title,
+        projectType: project.projectType,
+        creatorName: 'Project Creator', // Will need to fetch from users table
+        location: {
+          country: project.location?.name || 'Unknown',
+          region: project.location?.name || 'Unknown',
+        },
+        purchaseInfo: {
+          creditsOwned: purchase.creditAmount,
+          purchaseDate: purchase._creationTime,
+          totalInvestment: purchase.totalAmount,
+        },
+        currentStatus: {
+          overallProgress,
+          currentPhase: 'In Progress', // Schema doesn't have currentPhase
+          nextMilestone: nextMilestone?.title || 'Project Completion',
+          nextMilestoneDate: nextMilestone?.plannedDate || project.expectedCompletionDate,
+        },
+        recentUpdates: recentUpdates.map(update => ({
+          id: update._id,
+          type: update.updateType,
+          title: update.title,
+          description: update.description,
+          date: update.reportingDate || update._creationTime,
+          photos: update.photos?.map(p => p.cloudinary_url) || [],
+          metrics: update.measurementData,
+        })),
+        impact: {
+          carbonOffset,
+          additionalMetrics: latestUpdate?.measurementData || {},
+        },
+        alerts: alerts.map(alert => ({
+          id: alert._id,
+          severity: alert.severity,
+          message: alert.message,
+          date: alert._creationTime,
+          isResolved: alert.isResolved,
+        })),
+        milestones: milestones.map(milestone => ({
+          id: milestone._id,
+          title: milestone.title,
+          plannedDate: milestone.plannedDate,
+          actualDate: milestone.actualDate,
+          status: milestone.status,
+          description: milestone.description,
+        })),
+        verificationStatus: {
+          status: project.verificationStatus || 'pending',
+          lastVerified: project.verificationCompletedAt,
+          nextVerification: null, // Schema doesn't have nextVerificationDate
+        },
+      });
+    }
+
+    return trackingData;
+  },
+});
+
+/**
+ * Get detailed tracking data for a specific project (buyer view)
+ */
+export const getDetailedProjectTracking = query({
+  args: {
+    projectId: v.id('projects'),
+    userId: v.id('users'),
+  },
+  handler: async (ctx, { projectId, userId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Verify user can access this data
+    const hasAccess = await verifyBuyerAccess(ctx, userId, identity.subject);
+    if (!hasAccess) {
+      throw new Error('Not authorized to access this data');
+    }
+
+    // Verify the user has purchased credits for this project
+    const purchase = await ctx.db
+      .query('transactions')
+      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('projectId'), projectId),
+          q.eq(q.field('paymentStatus'), 'completed')
+        )
+      )
+      .first();
+
+    if (!purchase) {
+      throw new Error('Access denied: You have not purchased credits for this project');
+    }
+
+    const project = await ctx.db.get(projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // Get all progress updates
+    const progressUpdates = await ctx.db
+      .query('progressUpdates')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .order('desc')
+      .collect();
+
+    // Get all milestones
+    const milestones = await ctx.db
+      .query('projectMilestones')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .order('asc')
+      .collect();
+
+    // Get all alerts (resolved and unresolved)
+    const alerts = await ctx.db
+      .query('systemAlerts')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .order('desc')
+      .collect();
+
+    // Calculate detailed progress metrics
+    const completedMilestones = milestones.filter(m => m.status === 'completed').length;
+    const totalMilestones = milestones.length;
+    const overallProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+
+    const nextMilestone = milestones.find(m => m.status === 'pending' || m.status === 'in_progress');
+
+    // Calculate total carbon impact
+    const latestUpdate = progressUpdates[0];
+    const carbonOffset = latestUpdate?.measurementData?.carbonImpactToDate ||
+                        (purchase.creditAmount * 1.5);
+
+    return {
+      projectId,
+      projectTitle: project.title,
+      projectType: project.projectType,
+      projectDescription: project.description,
+      creatorName: 'Project Creator', // Will need to fetch from users table
+      location: {
+        country: project.location?.name || 'Unknown',
+        region: project.location?.name || 'Unknown',
+      },
+      purchaseInfo: {
+        creditsOwned: purchase.creditAmount,
+        purchaseDate: purchase._creationTime,
+        totalInvestment: purchase.totalAmount,
+      },
+      currentStatus: {
+        overallProgress,
+        currentPhase: 'In Progress', // Schema doesn't have currentPhase
+        nextMilestone: nextMilestone?.title || 'Project Completion',
+        nextMilestoneDate: nextMilestone?.plannedDate || project.expectedCompletionDate,
+      },
+      recentUpdates: progressUpdates.map(update => ({
+        id: update._id,
+        type: update.updateType,
+        title: update.title,
+        description: update.description,
+        date: update.reportingDate || update._creationTime,
+        photos: update.photos?.map(p => p.cloudinary_url) || [],
+        metrics: update.measurementData,
+      })),
+      impact: {
+        carbonOffset,
+        additionalMetrics: latestUpdate?.measurementData || {},
+      },
+      alerts: alerts.map(alert => ({
+        id: alert._id,
+        severity: alert.severity,
+        message: alert.message,
+        date: alert._creationTime,
+        isResolved: alert.isResolved,
+        resolvedAt: alert.resolvedAt,
+        resolutionNotes: alert.resolutionNotes,
+      })),
+      milestones: milestones.map(milestone => ({
+        id: milestone._id,
+        title: milestone.title,
+        plannedDate: milestone.plannedDate,
+        actualDate: milestone.actualDate,
+        status: milestone.status,
+        description: milestone.description,
+        delayReason: milestone.delayReason,
+      })),
+      verificationStatus: {
+        status: project.verificationStatus || 'pending',
+        lastVerified: project.verificationCompletedAt,
+        nextVerification: null, // Schema doesn't have nextVerificationDate
+      },
+      timeline: {
+        startDate: project.startDate,
+        expectedCompletion: project.expectedCompletionDate,
+        actualCompletion: project.actualCompletionDate,
+      },
+    };
+  },
+});
+
+/**
+ * Get buyer's portfolio summary for tracking overview
+ */
+export const getBuyerPortfolioSummary = query({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Verify user can access this data
+    const hasAccess = await verifyBuyerAccess(ctx, userId, identity.subject);
+    if (!hasAccess) {
+      throw new Error('Not authorized to access this data');
+    }
+
+    // Get all purchases by this buyer
+    const purchases = await ctx.db
+      .query('transactions')
+      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
+      .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
+      .collect();
+
+    let totalCredits = 0;
+    let totalInvestment = 0;
+    let totalCarbonOffset = 0;
+    let activeProjects = 0;
+    let completedProjects = 0;
+    let projectsWithIssues = 0;
+
+    for (const purchase of purchases) {
+      totalCredits += purchase.creditAmount;
+      totalInvestment += purchase.totalAmount;
+
+      const project = await ctx.db.get(purchase.projectId);
+      if (!project) continue;
+
+      // Get latest progress update for carbon impact
+      const latestUpdate = await ctx.db
+        .query('progressUpdates')
+        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .order('desc')
+        .first();
+
+      const carbonOffset = latestUpdate?.measurementData?.carbonImpactToDate ||
+                          (purchase.creditAmount * 1.5);
+      totalCarbonOffset += carbonOffset;
+
+      // Check project status
+      if (project.status === 'completed') {
+        completedProjects++;
+      } else {
+        activeProjects++;
+      }
+
+      // Check for unresolved alerts
+      const hasIssues = await ctx.db
+        .query('systemAlerts')
+        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .filter((q) => q.eq(q.field('isResolved'), false))
+        .first();
+
+      if (hasIssues) {
+        projectsWithIssues++;
+      }
+    }
+
+    return {
+      totalCredits,
+      totalInvestment,
+      totalCarbonOffset: Math.round(totalCarbonOffset * 10) / 10, // Round to 1 decimal
+      activeProjects,
+      completedProjects,
+      projectsWithIssues,
+      totalProjects: purchases.length,
+      averageInvestment: purchases.length > 0 ? totalInvestment / purchases.length : 0,
+    };
+  },
+});
