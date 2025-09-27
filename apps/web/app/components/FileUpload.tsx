@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useCallback, useRef, useState } from 'react';
-import { useAction, useMutation } from 'convex/react';
 import { api, Id } from '@packages/backend';
-import { File, FileText, Image, Upload, X } from 'lucide-react';
+import { useAction, useMutation } from 'convex/react';
+import { File, FileText, Image as ImageIcon, Upload, X } from 'lucide-react';
+import React, { useCallback, useRef, useState } from 'react';
 
 interface UploadedFile {
   id: string;
@@ -52,7 +52,7 @@ export default function FileUpload({
   console.log('Projects API:', api.projects);
 
   const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <Image className="w-6 h-6" />;
+    if (fileType.startsWith('image/')) return <ImageIcon className="w-6 h-6" />;
     if (fileType === 'application/pdf') return <FileText className="w-6 h-6" />;
     return <File className="w-6 h-6" />;
   };

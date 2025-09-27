@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation, useQuery, useAction } from 'convex/react';
-import { api, Id } from '@packages/backend';
 import { Project } from '@echo-sprout/types';
+import { api, Id } from '@packages/backend';
+import { useAction, useMutation, useQuery } from 'convex/react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
 import FileUpload from '../../components/FileUpload';
+import PageContainer from '../../../components/ui/PageContainer';
+import PageHeader from '../../../components/ui/PageHeader';
 
 export default function ManageProjects() {
   const router = useRouter();
@@ -222,40 +226,41 @@ export default function ManageProjects() {
 
   if (!projects) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Manage Projects</h1>
-          <a
-            href="/projects/register"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+      <PageContainer size="lg">
+        <PageHeader
+          title="Manage Projects"
+          right={
+            <a
+              href="/projects/register"
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            New Project
-          </a>
-        </div>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              New Project
+            </a>
+          }
+        />
         <div className="text-center py-16">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-lg text-gray-600">Loading your projects...</p>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Header */}
+    <PageContainer size="lg">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Manage Projects</h1>
@@ -268,7 +273,7 @@ export default function ManageProjects() {
             <input
               type="text"
               placeholder="Search projects..."
-              className="pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+              className="pl-12 pr-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -290,7 +295,7 @@ export default function ManageProjects() {
           </div>
           <a
             href="/projects/register"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
           >
             <svg
               className="w-5 h-5"
@@ -361,15 +366,18 @@ export default function ManageProjects() {
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                             </div>
                           ) : (
-                            <img
-                              src={
-                                convexImageUrls[
-                                  project.featuredImage.cloudinary_public_id
-                                ] || project.featuredImage.cloudinary_url
-                              }
-                              alt={project.title}
-                              className="w-20 h-20 rounded-lg object-cover shadow-sm"
-                            />
+                            <div className="relative w-20 h-20">
+                              <Image
+                                src={
+                                  convexImageUrls[
+                                    project.featuredImage.cloudinary_public_id
+                                  ] || project.featuredImage.cloudinary_url
+                                }
+                                alt={project.title || 'Project image'}
+                                fill
+                                className="rounded-lg object-cover shadow-sm"
+                              />
+                            </div>
                           )
                         ) : project.projectImages &&
                           project.projectImages.length > 0 &&
@@ -381,18 +389,22 @@ export default function ManageProjects() {
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                             </div>
                           ) : (
-                            <img
-                              src={
-                                convexImageUrls[
-                                  project.projectImages[0].cloudinary_public_id
-                                ] || project.projectImages[0].cloudinary_url
-                              }
-                              alt={
-                                project.projectImages[0].caption ||
-                                project.title
-                              }
-                              className="w-20 h-20 rounded-lg object-cover shadow-sm"
-                            />
+                            <div className="relative w-20 h-20">
+                              <Image
+                                src={
+                                  convexImageUrls[
+                                    project.projectImages[0]
+                                      .cloudinary_public_id
+                                  ] || project.projectImages[0].cloudinary_url
+                                }
+                                alt={
+                                  project.projectImages[0].caption ||
+                                  project.title
+                                }
+                                fill
+                                className="rounded-lg object-cover shadow-sm"
+                              />
+                            </div>
                           )
                         ) : (
                           <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-sm">
@@ -617,6 +629,6 @@ export default function ManageProjects() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

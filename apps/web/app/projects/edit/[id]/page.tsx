@@ -1,10 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { useAction, useQuery, useMutation } from 'convex/react';
 import { api, Id } from '@packages/backend';
+import { useAction, useMutation, useQuery } from 'convex/react';
+import Image from 'next/image';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+
+import Card from '../../../../components/ui/Card';
+import PageContainer from '../../../../components/ui/PageContainer';
+import PageHeader from '../../../../components/ui/PageHeader';
 
 export default function EditProject() {
   const { user, isLoaded } = useUser();
@@ -542,35 +547,13 @@ export default function EditProject() {
   const selectedProject = project.project;
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Back to Projects
-          </button>
-          <div className="h-6 w-px bg-gray-300"></div>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Project</h1>
-        </div>
-        <div className="flex items-center gap-4">
+    <PageContainer size="md">
+      <PageHeader
+        title="Edit Project"
+        backHref="/projects/manage"
+        right={
           <span
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(selectedProject.status)}`}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(selectedProject.status)}`}
           >
             <span>
               {selectedProject.status === 'approved'
@@ -591,20 +574,21 @@ export default function EditProject() {
             </span>
             {selectedProject.status?.replace('_', ' ').toUpperCase()}
           </span>
-        </div>
-      </div>
+        }
+      />
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Enhanced Hero Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        {/* Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Featured Image - Display Only */}
-          <div className="lg:col-span-2">
+          <Card className="lg:col-span-2">
             {selectedProject.featuredImage ? (
-              <div className="relative group">
-                <img
+              <div className="relative group h-80">
+                <Image
                   src={selectedProject.featuredImage.cloudinary_url}
-                  alt={selectedProject.title}
-                  className="w-full h-80 object-cover rounded-2xl shadow-xl"
+                  alt={selectedProject.title || 'Project image'}
+                  fill
+                  className="object-cover rounded-2xl shadow-xl"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-2xl"></div>
                 <div className="absolute bottom-4 left-4 right-4">
@@ -631,95 +615,89 @@ export default function EditProject() {
                 </div>
               </div>
             )}
-          </div>
+          </Card>
 
           {/* Project Info - Form Fields */}
-          <div className="lg:col-span-3">
-            <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8 h-full border border-gray-200">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                    Project Information
-                  </h3>
+          <Card className="lg:col-span-3">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                  Project Information
+                </h3>
 
-                  {/* Title */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Project Title *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) =>
-                        handleInputChange('title', e.target.value)
-                      }
-                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.title ? 'border-red-300' : 'border-gray-300'}`}
-                      placeholder="Enter project title"
-                    />
-                    {errors.title && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.title}
-                      </p>
-                    )}
-                  </div>
+                {/* Title */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Project Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.title ? 'border-red-300' : 'border-gray-300'}`}
+                    placeholder="Enter project title"
+                  />
+                  {errors.title && (
+                    <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+                  )}
+                </div>
 
-                  {/* Description */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Project Description *
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={formData.description}
-                      onChange={(e) =>
-                        handleInputChange('description', e.target.value)
-                      }
-                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.description ? 'border-red-300' : 'border-gray-300'}`}
-                      placeholder="Describe your carbon credit project"
-                    />
-                    {errors.description && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.description}
-                      </p>
-                    )}
-                  </div>
+                {/* Description */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Project Description *
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.description}
+                    onChange={(e) =>
+                      handleInputChange('description', e.target.value)
+                    }
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.description ? 'border-red-300' : 'border-gray-300'}`}
+                    placeholder="Describe your carbon credit project"
+                  />
+                  {errors.description && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.description}
+                    </p>
+                  )}
+                </div>
 
-                  {/* Project Type */}
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Project Type *
-                    </label>
-                    <select
-                      value={formData.projectType}
-                      onChange={(e) =>
-                        handleInputChange('projectType', e.target.value)
-                      }
-                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.projectType ? 'border-red-300' : 'border-gray-300'}`}
-                    >
-                      <option value="">Select project type</option>
-                      <option value="reforestation">Reforestation</option>
-                      <option value="solar">Solar Energy</option>
-                      <option value="wind">Wind Energy</option>
-                      <option value="biogas">Biogas</option>
-                      <option value="waste_management">Waste Management</option>
-                      <option value="mangrove_restoration">
-                        Mangrove Restoration
-                      </option>
-                    </select>
-                    {errors.projectType && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.projectType}
-                      </p>
-                    )}
-                  </div>
+                {/* Project Type */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Project Type *
+                  </label>
+                  <select
+                    value={formData.projectType}
+                    onChange={(e) =>
+                      handleInputChange('projectType', e.target.value)
+                    }
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.projectType ? 'border-red-300' : 'border-gray-300'}`}
+                  >
+                    <option value="">Select project type</option>
+                    <option value="reforestation">Reforestation</option>
+                    <option value="solar">Solar Energy</option>
+                    <option value="wind">Wind Energy</option>
+                    <option value="biogas">Biogas</option>
+                    <option value="waste_management">Waste Management</option>
+                    <option value="mangrove_restoration">
+                      Mangrove Restoration
+                    </option>
+                  </select>
+                  {errors.projectType && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.projectType}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Project Details Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Location */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -858,7 +836,10 @@ export default function EditProject() {
         </div>
 
         {/* Project Images Management */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+        <Card
+          title="Project Images"
+          description="Manage your project images and set featured image"
+        >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
@@ -924,21 +905,22 @@ export default function EditProject() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {projectImages.map((image, index) => (
                 <div key={index} className="relative group">
-                  <div className="aspect-square rounded-2xl overflow-hidden shadow-lg border-2 border-gray-100 hover:border-blue-300 transition-all duration-300">
+                  <div className="relative aspect-square rounded-2xl overflow-hidden shadow-lg border-2 border-gray-100 hover:border-blue-300 transition-all duration-300">
                     {loadingImageUrls[image.cloudinary_public_id] ? (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                       </div>
                     ) : uploadedImagePreviews[image.cloudinary_public_id] ||
                       convexImageUrls[image.cloudinary_public_id] ? (
-                      <img
+                      <Image
                         src={
                           uploadedImagePreviews[image.cloudinary_public_id] ||
                           convexImageUrls[image.cloudinary_public_id] ||
                           image.cloudinary_url
                         }
                         alt={image.caption || `Project image ${index + 1}`}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-110"
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center">
@@ -1045,10 +1027,13 @@ export default function EditProject() {
               </div>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Project Documents (Unified) */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+        <Card
+          title="Project Documents"
+          description="Upload and manage all project documents (PDF, DOC, DOCX)"
+        >
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-xl text-white">📄</span>
@@ -1240,10 +1225,13 @@ export default function EditProject() {
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Timeline Section */}
-        <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8 border border-gray-200">
+        <Card
+          title="Project Timeline"
+          description="Set your project start and completion dates"
+        >
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-xl text-white">⏰</span>
@@ -1295,10 +1283,10 @@ export default function EditProject() {
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-4 pt-8 border-t border-gray-200">
+        <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
           <button
             type="button"
             onClick={() => router.back()}
@@ -1337,6 +1325,6 @@ export default function EditProject() {
           </button>
         </div>
       </form>
-    </div>
+    </PageContainer>
   );
 }

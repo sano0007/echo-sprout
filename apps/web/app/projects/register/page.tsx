@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useAction, useMutation } from 'convex/react';
 import { api } from '@packages/backend';
+import { useAction, useMutation } from 'convex/react';
+import Image from 'next/image';
+import { useState } from 'react';
+
 import FileUpload from '../../components/FileUpload';
 
 interface ProjectFormData {
@@ -679,11 +681,14 @@ export default function ProjectRegister() {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                     {projectImages.map((image, index) => (
                       <div key={index} className="relative group">
-                        <img
-                          src={image.cloudinary_url}
-                          alt={`Project image ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg"
-                        />
+                        <div className="relative w-full h-32">
+                          <Image
+                            src={image.cloudinary_url}
+                            alt={`Project image ${index + 1}`}
+                            fill
+                            className="object-cover rounded-lg"
+                          />
+                        </div>
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 flex gap-2">
                             <button

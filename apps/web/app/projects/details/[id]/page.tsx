@@ -1,11 +1,15 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import { useQuery, useMutation, useAction } from 'convex/react';
-import { api, Id } from '@packages/backend';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { api, Id } from '@packages/backend';
+import { useAction, useMutation, useQuery } from 'convex/react';
+import Image from 'next/image';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+import Card from '../../../../components/ui/Card';
+import PageContainer from '../../../../components/ui/PageContainer';
+import PageHeader from '../../../../components/ui/PageHeader';
 
 export default function ProjectDetails() {
   const params = useParams();
@@ -287,48 +291,26 @@ export default function ProjectDetails() {
   const selectedProject = project;
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Back to Projects
-          </button>
-          <div className="h-6 w-px bg-gray-300"></div>
-          <h1 className="text-3xl font-bold text-gray-900">Project Details</h1>
-        </div>
-        <div className="flex items-center gap-4">
+    <PageContainer size="md">
+      <PageHeader
+        title="Project Details"
+        backHref="/projects/manage"
+        right={
           <span
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(selectedProject.status)}`}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(selectedProject.status)}`}
           >
             <span>{getStatusIcon(selectedProject.status)}</span>
             {getStatusText(selectedProject.status)}
           </span>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Enhanced Hero Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
-        {/* Featured Image - Larger */}
-        <div className="lg:col-span-2">
+      {/* Overview Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+        {/* Featured Image */}
+        <Card className="lg:col-span-2">
           {selectedProject.featuredImage ? (
-            <div className="relative group">
+            <div className="relative">
               {loadingImageUrls[
                 selectedProject.featuredImage.cloudinary_public_id
               ] ? (
@@ -336,19 +318,20 @@ export default function ProjectDetails() {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 </div>
               ) : (
-                <img
+                <Image
                   src={
                     convexImageUrls[
                       selectedProject.featuredImage.cloudinary_public_id
                     ] || selectedProject.featuredImage.cloudinary_url
                   }
-                  alt={selectedProject.title}
-                  className="w-full h-80 object-cover rounded-2xl shadow-xl transition-transform duration-300 group-hover:scale-105"
+                  alt={selectedProject.title || 'Project image'}
+                  fill
+                  className="object-cover rounded-2xl shadow-xl transition-transform duration-300 group-hover:scale-105"
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-2xl"></div>
               <div className="absolute bottom-4 left-4 right-4">
-                <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-xl p-4">
+                <div className="bg-white/90 rounded-lg p-3 shadow">
                   <p className="text-sm font-medium text-gray-800">
                     Featured Image
                   </p>
@@ -368,11 +351,11 @@ export default function ProjectDetails() {
               </div>
             </div>
           )}
-        </div>
+        </Card>
 
-        {/* Project Info - Enhanced */}
-        <div className="lg:col-span-3">
-          <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8 h-full border border-gray-200">
+        {/* Project Info */}
+        <Card className="lg:col-span-3">
+          <div className="space-y-6">
             <div className="space-y-6">
               <div>
                 <h3 className="text-3xl font-bold text-gray-900 mb-3">
@@ -391,8 +374,8 @@ export default function ProjectDetails() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">📍</span>
                     <span className="text-sm font-medium text-gray-600">
@@ -404,7 +387,7 @@ export default function ProjectDetails() {
                   </p>
                 </div>
 
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">📏</span>
                     <span className="text-sm font-medium text-gray-600">
@@ -416,7 +399,7 @@ export default function ProjectDetails() {
                   </p>
                 </div>
 
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">💰</span>
                     <span className="text-sm font-medium text-gray-600">
@@ -428,7 +411,7 @@ export default function ProjectDetails() {
                   </p>
                 </div>
 
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">🌿</span>
                     <span className="text-sm font-medium text-gray-600">
@@ -445,12 +428,12 @@ export default function ProjectDetails() {
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
-      {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-2xl">💰</span>
@@ -472,7 +455,7 @@ export default function ProjectDetails() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-14 h-14 bg-green-500 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-2xl">✅</span>
@@ -496,7 +479,7 @@ export default function ProjectDetails() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-14 h-14 bg-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-2xl">📊</span>
@@ -520,7 +503,7 @@ export default function ProjectDetails() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-2xl">💎</span>
@@ -542,8 +525,12 @@ export default function ProjectDetails() {
         </div>
       </div>
 
-      {/* Enhanced Timeline */}
-      <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8 border border-gray-200 mb-8">
+      {/* Timeline */}
+      <Card
+        title="Project Timeline"
+        description="Track your project's progress and milestones"
+        className="mb-8"
+      >
         <div className="flex items-center gap-4 mb-8">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
             <span className="text-xl text-white">⏰</span>
@@ -559,14 +546,14 @@ export default function ProjectDetails() {
         </div>
 
         <div className="relative">
-          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-green-500"></div>
+          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
           <div className="space-y-8">
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center shadow-lg relative z-10">
-                <span className="text-2xl text-white">🚀</span>
+              <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center relative z-10">
+                <span className="text-2xl">🚀</span>
               </div>
-              <div className="flex-1 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="flex-1 bg-white rounded-lg p-6 shadow-md border border-gray-200">
                 <div className="flex justify-between items-center">
                   <div>
                     <h5 className="font-bold text-gray-900 text-lg">
@@ -594,10 +581,10 @@ export default function ProjectDetails() {
             </div>
 
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center shadow-lg relative z-10">
-                <span className="text-2xl text-white">🎯</span>
+              <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center relative z-10">
+                <span className="text-2xl">🎯</span>
               </div>
-              <div className="flex-1 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="flex-1 bg-white rounded-lg p-6 shadow-md border border-gray-200">
                 <div className="flex justify-between items-center">
                   <div>
                     <h5 className="font-bold text-gray-900 text-lg">
@@ -627,7 +614,7 @@ export default function ProjectDetails() {
                 <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center shadow-lg relative z-10">
                   <span className="text-2xl text-white">🏁</span>
                 </div>
-                <div className="flex-1 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div className="flex-1 bg-white rounded-lg p-6 shadow-md border border-gray-200">
                   <div className="flex justify-between items-center">
                     <div>
                       <h5 className="font-bold text-gray-900 text-lg">
@@ -685,11 +672,11 @@ export default function ProjectDetails() {
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Featured Image Section */}
       {selectedProject.featuredImage && (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 mb-8">
+        <Card title="Featured Image" className="mb-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
               <span className="text-xl">⭐</span>
@@ -697,7 +684,7 @@ export default function ProjectDetails() {
             <h4 className="text-xl font-bold text-gray-900">Featured Image</h4>
           </div>
 
-          <div className="relative group">
+          <div className="relative group h-80">
             {loadingImageUrls[
               selectedProject.featuredImage.cloudinary_public_id
             ] ? (
@@ -705,14 +692,15 @@ export default function ProjectDetails() {
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
               </div>
             ) : (
-              <img
+              <Image
                 src={
                   convexImageUrls[
                     selectedProject.featuredImage.cloudinary_public_id
                   ] || selectedProject.featuredImage.cloudinary_url
                 }
                 alt="Featured project image"
-                className="w-full h-64 object-cover rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
+                fill
+                className="object-cover rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl"></div>
@@ -720,11 +708,15 @@ export default function ProjectDetails() {
               Featured
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Project Images Section */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
+      <Card
+        title="Project Images"
+        description="Visual documentation of the project"
+        className="mb-8"
+      >
         <div className="flex items-center gap-4 mb-6">
           <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
             <span className="text-xl text-white">🖼️</span>
@@ -740,19 +732,20 @@ export default function ProjectDetails() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {selectedProject.projectImages.map((image, index) => (
               <div key={index} className="relative group">
-                <div className="aspect-square rounded-2xl overflow-hidden shadow-lg border-2 border-gray-100 hover:border-blue-300 transition-all duration-300">
+                <div className="relative aspect-square rounded-2xl overflow-hidden shadow-lg border-2 border-gray-100 hover:border-blue-300 transition-all duration-300">
                   {loadingImageUrls[image.cloudinary_public_id] ? (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
                   ) : (
-                    <img
+                    <Image
                       src={
                         convexImageUrls[image.cloudinary_public_id] ||
                         image.cloudinary_url
                       }
                       alt={image.caption || `Project image ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                   )}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
@@ -812,10 +805,14 @@ export default function ProjectDetails() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Project Documents (Unified, read-only) */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
+      <Card
+        title="Project Documents"
+        description="All documents linked to this project"
+        className="mb-8"
+      >
         <div className="flex items-center gap-4 mb-6">
           <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
             <span className="text-xl text-white">📄</span>
@@ -889,10 +886,10 @@ export default function ProjectDetails() {
             <p className="text-sm text-gray-500">No documents uploaded yet</p>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Creator Information */}
-      <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-8 border border-gray-100">
+      <Card title="Project Creator">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
             <span className="text-xl">👤</span>
@@ -942,7 +939,7 @@ export default function ProjectDetails() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </Card>
+    </PageContainer>
   );
 }
