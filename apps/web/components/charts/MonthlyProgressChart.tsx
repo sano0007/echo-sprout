@@ -45,14 +45,15 @@ export default function MonthlyProgressChart({
   monthlyProgress,
   totalCO2Offset,
   className = '',
-  showCumulative = true
+  showCumulative = true,
 }: MonthlyProgressChartProps) {
-
   // Prepare data for Chart.js
-  const labels = monthlyProgress.map(item => item.monthLabel);
+  const labels = monthlyProgress.map((item) => item.monthLabel);
 
-  const monthlyOffsetData = monthlyProgress.map(item => item.co2Offset);
-  const cumulativeOffsetData = monthlyProgress.map(item => item.cumulativeCO2);
+  const monthlyOffsetData = monthlyProgress.map((item) => item.co2Offset);
+  const cumulativeOffsetData = monthlyProgress.map(
+    (item) => item.cumulativeCO2
+  );
 
   const datasets = [
     {
@@ -70,7 +71,6 @@ export default function MonthlyProgressChart({
     },
   ];
 
-  // Add cumulative line if requested
   if (showCumulative) {
     datasets.push({
       label: 'Cumulative CO₂ Offset',
@@ -84,7 +84,6 @@ export default function MonthlyProgressChart({
       pointBorderWidth: 2,
       pointRadius: 3,
       pointHoverRadius: 5,
-      borderDash: [5, 5], // Dashed line for cumulative
     });
   }
 
@@ -117,10 +116,10 @@ export default function MonthlyProgressChart({
         cornerRadius: 8,
         displayColors: true,
         callbacks: {
-          title: function(context: any) {
+          title: function (context: any) {
             return context[0].label;
           },
-          label: function(context: any) {
+          label: function (context: any) {
             const datasetLabel = context.dataset.label;
             const value = context.parsed.y;
 
@@ -130,49 +129,10 @@ export default function MonthlyProgressChart({
               return `${datasetLabel}: ${value.toFixed(1)} tons`;
             }
           },
-          afterBody: function(context: any) {
+          afterBody: function (context: any) {
             const monthIndex = context[0].dataIndex;
             const monthData = monthlyProgress[monthIndex];
-            return [`Credits purchased: ${monthData.credits}`];
-          }
-        }
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          color: '#6b7280',
-          font: {
-            size: 11,
-          },
-          maxRotation: 45,
-          minRotation: 0,
-        },
-      },
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(107, 114, 128, 0.1)',
-        },
-        ticks: {
-          color: '#6b7280',
-          font: {
-            size: 11,
-          },
-          callback: function(value: any) {
-            return `${value} tons`;
-          },
-        },
-        title: {
-          display: true,
-          text: 'CO₂ Offset (tons)',
-          color: '#6b7280',
-          font: {
-            size: 12,
-            weight: 'normal',
+            return [`Credits purchased: ${monthData?.credits}`];
           },
         },
       },
@@ -198,11 +158,15 @@ export default function MonthlyProgressChart({
   // Show empty state if no data
   if (monthlyProgress.length === 0 || totalCO2Offset === 0) {
     return (
-      <div className={`flex items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 ${className}`}>
+      <div
+        className={`flex items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 ${className}`}
+      >
         <div className="text-center">
           <div className="text-4xl mb-2">📈</div>
           <p className="text-gray-500 font-medium">No CO₂ offset data yet</p>
-          <p className="text-gray-400 text-sm">Start purchasing carbon credits to track your progress</p>
+          <p className="text-gray-400 text-sm">
+            Start purchasing carbon credits to track your progress
+          </p>
         </div>
       </div>
     );
@@ -219,14 +183,19 @@ export default function MonthlyProgressChart({
           </div>
           {showCumulative && (
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-1 bg-blue-500 rounded" style={{ borderStyle: 'dashed' }}></div>
+              <div
+                className="w-3 h-1 bg-blue-500 rounded"
+                style={{ borderStyle: 'dashed' }}
+              ></div>
               <span className="text-gray-600">Cumulative Total</span>
             </div>
           )}
         </div>
         <div className="text-right">
           <span className="text-gray-600">Total: </span>
-          <span className="font-semibold text-emerald-600">{totalCO2Offset.toFixed(1)} tons CO₂</span>
+          <span className="font-semibold text-emerald-600">
+            {totalCO2Offset.toFixed(1)} tons CO₂
+          </span>
         </div>
       </div>
 
@@ -240,21 +209,28 @@ export default function MonthlyProgressChart({
         <div className="bg-emerald-50 p-2 rounded">
           <div className="font-medium text-emerald-700">Best Month</div>
           <div className="text-emerald-600">
-            {monthlyProgress.reduce((best, current) =>
-              current.co2Offset > best.co2Offset ? current : best
-            ).monthLabel}
+            {
+              monthlyProgress.reduce((best, current) =>
+                current.co2Offset > best.co2Offset ? current : best
+              ).monthLabel
+            }
           </div>
         </div>
         <div className="bg-blue-50 p-2 rounded">
           <div className="font-medium text-blue-700">Avg Monthly</div>
           <div className="text-blue-600">
-            {(totalCO2Offset / Math.max(monthlyProgress.filter(m => m.co2Offset > 0).length, 1)).toFixed(1)} tons
+            {(
+              totalCO2Offset /
+              Math.max(monthlyProgress.filter((m) => m.co2Offset > 0).length, 1)
+            ).toFixed(1)}{' '}
+            tons
           </div>
         </div>
         <div className="bg-purple-50 p-2 rounded">
           <div className="font-medium text-purple-700">Active Months</div>
           <div className="text-purple-600">
-            {monthlyProgress.filter(m => m.co2Offset > 0).length} of {monthlyProgress.length}
+            {monthlyProgress.filter((m) => m.co2Offset > 0).length} of{' '}
+            {monthlyProgress.length}
           </div>
         </div>
       </div>
@@ -263,24 +239,34 @@ export default function MonthlyProgressChart({
 }
 
 // Export a simplified version for smaller spaces
-export function ProgressSummary({ monthlyProgress, totalCO2Offset }: MonthlyProgressChartProps) {
-  const activeMonths = monthlyProgress.filter(m => m.co2Offset > 0).length;
+export function ProgressSummary({
+  monthlyProgress,
+  totalCO2Offset,
+}: MonthlyProgressChartProps) {
+  const activeMonths = monthlyProgress.filter((m) => m.co2Offset > 0).length;
   const avgMonthly = totalCO2Offset / Math.max(activeMonths, 1);
-  const lastMonthOffset = monthlyProgress[monthlyProgress.length - 1]?.co2Offset || 0;
+  const lastMonthOffset =
+    monthlyProgress[monthlyProgress.length - 1]?.co2Offset || 0;
 
   return (
     <div className="grid grid-cols-1 gap-3">
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-600">Total CO₂ Offset</span>
-        <span className="font-semibold text-emerald-600">{totalCO2Offset.toFixed(1)} tons</span>
+        <span className="font-semibold text-emerald-600">
+          {totalCO2Offset.toFixed(1)} tons
+        </span>
       </div>
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-600">Monthly Average</span>
-        <span className="font-medium text-blue-600">{avgMonthly.toFixed(1)} tons</span>
+        <span className="font-medium text-blue-600">
+          {avgMonthly.toFixed(1)} tons
+        </span>
       </div>
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-600">This Month</span>
-        <span className="font-medium text-purple-600">{lastMonthOffset.toFixed(1)} tons</span>
+        <span className="font-medium text-purple-600">
+          {lastMonthOffset.toFixed(1)} tons
+        </span>
       </div>
       <div className="flex justify-between items-center">
         <span className="text-sm text-gray-600">Active Months</span>

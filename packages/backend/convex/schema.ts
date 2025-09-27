@@ -489,4 +489,14 @@ export default defineSchema({
     .index('by_metric', ['metric'])
     .index('by_date', ['date'])
     .index('by_metric_date', ['metric', 'date']),
+
+  // ============= FILE STORAGE =============
+  files: defineTable({
+    storageId: v.id('_storage'),
+    filename: v.string(),
+    contentType: v.string(),
+    uploadedAt: v.number(),
+  })
+    .index('by_filename', ['filename'])
+    .index('by_upload_date', ['uploadedAt']),
 });

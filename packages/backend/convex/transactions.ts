@@ -1,4 +1,4 @@
-import { internalMutation, query } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
 import { ConvexError, v } from 'convex/values';
 
 export const createTransactionFromStripe = internalMutation({
@@ -319,9 +319,11 @@ export const getBuyerDashboardMetrics = query({
     const equivalentTrees = Math.round(totalCO2Offset * 40); // ~40 trees per ton CO2
     const equivalentCarsOff = Math.round(totalCO2Offset / 4.6); // ~4.6 tons CO2 per car per year
 
-    const validProjects = projects.filter((proj): proj is NonNullable<typeof proj> => {
-      return proj !== null && 'projectType' in proj;
-    });
+    const validProjects = projects.filter(
+      (proj): proj is NonNullable<typeof proj> => {
+        return proj !== null && 'projectType' in proj;
+      }
+    );
 
     const projectTypes = validProjects.reduce(
       (acc, project) => {
@@ -416,15 +418,24 @@ export const getMonthlyOffsetProgress = query({
       .collect();
 
     // Sort transactions by creation time
-    const sortedTransactions = transactions.sort((a, b) => a._creationTime - b._creationTime);
+    const sortedTransactions = transactions.sort(
+      (a, b) => a._creationTime - b._creationTime
+    );
 
     // Create monthly aggregation
-    const monthlyData: Record<string, { credits: number; co2Offset: number; cumulativeCO2: number }> = {};
+    const monthlyData: Record<
+      string,
+      { credits: number; co2Offset: number; cumulativeCO2: number }
+    > = {};
     let cumulativeCO2 = 0;
 
     // Calculate the date range (last N months from now)
     const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+    const startDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - months + 1,
+      1
+    );
 
     // Initialize all months with zero values
     for (let i = 0; i < months; i++) {
@@ -459,8 +470,11 @@ export const getMonthlyOffsetProgress = query({
     const sortedMonths = Object.keys(monthlyData).sort();
 
     for (const monthKey of sortedMonths) {
-      monthlyData[monthKey].cumulativeCO2 = runningCumulative;
-      runningCumulative -= monthlyData[monthKey].co2Offset;
+      const monthData = monthlyData[monthKey];
+      if (monthData) {
+        monthData.cumulativeCO2 = runningCumulative;
+        runningCumulative -= monthData.co2Offset;
+      }
     }
 
     // Convert to array format for charting
@@ -468,11 +482,17 @@ export const getMonthlyOffsetProgress = query({
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, data]) => {
         const [year, monthNum] = month.split('-');
-        const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+        const date = new Date(
+          parseInt(year || '0'),
+          parseInt(monthNum || '0') - 1
+        );
 
         return {
           month,
-          monthLabel: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          monthLabel: date.toLocaleDateString('en-US', {
+            month: 'short',
+            year: 'numeric',
+          }),
           credits: data.credits,
           co2Offset: data.co2Offset,
           cumulativeCO2: data.cumulativeCO2,
@@ -484,6 +504,88 @@ export const getMonthlyOffsetProgress = query({
       totalCO2Offset: cumulativeCO2,
       totalCredits: transactions.reduce((sum, t) => sum + t.creditAmount, 0),
       transactionCount: transactions.length,
+    };
+  },
+});
+
+export const generateCertificate = mutation({
+  args: {
+    transactionId: v.id('transactions'),
+    certificateUrl: v.string(), // URL from Convex storage
+  },
+  handler: async (ctx, args) => {
+    const { transactionId, certificateUrl } = args;
+
+    // Get the transaction
+    const transaction = await ctx.db.get(transactionId);
+    if (!transaction) {
+      throw new ConvexError('Transaction not found');
+    }
+
+    // Verify the transaction is completed
+    if (transaction.paymentStatus !== 'completed') {
+      throw new ConvexError(
+        'Cannot generate certificate for incomplete transaction'
+      );
+    }
+
+    // Update transaction with certificate URL
+    await ctx.db.patch(transactionId, {
+      certificateUrl,
+    });
+
+    console.log(
+      `✅ Certificate generated for transaction: ${transaction.transactionReference}`
+    );
+
+    return { success: true, certificateUrl };
+  },
+});
+
+export const getCertificateData = query({
+  args: {
+    transactionId: v.id('transactions'),
+  },
+  handler: async (ctx, args) => {
+    const transaction = await ctx.db.get(args.transactionId);
+    if (!transaction) {
+      throw new ConvexError('Transaction not found');
+    }
+
+    // Get buyer information
+    const buyer = await ctx.db
+      .query('users')
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', transaction.buyerId))
+      .first();
+
+    if (!buyer) {
+      throw new ConvexError('Buyer not found');
+    }
+
+    // Get project information if available
+    let project = null;
+    if (transaction.projectId) {
+      project = await ctx.db.get(transaction.projectId);
+    }
+
+    // Generate certificate ID
+    const certificateId = `CERT-${transaction.transactionReference}`;
+
+    // Calculate CO2 offset (1.5 tons per credit)
+    const co2Offset = transaction.creditAmount * 1.5;
+
+    return {
+      certificateId,
+      buyerName: buyer.email || 'Carbon Credit Buyer',
+      projectName: project?.title || 'General Carbon Credit Project',
+      projectType: project?.projectType || 'general',
+      projectLocation: project?.location || 'Global',
+      credits: transaction.creditAmount,
+      co2Offset,
+      purchaseDate: new Date(transaction._creationTime).toISOString(),
+      transactionReference: transaction.transactionReference,
+      verificationStandard: 'Verified Carbon Standard (VCS)',
+      existingCertificateUrl: transaction.certificateUrl,
     };
   },
 });

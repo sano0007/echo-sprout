@@ -5,12 +5,23 @@ import { useQuery } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import { useUser } from '@clerk/nextjs';
 import { SignInButton } from '@clerk/nextjs';
-import ProjectTypeChart, { ProjectTypeSummary } from '../../components/charts/ProjectTypeChart';
+import ProjectTypeChart, {
+  ProjectTypeSummary,
+} from '../../components/charts/ProjectTypeChart';
 import MonthlyProgressChart from '../../components/charts/MonthlyProgressChart';
+import { useCertificate } from '@/hooks/useCertificate';
 
 export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const { user, isSignedIn, isLoaded } = useUser();
+  const {
+    downloadCertificateDirectly,
+    downloadFromStorage,
+    viewCertificateInBrowserDirectly,
+    viewCertificateFromStorage,
+    isDownloading,
+    isViewing,
+  } = useCertificate();
 
   // Fetch dashboard metrics using Convex
   const dashboardMetrics = useQuery(
@@ -45,9 +56,12 @@ export default function BuyerDashboard() {
       <div className="max-w-7xl mx-auto p-6 text-center">
         <h1 className="text-3xl font-bold mb-8">Buyer Dashboard</h1>
         <div className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Sign in to view your dashboard</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            Sign in to view your dashboard
+          </h2>
           <p className="text-gray-600 mb-6">
-            You need to be signed in to view your purchase history and carbon credit certificates.
+            You need to be signed in to view your purchase history and carbon
+            credit certificates.
           </p>
           <SignInButton mode="modal">
             <button className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700">
@@ -94,7 +108,9 @@ export default function BuyerDashboard() {
     credits: transaction.creditAmount,
     price: transaction.unitPrice,
     totalPrice: transaction.totalAmount,
-    purchaseDate: new Date(transaction._creationTime).toISOString().split('T')[0],
+    purchaseDate: new Date(transaction._creationTime)
+      .toISOString()
+      .split('T')[0],
     certificateId: `CERT-${transaction.transactionReference}`,
     status: transaction.paymentStatus === 'completed' ? 'Active' : 'Pending',
     impact: {
@@ -113,7 +129,47 @@ export default function BuyerDashboard() {
     status: cert.status,
     co2Offset: cert.co2Offset,
     projectType: cert.projectType,
+    certificateUrl: cert.certificateUrl,
   }));
+
+  // Certificate download handlers
+  const handleDownloadCertificate = async (
+    transactionId: string,
+    certificateUrl?: string,
+    certificateId?: string
+  ) => {
+    try {
+      if (certificateUrl && certificateId) {
+        // Download from storage if already exists
+        await downloadFromStorage(certificateUrl, certificateId);
+      } else {
+        // Generate and download directly
+        await downloadCertificateDirectly(transactionId as any);
+      }
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      alert('Failed to download certificate. Please try again.');
+    }
+  };
+
+  // Certificate view handlers
+  const handleViewCertificate = async (
+    transactionId: string,
+    certificateUrl?: string
+  ) => {
+    try {
+      if (certificateUrl) {
+        // View from storage if already exists
+        await viewCertificateFromStorage(certificateUrl);
+      } else {
+        // Generate and view directly
+        await viewCertificateInBrowserDirectly(transactionId as any);
+      }
+    } catch (error) {
+      console.error('Error viewing certificate:', error);
+      alert('Failed to view certificate. Please try again.');
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -244,7 +300,9 @@ export default function BuyerDashboard() {
                     </div>
                     <div className="bg-purple-50 p-4 rounded-lg text-center">
                       <p className="text-3xl font-bold text-purple-600">⚡</p>
-                      <p className="text-lg font-semibold">{(metrics.totalCO2Offset * 3000).toFixed(0)}</p>
+                      <p className="text-lg font-semibold">
+                        {(metrics.totalCO2Offset * 3000).toFixed(0)}
+                      </p>
                       <p className="text-sm text-gray-600">
                         kWh clean energy supported
                       </p>
@@ -263,11 +321,18 @@ export default function BuyerDashboard() {
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Total Projects:</span>
-                      <span className="font-medium">{Object.values(metrics.projectTypes).reduce((sum, count) => sum + count, 0)}</span>
+                      <span className="font-medium">
+                        {Object.values(metrics.projectTypes).reduce(
+                          (sum, count) => sum + count,
+                          0
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm mt-1">
                       <span className="text-gray-600">Active Projects:</span>
-                      <span className="font-medium">{metrics.activeProjects}</span>
+                      <span className="font-medium">
+                        {metrics.activeProjects}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -288,7 +353,9 @@ export default function BuyerDashboard() {
               {purchaseHistory.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">No purchases yet</p>
-                  <p className="text-gray-400">Start buying carbon credits to see your history here.</p>
+                  <p className="text-gray-400">
+                    Start buying carbon credits to see your history here.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -304,7 +371,9 @@ export default function BuyerDashboard() {
                           </p>
                           <p className="text-sm text-gray-600">
                             Purchased on{' '}
-                            {new Date(purchase.purchaseDate as string).toLocaleDateString()}
+                            {new Date(
+                              purchase.purchaseDate as string
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="text-right">
@@ -374,15 +443,14 @@ export default function BuyerDashboard() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">Digital Certificates</h3>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded">
-                  Download All
-                </button>
               </div>
 
               {certificateList.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">No certificates yet</p>
-                  <p className="text-gray-400">Complete a purchase to generate your certificates.</p>
+                  <p className="text-gray-400">
+                    Complete a purchase to generate your certificates.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -411,7 +479,9 @@ export default function BuyerDashboard() {
                         </p>
                         <p>
                           <span className="font-medium">Issue Date:</span>{' '}
-                          {new Date(certificate.purchaseDate as string).toLocaleDateString()}
+                          {new Date(
+                            certificate.purchaseDate as string
+                          ).toLocaleDateString()}
                         </p>
                         <p>
                           <span className="font-medium">CO₂ Offset:</span>{' '}
@@ -420,11 +490,30 @@ export default function BuyerDashboard() {
                       </div>
 
                       <div className="flex gap-2">
-                        <button className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm">
-                          View Full
+                        <button
+                          className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() =>
+                            handleViewCertificate(
+                              certificate.id,
+                              certificate.certificateUrl
+                            )
+                          }
+                          disabled={isViewing}
+                        >
+                          {isViewing ? 'Opening...' : 'View Full'}
                         </button>
-                        <button className="flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm">
-                          Download
+                        <button
+                          className="flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() =>
+                            handleDownloadCertificate(
+                              certificate.id,
+                              certificate.certificateUrl,
+                              certificate.certificateId
+                            )
+                          }
+                          disabled={isDownloading}
+                        >
+                          {isDownloading ? 'Downloading...' : 'Download'}
                         </button>
                       </div>
                     </div>
@@ -441,10 +530,15 @@ export default function BuyerDashboard() {
                 Project Progress Tracking
               </h3>
 
-              {purchaseHistory.filter((p) => p.status === 'Active').length === 0 ? (
+              {purchaseHistory.filter((p) => p.status === 'Active').length ===
+              0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 text-lg">No active projects to track</p>
-                  <p className="text-gray-400">Purchase carbon credits to start tracking project progress.</p>
+                  <p className="text-gray-500 text-lg">
+                    No active projects to track
+                  </p>
+                  <p className="text-gray-400">
+                    Purchase carbon credits to start tracking project progress.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -467,7 +561,9 @@ export default function BuyerDashboard() {
                                   <span className="text-sm">
                                     Overall Progress
                                   </span>
-                                  <span className="text-sm font-medium">75%</span>
+                                  <span className="text-sm font-medium">
+                                    75%
+                                  </span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                   <div
@@ -483,7 +579,9 @@ export default function BuyerDashboard() {
                                   <p className="font-medium">Implementation</p>
                                 </div>
                                 <div>
-                                  <p className="text-gray-600">Next Milestone</p>
+                                  <p className="text-gray-600">
+                                    Next Milestone
+                                  </p>
                                   <p className="font-medium">Q2 2024</p>
                                 </div>
                               </div>
