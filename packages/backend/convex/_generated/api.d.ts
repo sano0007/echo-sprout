@@ -19,6 +19,7 @@ import type * as marketplace from "../marketplace.js";
 import type * as notifications from "../notifications.js";
 import type * as permissions from "../permissions.js";
 import type * as projects from "../projects.js";
+import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 import type * as verificationMessages from "../verificationMessages.js";
 import type * as verifications from "../verifications.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   permissions: typeof permissions;
   projects: typeof projects;
+  transactions: typeof transactions;
   users: typeof users;
   verificationMessages: typeof verificationMessages;
   verifications: typeof verifications;

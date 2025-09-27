@@ -36,6 +36,23 @@ export const createProject = mutation({
     totalCarbonCredits: v.number(),
     pricePerCredit: v.number(),
     requiredDocuments: v.array(v.string()),
+    projectImages: v.optional(
+      v.array(
+        v.object({
+          cloudinary_public_id: v.string(),
+          cloudinary_url: v.string(),
+          caption: v.optional(v.string()),
+          isPrimary: v.boolean(),
+          uploadDate: v.float64(),
+        })
+      )
+    ),
+    featuredImage: v.optional(
+      v.object({
+        cloudinary_public_id: v.string(),
+        cloudinary_url: v.string(),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -79,6 +96,8 @@ export const createProject = mutation({
       submittedDocuments: [],
       isDocumentationComplete: false,
       actualCompletionDate: undefined,
+      projectImages: args.projectImages || [],
+      featuredImage: args.featuredImage || undefined,
     });
 
     return projectId;
@@ -236,6 +255,12 @@ export const updateProject = mutation({
     pricePerCredit: v.optional(v.number()),
     status: v.optional(v.string()),
     requiredDocuments: v.optional(v.array(v.string())),
+    featuredImage: v.optional(
+      v.object({
+        cloudinary_public_id: v.string(),
+        cloudinary_url: v.string(),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();

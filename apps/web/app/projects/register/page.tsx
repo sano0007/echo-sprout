@@ -28,6 +28,17 @@ interface ProjectFormData {
   totalCarbonCredits: number;
   pricePerCredit: number;
   requiredDocuments: string[];
+  projectImages?: Array<{
+    cloudinary_public_id: string;
+    cloudinary_url: string;
+    caption?: string;
+    isPrimary: boolean;
+    uploadDate: number;
+  }>;
+  featuredImage?: {
+    cloudinary_public_id: string;
+    cloudinary_url: string;
+  };
 }
 
 const steps = [
@@ -41,6 +52,22 @@ const steps = [
 export default function ProjectRegister() {
   const [currentStep, setCurrentStep] = useState(0);
   const [tempUploadedFiles, setTempUploadedFiles] = useState<File[]>([]);
+  const [projectImages, setProjectImages] = useState<
+    Array<{
+      cloudinary_public_id: string;
+      cloudinary_url: string;
+      caption?: string;
+      isPrimary: boolean;
+      uploadDate: number;
+    }>
+  >([]);
+  const [featuredImage, setFeaturedImage] = useState<
+    | {
+        cloudinary_public_id: string;
+        cloudinary_url: string;
+      }
+    | undefined
+  >(undefined);
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     description: '',
@@ -77,15 +104,68 @@ export default function ProjectRegister() {
     field: string,
     value: string | number | { lat: number; long: number; name: string }
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    if (errors[field]) {
-      setErrors((prev) => ({
+    if (field === 'location') {
+      setFormData((prev) => ({
         ...prev,
-        [field]: '',
+        location: {
+          ...prev.location,
+          ...(value as { lat: number; long: number; name: string }),
+        },
       }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
+  };
+
+  const handleImageUpload = async (files: File[]) => {
+    try {
+      const uploadPromises = files.map(async (file) => {
+        // Get upload URL
+        const uploadUrl = await generateUploadUrl();
+
+        // Upload file
+        const response = await fetch(uploadUrl, {
+          method: 'POST',
+          body: file,
+          headers: {
+            'Content-Type': file.type,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Upload failed: ${response.statusText}`);
+        }
+
+        const { storageId } = await response.json();
+
+        // Generate the file URL (this would typically come from your storage provider)
+        const fileUrl = `https://your-storage-provider.com/${storageId}`;
+
+        return {
+          cloudinary_public_id: storageId,
+          cloudinary_url: fileUrl,
+          caption: '',
+          isPrimary: projectImages.length === 0, // First image is primary by default
+          uploadDate: Date.now(),
+        };
+      });
+
+      const newImages = await Promise.all(uploadPromises);
+      setProjectImages((prev) => [...prev, ...newImages]);
+
+      // Set the first image as featured if none is set
+      if (!featuredImage && newImages.length > 0) {
+        setFeaturedImage({
+          cloudinary_public_id: newImages[0]!.cloudinary_public_id,
+          cloudinary_url: newImages[0]!.cloudinary_url,
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      alert('Failed to upload images. Please try again.');
     }
   };
 
@@ -155,7 +235,7 @@ export default function ProjectRegister() {
 
   const submitProject = async (data: ProjectFormData) => {
     try {
-      // Create the project first
+      // Create the project with images included
       const projectId = await createProject({
         title: data.title,
         description: data.description,
@@ -169,6 +249,8 @@ export default function ProjectRegister() {
         totalCarbonCredits: data.totalCarbonCredits,
         pricePerCredit: data.pricePerCredit,
         requiredDocuments: data.requiredDocuments,
+        projectImages: projectImages.length > 0 ? projectImages : undefined,
+        featuredImage: featuredImage,
       });
 
       // Now upload the files if any exist
@@ -316,15 +398,31 @@ export default function ProjectRegister() {
               </div>
               <div>
                 <input
-                  type="number"
+                  type="text"
                   placeholder="Expected Carbon Credits"
                   value={formData.totalCarbonCredits || ''}
-                  onChange={(e) =>
-                    handleInputChange(
-                      'totalCarbonCredits',
-                      parseInt(e.target.value) || 0
-                    )
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Only allow numeric characters
+                    if (/^\d*$/.test(value)) {
+                      handleInputChange(
+                        'totalCarbonCredits',
+                        parseInt(value) || 0
+                      );
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    // Prevent typing 'e', '+', '-', and '.'
+                    if (
+                      e.key === 'e' ||
+                      e.key === 'E' ||
+                      e.key === '+' ||
+                      e.key === '-' ||
+                      e.key === '.'
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
                   className={`w-full p-3 border rounded ${errors.totalCarbonCredits ? 'border-red-500' : ''}`}
                 />
                 {errors.totalCarbonCredits && (
@@ -519,46 +617,167 @@ export default function ProjectRegister() {
 
         {currentStep === 3 && (
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Document Upload</h2>
-            <div className="space-y-4">
-              <FileUpload
-                projectId="" // Empty for deferred uploads
-                uploadMode="deferred"
-                onFilesReady={(
-                  files: Array<{ file: File; id: string; status: string }>
-                ) => {
-                  setTempUploadedFiles(
-                    files.map((f: { file: File }) => f.file)
-                  );
-                  console.log(
-                    'Files ready for upload after project creation:',
-                    files
-                  );
-                }}
-                maxFiles={10}
-                maxSizeMB={50}
-                acceptedTypes={[
-                  'application/pdf',
-                  'image/jpeg',
-                  'image/png',
-                  'application/msword',
-                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                ]}
-              />
-              {tempUploadedFiles.length > 0 && (
-                <div className="text-sm text-green-600">
-                  ✓ {tempUploadedFiles.length} file
-                  {tempUploadedFiles.length !== 1 ? 's' : ''} ready to upload
+            <h2 className="text-2xl font-semibold mb-4">
+              Document Upload & Images
+            </h2>
+            <div className="space-y-6">
+              {/* Project Images Section */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">Project Images</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload images that will be used as your project card image and
+                  gallery.
+                </p>
+
+                {/* Image Upload Area */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-4">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length > 0) {
+                        handleImageUpload(files);
+                      }
+                    }}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
+                    <svg
+                      className="w-12 h-12 text-gray-400 mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="text-blue-600 hover:text-blue-800">
+                      Click to upload project images
+                    </span>
+                    <span className="text-sm text-gray-500 mt-1">
+                      PNG, JPG up to 10MB each
+                    </span>
+                  </label>
                 </div>
-              )}
-              <div className="text-sm text-gray-600">
-                <p>Required documents:</p>
-                <ul className="list-disc ml-4">
-                  <li>Project proposal document</li>
-                  <li>Environmental impact assessment</li>
-                  <li>Site photographs</li>
-                  <li>Legal permits and certifications</li>
-                </ul>
+
+                {/* Image Preview Grid */}
+                {projectImages.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                    {projectImages.map((image, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={image.cloudinary_url}
+                          alt={`Project image ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 flex gap-2">
+                            <button
+                              onClick={() => {
+                                // Set as featured image
+                                setFeaturedImage({
+                                  cloudinary_public_id:
+                                    image.cloudinary_public_id,
+                                  cloudinary_url: image.cloudinary_url,
+                                });
+                              }}
+                              className={`px-2 py-1 text-xs rounded ${
+                                image.isPrimary ||
+                                featuredImage?.cloudinary_public_id ===
+                                  image.cloudinary_public_id
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-white text-gray-800'
+                              }`}
+                            >
+                              {image.isPrimary ||
+                              featuredImage?.cloudinary_public_id ===
+                                image.cloudinary_public_id
+                                ? 'Featured'
+                                : 'Set Featured'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                // Remove image
+                                setProjectImages((prev) =>
+                                  prev.filter((_, i) => i !== index)
+                                );
+                              }}
+                              className="px-2 py-1 text-xs bg-red-600 text-white rounded"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                        {image.isPrimary && (
+                          <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                            Primary
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {projectImages.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No images uploaded yet. Upload at least one image to
+                    continue.
+                  </p>
+                )}
+              </div>
+
+              {/* Document Upload Section */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">Project Documents</h3>
+                <FileUpload
+                  projectId="" // Empty for deferred uploads
+                  uploadMode="deferred"
+                  onFilesReady={(
+                    files: Array<{ file: File; id: string; status: string }>
+                  ) => {
+                    setTempUploadedFiles(
+                      files.map((f: { file: File }) => f.file)
+                    );
+                    console.log(
+                      'Files ready for upload after project creation:',
+                      files
+                    );
+                  }}
+                  maxFiles={10}
+                  maxSizeMB={50}
+                  acceptedTypes={[
+                    'application/pdf',
+                    'image/jpeg',
+                    'image/png',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                  ]}
+                />
+                {tempUploadedFiles.length > 0 && (
+                  <div className="text-sm text-green-600 mt-2">
+                    ✓ {tempUploadedFiles.length} file
+                    {tempUploadedFiles.length !== 1 ? 's' : ''} ready to upload
+                  </div>
+                )}
+                <div className="text-sm text-gray-600 mt-2">
+                  <p>Required documents:</p>
+                  <ul className="list-disc ml-4">
+                    <li>Project proposal document</li>
+                    <li>Environmental impact assessment</li>
+                    <li>Site photographs</li>
+                    <li>Legal permits and certifications</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
