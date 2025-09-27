@@ -9,12 +9,59 @@ export default {
     theme: {
     	extend: {
     		colors: {
-    			'rich-black': '#0B0B0B',
-    			dark: '#2C2C2C',
-    			'bangladesh-green': '#006A4E',
-    			'mountain-meadow': '#2ECC71',
-    			'caribbean-green': '#00F5B8',
-    			'anti-flash-white': '#F1F2F6',
+    			// Minimalistic 3-Color Palette (White, Green, Black)
+    			white: '#FFFFFF',
+    			green: {
+    				50: '#F0FDF4',
+    				100: '#DCFCE7',
+    				200: '#BBF7D0',
+    				300: '#86EFAC',
+    				400: '#4ADE80',
+    				500: '#22C55E',
+    				600: '#16A34A',
+    				700: '#15803D',
+    				800: '#166534',
+    				900: '#14532D',
+    			},
+    			black: '#0A0A0A',
+
+    			// Neutral grays derived from black/white
+    			gray: {
+    				50: '#FAFAFA',
+    				100: '#F4F4F5',
+    				200: '#E4E4E7',
+    				300: '#D4D4D8',
+    				400: '#A1A1AA',
+    				500: '#71717A',
+    				600: '#52525B',
+    				700: '#3F3F46',
+    				800: '#27272A',
+    				900: '#18181B',
+    			},
+
+    			// Legacy color mappings for gradual migration
+    			'rich-black': '#0A0A0A',
+    			'light-gray': '#71717A',
+    			'pure-white': '#FFFFFF',
+    			'cloud-gray': '#E4E4E7',
+    			'whisper-gray': '#FAFAFA',
+
+    			// Simplified semantic colors using green palette
+    			success: {
+    				DEFAULT: '#22C55E',
+    				light: '#F0FDF4',
+    				border: '#BBF7D0'
+    			},
+    			warning: {
+    				DEFAULT: '#A1A1AA',
+    				light: '#F4F4F5',
+    				border: '#D4D4D8'
+    			},
+    			error: {
+    				DEFAULT: '#52525B',
+    				light: '#F4F4F5',
+    				border: '#D4D4D8'
+    			},
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
     			card: {
@@ -97,6 +144,13 @@ export default {
     			'88': '22rem',
     			'128': '32rem'
     		},
+    		boxShadow: {
+    			'subtle': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+    			'soft': '0 2px 4px 0 rgb(0 0 0 / 0.06)',
+    			'medium': '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+    			'strong': '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+    			'intense': '0 20px 25px -5px rgb(0 0 0 / 0.1)'
+    		},
     		keyframes: {
     			'accordion-down': {
     				from: {
@@ -113,11 +167,26 @@ export default {
     				to: {
     					height: '0'
     				}
+    			},
+    			shimmer: {
+    				'0%': { backgroundPosition: '-200% 0' },
+    				'100%': { backgroundPosition: '200% 0' }
+    			},
+    			fadeIn: {
+    				'0%': { opacity: '0' },
+    				'100%': { opacity: '1' }
+    			},
+    			slideUp: {
+    				'0%': { transform: 'translateY(10px)', opacity: '0' },
+    				'100%': { transform: 'translateY(0)', opacity: '1' }
     			}
     		},
     		animation: {
     			'accordion-down': 'accordion-down 0.2s ease-out',
-    			'accordion-up': 'accordion-up 0.2s ease-out'
+    			'accordion-up': 'accordion-up 0.2s ease-out',
+    			'shimmer': 'shimmer 1.5s infinite',
+    			'fade-in': 'fadeIn 0.3s ease-in-out',
+    			'slide-up': 'slideUp 0.3s ease-out'
     		}
     	}
     },

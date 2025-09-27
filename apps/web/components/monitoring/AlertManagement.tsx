@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import {
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  BellIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/24/outline';
+  AlertTriangle,
+  Info,
+  XCircle,
+  Bell,
+  Search,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
 
 interface Alert {
   id: string;
@@ -122,17 +120,17 @@ export default function AlertManagement({
 
     switch (type) {
       case 'progress_reminder':
-        return <BellIcon className={iconClass} />;
+        return <Bell className={iconClass} />;
       case 'overdue_warning':
-        return <ExclamationTriangleIcon className={iconClass} />;
+        return <AlertTriangle className={iconClass} />;
       case 'milestone_delay':
-        return <XCircleIcon className={iconClass} />;
+        return <XCircle className={iconClass} />;
       case 'impact_shortfall':
-        return <ExclamationTriangleIcon className={iconClass} />;
+        return <AlertTriangle className={iconClass} />;
       case 'quality_concern':
-        return <InformationCircleIcon className={iconClass} />;
+        return <Info className={iconClass} />;
       default:
-        return <InformationCircleIcon className={iconClass} />;
+        return <Info className={iconClass} />;
     }
   };
 
@@ -260,7 +258,7 @@ export default function AlertManagement({
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search alerts..."
@@ -318,7 +316,7 @@ export default function AlertManagement({
       <div className="max-h-96 overflow-y-auto">
         {filteredAlerts.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            <BellIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p>No alerts found matching your criteria.</p>
           </div>
         ) : (
@@ -392,9 +390,9 @@ export default function AlertManagement({
                         className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700"
                       >
                         {expandedAlert === alert.id ? (
-                          <ChevronDownIcon className="h-4 w-4" />
+                          <ChevronDown className="h-4 w-4" />
                         ) : (
-                          <ChevronRightIcon className="h-4 w-4" />
+                          <ChevronRight className="h-4 w-4" />
                         )}
                         <span>View Recommendations</span>
                       </button>

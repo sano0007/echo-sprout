@@ -2,23 +2,23 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  ClockIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  ChatBubbleLeftRightIcon,
-  DocumentTextIcon,
-  UserIcon,
-  ChartBarIcon,
-  CogIcon,
-  BellIcon,
-  EyeIcon,
-  CalendarIcon,
-  FunnelIcon,
-  Squares2X2Icon,
-  ListBulletIcon,
-  ArrowTrendingUpIcon,
-  ShieldCheckIcon,
-} from '@heroicons/react/24/outline';
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  MessageCircle,
+  FileText,
+  User,
+  BarChart3,
+  Settings,
+  Bell,
+  Eye,
+  Calendar,
+  Filter,
+  Grid3X3,
+  List,
+  TrendingUp,
+  ShieldCheck,
+} from 'lucide-react';
 
 import VerificationQueue from './VerificationQueue';
 import ProgressReviewTools from './ProgressReviewTools';
@@ -133,15 +133,15 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'task_completed':
-        return CheckCircleIcon;
+        return CheckCircle;
       case 'message_received':
-        return ChatBubbleLeftRightIcon;
+        return MessageCircle;
       case 'task_assigned':
-        return ClockIcon;
+        return Clock;
       case 'review_submitted':
-        return DocumentTextIcon;
+        return FileText;
       default:
-        return DocumentTextIcon;
+        return FileText;
     }
   };
 
@@ -206,7 +206,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-orange-100 rounded-lg">
-              <ClockIcon className="h-6 w-6 text-orange-600" />
+              <Clock className="h-6 w-6 text-orange-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Pending Tasks</p>
@@ -220,7 +220,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-lg">
-              <EyeIcon className="h-6 w-6 text-blue-600" />
+              <Eye className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">In Review</p>
@@ -234,7 +234,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-lg">
-              <CheckCircleIcon className="h-6 w-6 text-green-600" />
+              <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">
@@ -250,7 +250,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <div className="flex items-center">
             <div className="p-3 bg-red-100 rounded-lg">
-              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+              <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Urgent Tasks</p>
@@ -346,7 +346,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
             onClick={() => setActiveTab('queue')}
             className="flex flex-col items-center p-4 text-center bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
           >
-            <ClockIcon className="h-8 w-8 text-blue-600 mb-2" />
+            <Clock className="h-8 w-8 text-blue-600 mb-2" />
             <span className="text-sm font-medium text-blue-900">
               View Queue
             </span>
@@ -355,7 +355,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
             onClick={() => setActiveTab('reviews')}
             className="flex flex-col items-center p-4 text-center bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
           >
-            <DocumentTextIcon className="h-8 w-8 text-green-600 mb-2" />
+            <FileText className="h-8 w-8 text-green-600 mb-2" />
             <span className="text-sm font-medium text-green-900">
               Review Progress
             </span>
@@ -364,7 +364,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
             onClick={() => setActiveTab('communications')}
             className="flex flex-col items-center p-4 text-center bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
           >
-            <ChatBubbleLeftRightIcon className="h-8 w-8 text-purple-600 mb-2" />
+            <MessageCircle className="h-8 w-8 text-purple-600 mb-2" />
             <span className="text-sm font-medium text-purple-900">
               Messages
             </span>
@@ -373,7 +373,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
             onClick={() => setActiveTab('analytics')}
             className="flex flex-col items-center p-4 text-center bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
           >
-            <ChartBarIcon className="h-8 w-8 text-orange-600 mb-2" />
+            <BarChart3 className="h-8 w-8 text-orange-600 mb-2" />
             <span className="text-sm font-medium text-orange-900">
               Analytics
             </span>
@@ -407,7 +407,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
               <p className="text-3xl font-bold text-gray-900">23</p>
               <p className="text-sm text-green-600">+12% from last week</p>
             </div>
-            <ArrowTrendingUpIcon className="h-8 w-8 text-green-600" />
+            <TrendingUp className="h-8 w-8 text-green-600" />
           </div>
         </div>
 
@@ -418,7 +418,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
               <p className="text-3xl font-bold text-gray-900">87%</p>
               <p className="text-sm text-green-600">+3% from last month</p>
             </div>
-            <ShieldCheckIcon className="h-8 w-8 text-blue-600" />
+            <ShieldCheck className="h-8 w-8 text-blue-600" />
           </div>
         </div>
 
@@ -431,7 +431,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
               <p className="text-3xl font-bold text-gray-900">2.1h</p>
               <p className="text-sm text-red-600">+0.3h from target</p>
             </div>
-            <ClockIcon className="h-8 w-8 text-orange-600" />
+            <Clock className="h-8 w-8 text-orange-600" />
           </div>
         </div>
       </div>
@@ -443,7 +443,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
         </h3>
         <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg">
           <div className="text-center">
-            <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
             <p className="text-gray-500 mt-2">
               Analytics charts will be implemented here
             </p>
@@ -454,15 +454,15 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
   );
 
   const tabs = [
-    { id: 'overview', name: 'Overview', icon: Squares2X2Icon },
-    { id: 'queue', name: 'Verification Queue', icon: ListBulletIcon },
-    { id: 'reviews', name: 'Progress Reviews', icon: DocumentTextIcon },
+    { id: 'overview', name: 'Overview', icon: Grid3X3 },
+    { id: 'queue', name: 'Verification Queue', icon: List },
+    { id: 'reviews', name: 'Progress Reviews', icon: FileText },
     {
       id: 'communications',
       name: 'Communications',
-      icon: ChatBubbleLeftRightIcon,
+      icon: MessageCircle,
     },
-    { id: 'analytics', name: 'Analytics', icon: ChartBarIcon },
+    { id: 'analytics', name: 'Analytics', icon: BarChart3 },
   ];
 
   return (
@@ -482,7 +482,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
                   onClick={() => setShowNotifications(!showNotifications)}
                   className="p-2 text-gray-400 hover:text-gray-600 relative"
                 >
-                  <BellIcon className="h-6 w-6" />
+                  <Bell className="h-6 w-6" />
                   {dashboardStats.unreadMessages > 0 && (
                     <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-600 text-white text-xs rounded-full flex items-center justify-center">
                       {dashboardStats.unreadMessages > 9
@@ -493,7 +493,7 @@ const VerifierDashboard: React.FC<VerifierDashboardProps> = ({
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <UserIcon className="h-8 w-8 text-gray-400" />
+                <User className="h-8 w-8 text-gray-400" />
                 <span className="text-sm font-medium text-gray-900">
                   {currentVerifierName}
                 </span>
