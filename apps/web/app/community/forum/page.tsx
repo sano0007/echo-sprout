@@ -68,7 +68,7 @@ function RelativeTime({
 }
 
 export default function CommunityForum() {
-  const [activeCategory, setActiveCategory] = useState('general');
+  const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'replies' | 'views' | 'newest'>(

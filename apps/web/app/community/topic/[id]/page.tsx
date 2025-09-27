@@ -41,20 +41,20 @@ export default function TopicDetailPage() {
     }
   };
 
-  // Increment view count when landing on a topic
+  // Increment view count once per visit (guards against React StrictMode double-mount in dev)
   useEffect(() => {
     if (!idParam) return;
     (async () => {
       try {
-        const key = 'viewed_topics';
-        const raw =
-          typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
-        const viewed: string[] = raw ? JSON.parse(raw) : [];
-        const sid = String(idParam);
-        if (viewed.includes(sid)) return; // already counted in this session
-        viewed.push(sid);
-        if (typeof window !== 'undefined')
-          sessionStorage.setItem(key, JSON.stringify(viewed));
+        const key = `topic_view_ts_${idParam}`;
+        const now = Date.now();
+        let last = 0;
+        try {
+          const raw = typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
+          last = raw ? parseInt(raw, 10) : 0;
+        } catch {}
+        if (last && now - last < 3000) return; // skip if we already incremented very recently
+        if (typeof window !== 'undefined') sessionStorage.setItem(key, String(now));
         // @ts-ignore Convex validates id at runtime
         await incrementViews({ id: idParam });
       } catch {}
