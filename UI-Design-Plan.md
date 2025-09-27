@@ -23,11 +23,12 @@ Created: September 27, 2025
 ## Design System Overview
 
 ### Core Design Principles
-- **Sustainability First**: Visual language that reflects environmental consciousness
-- **Trust & Transparency**: Clear information hierarchy and verification indicators
-- **Efficiency**: Streamlined workflows with minimal cognitive load
-- **Accessibility**: WCAG 2.1 AA compliance across all interfaces
-- **Consistency**: Unified experience across all user roles
+- **Minimalism First**: Clean, uncluttered interfaces that focus on essential functionality
+- **Sustainability Conscious**: Subtle environmental theming without overwhelming the interface
+- **Trust & Transparency**: Clear information hierarchy with minimal visual noise
+- **Efficiency**: Streamlined workflows with reduced cognitive load
+- **Accessibility**: WCAG 2.1 AA compliance with simple, readable designs
+- **Consistency**: Unified minimalistic experience across all user roles
 
 ### Technology Stack Integration
 - **UI Library**: shadcn/ui components with Tailwind CSS
@@ -82,39 +83,70 @@ Based on the provided color palette:
 
 ### Core UI Components (shadcn/ui based)
 
-#### 1. Navigation Components
+#### 1. Navigation Components (using existing shadcn sidebar)
 ```typescript
-// Primary Navigation
+// Navigation using existing shadcn/ui sidebar components
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from '@/components/ui/sidebar';
+
 interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
   badge?: number;
-  children?: NavItem[];
 }
 
-// Sidebar Navigation
-<Navigation
-  items={navItems}
-  collapsed={isCollapsed}
-  userRole="project-creator"
-  className="bg-rich-black text-anti-flash-white"
-/>
+// Minimalistic Sidebar Implementation
+<SidebarProvider>
+  <Sidebar>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {navItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild>
+                  <Link href={item.href}>
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto text-xs bg-bangladesh-green text-white px-1.5 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+  </Sidebar>
+</SidebarProvider>
 ```
 
-#### 2. Dashboard Cards
+#### 2. Minimalistic Dashboard Cards
 ```typescript
-// Metric Card
-<Card className="p-6 bg-anti-flash-white border-bangladesh-green/20">
-  <CardHeader className="pb-2">
-    <CardTitle className="text-sm font-medium text-dark flex items-center gap-2">
-      <TrendingUp className="h-4 w-4" />
-      Total Credits Sold
-    </CardTitle>
-  </CardHeader>
-  <CardContent>
-    <div className="text-2xl font-bold text-rich-black">1,234</div>
-    <p className="text-xs text-mountain-meadow">+20.1% from last month</p>
+// Clean, minimal Metric Card
+<Card className="p-4 bg-white border border-gray-200 hover:shadow-sm transition-shadow">
+  <CardContent className="p-0">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm text-gray-600">Total Credits Sold</p>
+        <p className="text-2xl font-semibold text-gray-900">1,234</p>
+      </div>
+      <TrendingUp className="h-8 w-8 text-bangladesh-green" />
+    </div>
+    <p className="text-xs text-mountain-meadow mt-2">+20.1% from last month</p>
   </CardContent>
 </Card>
 ```
@@ -202,54 +234,61 @@ const statusConfig = {
 
 ## Project Creator Dashboard
 
-### Layout Structure
+### Minimalistic Layout Structure
 ```
 ┌─────────────────────────────────────────────────────┐
-│ Header: Logo, User Menu, Notifications             │
+│ Header: Logo, User Menu                             │
 ├─────────────────────────────────────────────────────┤
-│ ┌─────────┐ ┌─────────────────────────────────────┐ │
-│ │         │ │                                     │ │
-│ │ Side    │ │ Main Content Area                   │ │
-│ │ Nav     │ │                                     │ │
-│ │         │ │                                     │ │
-│ │         │ │                                     │ │
-│ └─────────┘ └─────────────────────────────────────┘ │
+│ ┌─────┐ ┌─────────────────────────────────────────┐ │
+│ │     │ │                                         │ │
+│ │Side │ │ Main Content Area                       │ │
+│ │bar  │ │ (Clean, spacious layout)                │ │
+│ │     │ │                                         │ │
+│ └─────┘ └─────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────┘
 ```
 
 ### 1. Dashboard Overview Page
 ```typescript
-// Key Metrics Section
+// Minimalistic Key Metrics Section
 const MetricsGrid = () => (
-  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-    <MetricCard
-      title="Active Projects"
-      value="8"
-      change="+2"
-      changeType="positive"
-      icon={FolderOpen}
-    />
-    <MetricCard
-      title="Total Credits Sold"
-      value="12,453"
-      change="+1,234"
-      changeType="positive"
-      icon={TrendingUp}
-    />
-    <MetricCard
-      title="Revenue This Month"
-      value="$18,750"
-      change="+15%"
-      changeType="positive"
-      icon={DollarSign}
-    />
-    <MetricCard
-      title="Pending Verifications"
-      value="3"
-      change="0"
-      changeType="neutral"
-      icon={Clock}
-    />
+  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <Card className="p-4 bg-white border-0 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600">Active Projects</p>
+          <p className="text-2xl font-semibold">8</p>
+        </div>
+        <FolderOpen className="h-6 w-6 text-gray-400" />
+      </div>
+    </Card>
+    <Card className="p-4 bg-white border-0 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600">Credits Sold</p>
+          <p className="text-2xl font-semibold">12,453</p>
+        </div>
+        <TrendingUp className="h-6 w-6 text-bangladesh-green" />
+      </div>
+    </Card>
+    <Card className="p-4 bg-white border-0 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600">Revenue</p>
+          <p className="text-2xl font-semibold">$18,750</p>
+        </div>
+        <DollarSign className="h-6 w-6 text-gray-400" />
+      </div>
+    </Card>
+    <Card className="p-4 bg-white border-0 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600">Pending</p>
+          <p className="text-2xl font-semibold">3</p>
+        </div>
+        <Clock className="h-6 w-6 text-amber-500" />
+      </div>
+    </Card>
   </div>
 );
 
@@ -428,8 +467,9 @@ const RevenueAnalytics = () => (
 );
 ```
 
-### Navigation Structure
+### Minimalistic Navigation Structure
 ```typescript
+// Simplified navigation - focus on essential items only
 const creatorNavItems: NavItem[] = [
   {
     label: 'Dashboard',
@@ -439,18 +479,13 @@ const creatorNavItems: NavItem[] = [
   {
     label: 'Projects',
     href: '/creator/projects',
-    icon: FolderOpen,
-    children: [
-      { label: 'All Projects', href: '/creator/projects', icon: List },
-      { label: 'Create New', href: '/creator/projects/new', icon: Plus },
-      { label: 'Drafts', href: '/creator/projects/drafts', icon: FileText }
-    ]
+    icon: FolderOpen
   },
   {
-    label: 'Progress Reports',
+    label: 'Reports',
     href: '/creator/reports',
     icon: BarChart3,
-    badge: 2 // pending reports
+    badge: 2
   },
   {
     label: 'Revenue',
@@ -461,14 +496,38 @@ const creatorNavItems: NavItem[] = [
     label: 'Messages',
     href: '/creator/messages',
     icon: MessageSquare,
-    badge: 5 // unread messages
-  },
-  {
-    label: 'Settings',
-    href: '/creator/settings',
-    icon: Settings
+    badge: 5
   }
 ];
+
+// Implementation using existing shadcn sidebar
+const CreatorSidebar = () => (
+  <Sidebar>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {creatorNavItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild>
+                  <Link href={item.href} className="flex items-center gap-3">
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto text-xs bg-bangladesh-green text-white px-1.5 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+  </Sidebar>
+);
 ```
 
 ---
@@ -510,41 +569,35 @@ const MarketplaceGrid = () => (
   </div>
 );
 
-// Project Card Component
+// Minimalistic Project Card Component
 const ProjectCard = ({ project, view }) => (
-  <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-    <div className="aspect-video relative">
+  <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow">
+    <div className="aspect-video relative bg-gray-50">
       <Image
         src={project.image}
         alt={project.name}
         fill
         className="object-cover"
       />
-      <Badge className="absolute top-2 right-2 bg-bangladesh-green">
-        Verified
-      </Badge>
+      {project.verified && (
+        <span className="absolute top-3 right-3 w-2 h-2 bg-bangladesh-green rounded-full" />
+      )}
     </div>
     <CardContent className="p-4">
-      <div className="space-y-2">
-        <h3 className="font-semibold text-lg">{project.name}</h3>
-        <p className="text-sm text-dark line-clamp-2">{project.description}</p>
+      <div className="space-y-3">
+        <h3 className="font-medium text-lg text-gray-900">{project.name}</h3>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">${project.pricePerCredit}/credit</span>
-          <span className="text-sm text-dark">{project.creditsAvailable} available</span>
+          <span className="text-sm font-medium">${project.pricePerCredit}</span>
+          <span className="text-sm text-gray-500">{project.creditsAvailable} credits</span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-dark">
-          <MapPin className="h-4 w-4" />
+        <div className="flex items-center gap-1 text-sm text-gray-500">
+          <MapPin className="h-3 w-3" />
           {project.location}
         </div>
       </div>
-      <div className="mt-4 flex items-center gap-2">
-        <Button className="flex-1" onClick={() => openProjectDetails(project.id)}>
-          View Details
-        </Button>
-        <Button variant="outline" size="icon">
-          <Heart className="h-4 w-4" />
-        </Button>
-      </div>
+      <Button variant="outline" className="w-full mt-4 border-gray-200" onClick={() => openProjectDetails(project.id)}>
+        View Details
+      </Button>
     </CardContent>
   </Card>
 );
@@ -677,43 +730,37 @@ const ImpactDashboard = () => (
 
 ### 4. Certificate Management
 ```typescript
-// Certificate Library
+// Minimalistic Certificate Library
 const CertificateLibrary = () => (
-  <div className="space-y-4">
+  <div className="space-y-6">
     <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold">My Certificates</h2>
-      <Button variant="outline">
+      <h2 className="text-2xl font-semibold text-gray-900">Certificates</h2>
+      <Button variant="outline" size="sm" className="border-gray-200">
         <Download className="h-4 w-4 mr-2" />
         Download All
       </Button>
     </div>
 
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {certificates.map((cert) => (
-        <Card key={cert.id} className="group hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="aspect-[3/4] bg-gradient-to-br from-bangladesh-green to-mountain-meadow rounded-lg p-4 text-white mb-4">
-              <div className="text-center space-y-2">
-                <Award className="h-8 w-8 mx-auto" />
-                <h3 className="font-bold text-lg">Carbon Credit Certificate</h3>
-                <p className="text-sm opacity-90">{cert.projectName}</p>
-                <div className="bg-white/20 rounded-lg p-2 mt-4">
-                  <p className="text-2xl font-bold">{cert.credits}</p>
-                  <p className="text-xs">tons CO₂ offset</p>
-                </div>
+        <Card key={cert.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-5">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Award className="h-8 w-8 text-bangladesh-green" />
+                <span className="text-xs text-gray-500">{cert.issueDate}</span>
               </div>
-            </div>
-            <div className="space-y-2">
-              <p className="font-medium">{cert.projectName}</p>
-              <p className="text-sm text-dark">Issued: {cert.issueDate}</p>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1">
-                  <Eye className="h-4 w-4 mr-1" />
+              <div>
+                <h3 className="font-medium text-gray-900">{cert.projectName}</h3>
+                <p className="text-2xl font-semibold text-gray-900 mt-2">{cert.credits}</p>
+                <p className="text-sm text-gray-500">tons CO₂ offset</p>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button size="sm" variant="outline" className="flex-1 border-gray-200">
                   View
                 </Button>
-                <Button size="sm" variant="outline" className="flex-1">
-                  <Download className="h-4 w-4 mr-1" />
-                  Download
+                <Button size="sm" variant="outline" className="flex-1 border-gray-200">
+                  <Download className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -725,8 +772,9 @@ const CertificateLibrary = () => (
 );
 ```
 
-### Navigation Structure
+### Minimalistic Navigation Structure
 ```typescript
+// Simplified buyer navigation
 const buyerNavItems: NavItem[] = [
   {
     label: 'Dashboard',
@@ -739,32 +787,51 @@ const buyerNavItems: NavItem[] = [
     icon: ShoppingCart
   },
   {
-    label: 'My Portfolio',
+    label: 'Portfolio',
     href: '/buyer/portfolio',
-    icon: PieChart,
-    children: [
-      { label: 'Overview', href: '/buyer/portfolio', icon: BarChart },
-      { label: 'Certificates', href: '/buyer/certificates', icon: Award },
-      { label: 'Impact Tracking', href: '/buyer/impact', icon: Leaf }
-    ]
+    icon: PieChart
   },
   {
-    label: 'Purchase History',
-    href: '/buyer/history',
-    icon: History
+    label: 'Certificates',
+    href: '/buyer/certificates',
+    icon: Award
   },
   {
     label: 'Watchlist',
     href: '/buyer/watchlist',
     icon: Heart,
     badge: 3
-  },
-  {
-    label: 'Settings',
-    href: '/buyer/settings',
-    icon: Settings
   }
 ];
+
+// Clean implementation using shadcn sidebar
+const BuyerSidebar = () => (
+  <Sidebar>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {buyerNavItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild>
+                  <Link href={item.href} className="flex items-center gap-3">
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto text-xs bg-bangladesh-green text-white px-1.5 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+  </Sidebar>
+);
 ```
 
 ---
@@ -1026,8 +1093,9 @@ const MessageThread = ({ projectId }) => (
 );
 ```
 
-### Navigation Structure
+### Minimalistic Navigation Structure
 ```typescript
+// Simplified verifier navigation
 const verifierNavItems: NavItem[] = [
   {
     label: 'Dashboard',
@@ -1035,16 +1103,16 @@ const verifierNavItems: NavItem[] = [
     icon: LayoutDashboard
   },
   {
-    label: 'Verification Queue',
+    label: 'Queue',
     href: '/verifier/queue',
     icon: Clock,
-    badge: 12 // pending verifications
+    badge: 12
   },
   {
-    label: 'In Review',
+    label: 'Review',
     href: '/verifier/review',
     icon: Eye,
-    badge: 3 // currently reviewing
+    badge: 3
   },
   {
     label: 'Completed',
@@ -1055,19 +1123,38 @@ const verifierNavItems: NavItem[] = [
     label: 'Messages',
     href: '/verifier/messages',
     icon: MessageSquare,
-    badge: 7 // unread messages
-  },
-  {
-    label: 'Reports',
-    href: '/verifier/reports',
-    icon: FileText
-  },
-  {
-    label: 'Guidelines',
-    href: '/verifier/guidelines',
-    icon: BookOpen
+    badge: 7
   }
 ];
+
+// Clean implementation using shadcn sidebar
+const VerifierSidebar = () => (
+  <Sidebar>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {verifierNavItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild>
+                  <Link href={item.href} className="flex items-center gap-3">
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto text-xs bg-bangladesh-green text-white px-1.5 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+  </Sidebar>
+);
 ```
 
 ---
@@ -1280,8 +1367,9 @@ const PlatformAnalytics = () => (
 );
 ```
 
-### Navigation Structure
+### Minimalistic Navigation Structure
 ```typescript
+// Simplified admin navigation
 const adminNavItems: NavItem[] = [
   {
     label: 'Dashboard',
@@ -1289,48 +1377,56 @@ const adminNavItems: NavItem[] = [
     icon: LayoutDashboard
   },
   {
-    label: 'User Management',
+    label: 'Users',
     href: '/admin/users',
-    icon: Users,
-    children: [
-      { label: 'All Users', href: '/admin/users', icon: Users },
-      { label: 'Pending Approvals', href: '/admin/users/pending', icon: Clock },
-      { label: 'Role Management', href: '/admin/users/roles', icon: Shield }
-    ]
+    icon: Users
   },
   {
-    label: 'Platform Analytics',
+    label: 'Analytics',
     href: '/admin/analytics',
     icon: BarChart
   },
   {
-    label: 'Support Center',
+    label: 'Support',
     href: '/admin/support',
     icon: MessageSquare,
-    badge: 23 // pending tickets
+    badge: 23
   },
   {
-    label: 'System Settings',
+    label: 'Settings',
     href: '/admin/settings',
-    icon: Settings,
-    children: [
-      { label: 'General', href: '/admin/settings/general', icon: Settings },
-      { label: 'Payment', href: '/admin/settings/payment', icon: CreditCard },
-      { label: 'Security', href: '/admin/settings/security', icon: Shield },
-      { label: 'Notifications', href: '/admin/settings/notifications', icon: Bell }
-    ]
-  },
-  {
-    label: 'Content Management',
-    href: '/admin/content',
-    icon: FileText
-  },
-  {
-    label: 'System Logs',
-    href: '/admin/logs',
-    icon: Terminal
+    icon: Settings
   }
 ];
+
+// Clean implementation using shadcn sidebar
+const AdminSidebar = () => (
+  <Sidebar>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {adminNavItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild>
+                  <Link href={item.href} className="flex items-center gap-3">
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto text-xs bg-red-500 text-white px-1.5 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+  </Sidebar>
+);
 ```
 
 ---
@@ -1520,38 +1616,90 @@ xl: 1280px  /* Extra large devices (desktops) */
 </div>
 ```
 
-#### 2. Mobile Navigation
+#### 2. Mobile Navigation (using existing shadcn sidebar)
 ```typescript
-// Mobile-first navigation with hamburger menu
+// Mobile navigation using shadcn sidebar provider
 const MobileNavigation = () => (
-  <div className="lg:hidden">
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Menu className="h-6 w-6" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-72">
-        <NavigationMenu items={navItems} />
-      </SheetContent>
-    </Sheet>
-  </div>
+  <SidebarProvider>
+    {/* Sidebar trigger for mobile */}
+    <div className="lg:hidden">
+      <SidebarTrigger />
+    </div>
+
+    {/* The sidebar automatically handles mobile behavior */}
+    <Sidebar>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild>
+                    <Link href={item.href}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  </SidebarProvider>
 );
 ```
 
-#### 3. Responsive Tables
+#### 3. Minimalistic Responsive Tables
 ```typescript
-// Mobile-friendly table with stacked layout
-<div className="hidden md:block">
+// Clean table with minimal styling
+<div className="bg-white rounded-lg border-0 shadow-sm">
   <Table>
-    {/* Full table for desktop */}
+    <TableHeader>
+      <TableRow className="border-gray-100">
+        <TableHead className="text-gray-600 font-medium">Project</TableHead>
+        <TableHead className="text-gray-600 font-medium">Status</TableHead>
+        <TableHead className="text-gray-600 font-medium">Credits</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {data.map((item) => (
+        <TableRow key={item.id} className="border-gray-50 hover:bg-gray-50">
+          <TableCell className="font-medium text-gray-900">{item.name}</TableCell>
+          <TableCell>
+            <span className={`px-2 py-1 text-xs rounded-full ${
+              item.status === 'active' ? 'bg-green-100 text-green-700' :
+              item.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-gray-100 text-gray-700'
+            }`}>
+              {item.status}
+            </span>
+          </TableCell>
+          <TableCell className="text-gray-600">{item.credits}</TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
   </Table>
 </div>
 
-<div className="md:hidden space-y-4">
+// Mobile: Simple card layout
+<div className="md:hidden space-y-3">
   {data.map((item) => (
-    <Card key={item.id}>
-      {/* Stacked card layout for mobile */}
+    <Card key={item.id} className="border-0 shadow-sm p-4">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="font-medium text-gray-900">{item.name}</span>
+          <span className={`px-2 py-1 text-xs rounded-full ${
+            item.status === 'active' ? 'bg-green-100 text-green-700' :
+            item.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+            'bg-gray-100 text-gray-700'
+          }`}>
+            {item.status}
+          </span>
+        </div>
+        <p className="text-sm text-gray-600">{item.credits} credits</p>
+      </div>
     </Card>
   ))}
 </div>
@@ -1633,9 +1781,9 @@ const FocusableCard = ({ children, onSelect }) => (
 
 ---
 
-## Implementation Guidelines
+## Implementation Guidelines (Updated for Existing shadcn Sidebar)
 
-### 1. Component Development Standards
+### 1. Component Development Standards (Using Existing shadcn Components)
 ```typescript
 // Example component with proper TypeScript interfaces
 interface ProjectCardProps {
@@ -1829,4 +1977,22 @@ describe('ProjectCard', () => {
 
 ---
 
-This comprehensive UI design plan provides the foundation for implementing a cohesive, accessible, and user-friendly interface across all EcoSprout dashboards. Each component and layout has been designed with the specific workflows and user needs in mind, while maintaining consistency with the established design system and technical requirements.
+## Summary
+
+This updated UI design plan provides the foundation for implementing a clean, minimalistic, and user-friendly interface across all EcoSprout dashboards using the existing shadcn/ui sidebar component. Key changes include:
+
+### Key Updates Made:
+1. **Existing shadcn Sidebar Integration**: All navigation examples now use the existing `sidebar.tsx` component from `/components/ui/sidebar.tsx`
+2. **Minimalistic Design Approach**: Simplified visual design with reduced clutter, clean lines, and focused functionality
+3. **Streamlined Navigation**: Removed complex nested navigation in favor of simple, flat navigation structures
+4. **Clean Component Examples**: Updated all component examples to use minimal styling with subtle shadows and borders
+5. **Consistent Structure**: All sidebar implementations now use the same shadcn components (SidebarProvider, Sidebar, SidebarContent, etc.)
+
+### Implementation Benefits:
+- **Consistency**: All dashboards use the same proven sidebar component
+- **Maintainability**: Leverages existing, well-tested shadcn components
+- **Performance**: Reduces custom code and complexity
+- **Accessibility**: Built-in accessibility features from shadcn components
+- **User Experience**: Clean, minimalistic interface reduces cognitive load
+
+This approach ensures a cohesive, accessible, and user-friendly interface across all EcoSprout dashboards while maintaining the specific workflows and user needs for each role.

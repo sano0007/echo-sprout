@@ -29,11 +29,12 @@ State Management: Zustand
 
 ### Core Principles
 
-#### 1. **Component-Driven Development (CDD)**
-- Build UI components in isolation using Storybook
-- Develop atomic design principles (atoms → molecules → organisms → templates → pages)
-- Maintain a comprehensive component library
-- Ensure reusability and consistency across dashboards
+#### 1. **Minimalistic Component-Driven Development (CDD)**
+- Build clean, simple UI components in isolation using Storybook
+- Focus on essential functionality with minimal visual complexity
+- Leverage existing shadcn/ui components (including the existing sidebar component)
+- Maintain a streamlined component library with consistent minimalistic design
+- Ensure reusability across dashboards with a unified simple aesthetic
 
 #### 2. **Mobile-First Responsive Design**
 ```typescript
@@ -46,11 +47,19 @@ const breakpoints = {
   '2xl': '1536px' // Large desktop
 };
 
-// Component example with mobile-first approach
+// Minimalistic component example with mobile-first approach
 const DashboardGrid = () => (
-  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+  <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
     {metrics.map((metric) => (
-      <MetricCard key={metric.id} {...metric} />
+      <Card key={metric.id} className="p-4 bg-white border-0 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">{metric.title}</p>
+            <p className="text-2xl font-semibold">{metric.value}</p>
+          </div>
+          <metric.icon className="h-6 w-6 text-gray-400" />
+        </div>
+      </Card>
     ))}
   </div>
 );
@@ -90,15 +99,18 @@ graph LR
 
 #### 2. **Code Organization Standards**
 ```typescript
-// File naming conventions
+// File naming conventions with existing shadcn components
 // ✅ Good
+components/ui/sidebar.tsx          // Existing shadcn sidebar component
 components/ui/Button.tsx
 components/dashboard/MetricCard.tsx
+components/layout/DashboardLayout.tsx  // Uses existing sidebar
 hooks/useProjectData.ts
 types/project.types.ts
 utils/formatCurrency.ts
 
 // ❌ Bad
+components/sidebar.jsx             // Don't create custom sidebar
 components/button.jsx
 components/metric-card.tsx
 hooks/project-data.js
@@ -151,16 +163,17 @@ apps/web/
 │   ├── layout.tsx
 │   └── loading.tsx
 ├── components/                    # Component library
-│   ├── ui/                        # shadcn/ui components
+│   ├── ui/                        # shadcn/ui components (including existing sidebar)
 │   │   ├── Button.tsx
 │   │   ├── Card.tsx
 │   │   ├── Input.tsx
 │   │   ├── Table.tsx
+│   │   ├── sidebar.tsx            # Existing shadcn sidebar component
 │   │   └── [50+ more components]
 │   ├── layout/                    # Layout components
 │   │   ├── Header.tsx
-│   │   ├── Sidebar.tsx
-│   │   ├── Navigation.tsx
+│   │   ├── DashboardLayout.tsx    # Uses existing shadcn sidebar
+│   │   ├── Navigation.tsx         # Built with shadcn sidebar components
 │   │   └── Footer.tsx
 │   ├── dashboard/                 # Dashboard-specific components
 │   │   ├── common/                # Shared dashboard components
@@ -300,9 +313,10 @@ npx shadcn-ui@latest add slider
 npx shadcn-ui@latest add progress
 ```
 
-#### Phase 3: Navigation Components (Week 3)
+#### Phase 3: Navigation Components (Week 3) - Sidebar Already Available
 ```bash
-# Navigation and layout components
+# Navigation and layout components (sidebar already implemented)
+# Existing: sidebar.tsx at /components/ui/sidebar.tsx
 npx shadcn-ui@latest add navigation-menu
 npx shadcn-ui@latest add dropdown-menu
 npx shadcn-ui@latest add breadcrumb
@@ -830,34 +844,47 @@ export const badgeVariants = cva(
 
 ### Dashboard Component Hierarchy
 
-#### 1. **Layout Components**
+#### 1. **Layout Components (using existing shadcn sidebar)**
 ```typescript
 // components/layout/DashboardLayout.tsx
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
   userRole: 'creator' | 'buyer' | 'verifier' | 'admin';
-  sidebarCollapsed?: boolean;
+  sidebarContent: React.ReactNode;
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   userRole,
-  sidebarCollapsed = false
+  sidebarContent
 }) => {
   return (
-    <div className="min-h-screen bg-background">
-      <Header userRole={userRole} />
-      <div className="flex">
-        <Sidebar
-          userRole={userRole}
-          collapsed={sidebarCollapsed}
-          className="hidden lg:block"
-        />
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <Sidebar>
+          {sidebarContent}
+        </Sidebar>
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <div className="ml-auto flex items-center gap-2">
+              {/* Header content */}
+            </div>
+          </header>
+          <main className="flex-1 p-6">
+            {children}
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 ```
@@ -967,7 +994,7 @@ export const ProjectWizard: React.FC = () => {
 };
 ```
 
-**Credit Buyer Components:**
+**Minimalistic Credit Buyer Components:**
 ```typescript
 // components/dashboard/buyer/MarketplaceGrid.tsx
 interface MarketplaceGridProps {
@@ -975,36 +1002,60 @@ interface MarketplaceGridProps {
   view: 'grid' | 'list';
   loading?: boolean;
   onProjectSelect: (project: Project) => void;
-  filters: MarketplaceFilters;
 }
 
 export const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
   projects,
   view,
   loading,
-  onProjectSelect,
-  filters
+  onProjectSelect
 }) => {
   if (loading) {
-    return <ProjectGridSkeleton view={view} />;
+    return (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i} className="p-4 border-0 shadow-sm">
+            <div className="space-y-3">
+              <div className="h-32 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
   }
 
-  const gridClasses = cn(
-    'grid gap-6',
-    view === 'grid'
-      ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-      : 'grid-cols-1'
-  );
-
   return (
-    <div className={gridClasses}>
+    <div className={cn(
+      'grid gap-6',
+      view === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
+    )}>
       {projects.map((project) => (
-        <ProjectCard
+        <Card
           key={project.id}
-          project={project}
-          view={view}
-          onSelect={() => onProjectSelect(project)}
-        />
+          className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => onProjectSelect(project)}
+        >
+          <div className="aspect-video bg-gray-50">
+            <img
+              src={project.image}
+              alt={project.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="p-4 space-y-2">
+            <h3 className="font-medium text-gray-900">{project.name}</h3>
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">${project.pricePerCredit}</span>
+              <span className="text-gray-500">{project.creditsAvailable} credits</span>
+            </div>
+            <div className="flex items-center gap-1 text-sm text-gray-500">
+              <MapPin className="h-3 w-3" />
+              {project.location}
+            </div>
+          </div>
+        </Card>
       ))}
     </div>
   );
@@ -1131,4 +1182,32 @@ export function DataProvider<T>({ fetchData, children }: DataProviderProps<T>) {
 
 ---
 
-This completes the first part of the comprehensive frontend development plan. The document provides detailed methodology, architecture, and implementation strategies for the EcoSprout platform. Would you like me to continue with the remaining sections covering TypeScript implementation, state management, testing strategy, and implementation timeline?
+## Summary of Updates
+
+This updated frontend development plan now incorporates the existing shadcn sidebar component and adopts a minimalistic design approach. Key changes include:
+
+### Key Updates Made:
+1. **Existing shadcn Sidebar Integration**:
+   - Updated folder structure to highlight existing `sidebar.tsx` component
+   - Modified DashboardLayout to use SidebarProvider, SidebarInset, and SidebarTrigger
+   - Removed references to custom sidebar implementations
+
+2. **Minimalistic Component Approach**:
+   - Simplified MetricCard components with clean, minimal styling
+   - Updated component examples to use subtle shadows and minimal borders
+   - Focused on essential functionality without visual clutter
+
+3. **Architecture Improvements**:
+   - Leveraged existing shadcn components for consistency
+   - Streamlined component hierarchy
+   - Reduced custom code complexity
+
+### Implementation Benefits:
+- **Faster Development**: Leverages existing, proven components
+- **Consistency**: Unified sidebar experience across all dashboards
+- **Maintainability**: Less custom code to maintain
+- **Performance**: Optimized shadcn components
+- **User Experience**: Clean, minimalistic interface
+
+### Next Steps:
+The remaining sections covering TypeScript implementation, state management, testing strategy, and implementation timeline should follow the same minimalistic principles and leverage existing shadcn components wherever possible.
