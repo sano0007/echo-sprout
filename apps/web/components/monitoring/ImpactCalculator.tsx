@@ -1,21 +1,22 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
 import {
-  CalculatorIcon,
-  GlobeAltIcon,
-  TruckIcon,
-  HomeIcon,
-  BoltIcon,
-  TreePineIcon,
-  BeakerIcon,
-  ChartBarIcon,
-  ArrowRightIcon,
-  InformationCircleIcon,
-  ShareIcon,
-  BookmarkIcon,
-  ArrowDownTrayIcon,
-} from '@heroicons/react/24/outline';
+  Download,
+  ArrowRight,
+  Beaker,
+  Zap,
+  Bookmark,
+  Calculator,
+  BarChart3,
+  CheckCircle,
+  Globe,
+  Home,
+  Info,
+  Share,
+  TreePine,
+  Truck,
+} from 'lucide-react';
+import { useEffect, useMemo,useState } from 'react';
 
 interface CarbonCalculation {
   id: string;
@@ -345,23 +346,23 @@ export default function ImpactCalculator({
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'transportation':
-        return <TruckIcon className="h-5 w-5" />;
+        return <Truck className="h-5 w-5" />;
       case 'energy':
-        return <BoltIcon className="h-5 w-5" />;
+        return <Zap className="h-5 w-5" />;
       case 'lifestyle':
-        return <HomeIcon className="h-5 w-5" />;
+        return <Home className="h-5 w-5" />;
       case 'business':
-        return <ChartBarIcon className="h-5 w-5" />;
+        return <BarChart3 className="h-5 w-5" />;
       default:
-        return <CalculatorIcon className="h-5 w-5" />;
+        return <Calculator className="h-5 w-5" />;
     }
   };
 
   const categories = [
-    { key: 'transportation', label: 'Transportation', icon: TruckIcon },
-    { key: 'energy', label: 'Energy', icon: BoltIcon },
-    { key: 'lifestyle', label: 'Lifestyle', icon: HomeIcon },
-    { key: 'business', label: 'Business', icon: ChartBarIcon },
+    { key: 'transportation', label: 'Transportation', icon: Truck },
+    { key: 'energy', label: 'Energy', icon: Zap },
+    { key: 'lifestyle', label: 'Lifestyle', icon: Home },
+    { key: 'business', label: 'Business', icon: BarChart3 },
   ];
 
   return (
@@ -371,7 +372,7 @@ export default function ImpactCalculator({
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center space-x-3">
-              <CalculatorIcon className="h-8 w-8 text-blue-600" />
+              <Calculator className="h-8 w-8 text-blue-600" />
               <span>Carbon Impact Calculator</span>
             </h2>
             <p className="text-gray-600 mt-1">
@@ -383,14 +384,14 @@ export default function ImpactCalculator({
               onClick={() => onShareCalculation?.(calculations, totalEmissions)}
               className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              <ShareIcon className="h-4 w-4" />
+              <Share className="h-4 w-4" />
               <span>Share</span>
             </button>
             <button
               onClick={() => onSaveCalculation?.(calculations)}
               className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              <BookmarkIcon className="h-4 w-4" />
+              <Bookmark className="h-4 w-4" />
               <span>Save</span>
             </button>
           </div>
@@ -648,7 +649,7 @@ export default function ImpactCalculator({
             onClick={() => setShowResults(true)}
             className="w-full mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center space-x-2"
           >
-            <CalculatorIcon className="h-5 w-5" />
+            <Calculator className="h-5 w-5" />
             <span>Calculate Carbon Footprint</span>
           </button>
         </div>
@@ -658,7 +659,7 @@ export default function ImpactCalculator({
           {/* Total Emissions */}
           <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-lg shadow-lg p-6 border border-red-200">
             <div className="flex items-center space-x-3 mb-4">
-              <GlobeAltIcon className="h-8 w-8 text-red-600" />
+              <Globe className="h-8 w-8 text-red-600" />
               <div>
                 <h3 className="font-semibold text-gray-800">
                   Total Annual Emissions
@@ -892,7 +893,7 @@ export default function ImpactCalculator({
                     }
                     className="w-full mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center justify-center space-x-2"
                   >
-                    <TreePineIcon className="h-4 w-4" />
+                    <TreePine className="h-4 w-4" />
                     <span>Purchase Credits</span>
                   </button>
                 )}
@@ -900,7 +901,7 @@ export default function ImpactCalculator({
               {offsetPercentage >= 100 && (
                 <div className="mt-4 p-3 bg-green-100 rounded-lg">
                   <div className="flex items-center space-x-2">
-                    <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                    <CheckCircle className="h-5 w-5 text-green-600" />
                     <span className="text-sm font-medium text-green-800">
                       {offsetPercentage === 100
                         ? 'Carbon Neutral!'

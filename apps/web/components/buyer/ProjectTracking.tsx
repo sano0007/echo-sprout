@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import {
-  BarChart3,
   AlertTriangle,
+  BarChart3,
   CheckCircle,
   Clock,
-  RotateCcw,
   Eye,
+  RotateCcw,
 } from 'lucide-react';
-import { useProjectTracking, useProjectDetails, useProjectFilters } from '../../hooks/useProjectTracking';
+import { useState } from 'react';
+
+import { useProjectDetails, useProjectFilters,useProjectTracking } from '../../hooks/useProjectTracking';
 import type { ProjectProgress } from '../../store/tracking-store';
 
 interface ProjectTrackingProps {

@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
   AlertTriangle,
-  Info,
-  XCircle,
   Bell,
-  Search,
   ChevronDown,
   ChevronRight,
+  Info,
+  Search,
+  XCircle,
 } from 'lucide-react';
+import { useEffect,useState } from 'react';
 
 interface Alert {
   id: string;
@@ -68,7 +68,7 @@ export default function AlertManagement({
 
   // Filter and sort alerts
   useEffect(() => {
-    let filtered = alerts.filter((alert) => {
+    const filtered = alerts.filter((alert) => {
       const matchesSearch =
         alert.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
         alert.projectName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -88,9 +88,10 @@ export default function AlertManagement({
     // Sort alerts
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'severity':
+        case 'severity': {
           const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
           return severityOrder[b.severity] - severityOrder[a.severity];
+        }
         case 'project':
           return a.projectName.localeCompare(b.projectName);
         case 'date':

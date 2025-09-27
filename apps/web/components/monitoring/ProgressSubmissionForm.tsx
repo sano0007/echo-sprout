@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useRef } from 'react';
 import {
-  CloudArrowUpIcon,
-  PlusIcon,
-  XMarkIcon,
-  PhotoIcon,
-  MapPinIcon,
-} from '@heroicons/react/24/outline';
+  CloudUpload,
+  MapPin,
+  X,
+} from 'lucide-react';
+import { useRef,useState } from 'react';
 
 interface ProgressSubmissionFormProps {
   projectId: string;
@@ -393,7 +391,7 @@ export default function ProgressSubmissionForm({
                 onClick={() => fileInputRef.current?.click()}
                 className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors"
               >
-                <CloudArrowUpIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <CloudUpload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-lg font-medium text-gray-700">
                   Upload Photos
                 </p>
@@ -425,7 +423,7 @@ export default function ProgressSubmissionForm({
                         onClick={() => removePhoto(index)}
                         className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <XMarkIcon className="h-4 w-4" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
@@ -443,7 +441,7 @@ export default function ProgressSubmissionForm({
                   onClick={getCurrentLocation}
                   className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  <MapPinIcon className="h-5 w-5" />
+                  <MapPin className="h-5 w-5" />
                   <span>Use Current Location</span>
                 </button>
                 {formData.location && (

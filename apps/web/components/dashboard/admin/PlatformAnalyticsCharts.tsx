@@ -1,23 +1,20 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+  Calendar,
+  DollarSign,
+  FolderOpen,
+  TrendingUp,
+  Users} from 'lucide-react';
+import React, { useState } from 'react';
 import {
   Area,
   AreaChart,
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
   Line,
   LineChart,
   Pie,
@@ -25,18 +22,21 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend
-} from 'recharts';
+  YAxis} from 'recharts';
+
 import { cn } from '@/lib/utils';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  TrendingUp,
-  Users,
-  DollarSign,
-  FolderOpen,
-  Calendar
-} from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface PlatformAnalyticsChartsProps {
   loading?: boolean;

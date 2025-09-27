@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import {
-  CheckCircleIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  CalendarDaysIcon,
-} from '@heroicons/react/24/outline';
+  Calendar,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  AlertTriangle,
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface Milestone {
   id: string;
@@ -60,11 +60,11 @@ export default function ProjectTimeline({
   const getStatusIcon = (status: Milestone['status']) => {
     switch (status) {
       case 'completed':
-        return <CheckCircleIcon className="h-6 w-6 text-green-500" />;
+        return <CheckCircle className="h-6 w-6 text-green-500" />;
       case 'in_progress':
-        return <ClockIcon className="h-6 w-6 text-blue-500" />;
+        return <Clock className="h-6 w-6 text-blue-500" />;
       case 'delayed':
-        return <ExclamationTriangleIcon className="h-6 w-6 text-red-500" />;
+        return <AlertTriangle className="h-6 w-6 text-red-500" />;
       default:
         return (
           <div className="h-6 w-6 rounded-full border-2 border-gray-300" />
@@ -223,7 +223,7 @@ export default function ProjectTimeline({
                           {/* Dates */}
                           <div className="flex items-center space-x-4 mt-3 text-sm">
                             <div className="flex items-center space-x-1">
-                              <CalendarDaysIcon className="h-4 w-4 text-gray-400" />
+                              <Calendar className="h-4 w-4 text-gray-400" />
                               <span className="text-gray-600">
                                 Planned:{' '}
                                 {new Date(
@@ -233,7 +233,7 @@ export default function ProjectTimeline({
                             </div>
                             {milestone.actualDate && (
                               <div className="flex items-center space-x-1">
-                                <CalendarDaysIcon className="h-4 w-4 text-green-400" />
+                                <Calendar className="h-4 w-4 text-green-400" />
                                 <span className="text-gray-600">
                                   Actual:{' '}
                                   {new Date(
@@ -294,9 +294,9 @@ export default function ProjectTimeline({
                               className="flex items-center space-x-1 mt-3 text-sm text-blue-600 hover:text-blue-700"
                             >
                               {expandedMilestone === milestone.id ? (
-                                <ChevronDownIcon className="h-4 w-4" />
+                                <ChevronDown className="h-4 w-4" />
                               ) : (
-                                <ChevronRightIcon className="h-4 w-4" />
+                                <ChevronRight className="h-4 w-4" />
                               )}
                               <span>View Details</span>
                             </button>

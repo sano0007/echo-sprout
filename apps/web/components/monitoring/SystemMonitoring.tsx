@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
-  ComputerDesktopIcon,
-  ChartBarIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  CpuChipIcon,
-  ServerIcon,
-  CloudIcon,
-  BoltIcon,
-  UserGroupIcon,
-  DocumentTextIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  InformationCircleIcon,
-  Cog6ToothIcon,
-  EyeIcon,
-  RefreshIcon,
-} from '@heroicons/react/24/outline';
+  TrendingDown,
+  TrendingUp,
+  Zap,
+  BarChart3,
+  CheckCircle,
+  Clock,
+  Cloud,
+  Settings,
+  Monitor,
+  Cpu,
+  FileText,
+  AlertTriangle,
+  Eye,
+  Info,
+  RefreshCw,
+  Server,
+  Users,
+} from 'lucide-react';
+import { useEffect,useState } from 'react';
 
 interface SystemMetric {
   id: string;
@@ -330,13 +330,13 @@ export default function SystemMonitoring({
   const getTrendIcon = (trend: string, trendPercentage: number) => {
     if (trend === 'up') {
       return (
-        <ArrowTrendingUpIcon
+        <TrendingUp
           className={`h-4 w-4 ${trendPercentage > 0 ? 'text-green-500' : 'text-red-500'}`}
         />
       );
     } else if (trend === 'down') {
       return (
-        <ArrowTrendingDownIcon
+        <TrendingDown
           className={`h-4 w-4 ${trendPercentage < 0 ? 'text-green-500' : 'text-red-500'}`}
         />
       );
@@ -347,30 +347,30 @@ export default function SystemMonitoring({
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'performance':
-        return <BoltIcon className="h-5 w-5" />;
+        return <Zap className="h-5 w-5" />;
       case 'infrastructure':
-        return <ServerIcon className="h-5 w-5" />;
+        return <Server className="h-5 w-5" />;
       case 'application':
-        return <CpuChipIcon className="h-5 w-5" />;
+        return <Cpu className="h-5 w-5" />;
       case 'business':
-        return <ChartBarIcon className="h-5 w-5" />;
+        return <BarChart3 className="h-5 w-5" />;
       default:
-        return <ComputerDesktopIcon className="h-5 w-5" />;
+        return <Monitor className="h-5 w-5" />;
     }
   };
 
   const getServiceIcon = (serviceId: string) => {
     switch (serviceId) {
       case 'database':
-        return <ServerIcon className="h-6 w-6" />;
+        return <Server className="h-6 w-6" />;
       case 'authentication':
-        return <UserGroupIcon className="h-6 w-6" />;
+        return <Users className="h-6 w-6" />;
       case 'file_storage':
-        return <CloudIcon className="h-6 w-6" />;
+        return <Cloud className="h-6 w-6" />;
       case 'email_service':
-        return <DocumentTextIcon className="h-6 w-6" />;
+        return <FileText className="h-6 w-6" />;
       default:
-        return <ComputerDesktopIcon className="h-6 w-6" />;
+        return <Monitor className="h-6 w-6" />;
     }
   };
 
@@ -403,7 +403,7 @@ export default function SystemMonitoring({
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center space-x-3">
-              <ComputerDesktopIcon className="h-8 w-8 text-blue-600" />
+              <Monitor className="h-8 w-8 text-blue-600" />
               <span>System Monitoring</span>
             </h2>
             <p className="text-gray-600 mt-1">
@@ -425,7 +425,7 @@ export default function SystemMonitoring({
               onClick={handleRefresh}
               className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              <RefreshIcon className="h-4 w-4" />
+              <RefreshCw className="h-4 w-4" />
               <span>Refresh</span>
             </button>
           </div>
@@ -637,7 +637,7 @@ export default function SystemMonitoring({
         <div className="space-y-4">
           {filteredAlerts.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <CheckCircleIcon className="h-12 w-12 mx-auto mb-2 text-green-500" />
+              <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
               <p>No alerts to display</p>
             </div>
           ) : (
@@ -684,7 +684,7 @@ export default function SystemMonitoring({
                   </div>
                   <div className="flex items-center space-x-2">
                     <button className="p-1 text-gray-400 hover:text-gray-600">
-                      <EyeIcon className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </button>
                     {!alert.isResolved && onResolveAlert && (
                       <button

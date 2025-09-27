@@ -1,21 +1,21 @@
 'use client';
 
-import { useState } from 'react';
 import {
-  Search,
-  Filter,
-  Eye,
-  UserCheck,
-  UserX,
-  Shield,
-  Mail,
+  Ban,
   Calendar,
-  MoreHorizontal,
+  CheckCircle,
   Download,
   Edit,
-  Ban,
-  CheckCircle,
+  Eye,
+  Filter,
+  Mail,
+  MoreHorizontal,
+  Search,
+  Shield,
+  UserCheck,
+  UserX,
 } from 'lucide-react';
+import { useState } from 'react';
 
 export default function AdminUserManagement() {
   const [searchTerm, setSearchTerm] = useState('');

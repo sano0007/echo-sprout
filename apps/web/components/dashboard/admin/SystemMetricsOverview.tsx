@@ -1,22 +1,24 @@
 "use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import {
-  Users,
-  FolderOpen,
-  Coins,
-  DollarSign,
   Activity,
   Clock,
-  TrendingUp,
-  TrendingDown,
+  Coins,
+  DollarSign,
+  FolderOpen,
+  LucideIcon,
   Minus,
-  LucideIcon
-} from 'lucide-react';
+  TrendingDown,
+  TrendingUp,
+  Users} from 'lucide-react';
+import React from 'react';
+
+import { cn } from '@/lib/utils';
+
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+
 import { SystemOverviewMetrics } from '@/types/dashboard.types';
 
 interface MetricCardProps {

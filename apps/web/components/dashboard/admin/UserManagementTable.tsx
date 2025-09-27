@@ -1,18 +1,26 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Edit,
+  Filter,
+  Mail,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+  UserCheck,
+  UserX} from 'lucide-react';
+import React, { useMemo,useState } from 'react';
+
+import { cn } from '@/lib/utils';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -28,23 +37,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Search,
-  Filter,
-  Download,
-  MoreHorizontal,
-  ChevronUp,
-  ChevronDown,
-  UserCheck,
-  UserX,
-  Mail,
-  Edit,
-  Trash2,
-  Plus
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
 import { User, UserRole } from '@/types/global.types';
 
 interface UserWithDetails extends User {
@@ -64,8 +66,8 @@ interface UserManagementTableProps {
 }
 
 const roleColors: Record<UserRole, string> = {
-  creator: 'text-info-primary bg-info-light border-info-border',
-  buyer: 'text-success-primary bg-success-light border-success-border',
+  'project-creator': 'text-info-primary bg-info-light border-info-border',
+  'credit-buyer': 'text-success-primary bg-success-light border-success-border',
   verifier: 'text-bangladesh-green bg-mint-green border-sage-green',
   admin: 'text-error-primary bg-error-light border-error-border',
 };
@@ -82,23 +84,73 @@ const mockUsers: UserWithDetails[] = [
     id: '1',
     name: 'John Smith',
     email: 'john.smith@email.com',
-    role: 'creator',
+    role: 'project-creator',
     avatar: '',
+    status: 'active',
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-09-25'),
+    lastActiveAt: new Date('2024-09-25'),
+    profile: {
+      firstName: 'John',
+      lastName: 'Smith',
+      company: 'Green Energy Corp',
+      location: 'California, USA',
+      preferences: {
+        theme: 'light' as const,
+        language: 'en',
+        notifications: {
+          email: true,
+          push: true,
+          inApp: true,
+          marketing: false
+        },
+        dashboard: {
+          defaultView: 'table' as const,
+          itemsPerPage: 10,
+          showWelcome: true,
+          compactMode: false
+        }
+      }
+    },
     registrationDate: new Date('2024-01-15'),
     lastActive: new Date('2024-09-25'),
-    totalProjects: 3,
-    status: 'active'
+    totalProjects: 3
   },
   {
     id: '2',
     name: 'Sarah Johnson',
     email: 'sarah.j@company.com',
-    role: 'buyer',
+    role: 'credit-buyer',
     avatar: '',
+    status: 'active',
+    createdAt: new Date('2024-02-20'),
+    updatedAt: new Date('2024-09-26'),
+    lastActiveAt: new Date('2024-09-26'),
+    profile: {
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      company: 'Tech Solutions Inc',
+      location: 'New York, USA',
+      preferences: {
+        theme: 'dark' as const,
+        language: 'en',
+        notifications: {
+          email: true,
+          push: false,
+          inApp: true,
+          marketing: true
+        },
+        dashboard: {
+          defaultView: 'grid' as const,
+          itemsPerPage: 20,
+          showWelcome: false,
+          compactMode: true
+        }
+      }
+    },
     registrationDate: new Date('2024-02-20'),
     lastActive: new Date('2024-09-26'),
-    totalPurchases: 150,
-    status: 'active'
+    totalPurchases: 150
   },
   {
     id: '3',
@@ -106,32 +158,107 @@ const mockUsers: UserWithDetails[] = [
     email: 'm.chen@verification.org',
     role: 'verifier',
     avatar: '',
+    status: 'active',
+    createdAt: new Date('2024-01-10'),
+    updatedAt: new Date('2024-09-24'),
+    lastActiveAt: new Date('2024-09-24'),
+    profile: {
+      firstName: 'Michael',
+      lastName: 'Chen',
+      company: 'Environmental Verification Org',
+      location: 'Oregon, USA',
+      preferences: {
+        theme: 'system' as const,
+        language: 'en',
+        notifications: {
+          email: true,
+          push: true,
+          inApp: false,
+          marketing: false
+        },
+        dashboard: {
+          defaultView: 'list' as const,
+          itemsPerPage: 15,
+          showWelcome: true,
+          compactMode: false
+        }
+      }
+    },
     registrationDate: new Date('2024-01-10'),
     lastActive: new Date('2024-09-24'),
-    verificationCount: 45,
-    status: 'active'
+    verificationCount: 45
   },
   {
     id: '4',
     name: 'Emma Williams',
     email: 'emma.w@email.com',
-    role: 'creator',
+    role: 'project-creator',
     avatar: '',
+    status: 'inactive',
+    createdAt: new Date('2024-03-05'),
+    updatedAt: new Date('2024-09-20'),
+    lastActiveAt: new Date('2024-09-20'),
+    profile: {
+      firstName: 'Emma',
+      lastName: 'Williams',
+      company: 'EcoStartup Ltd',
+      location: 'London, UK',
+      preferences: {
+        theme: 'light' as const,
+        language: 'en',
+        notifications: {
+          email: false,
+          push: false,
+          inApp: true,
+          marketing: false
+        },
+        dashboard: {
+          defaultView: 'table' as const,
+          itemsPerPage: 5,
+          showWelcome: false,
+          compactMode: true
+        }
+      }
+    },
     registrationDate: new Date('2024-03-05'),
     lastActive: new Date('2024-09-20'),
-    totalProjects: 1,
-    status: 'inactive'
+    totalProjects: 1
   },
   {
     id: '5',
     name: 'Robert Brown',
     email: 'r.brown@suspended.com',
-    role: 'buyer',
+    role: 'credit-buyer',
     avatar: '',
+    status: 'suspended',
+    createdAt: new Date('2024-02-15'),
+    updatedAt: new Date('2024-08-15'),
+    lastActiveAt: new Date('2024-08-15'),
+    profile: {
+      firstName: 'Robert',
+      lastName: 'Brown',
+      company: 'Suspended Corp',
+      location: 'Texas, USA',
+      preferences: {
+        theme: 'dark' as const,
+        language: 'en',
+        notifications: {
+          email: false,
+          push: false,
+          inApp: false,
+          marketing: false
+        },
+        dashboard: {
+          defaultView: 'grid' as const,
+          itemsPerPage: 25,
+          showWelcome: false,
+          compactMode: false
+        }
+      }
+    },
     registrationDate: new Date('2024-02-15'),
     lastActive: new Date('2024-08-15'),
-    totalPurchases: 25,
-    status: 'suspended'
+    totalPurchases: 25
   }
 ];
 
@@ -148,7 +275,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const filteredAndSortedUsers = useMemo(() => {
-    let filtered = users.filter(user => {
+    const filtered = users.filter(user => {
       const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            user.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
@@ -161,6 +288,9 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
       const aValue = a[sortField];
       const bValue = b[sortField];
 
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return sortDirection === 'asc' ? -1 : 1;
+      if (bValue == null) return sortDirection === 'asc' ? 1 : -1;
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
       return 0;
@@ -186,9 +316,9 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
 
   const getActivityMetric = (user: UserWithDetails) => {
     switch (user.role) {
-      case 'creator':
+      case 'project-creator':
         return `${user.totalProjects || 0} projects`;
-      case 'buyer':
+      case 'credit-buyer':
         return `${user.totalPurchases || 0} credits`;
       case 'verifier':
         return `${user.verificationCount || 0} reviews`;
@@ -267,8 +397,8 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="creator">Creator</SelectItem>
-              <SelectItem value="buyer">Buyer</SelectItem>
+              <SelectItem value="project-creator">Creator</SelectItem>
+              <SelectItem value="credit-buyer">Buyer</SelectItem>
               <SelectItem value="verifier">Verifier</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
             </SelectContent>

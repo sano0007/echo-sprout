@@ -1,16 +1,5 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { SystemMetricsOverview } from '@/components/dashboard/admin/SystemMetricsOverview';
-import { UserManagementTable } from '@/components/dashboard/admin/UserManagementTable';
-import { PlatformAnalyticsCharts } from '@/components/dashboard/admin/PlatformAnalyticsCharts';
-import { QuickActionsPanel } from '@/components/dashboard/admin/QuickActionsPanel';
-import { RecentActivityFeed } from '@/components/dashboard/admin/RecentActivityFeed';
-import { SystemHealthMonitor } from '@/components/dashboard/admin/SystemHealthMonitor';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Activity,
   BarChart3,
@@ -20,6 +9,19 @@ import {
   Settings,
   Users,
 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
+import { PlatformAnalyticsCharts } from '@/components/dashboard/admin/PlatformAnalyticsCharts';
+import { QuickActionsPanel } from '@/components/dashboard/admin/QuickActionsPanel';
+import { RecentActivityFeed } from '@/components/dashboard/admin/RecentActivityFeed';
+import { SystemHealthMonitor } from '@/components/dashboard/admin/SystemHealthMonitor';
+import { SystemMetricsOverview } from '@/components/dashboard/admin/SystemMetricsOverview';
+import { UserManagementTable } from '@/components/dashboard/admin/UserManagementTable';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { SystemOverviewMetrics } from '@/types/dashboard.types';
 
 // Mock user data for the admin

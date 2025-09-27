@@ -1,27 +1,28 @@
 "use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Plus,
-  UserPlus,
-  FileText,
+  AlertTriangle,
+  Archive,
+  Bell,
+  CheckCircle,
+  Clock,
+  Database,
   Download,
+  FileText,
   Mail,
+  Plus,
+  RefreshCw,
   Settings,
   Shield,
-  Database,
-  RefreshCw,
-  Bell,
-  Archive,
-  AlertTriangle,
-  CheckCircle,
-  Clock
-} from 'lucide-react';
+  UserPlus} from 'lucide-react';
+import React from 'react';
+
 import { cn } from '@/lib/utils';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface QuickAction {
   id: string;
@@ -190,7 +191,7 @@ const TaskItem: React.FC<{ task: any }> = ({ task }) => {
 
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-      <div className={cn('mt-0.5', statusColors[task.status])}>
+      <div className={cn('mt-0.5', statusColors[task.status as keyof typeof statusColors] || 'text-gray-600')}>
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex-1 min-w-0">

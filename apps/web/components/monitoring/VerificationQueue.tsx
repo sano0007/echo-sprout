@@ -1,23 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import {
-  ClockIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  UserIcon,
-  CalendarIcon,
-  DocumentTextIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  PlayIcon,
-  EyeIcon,
-  ChatBubbleLeftRightIcon,
-  DocumentArrowDownIcon,
-} from '@heroicons/react/24/outline';
+  ArrowDown,
+  ArrowUp,
+  Calendar,
+  MessageCircle,
+  CheckCircle,
+  Clock,
+  Download,
+  FileText,
+  AlertTriangle,
+  Eye,
+  Filter,
+  Search,
+  Play,
+  User,
+  XCircle,
+} from 'lucide-react';
+import React, { useEffect,useState } from 'react';
 
 interface VerificationTask {
   id: string;
@@ -196,15 +196,15 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'milestone':
-        return CheckCircleIcon;
+        return CheckCircle;
       case 'completion':
-        return DocumentTextIcon;
+        return FileText;
       case 'progress_update':
-        return ClockIcon;
+        return Clock;
       case 'documentation':
-        return DocumentArrowDownIcon;
+        return Download;
       default:
-        return DocumentTextIcon;
+        return FileText;
     }
   };
 
@@ -330,7 +330,7 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
-            <FunnelIcon className="h-4 w-4" />
+            <Filter className="h-4 w-4" />
             Filters
           </button>
         </div>
@@ -341,7 +341,7 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <ClockIcon className="h-5 w-5 text-blue-600" />
+              <Clock className="h-5 w-5 text-blue-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Pending</p>
@@ -354,7 +354,7 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-100 rounded-lg">
-              <EyeIcon className="h-5 w-5 text-purple-600" />
+              <Eye className="h-5 w-5 text-purple-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">In Review</p>
@@ -367,7 +367,7 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-100 rounded-lg">
-              <ExclamationTriangleIcon className="h-5 w-5 text-orange-600" />
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Urgent</p>
@@ -380,7 +380,7 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircleIcon className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-green-600" />
             </div>
             <div>
               <p className="text-sm text-gray-600">My Tasks</p>
@@ -399,7 +399,7 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
       <div className="bg-white p-4 rounded-lg border border-gray-200">
         <div className="flex items-center gap-4 mb-4">
           <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search tasks, projects, or creators..."
@@ -478,9 +478,9 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
                     >
                       Project
                       {sortOrder === 'asc' ? (
-                        <ArrowUpIcon className="h-3 w-3" />
+                        <ArrowUp className="h-3 w-3" />
                       ) : (
-                        <ArrowDownIcon className="h-3 w-3" />
+                        <ArrowDown className="h-3 w-3" />
                       )}
                     </button>
                   </th>
@@ -551,7 +551,7 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
                       <td className="px-6 py-4 whitespace-nowrap">
                         {task.assignedTo ? (
                           <div className="flex items-center gap-2">
-                            <UserIcon className="h-4 w-4 text-gray-500" />
+                            <User className="h-4 w-4 text-gray-500" />
                             <span className="text-sm text-gray-900">
                               {task.assignedTo === currentVerifierId
                                 ? 'Me'
@@ -574,7 +574,7 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
                               }}
                               className="text-blue-600 hover:text-blue-900"
                             >
-                              <PlayIcon className="h-4 w-4" />
+                              <Play className="h-4 w-4" />
                             </button>
                           )}
                           <button
@@ -584,10 +584,10 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
                             }}
                             className="text-gray-600 hover:text-gray-900"
                           >
-                            <EyeIcon className="h-4 w-4" />
+                            <Eye className="h-4 w-4" />
                           </button>
                           <button className="text-gray-600 hover:text-gray-900">
-                            <ChatBubbleLeftRightIcon className="h-4 w-4" />
+                            <MessageCircle className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
@@ -602,7 +602,7 @@ const VerificationQueue: React.FC<VerificationQueueProps> = ({
 
       {sortedTasks.length === 0 && (
         <div className="text-center py-12">
-          <ClockIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <Clock className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
             No verification tasks
           </h3>

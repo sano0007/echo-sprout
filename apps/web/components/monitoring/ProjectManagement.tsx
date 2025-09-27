@@ -1,26 +1,26 @@
 'use client';
 
-import { useState } from 'react';
 import {
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  EllipsisVerticalIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  ClockIcon,
-  UserIcon,
-  MapPinIcon,
-  CalendarDaysIcon,
-  CurrencyDollarIcon,
-  ChartBarIcon,
-  ArrowDownTrayIcon,
-  PlusIcon,
-  Squares2X2Icon,
-  ListBulletIcon,
-} from '@heroicons/react/24/outline';
+  Download,
+  Calendar,
+  BarChart3,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  MoreVertical,
+  AlertTriangle,
+  Eye,
+  Filter,
+  List,
+  Search,
+  MapPin,
+  Edit,
+  Plus,
+  Grid3X3,
+  Trash,
+  User,
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface ProjectData {
   id: string;
@@ -366,11 +366,11 @@ export default function ProjectManagement({
               onClick={() => onExportData?.({})}
               className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              <ArrowDownTrayIcon className="h-4 w-4" />
+              <Download className="h-4 w-4" />
               <span>Export</span>
             </button>
             <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              <PlusIcon className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
               <span>Add Project</span>
             </button>
           </div>
@@ -423,7 +423,7 @@ export default function ProjectManagement({
         <div className="flex flex-wrap items-center justify-between mt-6 gap-4">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search projects..."
@@ -440,7 +440,7 @@ export default function ProjectManagement({
                   : 'border-gray-300 hover:bg-gray-50'
               }`}
             >
-              <FunnelIcon className="h-4 w-4" />
+              <Filter className="h-4 w-4" />
               <span>Filters</span>
             </button>
           </div>
@@ -476,13 +476,13 @@ export default function ProjectManagement({
                 onClick={() => setViewMode('list')}
                 className={`px-2 py-1 ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
               >
-                <ListBulletIcon className="h-4 w-4" />
+                <List className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
                 className={`px-2 py-1 ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'}`}
               >
-                <Squares2X2Icon className="h-4 w-4" />
+                <Grid3X3 className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -648,7 +648,7 @@ export default function ProjectManagement({
 
                     <div className="col-span-2">
                       <div className="flex items-center space-x-2">
-                        <UserIcon className="h-4 w-4 text-gray-400" />
+                        <User className="h-4 w-4 text-gray-400" />
                         <div>
                           <div className="font-medium text-gray-800">
                             {project.creator.name}
@@ -697,7 +697,7 @@ export default function ProjectManagement({
 
                     <div className="col-span-2">
                       <div className="flex items-center space-x-1 text-sm text-gray-600">
-                        <MapPinIcon className="h-4 w-4" />
+                        <MapPin className="h-4 w-4" />
                         <span>
                           {project.location.region}, {project.location.country}
                         </span>
@@ -708,7 +708,7 @@ export default function ProjectManagement({
                       <div className="flex items-center space-x-2">
                         {project.alerts.count > 0 && (
                           <div className="flex items-center space-x-1">
-                            <ExclamationTriangleIcon
+                            <AlertTriangle
                               className={`h-4 w-4 ${
                                 project.alerts.highPriority > 0
                                   ? 'text-red-500'
@@ -722,7 +722,7 @@ export default function ProjectManagement({
                         )}
                         {project.compliance.overdueReports > 0 && (
                           <div className="flex items-center space-x-1">
-                            <ClockIcon className="h-4 w-4 text-red-500" />
+                            <Clock className="h-4 w-4 text-red-500" />
                             <span className="text-sm text-red-600">
                               {project.compliance.overdueReports}
                             </span>
@@ -738,18 +738,18 @@ export default function ProjectManagement({
                           className="p-1 text-gray-400 hover:text-blue-600"
                           title="View Details"
                         >
-                          <EyeIcon className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => onEditProject?.(project.id)}
                           className="p-1 text-gray-400 hover:text-green-600"
                           title="Edit Project"
                         >
-                          <PencilIcon className="h-4 w-4" />
+                          <Edit className="h-4 w-4" />
                         </button>
                         <div className="relative">
                           <button className="p-1 text-gray-400 hover:text-gray-600">
-                            <EllipsisVerticalIcon className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4" />
                           </button>
                         </div>
                       </div>
@@ -823,14 +823,14 @@ export default function ProjectManagement({
                   </div>
 
                   <div className="flex items-center space-x-1 text-sm text-gray-600">
-                    <MapPinIcon className="h-4 w-4" />
+                    <MapPin className="h-4 w-4" />
                     <span>
                       {project.location.region}, {project.location.country}
                     </span>
                   </div>
 
                   <div className="flex items-center space-x-1 text-sm text-gray-600">
-                    <UserIcon className="h-4 w-4" />
+                    <User className="h-4 w-4" />
                     <span>{project.creator.name}</span>
                   </div>
 
@@ -839,7 +839,7 @@ export default function ProjectManagement({
                     <div className="flex items-center space-x-4 text-sm">
                       {project.alerts.count > 0 && (
                         <div className="flex items-center space-x-1">
-                          <ExclamationTriangleIcon
+                          <AlertTriangle
                             className={`h-4 w-4 ${
                               project.alerts.highPriority > 0
                                 ? 'text-red-500'
@@ -851,7 +851,7 @@ export default function ProjectManagement({
                       )}
                       {project.compliance.overdueReports > 0 && (
                         <div className="flex items-center space-x-1">
-                          <ClockIcon className="h-4 w-4 text-red-500" />
+                          <Clock className="h-4 w-4 text-red-500" />
                           <span className="text-red-600">
                             {project.compliance.overdueReports} overdue
                           </span>
@@ -867,19 +867,19 @@ export default function ProjectManagement({
                       onClick={() => onViewProject?.(project.id)}
                       className="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm"
                     >
-                      <EyeIcon className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                       <span>View</span>
                     </button>
                     <button
                       onClick={() => onEditProject?.(project.id)}
                       className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:bg-green-50 rounded text-sm"
                     >
-                      <PencilIcon className="h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                       <span>Edit</span>
                     </button>
                   </div>
                   <button className="p-1 text-gray-400 hover:text-gray-600">
-                    <EllipsisVerticalIcon className="h-4 w-4" />
+                    <MoreVertical className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -891,7 +891,7 @@ export default function ProjectManagement({
       {/* Empty State */}
       {sortedProjects.length === 0 && (
         <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-          <ChartBarIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <BarChart3 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-800 mb-2">
             No projects found
           </h3>

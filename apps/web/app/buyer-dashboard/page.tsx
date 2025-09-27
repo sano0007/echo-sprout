@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import ProjectTracking from '../../components/buyer/ProjectTracking';
 
 export default function BuyerDashboard() {

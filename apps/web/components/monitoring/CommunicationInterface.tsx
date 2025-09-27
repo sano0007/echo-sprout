@@ -1,21 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
 import {
-  ChatBubbleLeftRightIcon,
-  PaperClipIcon,
-  PaperAirplaneIcon,
-  UserIcon,
-  CalendarIcon,
-  DocumentTextIcon,
-  PhotoIcon,
-  XMarkIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  CheckIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-} from '@heroicons/react/24/outline';
+  MessageSquare,
+  FileText,
+  Filter,
+  Search,
+  Send,
+  Paperclip,
+  Image,
+  User,
+  X,
+} from 'lucide-react';
+import React, { useEffect, useRef,useState } from 'react';
 
 interface Message {
   id: string;
@@ -305,13 +301,13 @@ const CommunicationInterface: React.FC<CommunicationInterfaceProps> = ({
               onClick={() => setShowFilters(!showFilters)}
               className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
             >
-              <FunnelIcon className="h-4 w-4" />
+              <Filter className="h-4 w-4" />
             </button>
           </div>
 
           {/* Search */}
           <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search conversations..."
@@ -427,7 +423,7 @@ const CommunicationInterface: React.FC<CommunicationInterfaceProps> = ({
                     }
                     className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
                   >
-                    <XMarkIcon className="h-4 w-4" />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -468,12 +464,12 @@ const CommunicationInterface: React.FC<CommunicationInterfaceProps> = ({
                                 const getAttachmentIcon = (type: string) => {
                                   switch (type) {
                                     case 'image':
-                                      return PhotoIcon;
+                                      return Image;
                                     case 'pdf':
                                     case 'document':
-                                      return DocumentTextIcon;
+                                      return FileText;
                                     default:
-                                      return DocumentTextIcon;
+                                      return FileText;
                                   }
                                 };
                                 const AttachmentIcon = getAttachmentIcon(
@@ -529,7 +525,7 @@ const CommunicationInterface: React.FC<CommunicationInterfaceProps> = ({
                         isOwnMessage ? 'order-2 ml-2' : 'order-1 mr-2'
                       }`}
                     >
-                      <UserIcon className="w-full h-full text-gray-600 p-1" />
+                      <User className="w-full h-full text-gray-600 p-1" />
                     </div>
                   </div>
                 );
@@ -547,13 +543,13 @@ const CommunicationInterface: React.FC<CommunicationInterfaceProps> = ({
                       key={index}
                       className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-lg"
                     >
-                      <DocumentTextIcon className="h-4 w-4 text-gray-500" />
+                      <FileText className="h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-700">{file.name}</span>
                       <button
                         onClick={() => removeAttachment(index)}
                         className="text-gray-400 hover:text-gray-600"
                       >
-                        <XMarkIcon className="h-3 w-3" />
+                        <X className="h-3 w-3" />
                       </button>
                     </div>
                   ))}
@@ -565,7 +561,7 @@ const CommunicationInterface: React.FC<CommunicationInterfaceProps> = ({
                   onClick={() => fileInputRef.current?.click()}
                   className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
                 >
-                  <PaperClipIcon className="h-5 w-5" />
+                  <Paperclip className="h-5 w-5" />
                 </button>
 
                 <div className="flex-1">
@@ -589,7 +585,7 @@ const CommunicationInterface: React.FC<CommunicationInterfaceProps> = ({
                   disabled={!newMessage.trim() && attachments.length === 0}
                   className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  <PaperAirplaneIcon className="h-5 w-5" />
+                  <Send className="h-5 w-5" />
                 </button>
               </div>
 
@@ -607,7 +603,7 @@ const CommunicationInterface: React.FC<CommunicationInterfaceProps> = ({
           /* No Conversation Selected */
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <ChatBubbleLeftRightIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">
                 No conversation selected
               </h3>

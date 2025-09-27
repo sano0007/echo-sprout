@@ -1,22 +1,20 @@
 'use client';
 
-import { useState } from 'react';
 import {
-  DocumentChartBarIcon,
-  CalendarDaysIcon,
-  FunnelIcon,
-  ArrowDownTrayIcon,
-  EyeIcon,
-  Cog6ToothIcon,
-  ChartBarIcon,
-  TableCellsIcon,
-  DocumentTextIcon,
-  PhotoIcon,
-  PresentationChartBarIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+  Download,
+  BarChart3,
+  CheckCircle,
+  Clock,
+  Settings,
+  TrendingUp,
+  FileText,
+  AlertTriangle,
+  Eye,
+  Filter,
+  Presentation,
+  Table,
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface ReportTemplate {
   id: string;
@@ -94,8 +92,8 @@ export default function ReportGeneration({
     dateRange: {
       start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         .toISOString()
-        .split('T')[0],
-      end: new Date().toISOString().split('T')[0],
+        .split('T')[0] || '',
+      end: new Date().toISOString().split('T')[0] || '',
       preset: '30d',
     },
     projects: [],
@@ -292,19 +290,19 @@ export default function ReportGeneration({
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'project':
-        return <ChartBarIcon className="h-5 w-5" />;
+        return <BarChart3 className="h-5 w-5" />;
       case 'portfolio':
-        return <TableCellsIcon className="h-5 w-5" />;
+        return <Table className="h-5 w-5" />;
       case 'impact':
-        return <PresentationChartBarIcon className="h-5 w-5" />;
+        return <Presentation className="h-5 w-5" />;
       case 'financial':
-        return <DocumentChartBarIcon className="h-5 w-5" />;
+        return <TrendingUp className="h-5 w-5" />;
       case 'verification':
-        return <CheckCircleIcon className="h-5 w-5" />;
+        return <CheckCircle className="h-5 w-5" />;
       case 'custom':
-        return <Cog6ToothIcon className="h-5 w-5" />;
+        return <Settings className="h-5 w-5" />;
       default:
-        return <DocumentTextIcon className="h-5 w-5" />;
+        return <FileText className="h-5 w-5" />;
     }
   };
 
@@ -330,13 +328,13 @@ export default function ReportGeneration({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
       case 'generating':
-        return <ClockIcon className="h-5 w-5 text-blue-500" />;
+        return <Clock className="h-5 w-5 text-blue-500" />;
       case 'failed':
-        return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
       default:
-        return <ClockIcon className="h-5 w-5 text-gray-500" />;
+        return <Clock className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -364,9 +362,9 @@ export default function ReportGeneration({
     setFilters((prev) => ({
       ...prev,
       dateRange: {
-        start: start.toISOString().split('T')[0],
-        end: now.toISOString().split('T')[0],
-        preset: preset as any,
+        start: start.toISOString().split('T')[0] || '',
+        end: now.toISOString().split('T')[0] || '',
+        preset: preset as '7d' | '30d' | '90d' | '1y' | 'custom',
       },
     }));
   };
@@ -406,7 +404,7 @@ export default function ReportGeneration({
               onClick={() => setShowPreview(!showPreview)}
               className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              <EyeIcon className="h-4 w-4" />
+              <Eye className="h-4 w-4" />
               <span>Preview</span>
             </button>
           </div>
@@ -490,7 +488,7 @@ export default function ReportGeneration({
             {/* Filters */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h4 className="font-semibold text-gray-800 mb-4 flex items-center space-x-2">
-                <FunnelIcon className="h-5 w-5" />
+                <Filter className="h-5 w-5" />
                 <span>Report Filters</span>
               </h4>
 
@@ -702,7 +700,7 @@ export default function ReportGeneration({
                           key={index}
                           className="flex items-center space-x-2 text-sm"
                         >
-                          <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                          <CheckCircle className="h-4 w-4 text-green-500" />
                           <span>{section}</span>
                         </div>
                       ))}
@@ -715,7 +713,7 @@ export default function ReportGeneration({
                   disabled={!selectedTemplate}
                   className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
-                  <DocumentChartBarIcon className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" />
                   <span>Generate Report</span>
                 </button>
               </div>
@@ -807,7 +805,7 @@ export default function ReportGeneration({
                   }}
                   className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2"
                 >
-                  <DocumentChartBarIcon className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" />
                   <span>Generate Custom Report</span>
                 </button>
               )}
@@ -875,7 +873,7 @@ export default function ReportGeneration({
                         onClick={() => onDownloadReport?.(report.id)}
                         className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
                       >
-                        <ArrowDownTrayIcon className="h-4 w-4" />
+                        <Download className="h-4 w-4" />
                         <span>Download</span>
                       </button>
                     )}

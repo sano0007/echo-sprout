@@ -1,4 +1,9 @@
+import {Activity, BarChart3, Bell, HelpCircle, Home, LogOut, Search, Settings, Shield, User, Users} from "lucide-react";
 import React from 'react';
+
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
 import {
     Sidebar,
     SidebarContent, SidebarFooter,
@@ -7,10 +12,6 @@ import {
     SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
     SidebarProvider, SidebarRail, SidebarTrigger
 } from "@/components/ui/sidebar";
-import {Activity, BarChart3, Bell, HelpCircle, Home, LogOut, Search, Settings, Shield, User, Users} from "lucide-react";
-import {Badge} from "@/components/ui/badge";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
-import {Button} from "@/components/ui/button";
 
 const adminNavItems = [
     {

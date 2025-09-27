@@ -1,28 +1,28 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import {
-  Clock,
-  CheckCircle,
   AlertTriangle,
-  MessageCircle,
-  FileText,
-  User,
   BarChart3,
-  Settings,
   Bell,
-  Eye,
   Calendar,
+  CheckCircle,
+  Clock,
+  Eye,
+  FileText,
   Filter,
   Grid3X3,
   List,
-  TrendingUp,
+  MessageCircle,
+  Settings,
   ShieldCheck,
+  TrendingUp,
+  User,
 } from 'lucide-react';
+import React, { useEffect,useState } from 'react';
 
-import VerificationQueue from './VerificationQueue';
-import ProgressReviewTools from './ProgressReviewTools';
 import CommunicationInterface from './CommunicationInterface';
+import ProgressReviewTools from './ProgressReviewTools';
+import VerificationQueue from './VerificationQueue';
 
 interface VerifierDashboardProps {
   currentVerifierId?: string;

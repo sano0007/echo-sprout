@@ -1,18 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
 import {
-  ChartPieIcon,
-  CurrencyDollarIcon,
-  GlobeAmericasIcon,
-  TrendingUpIcon,
-  EyeIcon,
-  DocumentArrowDownIcon,
-  FunnelIcon,
-  Squares2X2Icon,
-  ListBulletIcon,
-  CalendarDaysIcon,
-} from '@heroicons/react/24/outline';
+  Calendar,
+  PieChart,
+  Download,
+  Eye,
+  Filter,
+  Globe,
+  List,
+  Grid3X3,
+} from 'lucide-react';
+import { useMemo,useState } from 'react';
 
 interface CreditPurchase {
   id: string;
@@ -157,7 +155,7 @@ export default function PortfolioOverview({
   }, [purchases, stats.totalSpent]);
 
   const getProjectTypeIcon = (type: string) => {
-    const icons = {
+    const icons: Record<string, string> = {
       reforestation: '🌳',
       solar: '☀️',
       wind: '💨',
@@ -169,7 +167,7 @@ export default function PortfolioOverview({
   };
 
   const getProjectTypeColor = (type: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       reforestation: 'from-green-500 to-green-600',
       solar: 'from-yellow-500 to-yellow-600',
       wind: 'from-blue-500 to-blue-600',
@@ -181,7 +179,7 @@ export default function PortfolioOverview({
   };
 
   const getStatusBadge = (status: string) => {
-    const styles = {
+    const styles: Record<string, string> = {
       active: 'bg-green-100 text-green-800',
       retired: 'bg-gray-100 text-gray-800',
       transferred: 'bg-blue-100 text-blue-800',
@@ -190,7 +188,7 @@ export default function PortfolioOverview({
   };
 
   const getVerificationBadge = (status: string) => {
-    const styles = {
+    const styles: Record<string, string> = {
       verified: 'bg-green-100 text-green-800',
       pending: 'bg-yellow-100 text-yellow-800',
       unverified: 'bg-red-100 text-red-800',
@@ -300,7 +298,7 @@ export default function PortfolioOverview({
           </h3>
           <div className="space-y-4">
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <GlobeAmericasIcon className="h-12 w-12 text-green-600 mx-auto mb-2" />
+              <Globe className="h-12 w-12 text-green-600 mx-auto mb-2" />
               <div className="text-2xl font-bold text-green-600">
                 {stats.totalCarbonOffset.toFixed(1)}
               </div>
@@ -334,7 +332,7 @@ export default function PortfolioOverview({
               onClick={() => onGenerateReport()}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2"
             >
-              <DocumentArrowDownIcon className="h-5 w-5" />
+              <Download className="h-5 w-5" />
               <span>Impact Report</span>
             </button>
           </div>
@@ -346,7 +344,7 @@ export default function PortfolioOverview({
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center space-x-2">
-              <FunnelIcon className="h-5 w-5 text-gray-400" />
+              <Filter className="h-5 w-5 text-gray-400" />
               <select
                 value={filterBy}
                 onChange={(e) => setFilterBy(e.target.value as any)}
@@ -399,13 +397,13 @@ export default function PortfolioOverview({
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
             >
-              <Squares2X2Icon className="h-5 w-5" />
+              <Grid3X3 className="h-5 w-5" />
             </button>
             <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
             >
-              <ListBulletIcon className="h-5 w-5" />
+              <List className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -505,7 +503,7 @@ export default function PortfolioOverview({
                     onClick={() => onViewProject(purchase.projectId)}
                     className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 flex items-center justify-center space-x-1"
                   >
-                    <EyeIcon className="h-4 w-4" />
+                    <Eye className="h-4 w-4" />
                     <span>View</span>
                   </button>
                   {purchase.certificateUrl && (
@@ -513,14 +511,14 @@ export default function PortfolioOverview({
                       onClick={() => onDownloadCertificate(purchase.id)}
                       className="px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700"
                     >
-                      <DocumentArrowDownIcon className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
                     </button>
                   )}
                 </div>
 
                 {/* Purchase Date */}
                 <div className="flex items-center text-xs text-gray-500 mt-3">
-                  <CalendarDaysIcon className="h-4 w-4 mr-1" />
+                  <Calendar className="h-4 w-4 mr-1" />
                   <span>
                     Purchased{' '}
                     {new Date(purchase.purchaseDate).toLocaleDateString()}
@@ -621,14 +619,14 @@ export default function PortfolioOverview({
                           onClick={() => onViewProject(purchase.projectId)}
                           className="text-blue-600 hover:text-blue-800"
                         >
-                          <EyeIcon className="h-5 w-5" />
+                          <Eye className="h-5 w-5" />
                         </button>
                         {purchase.certificateUrl && (
                           <button
                             onClick={() => onDownloadCertificate(purchase.id)}
                             className="text-green-600 hover:text-green-800"
                           >
-                            <DocumentArrowDownIcon className="h-5 w-5" />
+                            <Download className="h-5 w-5" />
                           </button>
                         )}
                       </div>
@@ -643,7 +641,7 @@ export default function PortfolioOverview({
 
       {filteredPurchases.length === 0 && (
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <ChartPieIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <PieChart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-800 mb-2">
             No purchases found
           </h3>

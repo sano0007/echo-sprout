@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
-  ChartBarIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  CalendarDaysIcon,
-  AdjustmentsHorizontalIcon,
-} from '@heroicons/react/24/outline';
+  Settings,
+  TrendingDown,
+  TrendingUp,
+  Calendar,
+  BarChart3,
+} from 'lucide-react';
+import { useEffect,useState } from 'react';
 
 interface MetricCard {
   id: string;
@@ -69,9 +69,9 @@ export default function MetricsDashboard({
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {
       case 'up':
-        return <ArrowTrendingUpIcon className="h-5 w-5 text-green-500" />;
+        return <TrendingUp className="h-5 w-5 text-green-500" />;
       case 'down':
-        return <ArrowTrendingDownIcon className="h-5 w-5 text-red-500" />;
+        return <TrendingDown className="h-5 w-5 text-red-500" />;
       default:
         return <div className="h-5 w-5 bg-gray-400 rounded-full" />;
     }
@@ -97,7 +97,7 @@ export default function MetricsDashboard({
   };
 
   const getCategoryColor = (category: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       environmental: 'from-green-500 to-green-600',
       progress: 'from-blue-500 to-blue-600',
       quality: 'from-purple-500 to-purple-600',
@@ -169,7 +169,7 @@ export default function MetricsDashboard({
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <AdjustmentsHorizontalIcon className="h-5 w-5 text-gray-400" />
+              <Settings className="h-5 w-5 text-gray-400" />
               <label className="flex items-center space-x-2 text-sm">
                 <input
                   type="checkbox"
@@ -247,7 +247,7 @@ export default function MetricsDashboard({
                       </p>
                     )}
                   </div>
-                  <ChartBarIcon className="h-6 w-6 opacity-75" />
+                  <BarChart3 className="h-6 w-6 opacity-75" />
                 </div>
               </div>
 
@@ -326,7 +326,7 @@ export default function MetricsDashboard({
 
                 {/* Last Updated */}
                 <div className="flex items-center text-xs text-gray-500 mt-4">
-                  <CalendarDaysIcon className="h-4 w-4 mr-1" />
+                  <Calendar className="h-4 w-4 mr-1" />
                   <span>
                     Updated {new Date(metric.lastUpdated).toLocaleDateString()}
                   </span>

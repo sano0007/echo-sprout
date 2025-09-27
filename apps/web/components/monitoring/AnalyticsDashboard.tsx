@@ -1,21 +1,20 @@
 'use client';
 
-import { useState } from 'react';
 import {
-  ChartBarIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
-  UserGroupIcon,
-  CurrencyDollarIcon,
-  GlobeAltIcon,
-  DocumentTextIcon,
-  CalendarDaysIcon,
-  ArrowDownTrayIcon,
-  ArrowPathIcon,
-  FunnelIcon,
-  EyeIcon,
-  InformationCircleIcon,
-} from '@heroicons/react/24/outline';
+  Download,
+  RotateCcw,
+  BarChart3,
+  DollarSign,
+  FileText,
+  Eye,
+  Filter,
+  Globe,
+  Info,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface AnalyticsMetric {
   id: string;
@@ -317,9 +316,9 @@ export default function AnalyticsDashboard({
   const getChangeIcon = (changeType: string) => {
     switch (changeType) {
       case 'increase':
-        return <TrendingUpIcon className="h-4 w-4 text-green-500" />;
+        return <TrendingUp className="h-4 w-4 text-green-500" />;
       case 'decrease':
-        return <TrendingDownIcon className="h-4 w-4 text-red-500" />;
+        return <TrendingDown className="h-4 w-4 text-red-500" />;
       default:
         return <div className="h-4 w-4 bg-gray-400 rounded-full" />;
     }
@@ -339,15 +338,15 @@ export default function AnalyticsDashboard({
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'platform':
-        return <ChartBarIcon className="h-5 w-5" />;
+        return <BarChart3 className="h-5 w-5" />;
       case 'environmental':
-        return <GlobeAltIcon className="h-5 w-5" />;
+        return <Globe className="h-5 w-5" />;
       case 'financial':
-        return <CurrencyDollarIcon className="h-5 w-5" />;
+        return <DollarSign className="h-5 w-5" />;
       case 'user':
-        return <UserGroupIcon className="h-5 w-5" />;
+        return <Users className="h-5 w-5" />;
       default:
-        return <DocumentTextIcon className="h-5 w-5" />;
+        return <FileText className="h-5 w-5" />;
     }
   };
 
@@ -499,7 +498,7 @@ export default function AnalyticsDashboard({
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 flex items-center space-x-3">
-              <ChartBarIcon className="h-8 w-8 text-blue-600" />
+              <BarChart3 className="h-8 w-8 text-blue-600" />
               <span>Analytics Dashboard</span>
             </h2>
             <p className="text-gray-600 mt-1">
@@ -511,7 +510,7 @@ export default function AnalyticsDashboard({
               onClick={onRefreshData}
               className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
-              <ArrowPathIcon className="h-4 w-4" />
+              <RotateCcw className="h-4 w-4" />
               <span>Refresh</span>
             </button>
             <button
@@ -520,7 +519,7 @@ export default function AnalyticsDashboard({
               }
               className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              <ArrowDownTrayIcon className="h-4 w-4" />
+              <Download className="h-4 w-4" />
               <span>Export Report</span>
             </button>
           </div>
@@ -569,7 +568,7 @@ export default function AnalyticsDashboard({
                 : 'border-gray-300 hover:bg-gray-50'
             }`}
           >
-            <FunnelIcon className="h-4 w-4" />
+            <Filter className="h-4 w-4" />
             <span>Advanced Filters</span>
           </button>
         </div>
@@ -676,7 +675,7 @@ export default function AnalyticsDashboard({
                 {formatValue(metric.previousValue, metric.format, metric.unit)}
               </span>
               <button className="flex items-center space-x-1 hover:text-blue-600">
-                <EyeIcon className="h-3 w-3" />
+                <Eye className="h-3 w-3" />
                 <span>Details</span>
               </button>
             </div>
@@ -699,7 +698,7 @@ export default function AnalyticsDashboard({
                   {chart.category.toUpperCase()}
                 </span>
                 <button className="p-1 text-gray-400 hover:text-gray-600">
-                  <InformationCircleIcon className="h-4 w-4" />
+                  <Info className="h-4 w-4" />
                 </button>
               </div>
             </div>

@@ -1,30 +1,30 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import {
-  DocumentTextIcon,
-  PhotoIcon,
-  MapPinIcon,
-  CalendarIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ExclamationTriangleIcon,
-  ChatBubbleLeftRightIcon,
-  DocumentArrowDownIcon,
-  EyeIcon,
-  PencilIcon,
-  ClockIcon,
-  UserIcon,
-  ChartBarIcon,
-  GlobeAltIcon,
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-  InformationCircleIcon,
-  CheckIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  BarChart3,
+  MessageCircle,
+  CheckCircle,
+  Check,
+  Clock,
+  Download,
+  FileText,
+  AlertTriangle,
+  Eye,
+  Filter,
+  Globe,
+  Info,
+  Search,
+  MapPin,
+  Edit,
+  Image,
+  User,
+  XCircle,
+  X,
+} from 'lucide-react';
+import React, { useEffect,useState } from 'react';
 
 interface ProgressSubmission {
   id: string;
@@ -242,15 +242,15 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'milestone':
-        return CheckCircleIcon;
+        return CheckCircle;
       case 'progress_update':
-        return ChartBarIcon;
+        return BarChart3;
       case 'completion':
-        return DocumentTextIcon;
+        return FileText;
       case 'documentation':
-        return DocumentArrowDownIcon;
+        return Download;
       default:
-        return DocumentTextIcon;
+        return FileText;
     }
   };
 
@@ -402,7 +402,7 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
                   Location
                 </h4>
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <MapPinIcon className="h-5 w-5 text-gray-500" />
+                  <MapPin className="h-5 w-5 text-gray-500" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">
                       {submission.geoLocation.address}
@@ -427,14 +427,14 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
                 const getDocIcon = (type: string) => {
                   switch (type) {
                     case 'image':
-                      return PhotoIcon;
+                      return Image;
                     case 'video':
-                      return PhotoIcon;
+                      return Image;
                     case 'pdf':
                     case 'report':
-                      return DocumentTextIcon;
+                      return FileText;
                     default:
-                      return DocumentArrowDownIcon;
+                      return Download;
                   }
                 };
                 const DocIcon = getDocIcon(doc.type);
@@ -454,7 +454,7 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
                       </p>
                     </div>
                     <button className="p-1 text-gray-400 hover:text-gray-600">
-                      <EyeIcon className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </button>
                   </div>
                 );
@@ -521,7 +521,7 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
       <div className="bg-white p-4 rounded-lg border border-gray-200">
         <div className="flex items-center gap-4 mb-4">
           <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search submissions..."
@@ -563,7 +563,7 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
             onClick={() => onSubmissionSelect?.(undefined as any)}
             className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
           >
-            <ArrowLeftIcon className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
             Back to list
           </button>
           {renderDetailedView(selectedSubmission)}
@@ -604,20 +604,20 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
 
                     <div className="flex items-center gap-6 text-sm text-gray-500 mb-4">
                       <div className="flex items-center gap-1">
-                        <CalendarIcon className="h-4 w-4" />
+                        <Calendar className="h-4 w-4" />
                         {formatDate(submission.submittedAt)}
                       </div>
                       <div className="flex items-center gap-1">
-                        <ChartBarIcon className="h-4 w-4" />
+                        <BarChart3 className="h-4 w-4" />
                         {submission.completionPercentage}% complete
                       </div>
                       <div className="flex items-center gap-1">
-                        <DocumentTextIcon className="h-4 w-4" />
+                        <FileText className="h-4 w-4" />
                         {submission.documents.length} documents
                       </div>
                       {submission.geoLocation && (
                         <div className="flex items-center gap-1">
-                          <MapPinIcon className="h-4 w-4" />
+                          <MapPin className="h-4 w-4" />
                           Location verified
                         </div>
                       )}
@@ -679,7 +679,7 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
                       onChange={(e) => setReviewAction(e.target.value as any)}
                       className="mr-2"
                     />
-                    <CheckIcon className="h-4 w-4 text-green-600 mr-1" />
+                    <Check className="h-4 w-4 text-green-600 mr-1" />
                     Approve submission
                   </label>
                   <label className="flex items-center">
@@ -690,7 +690,7 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
                       onChange={(e) => setReviewAction(e.target.value as any)}
                       className="mr-2"
                     />
-                    <PencilIcon className="h-4 w-4 text-orange-600 mr-1" />
+                    <Edit className="h-4 w-4 text-orange-600 mr-1" />
                     Request revision
                   </label>
                   <label className="flex items-center">
@@ -701,7 +701,7 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
                       onChange={(e) => setReviewAction(e.target.value as any)}
                       className="mr-2"
                     />
-                    <XMarkIcon className="h-4 w-4 text-red-600 mr-1" />
+                    <X className="h-4 w-4 text-red-600 mr-1" />
                     Reject submission
                   </label>
                 </div>
@@ -751,7 +751,7 @@ const ProgressReviewTools: React.FC<ProgressReviewToolsProps> = ({
 
       {filteredSubmissions.length === 0 && (
         <div className="text-center py-12">
-          <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <FileText className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
             No submissions found
           </h3>

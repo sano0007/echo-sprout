@@ -1,11 +1,27 @@
 "use client";
 
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  FileText,
+  Filter,
+  FolderOpen,
+  MessageSquare,
+  RefreshCw,
+  Settings,
+  Shield,
+  User} from 'lucide-react';
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { cn } from '@/lib/utils';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -13,22 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Activity,
-  User,
-  FolderOpen,
-  Shield,
-  DollarSign,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  MessageSquare,
-  Settings,
-  FileText,
-  RefreshCw,
-  Filter
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ActivityItem {
   id: string;

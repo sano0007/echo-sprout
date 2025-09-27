@@ -1,29 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
-  MapPinIcon,
-  CalendarDaysIcon,
-  CurrencyDollarIcon,
-  BeakerIcon,
-  DocumentTextIcon,
-  PhotoIcon,
-  ChartBarIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  UserGroupIcon,
-  TrophyIcon,
-  GlobeAltIcon,
-  ArrowDownTrayIcon,
-  ShareIcon,
-  HeartIcon,
-  EyeIcon,
-} from '@heroicons/react/24/outline';
-import {
-  HeartIcon as HeartSolid,
-  StarIcon as StarSolid,
-} from '@heroicons/react/24/solid';
+  Download,
+  FlaskConical,
+  Calendar,
+  BarChart3,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  FileText,
+  AlertTriangle,
+  Eye,
+  Globe,
+  Heart,
+  MapPin,
+  Image,
+  Share,
+  Trophy,
+  Users,
+  Star,
+} from 'lucide-react';
+import { useEffect,useState } from 'react';
 
 interface ProjectDetailData {
   id: string;
@@ -215,12 +212,12 @@ export default function ProjectDetailView({
   };
 
   const tabs = [
-    { key: 'overview', label: 'Overview', icon: DocumentTextIcon },
-    { key: 'timeline', label: 'Timeline', icon: CalendarDaysIcon },
-    { key: 'impact', label: 'Impact', icon: GlobeAltIcon },
-    { key: 'verification', label: 'Verification', icon: CheckCircleIcon },
-    { key: 'financials', label: 'Financials', icon: CurrencyDollarIcon },
-    { key: 'documents', label: 'Documents', icon: PhotoIcon },
+    { key: 'overview', label: 'Overview', icon: FileText },
+    { key: 'timeline', label: 'Timeline', icon: Calendar },
+    { key: 'impact', label: 'Impact', icon: Globe },
+    { key: 'verification', label: 'Verification', icon: CheckCircle },
+    { key: 'financials', label: 'Financials', icon: DollarSign },
+    { key: 'documents', label: 'Documents', icon: Image },
   ];
 
   useEffect(() => {
@@ -255,19 +252,19 @@ export default function ProjectDetailView({
                     {project.status.replace('_', ' ').toUpperCase()}
                   </span>
                   {project.creator.verification === 'verified' && (
-                    <CheckCircleIcon className="h-6 w-6 text-green-400" />
+                    <CheckCircle className="h-6 w-6 text-green-400" />
                   )}
                 </div>
                 <h1 className="text-3xl font-bold mb-2">{project.title}</h1>
                 <div className="flex items-center space-x-4 text-sm">
                   <div className="flex items-center space-x-1">
-                    <MapPinIcon className="h-4 w-4" />
+                    <MapPin className="h-4 w-4" />
                     <span>
                       {project.location.region}, {project.location.country}
                     </span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <UserGroupIcon className="h-4 w-4" />
+                    <Users className="h-4 w-4" />
                     <span>{project.creator.name}</span>
                     {project.creator.organization && (
                       <span className="text-gray-300">
@@ -276,7 +273,7 @@ export default function ProjectDetailView({
                     )}
                   </div>
                   <div className="flex items-center space-x-1">
-                    <EyeIcon className="h-4 w-4" />
+                    <Eye className="h-4 w-4" />
                     <span>
                       {project.metadata.viewCount.toLocaleString()} views
                     </span>
@@ -291,9 +288,9 @@ export default function ProjectDetailView({
                   className="flex items-center space-x-1 px-3 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-all"
                 >
                   {project.metadata.isFavorited ? (
-                    <HeartSolid className="h-5 w-5 text-red-400" />
+                    <Heart className="h-5 w-5 text-red-400 fill-current" />
                   ) : (
-                    <HeartIcon className="h-5 w-5" />
+                    <Heart className="h-5 w-5" />
                   )}
                   <span className="text-sm">{project.community.followers}</span>
                 </button>
@@ -302,7 +299,7 @@ export default function ProjectDetailView({
                   onClick={() => onShare?.(projectId)}
                   className="flex items-center space-x-1 px-3 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-all"
                 >
-                  <ShareIcon className="h-5 w-5" />
+                  <Share className="h-5 w-5" />
                   <span className="text-sm">Share</span>
                 </button>
 
@@ -348,7 +345,7 @@ export default function ProjectDetailView({
                 <div className="text-2xl font-bold text-yellow-600">
                   {project.community.averageRating.toFixed(1)}
                 </div>
-                <StarSolid className="h-6 w-6 text-yellow-400" />
+                <Star className="h-6 w-6 text-yellow-400 fill-current" />
               </div>
               <div className="text-sm text-gray-600">
                 {project.community.totalReviews} reviews
@@ -628,7 +625,7 @@ export default function ProjectDetailView({
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-green-50 p-6 rounded-lg">
                 <div className="flex items-center space-x-3 mb-4">
-                  <GlobeAltIcon className="h-8 w-8 text-green-600" />
+                  <Globe className="h-8 w-8 text-green-600" />
                   <div>
                     <h4 className="font-semibold text-green-800">CO₂ Impact</h4>
                     <p className="text-green-600">
@@ -652,7 +649,7 @@ export default function ProjectDetailView({
               {project.impact.biodiversityScore && (
                 <div className="bg-purple-50 p-6 rounded-lg">
                   <div className="flex items-center space-x-3 mb-4">
-                    <BeakerIcon className="h-8 w-8 text-purple-600" />
+                    <FlaskConical className="h-8 w-8 text-purple-600" />
                     <div>
                       <h4 className="font-semibold text-purple-800">
                         Biodiversity
@@ -685,7 +682,7 @@ export default function ProjectDetailView({
                       key={index}
                       className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
                     >
-                      <CheckCircleIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
                       <span className="text-gray-700">{benefit}</span>
                     </div>
                   ))}
@@ -767,13 +764,13 @@ export default function ProjectDetailView({
                     className={`w-12 h-12 rounded-full flex items-center justify-center ${getStatusColor(project.verification.status)}`}
                   >
                     {project.verification.status === 'verified' ? (
-                      <CheckCircleIcon className="h-6 w-6" />
+                      <CheckCircle className="h-6 w-6" />
                     ) : project.verification.status === 'in_progress' ? (
-                      <ClockIcon className="h-6 w-6" />
+                      <Clock className="h-6 w-6" />
                     ) : project.verification.status === 'rejected' ? (
-                      <ExclamationTriangleIcon className="h-6 w-6" />
+                      <AlertTriangle className="h-6 w-6" />
                     ) : (
-                      <DocumentTextIcon className="h-6 w-6" />
+                      <FileText className="h-6 w-6" />
                     )}
                   </div>
                   <div>
@@ -823,7 +820,7 @@ export default function ProjectDetailView({
                       key={index}
                       className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg"
                     >
-                      <TrophyIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                      <Trophy className="h-5 w-5 text-blue-500 flex-shrink-0" />
                       <span className="text-blue-700 font-medium">{cert}</span>
                     </div>
                   ))}
@@ -845,7 +842,7 @@ export default function ProjectDetailView({
                       className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
                     >
                       <div className="flex items-center space-x-3">
-                        <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+                        <FileText className="h-5 w-5 text-gray-400" />
                         <div>
                           <h5 className="font-medium text-gray-800">
                             {report.title}
@@ -859,7 +856,7 @@ export default function ProjectDetailView({
                         onClick={() => onDownloadReport?.(report.id)}
                         className="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:text-blue-700"
                       >
-                        <ArrowDownTrayIcon className="h-4 w-4" />
+                        <Download className="h-4 w-4" />
                         <span className="text-sm">Download</span>
                       </button>
                     </div>
@@ -1070,7 +1067,7 @@ export default function ProjectDetailView({
                     className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
                   >
                     <div className="flex items-center space-x-3">
-                      <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+                      <FileText className="h-5 w-5 text-gray-400" />
                       <div>
                         <h5 className="font-medium text-gray-800">
                           {report.title}
@@ -1099,7 +1096,7 @@ export default function ProjectDetailView({
                       onClick={() => onDownloadReport?.(report.id)}
                       className="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:text-blue-700"
                     >
-                      <ArrowDownTrayIcon className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
                       <span className="text-sm">Download</span>
                     </button>
                   </div>
@@ -1142,7 +1139,7 @@ export default function ProjectDetailView({
                   <span className="font-medium">
                     {project.community.averageRating.toFixed(1)}
                   </span>
-                  <StarSolid className="h-4 w-4 text-yellow-400" />
+                  <Star className="h-4 w-4 text-yellow-400 fill-current" />
                   <span className="text-sm text-gray-500">
                     ({project.community.totalReviews})
                   </span>
@@ -1166,9 +1163,9 @@ export default function ProjectDetailView({
                     }}
                     className="transition-colors"
                   >
-                    <StarSolid
+                    <Star
                       className={`h-6 w-6 ${
-                        star <= userRating ? 'text-yellow-400' : 'text-gray-300'
+                        star <= userRating ? 'text-yellow-400 fill-current' : 'text-gray-300'
                       }`}
                     />
                   </button>
