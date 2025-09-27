@@ -22,64 +22,37 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// Import existing monitoring components
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@packages/backend/convex/_generated/api";
 import AlertManagement from "@/components/monitoring/AlertManagement";
 import AnalyticsDashboard from "@/components/monitoring/AnalyticsDashboard";
 import ProjectManagement from "@/components/monitoring/ProjectManagement";
 
-// Mock data for demonstration
-const mockSystemStats = {
-  totalProjects: 1247,
-  activeProjects: 856,
-  pendingReports: 23,
-  criticalAlerts: 5
-};
-
-const mockAlerts = [
-  {
-    id: "1",
-    projectId: "proj_001",
-    projectName: "Amazon Reforestation Initiative",
-    alertType: "overdue_warning" as const,
-    severity: "high" as const,
-    message: "Progress report overdue by 5 days",
-    description: "Monthly progress report was due on Sept 22nd",
-    isResolved: false,
-    notificationsSent: ["email", "sms"],
-    createdAt: "2024-09-27T10:00:00Z",
-    dueDate: "2024-09-22T23:59:59Z",
-    actionRequired: "Contact project creator for immediate report submission"
-  },
-  {
-    id: "2",
-    projectId: "proj_002",
-    projectName: "Solar Farm Installation",
-    alertType: "milestone_delay" as const,
-    severity: "medium" as const,
-    message: "Installation milestone delayed by 10 days",
-    description: "Solar panel installation was scheduled for completion by Sept 15th",
-    isResolved: false,
-    notificationsSent: ["email"],
-    createdAt: "2024-09-25T14:30:00Z",
-    dueDate: "2024-09-15T23:59:59Z"
-  },
-  {
-    id: "3",
-    projectId: "proj_003",
-    projectName: "Wind Energy Project",
-    alertType: "impact_shortfall" as const,
-    severity: "critical" as const,
-    message: "Energy output 25% below projected targets",
-    description: "Monthly energy generation significantly below expectations",
-    isResolved: false,
-    notificationsSent: ["email", "sms", "push"],
-    createdAt: "2024-09-26T09:15:00Z"
-  }
-];
-
 
 const SystemOverview = () => {
+  // Get current user to check permissions
+  const currentUser = useQuery(api.users.getCurrentUser, {});
+  const isAdmin = currentUser?.role === 'admin';
+
+  // Get real data from backend - conditionally call admin-only APIs
+  const analytics = useQuery(
+    api.monitoring_admin.getMonitoringAnalytics,
+    isAdmin ? { timeframe: "7d" } : "skip"
+  );
+  const alertSummary = useQuery(api.alert_management.getAlertSummary, { timeframe: "7d" });
+  const userProjects = useQuery(api.projects.getUserProjects, {});
+
+  // Check if we have an access error and provide fallback data
+  const hasAnalyticsError = !isAdmin || analytics === null;
+  const hasAlertSummaryError = alertSummary === null;
+
+  // Calculate metrics from real data with fallbacks
+  const totalProjects = userProjects?.length || 0;
+  const activeProjects = userProjects?.filter(p => p.status === 'active').length || 0;
+  // Calculate pending reports from unresolved alerts related to reports
+  const pendingReports = hasAlertSummaryError ? 0 : (alertSummary?.unresolved || 0);
+  const criticalAlerts = hasAlertSummaryError ? 0 : (alertSummary?.bySeverity?.critical || 0);
+
   return (
     <div className="space-y-6">
       {/* Key Metrics */}
@@ -89,8 +62,10 @@ const SystemOverview = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                <p className="text-3xl font-bold text-gray-900">{mockSystemStats.totalProjects.toLocaleString()}</p>
-                <p className="text-sm text-blue-600 mt-1">+12% from last month</p>
+                <p className="text-3xl font-bold text-gray-900">{totalProjects.toLocaleString()}</p>
+                <p className="text-sm text-blue-600 mt-1">
+                  {userProjects ? `${userProjects.length} total` : "Loading..."}
+                </p>
               </div>
               <Monitor className="h-12 w-12 text-blue-600 opacity-80" />
             </div>
@@ -102,8 +77,10 @@ const SystemOverview = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Projects</p>
-                <p className="text-3xl font-bold text-gray-900">{mockSystemStats.activeProjects.toLocaleString()}</p>
-                <p className="text-sm text-green-600 mt-1">+8% from last month</p>
+                <p className="text-3xl font-bold text-gray-900">{activeProjects.toLocaleString()}</p>
+                <p className="text-sm text-green-600 mt-1">
+                  {userProjects ? `${Math.round((activeProjects/totalProjects)*100) || 0}% of total` : "Loading..."}
+                </p>
               </div>
               <Activity className="h-12 w-12 text-green-600 opacity-80" />
             </div>
@@ -115,8 +92,10 @@ const SystemOverview = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending Reports</p>
-                <p className="text-3xl font-bold text-gray-900">{mockSystemStats.pendingReports}</p>
-                <p className="text-sm text-yellow-600 mt-1">-15% from last week</p>
+                <p className="text-3xl font-bold text-gray-900">{pendingReports}</p>
+                <p className="text-sm text-yellow-600 mt-1">
+                  {analytics ? "This week" : "Loading..."}
+                </p>
               </div>
               <Clock className="h-12 w-12 text-yellow-600 opacity-80" />
             </div>
@@ -128,8 +107,10 @@ const SystemOverview = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Critical Alerts</p>
-                <p className="text-3xl font-bold text-gray-900">{mockSystemStats.criticalAlerts}</p>
-                <p className="text-sm text-red-600 mt-1">Requires attention</p>
+                <p className="text-3xl font-bold text-gray-900">{criticalAlerts}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  {alertSummary ? "Requires attention" : "Loading..."}
+                </p>
               </div>
               <AlertTriangle className="h-12 w-12 text-red-600 opacity-80" />
             </div>
@@ -170,26 +151,107 @@ const SystemOverview = () => {
 
 const AlertsOverview = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [severityFilter, setSeverityFilter] = useState<string>("all");
+  const [severityFilter, setSeverityFilter] = useState<"all" | "low" | "medium" | "high" | "critical">("all");
 
-  const handleResolveAlert = (alertId: string, resolution: string) => {
-    console.log(`Resolving alert ${alertId} with resolution: ${resolution}`);
+  // Get current user to check permissions
+  const currentUser = useQuery(api.users.getCurrentUser, {});
+  const isAdmin = currentUser?.role === 'admin';
+
+  // Get real alerts data from backend - conditionally call based on permissions
+  const alertsQuery = useQuery(
+    api.alert_management.getAlerts,
+    isAdmin ? {
+      filters: severityFilter !== "all" ? {
+        severity: [severityFilter as "low" | "medium" | "high" | "critical"]
+      } : undefined,
+      pagination: { limit: 100 }
+    } : "skip"
+  );
+
+  const alertSummary = useQuery(
+    api.alert_management.getAlertSummary,
+    isAdmin ? { timeframe: "7d" } : "skip"
+  );
+
+  // Check for access errors
+  const hasAlertsError = !isAdmin || alertsQuery === null;
+  const hasAlertSummaryError = !isAdmin || alertSummary === null;
+
+  // Mutations for alert actions
+  const resolveAlert = useMutation(api.alert_management.resolveAlert);
+  const updateAlert = useMutation(api.alert_management.updateAlert);
+
+  const handleResolveAlert = async (alertId: string, resolution: string) => {
+    try {
+      await resolveAlert({
+        alertId: alertId as any, // Type assertion for Convex ID
+        resolutionNotes: resolution,
+        resolutionType: 'fixed' as const
+      });
+    } catch (error) {
+      console.error("Failed to resolve alert:", error);
+    }
   };
 
-  const handleSnoozeAlert = (alertId: string, duration: number) => {
-    console.log(`Snoozing alert ${alertId} for ${duration} minutes`);
+  const handleSnoozeAlert = async (alertId: string, duration: number) => {
+    try {
+      // Since snoozeAlert doesn't exist, we'll update the alert with a note
+      await updateAlert({
+        alertId: alertId as any, // Type assertion for Convex ID
+        updates: {
+          metadata: { snoozed: true, snoozeUntil: Date.now() + (duration * 60 * 1000) }
+        },
+        notes: `Alert snoozed for ${duration} minutes`
+      });
+      console.log(`Alert ${alertId} snoozed for ${duration} minutes`);
+    } catch (error) {
+      console.error("Failed to snooze alert:", error);
+    }
   };
 
-  const handleEscalateAlert = (alertId: string, escalationLevel: string) => {
-    console.log(`Escalating alert ${alertId} to level: ${escalationLevel}`);
+  const handleEscalateAlert = async (alertId: string, escalationLevel: string) => {
+    try {
+      // Since escalateAlert doesn't exist, we'll update the alert with escalation info
+      await updateAlert({
+        alertId: alertId as any, // Type assertion for Convex ID
+        updates: {
+          metadata: { escalated: true, escalationLevel, escalatedAt: Date.now() }
+        },
+        notes: `Alert escalated to level: ${escalationLevel}`
+      });
+      console.log(`Alert ${alertId} escalated to level: ${escalationLevel}`);
+    } catch (error) {
+      console.error("Failed to escalate alert:", error);
+    }
   };
 
-  const filteredAlerts = mockAlerts.filter(alert => {
-    const matchesSearch = alert.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         alert.message.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSeverity = severityFilter === "all" || alert.severity === severityFilter;
-    return matchesSearch && matchesSeverity;
-  });
+  // Filter alerts based on search term
+  const allAlerts = hasAlertsError ? [] : (alertsQuery?.alerts || []);
+  const filteredAlerts = allAlerts.filter(alert =>
+    (alert.projectInfo?.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    alert.message.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Show access error message if user doesn't have permission
+  if (hasAlertsError || hasAlertSummaryError) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-l-4 border-l-yellow-500">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-8 w-8 text-yellow-600" />
+              <div>
+                <h3 className="font-medium text-gray-900">Access Restricted</h3>
+                <p className="text-sm text-gray-600">
+                  Admin privileges are required to view alert management. Please contact your administrator for access.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -199,7 +261,7 @@ const AlertsOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-red-600">{mockAlerts.filter(a => a.severity === 'critical').length}</div>
+                <div className="text-3xl font-bold text-red-600">{alertSummary?.bySeverity?.critical || 0}</div>
                 <div className="text-sm font-medium text-gray-600">Critical Alerts</div>
                 <div className="text-xs text-red-600 mt-1">Immediate action required</div>
               </div>
@@ -211,7 +273,7 @@ const AlertsOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-orange-600">{mockAlerts.filter(a => a.severity === 'high').length}</div>
+                <div className="text-3xl font-bold text-orange-600">{alertSummary?.bySeverity?.high || 0}</div>
                 <div className="text-sm font-medium text-gray-600">High Priority</div>
                 <div className="text-xs text-orange-600 mt-1">Attention needed soon</div>
               </div>
@@ -223,7 +285,7 @@ const AlertsOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-yellow-600">{mockAlerts.filter(a => a.severity === 'medium').length}</div>
+                <div className="text-3xl font-bold text-yellow-600">{alertSummary?.bySeverity?.medium || 0}</div>
                 <div className="text-sm font-medium text-gray-600">Medium Priority</div>
                 <div className="text-xs text-yellow-600 mt-1">Monitor progress</div>
               </div>
@@ -235,7 +297,7 @@ const AlertsOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-blue-600">{mockAlerts.filter(a => a.severity === 'medium').length}</div>
+                <div className="text-3xl font-bold text-blue-600">{alertSummary?.bySeverity?.low || 0}</div>
                 <div className="text-sm font-medium text-gray-600">Low Priority</div>
                 <div className="text-xs text-blue-600 mt-1">Informational only</div>
               </div>
@@ -257,7 +319,7 @@ const AlertsOverview = () => {
               <CardDescription>Monitor and resolve system alerts across all projects</CardDescription>
             </div>
             <Badge variant="destructive" className="text-sm">
-              {mockAlerts.filter(a => !a.isResolved).length} Active
+              {hasAlertSummaryError ? 0 : (alertSummary?.unresolved || 0)} Active
             </Badge>
           </div>
         </CardHeader>
@@ -274,7 +336,10 @@ const AlertsOverview = () => {
                 />
               </div>
             </div>
-            <Select value={severityFilter} onValueChange={setSeverityFilter}>
+            <Select
+              value={severityFilter}
+              onValueChange={(value: string) => setSeverityFilter(value as "all" | "low" | "medium" | "high" | "critical")}
+            >
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Filter by severity" />
               </SelectTrigger>
@@ -292,12 +357,21 @@ const AlertsOverview = () => {
             </Button>
           </div>
 
-          <AlertManagement
-            alerts={filteredAlerts}
-            onResolveAlert={handleResolveAlert}
-            onSnoozeAlert={handleSnoozeAlert}
-            onEscalateAlert={handleEscalateAlert}
-          />
+          {alertsQuery === undefined ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-gray-400" />
+                <p className="text-gray-500">Loading alerts...</p>
+              </div>
+            </div>
+          ) : (
+            <AlertManagement
+              alerts={filteredAlerts}
+              onResolveAlert={handleResolveAlert}
+              onSnoozeAlert={handleSnoozeAlert}
+              onEscalateAlert={handleEscalateAlert}
+            />
+          )}
         </CardContent>
       </Card>
     </div>
@@ -305,6 +379,10 @@ const AlertsOverview = () => {
 };
 
 const ProjectMonitoringTab = () => {
+  // Get current user to check permissions
+  const currentUser = useQuery(api.users.getCurrentUser, {});
+  const userProjects = useQuery(api.projects.getUserProjects, {});
+
   return (
     <div className="space-y-6">
       <Card>
@@ -315,7 +393,16 @@ const ProjectMonitoringTab = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ProjectManagement />
+          {userProjects === undefined ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-gray-400" />
+                <p className="text-gray-500">Loading projects...</p>
+              </div>
+            </div>
+          ) : (
+            <ProjectManagement projects={userProjects as any} />
+          )}
         </CardContent>
       </Card>
     </div>
@@ -323,6 +410,30 @@ const ProjectMonitoringTab = () => {
 };
 
 const AnalyticsTab = () => {
+  // Get current user to check permissions
+  const currentUser = useQuery(api.users.getCurrentUser, {});
+  const isAdmin = currentUser?.role === 'admin';
+
+  const analytics = useQuery(
+    api.monitoring_admin.getMonitoringAnalytics,
+    isAdmin ? { timeframe: "30d" } : "skip"
+  );
+
+  const handleExportReport = (type: string, timeframe: string) => {
+    console.log(`Exporting ${type} report for ${timeframe}`);
+  };
+
+  const handleDrillDown = (metric: string, filters: any) => {
+    console.log(`Drilling down into ${metric} with filters:`, filters);
+  };
+
+  const handleRefreshData = () => {
+    console.log("Refreshing analytics data");
+  };
+
+  // Check for access error
+  const hasAnalyticsError = !isAdmin || analytics === null;
+
   return (
     <div className="space-y-6">
       <Card>
@@ -333,7 +444,31 @@ const AnalyticsTab = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AnalyticsDashboard />
+          {hasAnalyticsError ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <AlertTriangle className="h-12 w-12 text-yellow-600 mx-auto mb-3" />
+                <h3 className="font-medium text-gray-900 mb-2">Access Restricted</h3>
+                <p className="text-gray-600">
+                  Admin privileges are required to view analytics. Please contact your administrator for access.
+                </p>
+              </div>
+            </div>
+          ) : analytics === undefined ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-gray-400" />
+                <p className="text-gray-500">Loading analytics...</p>
+              </div>
+            </div>
+          ) : (
+            <AnalyticsDashboard
+              timeframe="30d"
+              onExportReport={handleExportReport}
+              onDrillDown={handleDrillDown}
+              onRefreshData={handleRefreshData}
+            />
+          )}
         </CardContent>
       </Card>
     </div>
