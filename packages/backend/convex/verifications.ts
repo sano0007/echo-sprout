@@ -370,7 +370,6 @@ export const completeVerification = mutation({
     );
 
     // Trigger workflow completion
-    const { WorkflowService } = await import('../services/workflow-service');
     await WorkflowService.handleVerificationCompletion(
       ctx,
       verificationId,
