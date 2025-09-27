@@ -69,7 +69,7 @@ export const createTransactionFromStripe = internalMutation({
     const transactionReference = `TXN-${Date.now()}-${sessionId.slice(-8)}`;
 
     const transactionId = await ctx.db.insert('transactions', {
-      buyerId: buyer._id,
+      buyerId: buyer.clerkId, // Use Clerk ID instead of internal user ID
       projectId: projectId || undefined,
       creditAmount: credits,
       unitPrice,
@@ -157,7 +157,7 @@ export const updatePaymentStatus = internalMutation({
 
 export const getUserTransactions = query({
   args: {
-    userId: v.id('users'),
+    userId: v.string(), // Using string to match buyerId which is clerkId
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -188,6 +188,303 @@ export const getTransactionByReference = query({
     }
 
     return transaction;
+  },
+});
+
+export const getUserWallet = query({
+  args: {
+    userId: v.string(), // Using string to match clerkId
+  },
+  handler: async (ctx, args) => {
+    // Get user by clerkId first
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', args.userId))
+      .first();
+
+    if (!user) {
+      throw new ConvexError('User not found');
+    }
+
+    const wallet = await ctx.db
+      .query('userWallet')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .first();
+
+    if (!wallet) {
+      // Return default wallet if none exists
+      return {
+        userId: user._id,
+        availableCredits: 0,
+        totalPurchased: 0,
+        totalAllocated: 0,
+        totalSpent: 0,
+        lifetimeImpact: 0,
+        lastTransactionAt: undefined,
+      };
+    }
+
+    return wallet;
+  },
+});
+
+export const getUserTransactionsWithProjects = query({
+  args: {
+    userId: v.string(), // Using string to match buyerId which is clerkId
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { userId, limit = 10 } = args;
+
+    const transactions = await ctx.db
+      .query('transactions')
+      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
+      .order('desc')
+      .take(limit);
+
+    // Enrich transactions with project data
+    return await Promise.all(
+      transactions.map(async (transaction) => {
+        let project = null;
+        if (transaction.projectId) {
+          project = await ctx.db.get(transaction.projectId);
+        }
+        return {
+          ...transaction,
+          project,
+        };
+      })
+    );
+  },
+});
+
+export const getBuyerDashboardMetrics = query({
+  args: {
+    userId: v.string(), // Using string to match buyerId which is clerkId
+  },
+  handler: async (ctx, args) => {
+    const { userId } = args;
+
+    // Get user by clerkId first
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', userId))
+      .first();
+
+    if (!user) {
+      throw new ConvexError('User not found');
+    }
+
+    // Get user wallet
+    const wallet = await ctx.db
+      .query('userWallet')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .first();
+
+    console.log('🫨 wallet details', wallet);
+
+    // Get all user transactions
+    const transactions = await ctx.db
+      .query('transactions')
+      .withIndex('by_buyer', (q) => q.eq('buyerId', user._id))
+      .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
+      .collect();
+
+    console.log('🫨 transactions', transactions);
+
+    // Get projects for transactions
+    const projectIds = transactions
+      .map((t) => t.projectId)
+      .filter((id): id is NonNullable<typeof id> => Boolean(id));
+
+    console.log('🫨 projectsIds', projectIds);
+
+    const projects = await Promise.all(
+      projectIds.map(async (projectId) => {
+        return await ctx.db.get(projectId);
+      })
+    );
+
+    // Calculate metrics
+    const totalCredits = transactions.reduce(
+      (sum, t) => sum + t.creditAmount,
+      0
+    );
+    const totalSpent = transactions.reduce((sum, t) => sum + t.totalAmount, 0);
+
+    // Calculate CO2 offset (assuming 1.5 tons CO2 per credit on average)
+    const totalCO2Offset = totalCredits * 1.5;
+
+    // Calculate equivalents
+    const equivalentTrees = Math.round(totalCO2Offset * 40); // ~40 trees per ton CO2
+    const equivalentCarsOff = Math.round(totalCO2Offset / 4.6); // ~4.6 tons CO2 per car per year
+
+    const validProjects = projects.filter((proj): proj is NonNullable<typeof proj> => {
+      return proj !== null && 'projectType' in proj;
+    });
+
+    const projectTypes = validProjects.reduce(
+      (acc, project) => {
+        if ('projectType' in project) {
+          const projectType = (project as any).projectType as string;
+          acc[projectType] = (acc[projectType] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    return {
+      wallet: wallet || {
+        userId: user._id,
+        availableCredits: 0,
+        totalPurchased: 0,
+        totalAllocated: 0,
+        totalSpent: 0,
+        lifetimeImpact: 0,
+        lastTransactionAt: undefined,
+      },
+      totalCredits,
+      totalSpent,
+      totalCO2Offset,
+      equivalentTrees,
+      equivalentCarsOff,
+      projectTypes,
+      transactionCount: transactions.length,
+      activeProjects: validProjects.filter(
+        (p) => 'status' in p && (p as any).status === 'active'
+      ).length,
+    };
+  },
+});
+
+export const getUserCertificates = query({
+  args: {
+    userId: v.string(), // Using string to match buyerId which is clerkId
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { userId, limit = 20 } = args;
+
+    // Get completed transactions with certificates
+    const transactions = await ctx.db
+      .query('transactions')
+      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
+      .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
+      .order('desc')
+      .take(limit);
+
+    // Enrich with project data and certificate info
+    return await Promise.all(
+      transactions.map(async (transaction) => {
+        let project = null;
+        if (transaction.projectId) {
+          project = await ctx.db.get(transaction.projectId);
+        }
+
+        return {
+          id: transaction._id,
+          transactionReference: transaction.transactionReference,
+          certificateId: `CERT-${transaction.transactionReference}`,
+          project: project?.title || 'General Carbon Credits',
+          projectType: project?.projectType || 'general',
+          credits: transaction.creditAmount,
+          purchaseDate: transaction._creationTime,
+          co2Offset: transaction.creditAmount * 1.5, // Assuming 1.5 tons per credit
+          status: 'Active',
+          certificateUrl: transaction.certificateUrl,
+          projectDetails: project,
+        };
+      })
+    );
+  },
+});
+
+export const getMonthlyOffsetProgress = query({
+  args: {
+    userId: v.string(), // Using string to match buyerId which is clerkId
+    months: v.optional(v.number()), // Number of months to look back, default 12
+  },
+  handler: async (ctx, args) => {
+    const { userId, months = 12 } = args;
+
+    // Get all completed transactions for the user
+    const transactions = await ctx.db
+      .query('transactions')
+      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
+      .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
+      .collect();
+
+    // Sort transactions by creation time
+    const sortedTransactions = transactions.sort((a, b) => a._creationTime - b._creationTime);
+
+    // Create monthly aggregation
+    const monthlyData: Record<string, { credits: number; co2Offset: number; cumulativeCO2: number }> = {};
+    let cumulativeCO2 = 0;
+
+    // Calculate the date range (last N months from now)
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+
+    // Initialize all months with zero values
+    for (let i = 0; i < months; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyData[monthKey] = { credits: 0, co2Offset: 0, cumulativeCO2: 0 };
+    }
+
+    // Process each transaction
+    for (const transaction of sortedTransactions) {
+      const transactionDate = new Date(transaction._creationTime);
+
+      // Only include transactions within our date range
+      if (transactionDate >= startDate) {
+        const monthKey = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+
+        const co2FromTransaction = transaction.creditAmount * 1.5; // 1.5 tons CO2 per credit
+        cumulativeCO2 += co2FromTransaction;
+
+        if (monthlyData[monthKey]) {
+          monthlyData[monthKey].credits += transaction.creditAmount;
+          monthlyData[monthKey].co2Offset += co2FromTransaction;
+        }
+      } else {
+        // For transactions before our range, just add to cumulative
+        cumulativeCO2 += transaction.creditAmount * 1.5;
+      }
+    }
+
+    // Set cumulative values for each month
+    let runningCumulative = cumulativeCO2;
+    const sortedMonths = Object.keys(monthlyData).sort();
+
+    for (const monthKey of sortedMonths) {
+      monthlyData[monthKey].cumulativeCO2 = runningCumulative;
+      runningCumulative -= monthlyData[monthKey].co2Offset;
+    }
+
+    // Convert to array format for charting
+    const monthlyProgress = Object.entries(monthlyData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, data]) => {
+        const [year, monthNum] = month.split('-');
+        const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+
+        return {
+          month,
+          monthLabel: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          credits: data.credits,
+          co2Offset: data.co2Offset,
+          cumulativeCO2: data.cumulativeCO2,
+        };
+      });
+
+    return {
+      monthlyProgress,
+      totalCO2Offset: cumulativeCO2,
+      totalCredits: transactions.reduce((sum, t) => sum + t.creditAmount, 0),
+      transactionCount: transactions.length,
+    };
   },
 });
 
