@@ -8,8 +8,6 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Recharts = require('recharts') as typeof import('recharts');
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
 
 export default function LearnAnalyticsPage() {
   const learningPaths = useQuery(api.learn.listLearningPaths);
@@ -50,77 +48,65 @@ export default function LearnAnalyticsPage() {
   const allTopics = useQuery((api as any).forum.listAllTopics, {});
   const contributors = useQuery((api as any).forum.replyContributors, {});
 
-  const handleGeneratePdf = () => {
-    // Get table HTML
-    console.log('calledddddddddddddddddd');
+  const handleGeneratePdf = async () => {
+    try {
+      const element = document.getElementById('anal_id');
+      if (!element) return;
 
-    const pdfTable = document.getElementById('anal_id');
-
-    // Use html2canvas to capture the table as a canvas image
-    html2canvas(pdfTable!)
-      .then(function (canvas) {
-        // Debugging to ensure canvas is being created correctly
-        console.log('Canvas dimensions:', canvas.width, canvas.height);
-
-        const imgData = canvas.toDataURL('image/png'); // Base64 image data
-
-        // Ensure canvas.width and canvas.height are not undefined
-        if (!canvas.width || !canvas.height) {
-          console.error(
-            'Canvas dimensions are invalid:',
-            canvas.width,
-            canvas.height
-          );
-          return;
-        }
-
-        // Adjust image height to fit the page
-        const pageHeight = 840; // A4 size page height in points (landscape)
-        const pageWidth = 1140; // A4 size page width in points (landscape)
-
-        // Scale height based on page width
-        const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-        console.log('Image height after scaling:', imgHeight);
-
-        const documentDefinition: any = {
-          content: [],
-          defaultStyle: {
-            font: 'NimbusSans',
-          },
-          pageSize: [pageWidth, pageHeight],
-          pageOrientation: 'landscape',
-          pageMargins: [40, 60, 40, 60],
-        };
-
-        let currentHeight = 0;
-
-        // Add the image to the document, split across multiple pages if needed
-        while (currentHeight < canvas.height) {
-          // Add image content to PDF with page break logic
-          documentDefinition.content.push({
-            image: imgData,
-            width: 600,
-            style: {
-              alignment: 'center',
-            },
-            // Check if we need a page break
-            pageBreak:
-              currentHeight + imgHeight > pageHeight ? 'before' : undefined,
-          });
-
-          // Increment currentHeight by the page height
-          currentHeight += pageHeight; // Move to the next page
-        }
-
-        console.log('calledddddddddddddddddd');
-
-        // Generate and download the PDF
-        pdfMake.createPdf(documentDefinition).download('generated_pdf.pdf');
-      })
-      .catch((err) => {
-        console.error('Error generating PDF', err);
+      // Temporarily hide controls during capture (preserve layout with visibility)
+      const toHide = element.querySelectorAll('[data-report-exclude]');
+      const prevVisibility: string[] = [];
+      toHide.forEach((el: Element, i) => {
+        const style = (el as HTMLElement).style;
+        prevVisibility[i] = style.visibility;
+        style.visibility = 'hidden';
       });
+
+      // Capture the analytics section at higher scale for better quality
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+      });
+
+      // Restore control visibility
+      toHide.forEach((el: Element, i) => {
+        (el as HTMLElement).style.visibility = prevVisibility[i] ?? '';
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      // Create a landscape A4 PDF in points
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // Add first page image
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pageHeight;
+
+      // Use a small overlap between pages to reduce text being cut between pages
+      const overlap = 24; // points
+
+      while (heightLeft > 0) {
+        pdf.addPage();
+        position = heightLeft - imgHeight + overlap; // shift up with small overlap
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= (pageHeight - overlap);
+      }
+
+      pdf.save('learn-analytics-report.pdf');
+    } catch (err) {
+      console.error('Error generating PDF', err);
+    }
   };
 
   return (
@@ -133,12 +119,17 @@ export default function LearnAnalyticsPage() {
         <h1 className="text-3xl font-bold">Education & Forum Analytics</h1>
         <div className={'flex justify-between items-center gap-4 flex-wrap'}>
           <button
+            data-report-exclude
             className={'px-4 py-2 bg-blue-500 text-white text-bold rounded-md'}
             onClick={handleGeneratePdf}
           >
             Generate Report
           </button>
-          <Link href="/learn" className="text-blue-600 hover:underline">
+          <Link
+            data-report-exclude
+            href="/learn"
+            className="text-blue-600 hover:underline"
+          >
             Back to Learn
           </Link>
         </div>
