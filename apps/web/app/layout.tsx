@@ -1,11 +1,14 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import './globals.css';
 import React from 'react';
 
 import './globals.css';
 
 import Footer from '../components/Footer';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navigation from '../components/Navigation';
 import ConvexClientProvider from '../providers/ConvexProviderWithClerk';
 
@@ -38,6 +41,18 @@ export default function RootLayout({
               <Navigation />
               <main className="flex-1">{children}</main>
               <Footer />
+              <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
             </div>
           </ConvexClientProvider>
         </ClerkProvider>

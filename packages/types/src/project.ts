@@ -14,6 +14,19 @@ export interface ProjectCreator {
   role?: string;
 }
 
+export interface ProjectImage {
+  cloudinary_public_id: string;
+  cloudinary_url: string;
+  caption?: string;
+  isPrimary: boolean;
+  uploadDate: number;
+}
+
+export interface FeaturedImage {
+  cloudinary_public_id: string;
+  cloudinary_url: string;
+}
+
 export interface Project {
   _id: Id<"projects">;
   _creationTime: number;
@@ -39,6 +52,8 @@ export interface Project {
   verificationStartedAt?: number;
   verificationCompletedAt?: number;
   qualityScore?: number;
+  projectImages?: ProjectImage[];
+  featuredImage?: FeaturedImage;
   requiredDocuments: string[];
   submittedDocuments: string[];
   isDocumentationComplete: boolean;

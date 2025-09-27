@@ -12,6 +12,7 @@
     "@echo-sprout/types": "*",
     "convex": "^1.25.4",
     "convex-helpers": "^0.1.101",
+    "stripe": "^18.5.0",
     "svix": "^1.70.0"
   },
   "devDependencies": {

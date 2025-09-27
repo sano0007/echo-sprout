@@ -55,11 +55,22 @@ exports.default = (0, server_1.defineSchema)({
         assignedVerifierId: values_1.v.optional(values_1.v.id('users')),
         verificationStartedAt: values_1.v.optional(values_1.v.float64()),
         verificationCompletedAt: values_1.v.optional(values_1.v.float64()),
-        qualityScore: values_1.v.optional(values_1.v.number()), // 1-10 scale
-        // Document requirements tracking
+        qualityScore: values_1.v.optional(values_1.v.number()),
         requiredDocuments: values_1.v.array(values_1.v.string()), // todo: enum of document types
         submittedDocuments: values_1.v.array(values_1.v.string()), // todo: enum of document types
         isDocumentationComplete: values_1.v.boolean(),
+        projectImages: values_1.v.array(values_1.v.object({
+            cloudinary_public_id: values_1.v.string(),
+            cloudinary_url: values_1.v.string(),
+            caption: values_1.v.optional(values_1.v.string()),
+            isPrimary: values_1.v.boolean(), // One image should be marked as primary for project cards
+            uploadDate: values_1.v.float64(),
+        })),
+        // Featured image for quick display
+        featuredImage: values_1.v.optional(values_1.v.object({
+            cloudinary_public_id: values_1.v.string(),
+            cloudinary_url: values_1.v.string(),
+        })),
     })
         .index('by_creator', ['creatorId'])
         .index('by_status', ['status'])
@@ -83,24 +94,18 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_availability', ['status', 'projectId'])
         .index('by_reserved_by', ['reservedBy']),
     transactions: (0, server_1.defineTable)({
-        buyerId: values_1.v.id('users'),
-        projectId: values_1.v.id('projects'),
+        // todo: replace when auth is set up
+        // buyerId: v.id('users'),
+        buyerId: values_1.v.string(), // Clerk user ID of the buyer
+        projectId: values_1.v.optional(values_1.v.id('projects')), // Link to specific project for project-specific purchases
         creditAmount: values_1.v.number(),
         unitPrice: values_1.v.number(),
         totalAmount: values_1.v.number(),
-        platformFee: values_1.v.number(), // platform fee
-        netAmount: values_1.v.number(), // Amount after platform fee
-        // paymentMethod: v.union(
-        //     v.literal("stripe"),
-        //     v.literal("paypal"),
-        //     v.literal("bank_transfer"),
-        //     v.literal("crypto"),
-        // ),
+        // platformFee: v.number(), // consider having a platform fee in the future
         paymentStatus: values_1.v.union(values_1.v.literal('pending'), values_1.v.literal('processing'), values_1.v.literal('completed'), values_1.v.literal('failed'), values_1.v.literal('refunded'), values_1.v.literal('expired')),
         stripePaymentIntentId: values_1.v.optional(values_1.v.string()),
         stripeSessionId: values_1.v.optional(values_1.v.string()),
         certificateUrl: values_1.v.optional(values_1.v.string()),
-        impactDescription: values_1.v.string(),
         transactionReference: values_1.v.string(), // Unique transaction reference
     })
         .index('by_buyer', ['buyerId'])
@@ -422,7 +427,7 @@ exports.default = (0, server_1.defineSchema)({
         totalPurchased: values_1.v.number(),
         totalAllocated: values_1.v.number(),
         totalSpent: values_1.v.number(),
-        lifetimeImpact: values_1.v.number(),
+        lifetimeImpact: values_1.v.number(), // Total CO2 offset by user's purchases
         lastTransactionAt: values_1.v.optional(values_1.v.float64()),
     }).index('by_user', ['userId']),
     // ============= AUDIT TRAIL & SYSTEM LOGS =============

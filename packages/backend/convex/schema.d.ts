@@ -46,6 +46,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         verificationStartedAt?: number | undefined;
         verificationCompletedAt?: number | undefined;
         qualityScore?: number | undefined;
+        featuredImage?: {
+            cloudinary_public_id: string;
+            cloudinary_url: string;
+        } | undefined;
         creatorId: import("convex/values").GenericId<"users">;
         title: string;
         description: string;
@@ -69,6 +73,13 @@ declare const _default: import("convex/server").SchemaDefinition<{
         requiredDocuments: string[];
         submittedDocuments: string[];
         isDocumentationComplete: boolean;
+        projectImages: {
+            caption?: string | undefined;
+            cloudinary_public_id: string;
+            cloudinary_url: string;
+            isPrimary: boolean;
+            uploadDate: number;
+        }[];
     }, {
         creatorId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
         title: import("convex/values").VString<string, "required">;
@@ -102,7 +113,33 @@ declare const _default: import("convex/server").SchemaDefinition<{
         requiredDocuments: import("convex/values").VArray<string[], import("convex/values").VString<string, "required">, "required">;
         submittedDocuments: import("convex/values").VArray<string[], import("convex/values").VString<string, "required">, "required">;
         isDocumentationComplete: import("convex/values").VBoolean<boolean, "required">;
-    }, "required", "creatorId" | "title" | "description" | "projectType" | "location" | "areaSize" | "estimatedCO2Reduction" | "budget" | "startDate" | "expectedCompletionDate" | "actualCompletionDate" | "status" | "verificationStatus" | "totalCarbonCredits" | "pricePerCredit" | "creditsAvailable" | "creditsSold" | "assignedVerifierId" | "verificationStartedAt" | "verificationCompletedAt" | "qualityScore" | "requiredDocuments" | "submittedDocuments" | "isDocumentationComplete" | "location.lat" | "location.long" | "location.name">, {
+        projectImages: import("convex/values").VArray<{
+            caption?: string | undefined;
+            cloudinary_public_id: string;
+            cloudinary_url: string;
+            isPrimary: boolean;
+            uploadDate: number;
+        }[], import("convex/values").VObject<{
+            caption?: string | undefined;
+            cloudinary_public_id: string;
+            cloudinary_url: string;
+            isPrimary: boolean;
+            uploadDate: number;
+        }, {
+            cloudinary_public_id: import("convex/values").VString<string, "required">;
+            cloudinary_url: import("convex/values").VString<string, "required">;
+            caption: import("convex/values").VString<string | undefined, "optional">;
+            isPrimary: import("convex/values").VBoolean<boolean, "required">;
+            uploadDate: import("convex/values").VFloat64<number, "required">;
+        }, "required", "cloudinary_public_id" | "cloudinary_url" | "caption" | "isPrimary" | "uploadDate">, "required">;
+        featuredImage: import("convex/values").VObject<{
+            cloudinary_public_id: string;
+            cloudinary_url: string;
+        } | undefined, {
+            cloudinary_public_id: import("convex/values").VString<string, "required">;
+            cloudinary_url: import("convex/values").VString<string, "required">;
+        }, "optional", "cloudinary_public_id" | "cloudinary_url">;
+    }, "required", "creatorId" | "title" | "description" | "projectType" | "location" | "areaSize" | "estimatedCO2Reduction" | "budget" | "startDate" | "expectedCompletionDate" | "actualCompletionDate" | "status" | "verificationStatus" | "totalCarbonCredits" | "pricePerCredit" | "creditsAvailable" | "creditsSold" | "assignedVerifierId" | "verificationStartedAt" | "verificationCompletedAt" | "qualityScore" | "requiredDocuments" | "submittedDocuments" | "isDocumentationComplete" | "projectImages" | "featuredImage" | "location.lat" | "location.long" | "location.name" | "featuredImage.cloudinary_public_id" | "featuredImage.cloudinary_url">, {
         by_creator: ["creatorId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_type: ["projectType", "_creationTime"];
@@ -135,34 +172,28 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_reserved_by: ["reservedBy", "_creationTime"];
     }, {}, {}>;
     transactions: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        projectId?: import("convex/values").GenericId<"projects"> | undefined;
         stripePaymentIntentId?: string | undefined;
         stripeSessionId?: string | undefined;
         certificateUrl?: string | undefined;
-        projectId: import("convex/values").GenericId<"projects">;
         creditAmount: number;
-        buyerId: import("convex/values").GenericId<"users">;
+        buyerId: string;
         unitPrice: number;
         totalAmount: number;
-        platformFee: number;
-        netAmount: number;
         paymentStatus: "completed" | "pending" | "processing" | "failed" | "refunded" | "expired";
-        impactDescription: string;
         transactionReference: string;
     }, {
-        buyerId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
+        buyerId: import("convex/values").VString<string, "required">;
+        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects"> | undefined, "optional">;
         creditAmount: import("convex/values").VFloat64<number, "required">;
         unitPrice: import("convex/values").VFloat64<number, "required">;
         totalAmount: import("convex/values").VFloat64<number, "required">;
-        platformFee: import("convex/values").VFloat64<number, "required">;
-        netAmount: import("convex/values").VFloat64<number, "required">;
         paymentStatus: import("convex/values").VUnion<"completed" | "pending" | "processing" | "failed" | "refunded" | "expired", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"processing", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"failed", "required">, import("convex/values").VLiteral<"refunded", "required">, import("convex/values").VLiteral<"expired", "required">], "required", never>;
         stripePaymentIntentId: import("convex/values").VString<string | undefined, "optional">;
         stripeSessionId: import("convex/values").VString<string | undefined, "optional">;
         certificateUrl: import("convex/values").VString<string | undefined, "optional">;
-        impactDescription: import("convex/values").VString<string, "required">;
         transactionReference: import("convex/values").VString<string, "required">;
-    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "platformFee" | "netAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "impactDescription" | "transactionReference">, {
+    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "transactionReference">, {
         by_buyer: ["buyerId", "_creationTime"];
         by_project: ["projectId", "_creationTime"];
         by_payment_status: ["paymentStatus", "_creationTime"];
@@ -690,10 +721,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         projectId: import("convex/values").GenericId<"projects">;
         buyerId: import("convex/values").GenericId<"users">;
         certificateUrl: string;
-        impactDescription: string;
         transactionId: import("convex/values").GenericId<"transactions">;
         certificateNumber: string;
         creditsAmount: number;
+        impactDescription: string;
         issueDate: number;
         qrCodeUrl: string;
         isValid: boolean;
@@ -708,7 +739,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         certificateUrl: import("convex/values").VString<string, "required">;
         qrCodeUrl: import("convex/values").VString<string, "required">;
         isValid: import("convex/values").VBoolean<boolean, "required">;
-    }, "required", "projectId" | "buyerId" | "certificateUrl" | "impactDescription" | "transactionId" | "certificateNumber" | "creditsAmount" | "issueDate" | "qrCodeUrl" | "isValid">, {
+    }, "required", "projectId" | "buyerId" | "certificateUrl" | "transactionId" | "certificateNumber" | "creditsAmount" | "impactDescription" | "issueDate" | "qrCodeUrl" | "isValid">, {
         by_transaction: ["transactionId", "_creationTime"];
         by_buyer: ["buyerId", "_creationTime"];
         by_project: ["projectId", "_creationTime"];
