@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAction, useMutation } from 'convex/react';
-import { api, Id } from '@packages/backend';
+import { api } from '@packages/backend';
 import FileUpload from '../../components/FileUpload';
 
 interface ProjectFormData {
@@ -52,11 +52,6 @@ const steps = [
 export default function ProjectRegister() {
   const [currentStep, setCurrentStep] = useState(0);
   const [tempUploadedFiles, setTempUploadedFiles] = useState<File[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const generateUploadUrlAction = useAction(api.projects.generateUploadUrl);
-  const uploadDocumentMutation = useMutation(
-    api.projects.uploadProjectDocument
-  );
   const [projectImages, setProjectImages] = useState<
     Array<{
       cloudinary_public_id: string;
@@ -100,6 +95,7 @@ export default function ProjectRegister() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createProject = useMutation(api.projects.createProject);
+  const getStorageUrl = useAction(api.projects.getStorageUrl);
   const uploadProjectDocuments = useMutation(
     api.projects.uploadProjectDocument
   );
@@ -125,24 +121,13 @@ export default function ProjectRegister() {
     }
   };
 
-  const handleFileUpload = async (
-    event: File[],
-    type: 'image' | 'document'
-  ) => {
-    const files = event;
-    if (!files || files.length === 0) return;
-
-    console.log(
-      'dhfuijkashjkfhjkadshfkhsadjkfhsjkadhlfhasdjkfhkjasdhfkjshdakjfhjkasdghfkjasdhjkfhsdajkfhksadhfsdkalfhj'
-    );
-
-    setIsUploading(true);
+  const handleImageUpload = async (files: File[]) => {
     try {
-      for (const file of Array.from(files)) {
-        // Generate upload URL
-        const uploadUrl = await generateUploadUrlAction();
+      const uploadPromises = files.map(async (file) => {
+        // Get upload URL
+        const uploadUrl = await generateUploadUrl();
 
-        // Upload file to storage
+        // Upload file
         const response = await fetch(uploadUrl, {
           method: 'POST',
           body: file,
@@ -152,34 +137,39 @@ export default function ProjectRegister() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to upload file');
+          throw new Error(`Upload failed: ${response.statusText}`);
         }
 
         const { storageId } = await response.json();
 
-        if (type === 'image' || type === 'document') {
-          console.log(
-            'dhfuijkashjkfhjkadshfkhsadjkfhsjkadhlfhasdjkfhkjasdhfkjshdakjfhjkasdghfkjasdhjkfhsdajkfhksadhfsdkalfhj'
-          );
+        console.log("Storage ID", storageId);
 
-          // Upload image or document
-          const {
-            storageId: convexStorageId,
-            fileUrl,
-            documentId,
-          } = await uploadDocumentMutation({
-            fileName: file.name,
-            fileType: file.type,
-            storageId,
-          });
-          console.log('XXXXXXXXXXXXX', convexStorageId, fileUrl, documentId);
-        }
+        const fileUrl = await getStorageUrl({ storageId });
+
+        console.log("File URL", fileUrl);
+
+        return {
+          cloudinary_public_id: storageId,
+          cloudinary_url: fileUrl ?? '',
+          caption: '',
+          isPrimary: projectImages.length === 0, // First image is primary by default
+          uploadDate: Date.now(),
+        };
+      });
+
+      const newImages = await Promise.all(uploadPromises);
+      setProjectImages((prev) => [...prev, ...newImages]);
+
+      // Set the first image as featured if none is set
+      if (!featuredImage && newImages.length > 0) {
+        setFeaturedImage({
+          cloudinary_public_id: newImages[0]!.cloudinary_public_id,
+          cloudinary_url: newImages[0]!.cloudinary_url,
+        });
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
-      alert('Failed to upload file. Please try again.');
-    } finally {
-      setIsUploading(false);
+      console.error('Error uploading images:', error);
+      alert('Failed to upload images. Please try again.');
     }
   };
 
@@ -652,7 +642,7 @@ export default function ProjectRegister() {
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
                       if (files.length > 0) {
-                        handleFileUpload(files, 'image');
+                        handleImageUpload(files);
                       }
                     }}
                     className="hidden"
@@ -753,45 +743,30 @@ export default function ProjectRegister() {
               {/* Document Upload Section */}
               <div>
                 <h3 className="text-lg font-medium mb-3">Project Documents</h3>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-4">
-                  <input
-                    type="file"
-                    multiple
-                    accept=".pdf,application/pdf"
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      if (files.length > 0) {
-                        handleFileUpload(files, 'document');
-                      }
-                    }}
-                    className="hidden"
-                    id="image-upload"
-                  />
-                  <label
-                    htmlFor="image-upload"
-                    className="cursor-pointer flex flex-col items-center"
-                  >
-                    <svg
-                      className="w-12 h-12 text-gray-400 mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span className="text-blue-600 hover:text-blue-800">
-                      Click to upload project documents
-                    </span>
-                    <span className="text-sm text-gray-500 mt-1">
-                      PDF up to 10MB each
-                    </span>
-                  </label>
-                </div>
+                <FileUpload
+                  projectId="" // Empty for deferred uploads
+                  uploadMode="deferred"
+                  onFilesReady={(
+                    files: Array<{ file: File; id: string; status: string }>
+                  ) => {
+                    setTempUploadedFiles(
+                      files.map((f: { file: File }) => f.file)
+                    );
+                    console.log(
+                      'Files ready for upload after project creation:',
+                      files
+                    );
+                  }}
+                  maxFiles={10}
+                  maxSizeMB={50}
+                  acceptedTypes={[
+                    'application/pdf',
+                    'image/jpeg',
+                    'image/png',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                  ]}
+                />
                 {tempUploadedFiles.length > 0 && (
                   <div className="text-sm text-green-600 mt-2">
                     ✓ {tempUploadedFiles.length} file

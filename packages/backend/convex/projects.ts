@@ -11,6 +11,16 @@ export const generateUploadUrl = action({
   },
 });
 
+export const getStorageUrl = action({
+  args: {
+    storageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const url = await ctx.storage.getUrl(args.storageId);
+    return url;
+  },
+});
+
 export const createProject = mutation({
   args: {
     title: v.string(),

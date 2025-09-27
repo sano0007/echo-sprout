@@ -1,14 +1,30 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api, Id } from '@packages/backend';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export default function ProjectDetails() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
+  const [convexImageUrls, setConvexImageUrls] = useState<{[storageId: string]: string}>({});
+  const [loadingImageUrls, setLoadingImageUrls] = useState<{[storageId: string]: boolean}>({});
+  const [existingDocuments, setExistingDocuments] = useState<{
+    projectProposal: any[];
+    environmentalAssessment: any[];
+    sitePhotographs: any[];
+    legalPermits: any[];
+  }>({
+    projectProposal: [],
+    environmentalAssessment: [],
+    sitePhotographs: [],
+    legalPermits: [],
+  });
+  const [convexDocumentUrls, setConvexDocumentUrls] = useState<{[storageId: string]: string}>({});
+  const [loadingDocumentUrls, setLoadingDocumentUrls] = useState<{[storageId: string]: boolean}>({});
 
   // Get project data
   const project = useQuery(
@@ -16,7 +32,19 @@ export default function ProjectDetails() {
     projectId ? { projectId: projectId as Id<'projects'> } : 'skip'
   );
 
+  // Fetch documents for this project and categorize by type
+  const projectDocuments = useQuery(
+    api.documents.getDocumentsByEntity,
+    projectId
+      ? {
+          entityId: projectId as string,
+          entityType: 'project' as const,
+        }
+      : 'skip'
+  );
+
   const updateProject = useMutation(api.projects.updateProject);
+  const getStorageUrl = useAction(api.projects.getStorageUrl);
 
   const formatNumberWithCommas = (num: number): string => {
     return num.toLocaleString();
@@ -104,6 +132,129 @@ export default function ProjectDetails() {
     }
   };
 
+  // Load Convex URLs for project images
+  useEffect(() => {
+    if (project?.project?.projectImages) {
+      const loadImageUrls = async () => {
+        for (const image of project.project.projectImages) {
+          if (
+            image.cloudinary_public_id &&
+            (image.cloudinary_url.startsWith('storage://') ||
+              !image.cloudinary_url.startsWith('http'))
+          ) {
+            try {
+              const storageId = image.cloudinary_public_id;
+
+              // Set loading state
+              setLoadingImageUrls((prev) => ({
+                ...prev,
+                [storageId]: true,
+              }));
+
+              const url = await getStorageUrl({ storageId });
+              if (url) {
+                setConvexImageUrls((prev) => ({
+                  ...prev,
+                  [storageId]: url,
+                }));
+              }
+            } catch (error) {
+              console.error(
+                'Failed to load image URL for storageId:',
+                image.cloudinary_public_id,
+                error
+              );
+            } finally {
+              // Clear loading state
+              setLoadingImageUrls((prev) => ({
+                ...prev,
+                [image.cloudinary_public_id]: false,
+              }));
+            }
+          } else if (image.cloudinary_url && image.cloudinary_url.startsWith('http')) {
+            setConvexImageUrls((prev) => ({
+              ...prev,
+              [image.cloudinary_public_id]: image.cloudinary_url,
+            }));
+          }
+        }
+      };
+      loadImageUrls();
+    }
+  }, [project, getStorageUrl]);
+
+  // Load and categorize existing documents and resolve their URLs
+  useEffect(() => {
+    if (projectDocuments && Array.isArray(projectDocuments)) {
+      // Categorize documents by type
+      const categorizedDocs = {
+        projectProposal: [] as any[],
+        environmentalAssessment: [] as any[],
+        sitePhotographs: [] as any[],
+        legalPermits: [] as any[],
+      };
+
+      projectDocuments.forEach((doc: any) => {
+        if (doc.documentType === 'project_plan') {
+          categorizedDocs.projectProposal.push(doc);
+        } else if (doc.documentType === 'environmental_assessment') {
+          categorizedDocs.environmentalAssessment.push(doc);
+        } else if (doc.documentType === 'photos') {
+          categorizedDocs.sitePhotographs.push(doc);
+        } else if (doc.documentType === 'permits') {
+          categorizedDocs.legalPermits.push(doc);
+        }
+      });
+
+      setExistingDocuments(categorizedDocs);
+
+      const loadDocumentUrls = async () => {
+        for (const doc of projectDocuments) {
+          if (
+            doc.media?.cloudinary_public_id &&
+            (doc.media.cloudinary_url.startsWith('storage://') ||
+              !doc.media.cloudinary_url.startsWith('http'))
+          ) {
+            try {
+              const storageId = doc.media.cloudinary_public_id;
+
+              setLoadingDocumentUrls((prev) => ({
+                ...prev,
+                [storageId]: true,
+              }));
+
+              const url = await getStorageUrl({ storageId });
+              if (url) {
+                setConvexDocumentUrls((prev) => ({
+                  ...prev,
+                  [storageId]: url,
+                }));
+              }
+            } catch (error) {
+              console.error(
+                'Failed to load document URL for storageId:',
+                doc.media.cloudinary_public_id,
+                error
+              );
+            } finally {
+              setLoadingDocumentUrls((prev) => ({
+                ...prev,
+                [doc.media.cloudinary_public_id]: false,
+              }));
+            }
+          } else if (doc.media?.cloudinary_url && doc.media.cloudinary_url.startsWith('http')) {
+            setConvexDocumentUrls((prev) => ({
+              ...prev,
+              [doc.media.cloudinary_public_id]: doc.media.cloudinary_url,
+            }));
+          }
+        }
+      };
+
+      loadDocumentUrls();
+    }
+  }, [projectDocuments, getStorageUrl]);
+
   if (!project) {
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -160,11 +311,17 @@ export default function ProjectDetails() {
         <div className="lg:col-span-2">
           {selectedProject.featuredImage ? (
             <div className="relative group">
-              <img
-                src={selectedProject.featuredImage.cloudinary_url}
-                alt={selectedProject.title}
-                className="w-full h-80 object-cover rounded-2xl shadow-xl transition-transform duration-300 group-hover:scale-105"
-              />
+              {loadingImageUrls[selectedProject.featuredImage.cloudinary_public_id] ? (
+                <div className="w-full h-80 bg-gray-100 rounded-2xl flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
+              ) : (
+                <img
+                  src={convexImageUrls[selectedProject.featuredImage.cloudinary_public_id] || selectedProject.featuredImage.cloudinary_url}
+                  alt={selectedProject.title}
+                  className="w-full h-80 object-cover rounded-2xl shadow-xl transition-transform duration-300 group-hover:scale-105"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-2xl"></div>
               <div className="absolute bottom-4 left-4 right-4">
                 <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-xl p-4">
@@ -516,12 +673,18 @@ export default function ProjectDetails() {
             <h4 className="text-xl font-bold text-gray-900">Featured Image</h4>
           </div>
 
-          <div className="relative group max-w-md mx-auto">
-            <img
-              src={selectedProject.featuredImage.cloudinary_url}
-              alt="Featured project image"
-              className="w-full h-64 object-cover rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
-            />
+          <div className="relative group">
+            {loadingImageUrls[selectedProject.featuredImage.cloudinary_public_id] ? (
+              <div className="w-full h-64 bg-gray-100 rounded-xl flex items-center justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <img
+                src={convexImageUrls[selectedProject.featuredImage.cloudinary_public_id] || selectedProject.featuredImage.cloudinary_url}
+                alt="Featured project image"
+                className="w-full h-64 object-cover rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-105"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl"></div>
             <div className="absolute top-4 right-4 bg-yellow-500 text-white text-xs px-3 py-1 rounded-full shadow-lg">
               Featured
@@ -530,35 +693,38 @@ export default function ProjectDetails() {
         </div>
       )}
 
-      {/* Enhanced Project Gallery */}
-      {selectedProject.projectImages &&
-      selectedProject.projectImages.length > 0 ? (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-xl text-white">🖼️</span>
-              </div>
-              <div>
-                <h4 className="text-2xl font-bold text-gray-900">
-                  Project Gallery
-                </h4>
-                <p className="text-gray-600">
-                  {selectedProject.projectImages.length} images uploaded
-                </p>
-              </div>
-            </div>
+      {/* Project Images Section */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <span className="text-xl text-white">🖼️</span>
           </div>
+          <div>
+            <h4 className="text-2xl font-bold text-gray-900">
+              Project Images
+            </h4>
+            <p className="text-gray-600">
+              Visual documentation of the project
+            </p>
+          </div>
+        </div>
 
+        {selectedProject.projectImages && selectedProject.projectImages.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {selectedProject.projectImages.map((image, index) => (
               <div key={index} className="relative group">
                 <div className="aspect-square rounded-2xl overflow-hidden shadow-lg border-2 border-gray-100 hover:border-blue-300 transition-all duration-300">
-                  <img
-                    src={image.cloudinary_url}
-                    alt={image.caption || `Project image ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
+                  {loadingImageUrls[image.cloudinary_public_id] ? (
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : (
+                    <img
+                      src={convexImageUrls[image.cloudinary_public_id] || image.cloudinary_url}
+                      alt={image.caption || `Project image ${index + 1}`}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
                     <button
                       onClick={(e) => {
@@ -591,74 +757,220 @@ export default function ProjectDetails() {
               </div>
             ))}
           </div>
-        </div>
-      ) : (
-        <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8 border-2 border-dashed border-gray-300 mb-8">
-          <div className="text-center">
-            <span className="text-6xl mb-4 block">📷</span>
-            <h4 className="text-xl font-bold text-gray-900 mb-2">
-              No Images Uploaded
-            </h4>
-            <p className="text-gray-600">
-              Upload project images to showcase your work
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Project Documents */}
-      {project.project.documents && project.project.documents.length > 0 ? (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-xl text-white">📄</span>
-            </div>
-            <div>
-              <h4 className="text-2xl font-bold text-gray-900">
-                Uploaded Documents
+        ) : (
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+            <div className="text-center">
+              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <h4 className="text-lg font-medium text-gray-900 mb-2">
+                No project images uploaded yet
               </h4>
-              <p className="text-gray-600">
-                {project.project.documents.length} document(s) uploaded
+              <p className="text-gray-500 text-sm">
+                Only PNG files up to 10MB each
               </p>
             </div>
           </div>
+        )}
+      </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {project.project.documents.map((doc, index) => (
-              <div
-                key={index}
-                className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-all duration-200"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm">📎</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 capitalize">
-                      {doc.originalName || doc.fileName}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {doc.fileType} • {doc.fileSizeFormatted}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+      {/* Required Documents Sections */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <span className="text-xl text-white">📄</span>
           </div>
-        </div>
-      ) : (
-        <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8 border-2 border-dashed border-gray-300 mb-8">
-          <div className="text-center">
-            <span className="text-6xl mb-4 block">📄</span>
-            <h4 className="text-xl font-bold text-gray-900 mb-2">
-              No Documents Uploaded
+          <div>
+            <h4 className="text-2xl font-bold text-gray-900">
+              Required Documents
             </h4>
             <p className="text-gray-600">
-              Upload project documents to complete your project submission
+              Documentation status by category
             </p>
           </div>
         </div>
-      )}
+
+        <div className="space-y-6">
+          {/* Project Proposal Document */}
+          <div className="border rounded-lg p-4">
+            <h4 className="text-md font-medium mb-2">Project proposal document (PDF, DOC, and DOCX files)</h4>
+            {existingDocuments.projectProposal.length > 0 ? (
+              <div className="space-y-2">
+                {existingDocuments.projectProposal.map((doc: any, index: number) => (
+                  <div key={doc._id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center space-x-3">
+                      <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                      </svg>
+                      <div className="min-w-0">
+                        <a
+                          href={convexDocumentUrls[doc.media?.cloudinary_public_id] || doc.media?.cloudinary_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                          title={doc.originalName || doc.fileName}
+                        >
+                          {doc.originalName || doc.fileName}
+                        </a>
+                        <p className="text-xs text-gray-500">
+                          {doc.fileType} • {doc.fileSizeFormatted} {doc.isVerified ? '• Verified' : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <svg className="w-8 h-8 text-gray-400 mb-2 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-sm text-gray-500">No documents uploaded yet</p>
+              </div>
+            )}
+          </div>
+
+          {/* Environmental Impact Assessment */}
+          <div className="border rounded-lg p-4">
+            <h4 className="text-md font-medium mb-2">Environmental impact assessment (PDF, DOC, and DOCX files)</h4>
+            {existingDocuments.environmentalAssessment.length > 0 ? (
+              <div className="space-y-2">
+                {existingDocuments.environmentalAssessment.map((doc: any, index: number) => (
+                  <div key={doc._id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center space-x-3">
+                      <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                      </svg>
+                      <div className="min-w-0">
+                        <a
+                          href={convexDocumentUrls[doc.media?.cloudinary_public_id] || doc.media?.cloudinary_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                          title={doc.originalName || doc.fileName}
+                        >
+                          {doc.originalName || doc.fileName}
+                        </a>
+                        <p className="text-xs text-gray-500">
+                          {doc.fileType} • {doc.fileSizeFormatted} {doc.isVerified ? '• Verified' : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <svg className="w-8 h-8 text-gray-400 mb-2 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-sm text-gray-500">No documents uploaded yet</p>
+              </div>
+            )}
+          </div>
+
+          {/* Site Photographs */}
+          <div className="border rounded-lg p-4">
+            <h4 className="text-md font-medium mb-2">Site photographs (Images)</h4>
+            {selectedProject.projectImages && selectedProject.projectImages.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {selectedProject.projectImages.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <div className="aspect-square bg-gray-100 rounded border overflow-hidden">
+                      {loadingImageUrls[image.cloudinary_public_id] ? (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : (
+                        <img
+                          src={convexImageUrls[image.cloudinary_public_id] || image.cloudinary_url}
+                          alt={image.caption || `Site photo ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <p className="text-xs text-center mt-1 truncate">{image.caption || `Image ${index + 1}`}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <svg className="w-8 h-8 text-gray-400 mb-2 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-sm text-gray-500">No photographs uploaded yet</p>
+              </div>
+            )}
+          </div>
+
+          {/* Legal Permits and Certifications */}
+          <div className="border rounded-lg p-4">
+            <h4 className="text-md font-medium mb-2">Legal permits and certifications (PDF, DOC, and DOCX files)</h4>
+            {existingDocuments.legalPermits.length > 0 ? (
+              <div className="space-y-2">
+                {existingDocuments.legalPermits.map((doc: any, index: number) => (
+                  <div key={doc._id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center space-x-3">
+                      <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                      </svg>
+                      <div className="min-w-0">
+                        <a
+                          href={convexDocumentUrls[doc.media?.cloudinary_public_id] || doc.media?.cloudinary_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-blue-600 hover:underline truncate block"
+                          title={doc.originalName || doc.fileName}
+                        >
+                          {doc.originalName || doc.fileName}
+                        </a>
+                        <p className="text-xs text-gray-500">
+                          {doc.fileType} • {doc.fileSizeFormatted} {doc.isVerified ? '• Verified' : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <svg className="w-8 h-8 text-gray-400 mb-2 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-sm text-gray-500">No documents uploaded yet</p>
+              </div>
+            )}
+          </div>
+
+          {/* Show any general uploaded documents */}
+          {project.project.documents && project.project.documents.length > 0 && (
+            <div className="mt-6">
+              <h5 className="text-lg font-semibold text-gray-900 mb-4">Additional Uploaded Files</h5>
+              <div className="space-y-2">
+                {project.project.documents.map((doc, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
+                        <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {doc.originalName || doc.fileName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {doc.fileType} • {doc.fileSizeFormatted}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Creator Information */}
       <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-8 border border-gray-100">

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQuery } from 'convex/react';
+import { useMutation, useQuery, useAction } from 'convex/react';
 import { api, Id } from '@packages/backend';
 import { Project } from '@echo-sprout/types';
 import FileUpload from '../../components/FileUpload';
@@ -10,6 +10,9 @@ import FileUpload from '../../components/FileUpload';
 export default function ManageProjects() {
   const router = useRouter();
   const projects = useQuery(api.projects.getUserProjects);
+  const getStorageUrl = useAction(api.projects.getStorageUrl);
+  const [convexImageUrls, setConvexImageUrls] = useState<{[storageId: string]: string}>({});
+  const [loadingImageUrls, setLoadingImageUrls] = useState<{[storageId: string]: boolean}>({});
   const updateProject = useMutation(api.projects.updateProject);
   const deleteProject = useMutation(api.projects.deleteProject);
   const submitProjectForVerification = useMutation(
@@ -30,6 +33,80 @@ export default function ManageProjects() {
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Load Convex URLs for project images
+  useEffect(() => {
+    if (projects) {
+      const loadImageUrls = async () => {
+        for (const project of projects) {
+          // Load featured image URL
+          if (project.featuredImage?.cloudinary_public_id && 
+              (project.featuredImage.cloudinary_url.startsWith('storage://') || !project.featuredImage.cloudinary_url.startsWith('http'))) {
+            try {
+              const storageId = project.featuredImage.cloudinary_public_id;
+              
+              // Set loading state
+              setLoadingImageUrls(prev => ({
+                ...prev,
+                [storageId]: true
+              }));
+              
+              const url = await getStorageUrl({ storageId });
+              if (url) {
+                setConvexImageUrls(prev => ({
+                  ...prev,
+                  [storageId]: url
+                }));
+              }
+            } catch (error) {
+              console.error('Failed to load featured image URL:', error);
+            } finally {
+              // Clear loading state
+              setLoadingImageUrls(prev => ({
+                ...prev,
+                [project.featuredImage?.cloudinary_public_id ?? ""]: false
+              }));
+            }
+          }
+          
+          // Load project images URLs
+          if (project.projectImages) {
+            for (const image of project.projectImages) {
+              if (image.cloudinary_public_id && 
+                  (image.cloudinary_url.startsWith('storage://') || !image.cloudinary_url.startsWith('http'))) {
+                try {
+                  const storageId = image.cloudinary_public_id;
+                  
+                  // Set loading state
+                  setLoadingImageUrls(prev => ({
+                    ...prev,
+                    [storageId]: true
+                  }));
+                  
+                  const url = await getStorageUrl({ storageId });
+                  if (url) {
+                    setConvexImageUrls(prev => ({
+                      ...prev,
+                      [storageId]: url
+                    }));
+                  }
+                } catch (error) {
+                  console.error('Failed to load project image URL:', error);
+                } finally {
+                  // Clear loading state
+                  setLoadingImageUrls(prev => ({
+                    ...prev,
+                    [image.cloudinary_public_id]: false
+                  }));
+                }
+              }
+            }
+          }
+        }
+      };
+      loadImageUrls();
+    }
+  }, [projects, getStorageUrl]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -267,21 +344,33 @@ export default function ManageProjects() {
                       {/* Project Image */}
                       <div className="flex-shrink-0">
                         {project.featuredImage ? (
-                          <img
-                            src={project.featuredImage.cloudinary_url}
-                            alt={project.title}
-                            className="w-20 h-20 rounded-lg object-cover shadow-sm"
-                          />
+                          loadingImageUrls[project.featuredImage.cloudinary_public_id] ? (
+                            <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                            </div>
+                          ) : (
+                            <img
+                              src={convexImageUrls[project.featuredImage.cloudinary_public_id] || project.featuredImage.cloudinary_url}
+                              alt={project.title}
+                              className="w-20 h-20 rounded-lg object-cover shadow-sm"
+                            />
+                          )
                         ) : project.projectImages &&
                           project.projectImages.length > 0 &&
                           project.projectImages[0] ? (
-                          <img
-                            src={project.projectImages[0].cloudinary_url}
-                            alt={
-                              project.projectImages[0].caption || project.title
-                            }
-                            className="w-20 h-20 rounded-lg object-cover shadow-sm"
-                          />
+                          loadingImageUrls[project.projectImages[0].cloudinary_public_id] ? (
+                            <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                            </div>
+                          ) : (
+                            <img
+                              src={convexImageUrls[project.projectImages[0].cloudinary_public_id] || project.projectImages[0].cloudinary_url}
+                              alt={
+                                project.projectImages[0].caption || project.title
+                              }
+                              className="w-20 h-20 rounded-lg object-cover shadow-sm"
+                            />
+                          )
                         ) : (
                           <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-sm">
                             <span className="text-3xl">🌱</span>
@@ -374,6 +463,7 @@ export default function ManageProjects() {
                     <button
                       onClick={() => handleEditProject(project)}
                       className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      title="Edit project details, images, and documents"
                     >
                       <svg
                         className="w-4 h-4"
