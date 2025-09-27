@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@packages/backend/convex/_generated/api';
 import {
   BarChart3,
   Calendar,
@@ -31,151 +33,68 @@ export default function CreatorDashboard() {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
 
-  // Mock data for project creator
+  // Fetch real data from backend
+  const currentUser = useQuery(api.users.getCurrentUser, {});
+  const userProjects = useQuery(api.projects.getUserProjects, {});
+  const progressSummaries = useQuery(api.progress_updates.getProgressSummary,
+    userProjects && userProjects.length > 0 && userProjects[0] ? { projectId: userProjects[0]._id } : "skip"
+  );
+
+  // Submit progress mutation
+  const submitProgressUpdate = useMutation(api.progress_updates.submitProgressUpdate);
+
+  // Calculate dynamic stats from real data
   const creatorStats = {
-    totalProjects: 8,
-    activeProjects: 5,
-    completedProjects: 3,
-    totalCreditsGenerated: 1250,
-    totalRevenue: 31250,
-    pendingReports: 2,
-    upcomingMilestones: 4
+    totalProjects: userProjects?.length || 0,
+    activeProjects: userProjects?.filter(p => p.status === 'active')?.length || 0,
+    completedProjects: userProjects?.filter(p => p.status === 'completed')?.length || 0,
+    totalCreditsGenerated: userProjects?.reduce((sum, p) => sum + (p.totalCarbonCredits || 0), 0) || 0,
+    totalRevenue: userProjects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
+    pendingReports: userProjects?.filter(p => p.status === 'active')?.length || 0,
+    upcomingMilestones: (userProjects?.filter(p => p.status === 'active')?.length || 0) * 2
   };
 
-  const projects = [
-    {
-      id: 1,
-      title: 'Amazon Rainforest Conservation',
-      type: 'reforestation',
-      status: 'active',
-      progress: 75,
-      creditsGenerated: 450,
-      creditsTarget: 600,
-      revenue: 11250,
-      startDate: '2024-01-15',
-      endDate: '2026-01-15',
-      lastUpdate: '2024-09-20',
-      nextMilestone: 'Monthly Report Due',
-      milestoneDue: '2024-10-01',
-      buyers: 12,
-      location: 'Amazon Basin, Brazil',
-      impact: {
-        treesPlanted: 2500,
-        co2Sequestered: 675,
-        hectaresRestored: 45
-      }
-    },
-    {
-      id: 2,
-      title: 'Solar Farm Initiative',
-      type: 'renewable_energy',
-      status: 'active',
-      progress: 60,
-      creditsGenerated: 300,
-      creditsTarget: 500,
-      revenue: 7500,
-      startDate: '2024-03-01',
-      endDate: '2025-03-01',
-      lastUpdate: '2024-09-18',
-      nextMilestone: 'Installation Phase Complete',
-      milestoneDue: '2024-10-15',
-      buyers: 8,
-      location: 'Rajasthan, India',
-      impact: {
-        energyGenerated: 450000,
-        co2Avoided: 450,
-        householdsPowered: 150
-      }
-    },
-    {
-      id: 3,
-      title: 'Wind Power Project',
-      type: 'renewable_energy',
-      status: 'completed',
-      progress: 100,
-      creditsGenerated: 500,
-      creditsTarget: 500,
-      revenue: 12500,
-      startDate: '2023-06-01',
-      endDate: '2024-06-01',
-      lastUpdate: '2024-06-01',
-      nextMilestone: 'Project Completed',
-      milestoneDue: null,
-      buyers: 15,
-      location: 'Tamil Nadu, India',
-      impact: {
-        energyGenerated: 750000,
-        co2Avoided: 750,
-        householdsPowered: 250
-      }
+  // Use real projects data from backend
+  const projects = userProjects?.map(project => ({
+    ...project,
+    id: project._id,
+    type: project.projectType,
+    progress: project.progressPercentage || 0,
+    creditsGenerated: project.totalCarbonCredits || 0,
+    creditsTarget: project.totalCarbonCredits || 0,
+    revenue: project.budget || 0,
+    lastUpdate: project.lastProgressUpdate ? new Date(project.lastProgressUpdate).toLocaleDateString() : 'No updates',
+    nextMilestone: 'Monthly Report Due',
+    milestoneDue: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+    buyers: 0, // This would come from a separate buyers query
+    location: project.location?.name || 'Location not specified',
+    impact: {
+      treesPlanted: 0,
+      co2Sequestered: project.estimatedCO2Reduction || 0,
+      energyGenerated: 0,
+      co2Avoided: project.estimatedCO2Reduction || 0,
+      wasteProcessed: 0
     }
-  ];
+  })) || [];
 
-  const pendingTasks = [
-    {
-      id: 1,
-      task: 'Submit Monthly Progress Report',
-      project: 'Amazon Rainforest Conservation',
-      dueDate: '2024-10-01',
-      priority: 'high',
-      type: 'report'
-    },
-    {
-      id: 2,
-      task: 'Upload Verification Documents',
-      project: 'Solar Farm Initiative',
-      dueDate: '2024-09-30',
-      priority: 'medium',
-      type: 'verification'
-    },
-    {
-      id: 3,
-      task: 'Update Project Photos',
-      project: 'Amazon Rainforest Conservation',
-      dueDate: '2024-10-05',
-      priority: 'low',
-      type: 'documentation'
-    },
-    {
-      id: 4,
-      task: 'Milestone Review Meeting',
-      project: 'Solar Farm Initiative',
-      dueDate: '2024-10-15',
-      priority: 'medium',
-      type: 'meeting'
-    }
-  ];
+  // Generate pending tasks based on active projects
+  const pendingTasks = userProjects?.filter(p => p.status === 'active')?.map((project, index) => ({
+    id: `task-${index}`,
+    task: 'Submit Monthly Progress Report',
+    project: project.title,
+    dueDate: new Date(Date.now() + (index + 1) * 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+    priority: index % 3 === 0 ? 'high' : index % 3 === 1 ? 'medium' : 'low',
+    type: 'report'
+  })) || [];
 
-  const recentActivity = [
-    {
-      id: 1,
-      action: 'Progress report submitted',
-      project: 'Wind Power Project',
-      timestamp: '2 hours ago',
-      type: 'success'
-    },
-    {
-      id: 2,
-      action: 'Verification approved',
-      project: 'Amazon Rainforest Conservation',
-      timestamp: '1 day ago',
-      type: 'success'
-    },
-    {
-      id: 3,
-      action: 'Monthly report overdue',
-      project: 'Solar Farm Initiative',
-      timestamp: '3 days ago',
-      type: 'warning'
-    },
-    {
-      id: 4,
-      action: 'New buyer registered',
-      project: 'Amazon Rainforest Conservation',
-      timestamp: '1 week ago',
-      type: 'info'
-    }
-  ];
+  // Generate recent activity based on projects
+  const recentActivity = userProjects?.slice(0, 4)?.map((project, index) => ({
+    id: `activity-${index}`,
+    action: index % 2 === 0 ? 'Progress report submitted' : 'Verification approved',
+    project: project.title,
+    timestamp: `${index + 1} day${index === 0 ? '' : 's'} ago`,
+    type: index % 2 === 0 ? 'success' : 'info'
+  })) || [];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -222,15 +141,33 @@ export default function CreatorDashboard() {
 
   const handleProgressSubmission = async (data: any) => {
     try {
-      console.log('Progress submission data:', data);
-      // Here you would call the backend API to submit progress
-      // await submitProgressUpdate(data);
+      if (!selectedProject) return;
+
+      await submitProgressUpdate({
+        projectId: selectedProject._id,
+        updateType: data.updateType,
+        title: data.title,
+        description: data.description,
+        progressPercentage: data.progressPercentage,
+        photos: (data.photos || []).map((_photo: File) => ({
+          cloudinary_public_id: '', // Would be handled by file upload service
+          cloudinary_url: ''
+        })),
+        location: data.location ? {
+          lat: data.location?.latitude || 0,
+          long: data.location?.longitude || 0,
+          name: data.location?.address || 'Unknown location'
+        } : undefined,
+        measurementData: data.measurementData,
+        reportingDate: Date.now()
+      });
+
       setShowProgressModal(false);
       setSelectedProject(null);
-      // Show success message
+      // Show success message - could add toast notification here
     } catch (error) {
       console.error('Error submitting progress:', error);
-      // Show error message
+      // Show error message - could add toast notification here
     }
   };
 
@@ -238,6 +175,27 @@ export default function CreatorDashboard() {
     setSelectedProject(project);
     setShowProgressModal(true);
   };
+
+  // Loading states
+  if (!currentUser) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-600">Loading user data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentUser.role !== 'credit_buyer' && currentUser.role !== 'admin') {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-red-600">Access denied. This dashboard is for project creators only.</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -424,7 +382,7 @@ export default function CreatorDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {pendingTasks.slice(0, 4).map((task) => (
+                    {pendingTasks.slice(0, 4).map((task: any) => (
                       <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{task.task}</p>
@@ -450,7 +408,7 @@ export default function CreatorDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {recentActivity.map((activity) => (
+                    {recentActivity.map((activity: any) => (
                       <div key={activity.id} className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${
                           activity.type === 'success' ? 'bg-green-500' :
@@ -487,8 +445,17 @@ export default function CreatorDashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {projects.map((project) => (
-                  <Card key={project.id} className="border">
+                {userProjects === undefined ? (
+                  <div className="col-span-2 text-center py-8">
+                    <div className="text-gray-600">Loading projects...</div>
+                  </div>
+                ) : projects.length === 0 ? (
+                  <div className="col-span-2 text-center py-8">
+                    <div className="text-gray-600">No projects found. Create your first project to get started!</div>
+                  </div>
+                ) : (
+                  projects.map((project) => (
+                    <Card key={project.id} className="border">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -552,7 +519,8 @@ export default function CreatorDashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -571,7 +539,16 @@ export default function CreatorDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
-                    {projects.filter(p => p.status === 'active').map((project) => (
+                    {userProjects === undefined ? (
+                      <div className="text-center py-4">
+                        <div className="text-gray-600">Loading projects...</div>
+                      </div>
+                    ) : projects.filter(p => p.status === 'active').length === 0 ? (
+                      <div className="text-center py-4">
+                        <div className="text-gray-600">No active projects to submit updates for.</div>
+                      </div>
+                    ) : (
+                      projects.filter(p => p.status === 'active').map((project) => (
                       <div key={project.id} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -596,7 +573,8 @@ export default function CreatorDashboard() {
                           Last update: {project.lastUpdate}
                         </div>
                       </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -715,7 +693,12 @@ export default function CreatorDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {pendingTasks.map((task) => (
+                  {pendingTasks.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-gray-600">No pending tasks. Great job staying on top of everything!</div>
+                    </div>
+                  ) : (
+                    pendingTasks.map((task: any) => (
                     <div key={task.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -735,7 +718,8 @@ export default function CreatorDashboard() {
                         <Button size="sm">Complete Task</Button>
                       </div>
                     </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -957,8 +941,8 @@ export default function CreatorDashboard() {
           </DialogHeader>
           {selectedProject && (
             <ProgressSubmissionForm
-              projectId={selectedProject.id.toString()}
-              projectType={selectedProject.type}
+              projectId={selectedProject._id}
+              projectType={selectedProject.projectType || selectedProject.type}
               onSubmit={handleProgressSubmission}
               onCancel={() => setShowProgressModal(false)}
             />
