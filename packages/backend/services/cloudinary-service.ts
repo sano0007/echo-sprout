@@ -71,6 +71,7 @@ export class CloudinaryService {
     // Validate each photo
     for (let i = 0; i < photos.length; i++) {
       const photo = photos[i];
+      if (!photo) continue;
       const photoIndex = i + 1;
 
       if (!photo.cloudinary_public_id) {
@@ -366,14 +367,20 @@ export class CloudinaryService {
       // Find the actual file part (last part without transformations)
       let fileWithExtension = afterUpload[afterUpload.length - 1];
 
+      if (!fileWithExtension) {
+        return { publicId: '' };
+      }
+
       // Handle versioned URLs
       let version: string | undefined;
+      const versionPart = afterUpload[afterUpload.length - 2];
       if (
         fileWithExtension.startsWith('v') &&
-        /^v\d+$/.test(afterUpload[afterUpload.length - 2])
+        versionPart &&
+        /^v\d+$/.test(versionPart)
       ) {
-        version = afterUpload[afterUpload.length - 2];
-        fileWithExtension = afterUpload[afterUpload.length - 1];
+        version = versionPart;
+        fileWithExtension = afterUpload[afterUpload.length - 1] || '';
       }
 
       // Extract format
@@ -410,6 +417,7 @@ export class CloudinaryService {
     // For now, we'll do basic URL validation
     for (let i = 0; i < photos.length; i++) {
       const photo = photos[i];
+      if (!photo) continue;
       const photoIndex = i + 1;
 
       if (!photo.cloudinary_url) {

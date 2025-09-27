@@ -480,7 +480,7 @@ async function performTrendAnalysis(
   const averageValue =
     values.reduce((sum, val) => sum + val, 0) / values.length;
   const sortedValues = [...values].sort((a, b) => a - b);
-  const medianValue = sortedValues[Math.floor(sortedValues.length / 2)];
+  const medianValue = sortedValues[Math.floor(sortedValues.length / 2)] || 0;
   const standardDeviation = Math.sqrt(
     values.reduce((sum, val) => sum + Math.pow(val - averageValue, 2), 0) /
       values.length
@@ -555,11 +555,15 @@ function calculateCorrelation(x: number[], y: number[]): number {
   let denomY = 0;
 
   for (let i = 0; i < n; i++) {
-    const deltaX = x[i] - meanX;
-    const deltaY = y[i] - meanY;
-    numerator += deltaX * deltaY;
-    denomX += deltaX * deltaX;
-    denomY += deltaY * deltaY;
+    const xVal = x[i];
+    const yVal = y[i];
+    if (xVal !== undefined && yVal !== undefined) {
+      const deltaX = xVal - meanX;
+      const deltaY = yVal - meanY;
+      numerator += deltaX * deltaY;
+      denomX += deltaX * deltaX;
+      denomY += deltaY * deltaY;
+    }
   }
 
   const denominator = Math.sqrt(denomX * denomY);
@@ -575,6 +579,7 @@ function detectAnomalies(
 
   for (let i = 0; i < dataPoints.length; i++) {
     const point = dataPoints[i];
+    if (!point) continue;
     const deviationScore = Math.abs(point.value - mean) / stdDev;
 
     if (deviationScore > 2) {
@@ -629,8 +634,9 @@ function assessDataQuality(
 
   const interval =
     expectedIntervalMs[timeframe as keyof typeof expectedIntervalMs];
-  const timeSpan =
-    dataPoints[dataPoints.length - 1].timestamp - dataPoints[0].timestamp;
+  const lastPoint = dataPoints[dataPoints.length - 1];
+  const firstPoint = dataPoints[0];
+  const timeSpan = lastPoint && firstPoint ? lastPoint.timestamp - firstPoint.timestamp : 0;
   const expectedPoints = Math.floor(timeSpan / interval) + 1;
   const completeness = Math.min(dataPoints.length / expectedPoints, 1);
 
@@ -642,7 +648,11 @@ function assessDataQuality(
   // Consistency: How consistent are the reporting intervals
   const intervals: number[] = [];
   for (let i = 1; i < dataPoints.length; i++) {
-    intervals.push(dataPoints[i].timestamp - dataPoints[i - 1].timestamp);
+    const current = dataPoints[i];
+    const previous = dataPoints[i - 1];
+    if (current && previous) {
+      intervals.push(current.timestamp - previous.timestamp);
+    }
   }
 
   const avgInterval =
@@ -681,7 +691,11 @@ function generateForecast(
   // Calculate confidence based on trend consistency
   const recentTrends = [];
   for (let i = 2; i < values.length; i++) {
-    recentTrends.push(values[i] - values[i - 1]);
+    const current = values[i];
+    const previous = values[i - 1];
+    if (current !== undefined && previous !== undefined) {
+      recentTrends.push(current - previous);
+    }
   }
 
   const trendStdDev = Math.sqrt(
