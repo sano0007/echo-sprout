@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useMutation, useQuery } from 'convex/react';
@@ -75,6 +75,10 @@ export default function CommunityForum() {
     'newest'
   );
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 5;
+
   // Form state for New Topic
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('general');
@@ -103,73 +107,7 @@ export default function CommunityForum() {
   ];
 
   const nowTs = Date.now();
-  const initialPosts: Post[] = [
-    // {
-    //   id: 1,
-    //   title: 'Best practices for reforestation project documentation?',
-    //   author: 'Maria Garcia',
-    //   category: 'project-dev',
-    //   replies: 12,
-    //   views: 234,
-    //   lastActivity: '2 hours ago',
-    //   lastActivityAt: nowTs - 2 * 60 * 60 * 1000,
-    //   isAnswered: false,
-    //   isPinned: false,
-    //   tags: ['reforestation', 'documentation', 'best-practices'],
-    // },
-    // {
-    //   id: 2,
-    //   title: '[ANNOUNCEMENT] New verification standards update',
-    //   author: 'Admin Team',
-    //   category: 'announcements',
-    //   replies: 8,
-    //   views: 456,
-    //   lastActivity: '4 hours ago',
-    //   lastActivityAt: nowTs - 4 * 60 * 60 * 1000,
-    //   isAnswered: false,
-    //   isPinned: true,
-    //   tags: ['announcement', 'verification', 'standards'],
-    // },
-    // {
-    //   id: 3,
-    //   title: 'How long does the verification process typically take?',
-    //   author: 'John Smith',
-    //   category: 'verification',
-    //   replies: 15,
-    //   views: 189,
-    //   lastActivity: '6 hours ago',
-    //   lastActivityAt: nowTs - 6 * 60 * 60 * 1000,
-    //   isAnswered: true,
-    //   isPinned: false,
-    //   tags: ['verification', 'timeline', 'question'],
-    // },
-    // {
-    //   id: 4,
-    //   title: 'Solar project credit calculation methodology',
-    //   author: 'Sarah Chen',
-    //   category: 'project-dev',
-    //   replies: 7,
-    //   views: 123,
-    //   lastActivity: '1 day ago',
-    //   lastActivityAt: nowTs - 24 * 60 * 60 * 1000,
-    //   isAnswered: false,
-    //   isPinned: false,
-    //   tags: ['solar', 'calculation', 'methodology'],
-    // },
-    // {
-    //   id: 5,
-    //   title: 'Marketplace pricing trends - Q1 2024',
-    //   author: 'Market Analyst',
-    //   category: 'marketplace',
-    //   replies: 23,
-    //   views: 567,
-    //   lastActivity: '1 day ago',
-    //   lastActivityAt: nowTs - 24 * 60 * 60 * 1000,
-    //   isAnswered: false,
-    //   isPinned: false,
-    //   tags: ['pricing', 'trends', 'analysis'],
-    // },
-  ];
+  const initialPosts: Post[] = [];
 
   const topContributors =
     useQuery((api as any).forum.getTopContributors, {}) || [];
@@ -182,8 +120,6 @@ export default function CommunityForum() {
   const deleteTopicMutation = useMutation((api as any).forum.deleteTopic);
   const allTopicsQuery = useQuery((api as any).forum.listAllTopics, {});
   const activeUsersCount = useQuery((api as any).forum.getActiveUsersCount, {});
-
-  // No REST or localStorage: rely on Convex `myTopics` + local optimistic state
 
   const backendPosts: Post[] = useMemo(() => {
     if (!allTopicsQuery) return [];
@@ -249,6 +185,28 @@ export default function CommunityForum() {
     }
     return arr;
   }, [filteredPosts, sortBy]);
+
+  // Pagination
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(sortedPosts.length / postsPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   const resetForm = () => {
     setTitle('');
@@ -335,7 +293,10 @@ export default function CommunityForum() {
               content: content.trim(),
             });
           } catch (e) {
-            // Optional: toast error
+            setError('Failed to update topic.');
+            setNotice({ msg: 'Operation failed', type: 'error' });
+            setTimeout(() => setNotice(null), 3000);
+            return;
           }
         }
       } else {
@@ -360,7 +321,6 @@ export default function CommunityForum() {
           isMine: true,
         };
 
-        // Create directly in Convex backend
         try {
           const result = await createTopic({
             title: newPost.title,
@@ -370,7 +330,10 @@ export default function CommunityForum() {
           });
           if (result?.id) newPost.id = result.id;
         } catch (e) {
-          // If Convex call fails, we still show locally; consider surfacing error to user
+          setError('Failed to create topic.');
+          setNotice({ msg: 'Operation failed', type: 'error' });
+          setTimeout(() => setNotice(null), 3000);
+          return;
         }
 
         setPosts((prev) => [newPost, ...prev]);
@@ -443,13 +406,13 @@ export default function CommunityForum() {
         {/* Sidebar */}
         <div className="lg:col-span-1">
           {/* Search */}
-          <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+          <div className="bg-white p-4  rounded-lg shadow-md mb-6">
             <input
               type="text"
               placeholder="Search forums..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-3 border rounded"
+              className="w-full p-3 bg-white border rounded"
             />
           </div>
 
@@ -511,7 +474,7 @@ export default function CommunityForum() {
                     : categories.find((c) => c.id === activeCategory)?.name}
                 </h2>
                 <select
-                  className="border rounded px-3 py-1 text-sm"
+                  className="border rounded bg-white px-3 py-1 text-sm"
                   value={sortBy}
                   onChange={(e) =>
                     setSortBy(
@@ -528,7 +491,7 @@ export default function CommunityForum() {
             </div>
 
             <div className="divide-y">
-              {sortedPosts.map((post) => (
+              {currentPosts.map((post) => (
                 <div key={String(post.id)} className="p-6 hover:bg-gray-50">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -596,19 +559,33 @@ export default function CommunityForum() {
             {/* Pagination */}
             <div className="p-6 border-t flex justify-center">
               <div className="flex gap-2">
-                <button className="px-3 py-2 border rounded text-sm hover:bg-gray-100">
+                <button
+                  className="px-3 py-2 border rounded text-sm hover:bg-gray-100"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                >
                   Previous
                 </button>
-                <button className="px-3 py-2 bg-blue-600 text-white rounded text-sm">
-                  1
-                </button>
-                <button className="px-3 py-2 border rounded text-sm hover:bg-gray-100">
-                  2
-                </button>
-                <button className="px-3 py-2 border rounded text-sm hover:bg-gray-100">
-                  3
-                </button>
-                <button className="px-3 py-2 border rounded text-sm hover:bg-gray-100">
+
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <button
+                    key={index + 1}
+                    className={`px-3 py-2 border rounded text-sm ${
+                      currentPage === index + 1
+                        ? 'bg-blue-600 text-white'
+                        : 'hover:bg-gray-100'
+                    }`}
+                    onClick={() => handlePageChange(index + 1)}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+
+                <button
+                  className="px-3 py-2 border rounded text-sm hover:bg-gray-100"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
                   Next
                 </button>
               </div>
