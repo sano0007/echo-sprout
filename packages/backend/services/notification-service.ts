@@ -36,16 +36,36 @@ export class NotificationService {
   ) {
     const notificationData = {
       recipientId: data.recipientId,
-      type: data.type,
-      title: data.title,
+      senderId: undefined,
+      subject: data.title,
       message: data.message,
+      type: data.type,
+      severity: undefined,
+      category: undefined,
+      channels: ['in_app'],
+      scheduledAt: undefined,
+      sentAt: undefined,
+      deliveredAt: undefined,
+      readAt: undefined,
+      retryCount: 0,
+      deliveryStatus: 'pending',
+      failureReason: undefined,
+      template: undefined,
+      templateData: undefined,
       priority: data.priority || ('normal' as const),
       relatedEntityId: data.relatedEntityId,
       relatedEntityType: data.relatedEntityType,
       actionUrl: data.actionUrl,
+      expiresAt: undefined,
+      metadata: undefined,
       isRead: false,
       isEmailSent: false,
       isPushSent: false,
+        isArchived: false,
+        tags: undefined,
+        batchId: undefined,
+        parentNotificationId: undefined,
+        isTest: false,
     };
 
     const notificationId = await ctx.db.insert(
@@ -53,23 +73,21 @@ export class NotificationService {
       notificationData
     );
 
-    // Schedule email notification if requested
+    // Update notification channels based on preferences
+    const channels = ['in_app'];
     if (data.emailNotification !== false) {
-      await this.scheduleEmailNotification(
-        ctx,
-        notificationId,
-        data.recipientId
-      );
+      channels.push('email');
+    }
+    if (data.pushNotification !== false) {
+      channels.push('push');
     }
 
-    // Schedule push notification if requested
-    if (data.pushNotification !== false) {
-      await this.schedulePushNotification(
-        ctx,
-        notificationId,
-        data.recipientId
-      );
-    }
+    // Update the notification with the correct channels
+    await ctx.db.patch(notificationId, {
+      channels,
+      deliveryStatus: 'sent',
+      sentAt: Date.now(),
+    });
 
     return notificationId;
   }
@@ -201,7 +219,7 @@ export class NotificationService {
           acc[notification.type] = (acc[notification.type] || 0) + 1;
           return acc;
         },
-        {} as Record<NotificationType, number>
+        {} as Record<string, number>
       ),
       byPriority: allNotifications.reduce(
         (acc, notification) => {
@@ -213,31 +231,6 @@ export class NotificationService {
     };
   }
 
-  // Schedule email notification
-  private static async scheduleEmailNotification(
-    ctx: MutationCtx,
-    notificationId: Id<'notifications'>,
-    userId: Id<'users'>
-  ) {
-    4; // This would integrate with your email service (SendGrid, AWS SES, etc.)
-    // For now, we'll just mark it as sent
-    await ctx.db.patch(notificationId, {
-      isEmailSent: true,
-    });
-  }
-
-  // Schedule push notification
-  private static async schedulePushNotification(
-    ctx: MutationCtx,
-    notificationId: Id<'notifications'>,
-    userId: Id<'users'>
-  ) {
-    // This would integrate with your push notification service (FCM, APNS, etc.)
-    // For now, we'll just mark it as sent
-    await ctx.db.patch(notificationId, {
-      isPushSent: true,
-    });
-  }
 
   // Verification-specific notification helpers
   public static async notifyVerificationAssigned(

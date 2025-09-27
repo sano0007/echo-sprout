@@ -2,11 +2,19 @@
 
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
+import {usePathname, useRouter} from 'next/navigation';
 import { useState } from 'react';
 
 export default function Navigation() {
+  const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const isAdminDashboard = pathname === '/admin' || pathname?.startsWith('/admin/');
+
+  if (isAdminDashboard) {
+    return null;
+  }
 
   const navigationItems = [
     {
