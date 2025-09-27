@@ -293,6 +293,7 @@ exports.default = (0, server_1.defineSchema)({
         contentType: values_1.v.union(values_1.v.literal('article'), values_1.v.literal('video'), values_1.v.literal('case_study')),
         category: values_1.v.string(),
         tags: values_1.v.array(values_1.v.string()),
+        images: values_1.v.optional(values_1.v.array(values_1.v.string())),
         authorId: values_1.v.id('users'),
         status: values_1.v.union(values_1.v.literal('draft'), values_1.v.literal('submitted'), values_1.v.literal('under_review'), values_1.v.literal('approved'), values_1.v.literal('rejected'), values_1.v.literal('published')),
         reviewedBy: values_1.v.optional(values_1.v.id('users')), // Admin who reviewed
@@ -315,6 +316,43 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_published', ['isPublished'])
         .index('by_type', ['contentType'])
         .index('by_review', ['status', 'reviewedBy']),
+    // ============= LEARNING PATHS =============
+    learningPaths: (0, server_1.defineTable)({
+        title: values_1.v.string(),
+        description: values_1.v.string(),
+        objectives: values_1.v.optional(values_1.v.array(values_1.v.string())),
+        level: values_1.v.union(values_1.v.literal('beginner'), values_1.v.literal('intermediate'), values_1.v.literal('advanced')),
+        estimatedDuration: values_1.v.number(), // in minutes
+        tags: values_1.v.array(values_1.v.string()),
+        visibility: values_1.v.union(values_1.v.literal('public'), values_1.v.literal('private'), values_1.v.literal('unlisted')),
+        coverImageUrl: values_1.v.optional(values_1.v.string()),
+        createdBy: values_1.v.id('users'),
+        status: values_1.v.union(values_1.v.literal('draft'), values_1.v.literal('published'), values_1.v.literal('archived')),
+        isPublished: values_1.v.boolean(),
+        publishedAt: values_1.v.optional(values_1.v.float64()),
+        lastUpdatedAt: values_1.v.float64(),
+        moduleCount: values_1.v.number(),
+        enrollmentCount: values_1.v.number(),
+    })
+        .index('by_creator', ['createdBy'])
+        .index('by_status', ['status'])
+        .index('by_visibility', ['visibility'])
+        .index('by_published', ['isPublished'])
+        .index('by_level', ['level']),
+    // ============= LEARNING PATH LESSONS =============
+    learningPathLessons: (0, server_1.defineTable)({
+        pathId: values_1.v.id('learningPaths'),
+        title: values_1.v.string(),
+        description: values_1.v.optional(values_1.v.string()),
+        videoUrl: values_1.v.optional(values_1.v.string()),
+        pdfUrls: values_1.v.array(values_1.v.string()),
+        order: values_1.v.number(),
+        estimatedDuration: values_1.v.optional(values_1.v.number()),
+        createdBy: values_1.v.id('users'),
+        lastUpdatedAt: values_1.v.float64(),
+    })
+        .index('by_path', ['pathId'])
+        .index('by_path_order', ['pathId', 'order']),
     // ============= FORUM SYSTEM =============
     forumTopics: (0, server_1.defineTable)({
         title: values_1.v.string(),
@@ -361,6 +399,34 @@ exports.default = (0, server_1.defineSchema)({
     })
         .index('by_topic', ['topicId'])
         .index('by_author', ['authorId']),
+    // ============= LEARN: USER PROGRESS =============
+    learningProgress: (0, server_1.defineTable)({
+        userId: values_1.v.id('users'),
+        pathId: values_1.v.id('learningPaths'),
+        lessonId: values_1.v.id('learningPathLessons'),
+        itemType: values_1.v.union(values_1.v.literal('video'), values_1.v.literal('pdf')),
+        itemIndex: values_1.v.number(),
+        completed: values_1.v.boolean(),
+        completedAt: values_1.v.optional(values_1.v.float64()),
+    })
+        .index('by_user_path', ['userId', 'pathId'])
+        .index('by_user_lesson', ['userId', 'lessonId'])
+        .index('by_user', ['userId'])
+        .index('by_unique_key', [
+        'userId',
+        'pathId',
+        'lessonId',
+        'itemType',
+        'itemIndex',
+    ]),
+    forumReplyVotes: (0, server_1.defineTable)({
+        replyId: values_1.v.id('forumReplies'),
+        userId: values_1.v.id('users'),
+        value: values_1.v.union(values_1.v.literal(1), values_1.v.literal(-1)),
+    })
+        .index('by_reply', ['replyId'])
+        .index('by_user', ['userId'])
+        .index('by_reply_user', ['replyId', 'userId']),
     // .index("by_parent", ["parentReplyId"]),
     // .index("by_accepted", ["isAcceptedAnswer"]),
     // ============= CERTIFICATES & REWARDS =============

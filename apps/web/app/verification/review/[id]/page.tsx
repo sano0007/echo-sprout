@@ -9,7 +9,9 @@ import { toast } from 'react-hot-toast';
 import PDFViewerWrapper from '../../../../components/pdf/PDFViewerWrapper';
 import CollaborativeAnnotations from '../../../../components/pdf/CollaborativeAnnotations';
 import EnhancedChecklist from '../../../../components/verification/EnhancedChecklist';
+import EnhancedCommunicationPanel from '../../../../components/communication/EnhancedCommunicationPanel';
 import { Annotation } from '@/components/pdf';
+import { useRealTimeMessaging } from '@/hooks/useRealTimeMessaging';
 import { api } from '@packages/backend';
 
 export default function ProjectReview() {
@@ -41,6 +43,58 @@ export default function ProjectReview() {
   });
   const permissions = useQuery(api.permissions.getCurrentUserPermissions);
   const currentUser = useQuery(api.users.getCurrentUser);
+
+  // Real-time messaging
+  const {
+    messages: realtimeMessages,
+    unreadCount,
+    urgentCount,
+  } = useRealTimeMessaging({
+    verificationId: verification?._id,
+    userId: currentUser?._id || '',
+    onNewMessage: (message) => {
+      console.log('New message received:', message);
+    },
+  });
+
+  // Get unique user IDs from messages for user information lookup
+  const userIds = Array.from(
+    new Set(
+      realtimeMessages?.flatMap((msg: any) => [
+        msg.senderId,
+        msg.recipientId,
+      ]) || []
+    )
+  ).filter(Boolean);
+
+  // Fetch user information for all users involved in messages
+  const messageUsers = useQuery(
+    api.users.getUsersByIds,
+    userIds.length > 0 ? { ids: userIds } : 'skip'
+  );
+
+  // Transform messages to include user information
+  const transformedMessages =
+    realtimeMessages?.map((msg: any) => {
+      const sender = messageUsers?.find(
+        (user: any) => user._id === msg.senderId
+      );
+      const recipient = messageUsers?.find(
+        (user: any) => user._id === msg.recipientId
+      );
+
+      return {
+        ...msg,
+        senderName: sender
+          ? `${sender.firstName} ${sender.lastName}`
+          : 'Unknown User',
+        senderRole: sender?.role || 'unknown',
+        recipientName: recipient
+          ? `${recipient.firstName} ${recipient.lastName}`
+          : 'Unknown User',
+      };
+    }) || [];
+
   const projectDocuments = useQuery(api.documents.getDocumentsByEntity, {
     entityId: projectId,
     entityType: 'project',
@@ -61,9 +115,6 @@ export default function ProjectReview() {
   // Mutations
   const acceptVerification = useMutation(api.verifications.acceptVerification);
   const startVerification = useMutation(api.verifications.startVerification);
-  const updateChecklist = useMutation(
-    api.verifications.updateVerificationChecklist
-  );
   const completeVerification = useMutation(
     api.verifications.completeVerification
   );
@@ -137,8 +188,8 @@ export default function ProjectReview() {
       }
 
       // Set new timeout for debounced save
-      saveTimeoutRef.current = setTimeout(() => {
-        debouncedSave(documentId, annotations);
+      saveTimeoutRef.current = setTimeout(async () => {
+        await debouncedSave(documentId, annotations);
       }, 1000); // 1 second delay
     },
     [debouncedSave]
@@ -269,87 +320,6 @@ export default function ProjectReview() {
     );
   }
 
-  // Create checklist from verification data
-  const checklist = [
-    {
-      id: 'timelineCompliance',
-      category: 'Documentation',
-      item: 'Timeline compliance verification',
-      status: verification.timelineCompliance
-        ? 'approved'
-        : verification.timelineCompliance === false
-          ? 'rejected'
-          : 'pending',
-      required: true,
-    },
-    {
-      id: 'documentationComplete',
-      category: 'Documentation',
-      item: 'Documentation completeness check',
-      status: verification.documentationComplete
-        ? 'approved'
-        : verification.documentationComplete === false
-          ? 'rejected'
-          : 'pending',
-      required: true,
-    },
-    {
-      id: 'co2CalculationAccurate',
-      category: 'Technical',
-      item: 'CO2 calculation accuracy',
-      status: verification.co2CalculationAccurate
-        ? 'approved'
-        : verification.co2CalculationAccurate === false
-          ? 'rejected'
-          : 'pending',
-      required: true,
-    },
-    {
-      id: 'environmentalImpactValid',
-      category: 'Environmental',
-      item: 'Environmental impact validation',
-      status: verification.environmentalImpactValid
-        ? 'approved'
-        : verification.environmentalImpactValid === false
-          ? 'rejected'
-          : 'pending',
-      required: true,
-    },
-    {
-      id: 'projectFeasible',
-      category: 'Technical',
-      item: 'Project feasibility assessment',
-      status: verification.projectFeasible
-        ? 'approved'
-        : verification.projectFeasible === false
-          ? 'rejected'
-          : 'pending',
-      required: true,
-    },
-    {
-      id: 'locationVerified',
-      category: 'Location',
-      item: 'Location verification',
-      status: verification.locationVerified
-        ? 'approved'
-        : verification.locationVerified === false
-          ? 'rejected'
-          : 'pending',
-      required: true,
-    },
-    {
-      id: 'sustainabilityAssessed',
-      category: 'Environmental',
-      item: 'Sustainability assessment',
-      status: verification.sustainabilityAssessed
-        ? 'approved'
-        : verification.sustainabilityAssessed === false
-          ? 'rejected'
-          : 'pending',
-      required: true,
-    },
-  ];
-
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
@@ -440,9 +410,19 @@ export default function ProjectReview() {
               </button>
               <button
                 onClick={() => setActiveSection('communication')}
-                className={`w-full text-left p-3 rounded ${activeSection === 'communication' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
+                className={`w-full text-left p-3 rounded flex items-center justify-between ${activeSection === 'communication' ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'}`}
               >
-                Communication
+                <span>Communication</span>
+                {unreadCount > 0 && (
+                  <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+                {urgentCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-1 py-1 rounded-full animate-pulse">
+                    !
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveSection('auditTrail')}
@@ -593,9 +573,9 @@ export default function ProjectReview() {
                               })()}
                               {permissions.canVerifyDocuments && (
                                 <button
-                                  onClick={(e) => {
+                                  onClick={async (e) => {
                                     e.stopPropagation();
-                                    handleDocumentVerify(
+                                    await handleDocumentVerify(
                                       doc._id,
                                       !doc.isVerified
                                     );
@@ -725,27 +705,40 @@ export default function ProjectReview() {
             </div>
           )}
 
-          {/* Communication */}
+          {/* Enhanced Communication */}
           {activeSection === 'communication' && (
-            <CommunicationPanel
+            <EnhancedCommunicationPanel
               verification={verification}
-              onSendMessage={async (
-                subject: string,
-                message: string,
-                recipientId: Id<'users'>
-              ) => {
+              currentUser={
+                currentUser
+                  ? {
+                      id: currentUser._id,
+                      name: `${currentUser.firstName} ${currentUser.lastName}`,
+                      role: currentUser.role,
+                    }
+                  : { id: '', name: '', role: '' }
+              }
+              onSendMessage={async (messageData) => {
                 try {
                   await sendMessage({
                     verificationId: verification._id,
-                    recipientId,
-                    subject,
-                    message,
-                    priority: 'normal',
+                    recipientId: messageData.recipientId as Id<'users'>,
+                    subject: messageData.subject,
+                    message: messageData.message,
+                    priority: messageData.priority,
+                    threadId: messageData.threadId,
                   });
-                  toast.success('Message sent successfully');
                 } catch (error) {
-                  toast.error('Failed to send message');
+                  throw error; // Let the component handle the error display
                 }
+              }}
+              messages={transformedMessages}
+              isLoading={!verification || !currentUser}
+              projectInfo={{
+                id: projectId,
+                title: 'Project Verification',
+                creatorId: verification?.verifierId || '',
+                creatorName: 'Project Team',
               }}
             />
           )}
@@ -755,181 +748,6 @@ export default function ProjectReview() {
             <AuditTrailPanel auditTrail={auditTrail} />
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-// Communication Panel Component
-function CommunicationPanel({
-  verification,
-  onSendMessage,
-}: {
-  verification: any;
-  onSendMessage: (
-    subject: string,
-    message: string,
-    recipientId: Id<'users'>
-  ) => Promise<void>;
-}) {
-  const [newMessage, setNewMessage] = useState('');
-  const [messageSubject, setMessageSubject] = useState('');
-  const [isComposing, setIsComposing] = useState(false);
-
-  // Get verification messages
-  const messages = useQuery(
-    api.verificationMessages.getMessagesByVerification,
-    verification?._id ? { verificationId: verification._id } : 'skip'
-  );
-
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !messageSubject.trim()) {
-      toast.error('Please enter both subject and message');
-      return;
-    }
-
-    // For now, we'll use a placeholder recipient ID
-    // In a real implementation, this would be the project creator's ID
-    const recipientId = verification.verifierId as Id<'users'>; // Placeholder
-
-    try {
-      await onSendMessage(messageSubject, newMessage, recipientId);
-      setNewMessage('');
-      setMessageSubject('');
-      setIsComposing(false);
-    } catch (error) {
-      // Error is handled in the parent component
-    }
-  };
-
-  if (!messages) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex items-center justify-center h-32">
-          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Communication</h2>
-        <button
-          onClick={() => setIsComposing(!isComposing)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {isComposing ? 'Cancel' : 'New Message'}
-        </button>
-      </div>
-
-      {/* New Message Composer */}
-      {isComposing && (
-        <div className="mb-6 p-4 border border-blue-200 rounded-lg bg-blue-50">
-          <h3 className="text-lg font-medium mb-4">Compose Message</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Subject</label>
-              <input
-                type="text"
-                value={messageSubject}
-                onChange={(e) => setMessageSubject(e.target.value)}
-                className="w-full p-2 border rounded"
-                placeholder="Message subject..."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Message</label>
-              <textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                className="w-full h-24 p-3 border rounded"
-                placeholder="Type your message here..."
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim() || !messageSubject.trim()}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
-              >
-                Send Message
-              </button>
-              <button
-                onClick={() => setIsComposing(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Message Thread */}
-      <div className="space-y-4 max-h-96 overflow-y-auto">
-        {messages.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-4.126-.98L3 20l1.98-5.874A8.955 8.955 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"
-                />
-              </svg>
-            </div>
-            <p>No messages yet. Start a conversation!</p>
-          </div>
-        ) : (
-          messages
-            .sort(
-              (a: any, b: any) =>
-                (a._creationTime || 0) - (b._creationTime || 0)
-            )
-            .map((message: any) => (
-              <div
-                key={message._id}
-                className={`p-4 rounded-lg ${
-                  message.senderId === verification.verifierId
-                    ? 'bg-blue-50 ml-8'
-                    : 'bg-gray-50 mr-8'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h4 className="font-medium text-sm">{message.subject}</h4>
-                    <p className="text-xs text-gray-500">
-                      {message.senderId === verification.verifierId
-                        ? 'You'
-                        : 'Project Creator'}{' '}
-                      • {new Date(message._creationTime).toLocaleDateString()}{' '}
-                      {new Date(message._creationTime).toLocaleTimeString()}
-                    </p>
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded ${
-                      message.priority === 'urgent'
-                        ? 'bg-red-100 text-red-800'
-                        : message.priority === 'high'
-                          ? 'bg-orange-100 text-orange-800'
-                          : 'bg-blue-100 text-blue-800'
-                    }`}
-                  >
-                    {message.priority}
-                  </span>
-                </div>
-                <p className="text-gray-700">{message.message}</p>
-              </div>
-            ))
-        )}
       </div>
     </div>
   );

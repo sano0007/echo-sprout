@@ -13,9 +13,8 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-
-import type * as forum from "../forum.js";
 import type * as documents from "../documents.js";
+import type * as forum from "../forum.js";
 import type * as http from "../http.js";
 import type * as learn from "../learn.js";
 import type * as marketplace from "../marketplace.js";
@@ -37,9 +36,8 @@ import type * as workflow from "../workflow.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-
-  forum: typeof forum;
   documents: typeof documents;
+  forum: typeof forum;
   http: typeof http;
   learn: typeof learn;
   marketplace: typeof marketplace;
