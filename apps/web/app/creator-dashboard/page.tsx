@@ -187,7 +187,7 @@ export default function CreatorDashboard() {
     );
   }
 
-  if (currentUser.role !== 'credit_buyer' && currentUser.role !== 'admin') {
+  if (currentUser.role !== 'project_creator' && currentUser.role !== 'admin') {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-center h-64">
