@@ -60,7 +60,7 @@ export default function BuyerDashboard() {
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-2xl font-bold text-blue-600">
-            ${totalImpact.totalSpent}
+            Rs. {totalImpact.totalSpent.toFixed(2)}
           </p>
           <p className="text-sm text-gray-600">Total Invested</p>
         </div>
@@ -233,13 +233,13 @@ export default function BuyerDashboard() {
                           Price per Credit
                         </p>
                         <p className="text-lg font-semibold">
-                          ${purchase.price}
+                          Rs. {purchase.price.toFixed(2)}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Total Cost</p>
                         <p className="text-lg font-semibold">
-                          ${purchase.credits * purchase.price}
+                          Rs. {(purchase.credits * purchase.price).toFixed(2)}
                         </p>
                       </div>
                       <div>

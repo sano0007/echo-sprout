@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.28.1",
     "@echo-sprout/types": "*",
+    "@packages/backend": "^1.0.0",
     "@repo/ui": "*",
     "@types/react-pdf": "^7.0.0",
     "@types/uuid": "^11.0.0",
@@ -25,6 +26,7 @@
     "pdfmake": "^0.2.20",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.6.0",
     "react-paginate": "^8.3.0",
     "react-pdf": "^10.1.0",
     "recharts": "^3.2.1",
