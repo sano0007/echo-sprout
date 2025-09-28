@@ -926,7 +926,7 @@ exports.default = (0, server_1.defineSchema)({
         challenges: values_1.v.optional(values_1.v.string()),
         submittedAt: values_1.v.optional(values_1.v.float64()),
         reportingDate: values_1.v.float64(),
-        status: values_1.v.union(values_1.v.literal('pending_review'), values_1.v.literal('approved'), values_1.v.literal('rejected'), values_1.v.literal('needs_revision')),
+        status: values_1.v.optional(values_1.v.union(values_1.v.literal('pending_review'), values_1.v.literal('approved'), values_1.v.literal('rejected'), values_1.v.literal('needs_revision'))),
         isVerified: values_1.v.boolean(),
         verifiedBy: values_1.v.optional(values_1.v.id('users')),
         verifiedAt: values_1.v.optional(values_1.v.float64()),

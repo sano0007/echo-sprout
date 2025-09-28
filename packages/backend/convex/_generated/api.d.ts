@@ -19,6 +19,7 @@ import type * as alert_management from "../alert_management.js";
 import type * as analytics_dashboard_reports from "../analytics_dashboard_reports.js";
 import type * as analytics_engine from "../analytics_engine.js";
 import type * as automated_monitoring from "../automated_monitoring.js";
+import type * as buyer_dashboard from "../buyer_dashboard.js";
 import type * as buyer_impact_reports from "../buyer_impact_reports.js";
 import type * as credit_batch_management from "../credit_batch_management.js";
 import type * as credit_calculation from "../credit_calculation.js";
@@ -56,6 +57,7 @@ import type * as validation_examples from "../validation_examples.js";
 import type * as verificationMessages from "../verificationMessages.js";
 import type * as verifications from "../verifications.js";
 import type * as verifier_assignment from "../verifier_assignment.js";
+import type * as viva_demo_seed from "../viva_demo_seed.js";
 import type * as workflow from "../workflow.js";
 
 /**
@@ -73,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   analytics_dashboard_reports: typeof analytics_dashboard_reports;
   analytics_engine: typeof analytics_engine;
   automated_monitoring: typeof automated_monitoring;
+  buyer_dashboard: typeof buyer_dashboard;
   buyer_impact_reports: typeof buyer_impact_reports;
   credit_batch_management: typeof credit_batch_management;
   credit_calculation: typeof credit_calculation;
@@ -110,6 +113,7 @@ declare const fullApi: ApiFromModules<{
   verificationMessages: typeof verificationMessages;
   verifications: typeof verifications;
   verifier_assignment: typeof verifier_assignment;
+  viva_demo_seed: typeof viva_demo_seed;
   workflow: typeof workflow;
 }>;
 export declare const api: FilterApi<

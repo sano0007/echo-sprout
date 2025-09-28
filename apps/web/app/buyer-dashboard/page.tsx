@@ -1,52 +1,71 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from 'convex/react';
+import { useUser } from '@clerk/nextjs';
+import { api } from '@packages/backend/convex/_generated/api';
+
 
 import ProjectTracking from '../../components/buyer/ProjectTracking';
 
 export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const { user } = useUser();
 
-  const purchaseHistory = [
-    {
-      id: 1,
-      project: 'Amazon Rainforest Conservation',
-      credits: 50,
-      price: 15,
-      purchaseDate: '2024-01-10',
-      certificateId: 'ARF-2024-001',
-      status: 'Active',
-      impact: { co2Offset: 75, treesPlanted: 125 },
-    },
-    {
-      id: 2,
-      project: 'Solar Farm Initiative',
-      credits: 25,
-      price: 12,
-      purchaseDate: '2024-01-05',
-      certificateId: 'SFI-2024-002',
-      status: 'Active',
-      impact: { co2Offset: 37.5, solarGenerated: 15000 },
-    },
-    {
-      id: 3,
-      project: 'Wind Power Project',
-      credits: 30,
-      price: 18,
-      purchaseDate: '2023-12-28',
-      certificateId: 'WPP-2023-156',
-      status: 'Retired',
-      impact: { co2Offset: 54, windGenerated: 12000 },
-    },
-  ];
+  // Fetch real data from the database
+  const purchaseData = useQuery(
+    api.buyer_dashboard.getBuyerPurchaseHistory,
+    user?.id ? { buyerClerkId: user.id } : 'skip'
+  );
 
-  const totalImpact = {
-    totalCredits: 105,
-    totalSpent: 1040,
-    totalCO2Offset: 166.5,
-    equivalentTrees: 125,
-    equivalentCarsOff: 36,
+  const certificates = useQuery(
+    api.buyer_dashboard.getBuyerCertificates,
+    user?.id ? { buyerClerkId: user.id } : 'skip'
+  );
+
+  const dashboardSummary = useQuery(
+    api.buyer_dashboard.getBuyerDashboardSummary,
+    user?.id ? { buyerClerkId: user.id } : 'skip'
+  );
+
+  // Use real data or show loading
+  const purchaseHistory = purchaseData?.purchases || [];
+  const totalImpact = purchaseData?.totalImpact || {
+    totalCredits: 0,
+    totalSpent: 0,
+    totalCO2Offset: 0,
+    equivalentTrees: 0,
+    equivalentCarsOff: 0,
   };
+
+  // Show loading state
+  if (purchaseData === undefined || certificates === undefined || dashboardSummary === undefined) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="animate-pulse">
+          <h1 className="text-3xl font-bold mb-8">Buyer Dashboard</h1>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-gray-200 h-24 rounded-lg"></div>
+            ))}
+          </div>
+          <div className="bg-gray-200 h-96 rounded-lg"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no user
+  if (!user) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center py-12">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please Sign In</h1>
+          <p className="text-gray-600">You need to sign in to view your buyer dashboard.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6">

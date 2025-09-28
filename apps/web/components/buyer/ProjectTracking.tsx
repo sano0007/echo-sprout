@@ -9,9 +9,10 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useQuery } from 'convex/react';
+import { useUser } from '@clerk/nextjs';
+import { api } from '@packages/backend/convex/_generated/api';
 
-import { useProjectDetails, useProjectFilters,useProjectTracking } from '../../hooks/useProjectTracking';
-import type { ProjectProgress } from '../../store/tracking-store';
 
 interface ProjectTrackingProps {
   className?: string;
@@ -19,27 +20,20 @@ interface ProjectTrackingProps {
 
 export default function ProjectTracking({ className = '' }: ProjectTrackingProps) {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [filters, setFilters] = useState({
+    status: 'all',
+    sortBy: 'recent'
+  });
+  const { user } = useUser();
 
-  // Use the new tracking hooks
-  const {
-    projects: purchasedProjects,
-    loading,
-    errors,
-    refreshAllData,
-    isAuthenticated,
-  } = useProjectTracking();
+  // Fetch buyer's project tracking data
+  const purchasedProjects = useQuery(
+    api.buyer_dashboard.getBuyerProjectTracking,
+    user?.id ? { buyerClerkId: user.id } : 'skip'
+  );
 
-  const {
-    filters,
-    setFilters,
-    availableFilters,
-  } = useProjectFilters();
-
-  const {
-    project: selectedProjectData,
-    loading: selectedProjectLoading,
-    error: selectedProjectError,
-  } = useProjectDetails(selectedProject || undefined);
+  const loading = purchasedProjects === undefined;
+  const isAuthenticated = !!user?.id;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -98,32 +92,52 @@ export default function ProjectTracking({ className = '' }: ProjectTrackingProps
     });
   };
 
-  // Projects are already filtered and sorted by the store
-  const sortedProjects = purchasedProjects;
+  // Filter and sort projects
+  const getFilteredProjects = () => {
+    if (!purchasedProjects) return [];
 
-  if (loading.projects) {
+    let filtered = [...purchasedProjects];
+
+    // Filter by status
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(project => {
+        if (filters.status === 'active') return project.currentStatus.overallProgress < 100;
+        if (filters.status === 'completed') return project.currentStatus.overallProgress >= 100;
+        if (filters.status === 'issues') return project.alerts.some(alert => !alert.isResolved);
+        return true;
+      });
+    }
+
+    // Sort projects
+    if (filters.sortBy === 'progress') {
+      filtered.sort((a, b) => b.currentStatus.overallProgress - a.currentStatus.overallProgress);
+    } else if (filters.sortBy === 'investment') {
+      filtered.sort((a, b) => b.purchaseInfo.totalInvestment - a.purchaseInfo.totalInvestment);
+    } else if (filters.sortBy === 'alerts') {
+      filtered.sort((a, b) => b.alerts.filter(alert => !alert.isResolved).length - a.alerts.filter(alert => !alert.isResolved).length);
+    } else if (filters.sortBy === 'carbon_impact') {
+      filtered.sort((a, b) => b.impact.carbonOffset - a.impact.carbonOffset);
+    } else {
+      // Default: recent updates
+      filtered.sort((a, b) => {
+        const aLatest = a.recentUpdates[0]?.date || 0;
+        const bLatest = b.recentUpdates[0]?.date || 0;
+        return bLatest - aLatest;
+      });
+    }
+
+    return filtered;
+  };
+
+  const sortedProjects = getFilteredProjects();
+
+  if (loading) {
     return (
       <div className={`flex items-center justify-center h-64 ${className}`}>
         <div className="flex items-center space-x-2">
           <RotateCcw className="h-5 w-5 animate-spin text-blue-600" />
           <span className="text-gray-600">Loading your projects...</span>
         </div>
-      </div>
-    );
-  }
-
-  if (errors.projects) {
-    return (
-      <div className={`text-center py-12 ${className}`}>
-        <AlertTriangle className="h-16 w-16 text-red-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-800 mb-2">Error Loading Projects</h3>
-        <p className="text-gray-600 mb-4">{errors.projects}</p>
-        <button
-          onClick={refreshAllData}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Try Again
-        </button>
       </div>
     );
   }
@@ -140,7 +154,7 @@ export default function ProjectTracking({ className = '' }: ProjectTrackingProps
     );
   }
 
-  if (purchasedProjects.length === 0) {
+  if (purchasedProjects && purchasedProjects.length === 0) {
     return (
       <div className={`text-center py-12 ${className}`}>
         <BarChart3 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -164,40 +178,32 @@ export default function ProjectTracking({ className = '' }: ProjectTrackingProps
         <div className="flex items-center space-x-3">
           <select
             value={filters.status}
-            onChange={(e) => setFilters({ status: e.target.value as any })}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           >
-            {availableFilters.statuses.map(status => (
-              <option key={status} value={status}>
-                {status === 'all' ? 'All Projects' :
-                 status === 'active' ? 'Active' :
-                 status === 'completed' ? 'Completed' :
-                 status === 'issues' ? 'With Issues' : status}
-              </option>
-            ))}
+            <option value="all">All Projects</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="issues">With Issues</option>
           </select>
 
           <select
             value={filters.sortBy}
-            onChange={(e) => setFilters({ sortBy: e.target.value as any })}
+            onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           >
-            {availableFilters.sortOptions.map(sort => (
-              <option key={sort} value={sort}>
-                {sort === 'recent' ? 'Recent Updates' :
-                 sort === 'progress' ? 'Progress' :
-                 sort === 'alerts' ? 'Alert Count' :
-                 sort === 'investment' ? 'Investment' :
-                 sort === 'carbon_impact' ? 'Carbon Impact' : sort}
-              </option>
-            ))}
+            <option value="recent">Recent Updates</option>
+            <option value="progress">Progress</option>
+            <option value="alerts">Alert Count</option>
+            <option value="investment">Investment</option>
+            <option value="carbon_impact">Carbon Impact</option>
           </select>
         </div>
       </div>
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {sortedProjects?.map((project: ProjectProgress) => (
+        {sortedProjects?.map((project: any) => (
           <div
             key={project.projectId}
             className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
@@ -313,7 +319,9 @@ export default function ProjectTracking({ className = '' }: ProjectTrackingProps
       </div>
 
       {/* Detailed Project Modal/Panel */}
-      {selectedProject && selectedProjectData && (
+      {selectedProject && (() => {
+        const selectedProjectData = sortedProjects?.find(p => p.projectId === selectedProject);
+        return selectedProjectData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl max-h-[90vh] w-full overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b">
@@ -488,7 +496,8 @@ export default function ProjectTracking({ className = '' }: ProjectTrackingProps
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

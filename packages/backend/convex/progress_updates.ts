@@ -171,6 +171,7 @@ export const submitProgressUpdateWithFiles = mutation({
       progressPercentage: args.progressPercentage,
       photoStorageIds: args.photoStorageIds,
       photoUrls, // Store URLs for quick access
+      photos: [], // Ensure old photos field is present but empty
       location: args.location,
       measurementData: args.measurementData,
       nextSteps: args.nextSteps,

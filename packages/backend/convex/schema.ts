@@ -1224,12 +1224,12 @@ export default defineSchema({
     challenges: v.optional(v.string()),
     submittedAt: v.optional(v.float64()),
     reportingDate: v.float64(),
-    status: v.union(
+    status: v.optional(v.union(
       v.literal('pending_review'),
       v.literal('approved'),
       v.literal('rejected'),
       v.literal('needs_revision')
-    ),
+    )),
     isVerified: v.boolean(),
     verifiedBy: v.optional(v.id('users')),
     verifiedAt: v.optional(v.float64()),

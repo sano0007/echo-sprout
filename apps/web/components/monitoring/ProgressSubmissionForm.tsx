@@ -8,6 +8,7 @@ import {
 import { useRef,useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
+import { validateForm, progressUpdateSchema, FormValidator } from '../../utils/validation';
 
 interface ProgressSubmissionFormProps {
   projectId: string;
@@ -52,6 +53,8 @@ export default function ProgressSubmissionForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
   const [uploadedFileIds, setUploadedFileIds] = useState<string[]>([]);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validator] = useState(() => new FormValidator(progressUpdateSchema));
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Convex mutations
@@ -94,10 +97,17 @@ export default function ProgressSubmissionForm({
   };
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
+    const newFormData = {
+      ...formData,
       [field]: value,
-    }));
+    };
+
+    setFormData(newFormData);
+
+    // Real-time validation
+    validator.setFieldValue(field, value);
+    const validation = validateForm(newFormData, progressUpdateSchema);
+    setValidationErrors(validation.errors);
   };
 
   const handleMeasurementChange = (field: string, value: number) => {
@@ -264,8 +274,13 @@ export default function ProgressSubmissionForm({
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 placeholder="e.g., Monthly Progress Report - January 2024"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  validationErrors.title ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
               />
+              {validationErrors.title && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.title}</p>
+              )}
             </div>
 
             <div>
@@ -306,8 +321,13 @@ export default function ProgressSubmissionForm({
                 }
                 placeholder="Describe the progress made, activities completed, and any important updates..."
                 rows={4}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  validationErrors.description ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
               />
+              {validationErrors.description && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.description}</p>
+              )}
             </div>
           </div>
         )}

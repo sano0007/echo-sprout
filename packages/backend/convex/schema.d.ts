@@ -1674,6 +1674,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             lat: number;
             long: number;
         } | undefined;
+        status?: "rejected" | "approved" | "pending_review" | "needs_revision" | undefined;
         verificationNotes?: string | undefined;
         photos?: {
             cloudinary_public_id: string;
@@ -1707,7 +1708,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isVerified: boolean;
         title: string;
         description: string;
-        status: "rejected" | "approved" | "pending_review" | "needs_revision";
         progressPercentage: number;
         projectId: import("convex/values").GenericId<"projects">;
         updateType: "completion" | "milestone" | "measurement" | "photo" | "issue";
@@ -1768,7 +1768,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         challenges: import("convex/values").VString<string | undefined, "optional">;
         submittedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         reportingDate: import("convex/values").VFloat64<number, "required">;
-        status: import("convex/values").VUnion<"rejected" | "approved" | "pending_review" | "needs_revision", [import("convex/values").VLiteral<"pending_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"needs_revision", "required">], "required", never>;
+        status: import("convex/values").VUnion<"rejected" | "approved" | "pending_review" | "needs_revision" | undefined, [import("convex/values").VLiteral<"pending_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"needs_revision", "required">], "optional", never>;
         isVerified: import("convex/values").VBoolean<boolean, "required">;
         verifiedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
         verifiedAt: import("convex/values").VFloat64<number | undefined, "optional">;
