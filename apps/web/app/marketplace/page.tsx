@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
 import Image from 'next/image';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactPaginate from 'react-paginate';
 import { useQuery } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
@@ -198,9 +198,9 @@ export default function Marketplace() {
             className="p-3 border rounded bg-white"
           >
             <option value="">Price Range</option>
-            <option value="0-10">$0 - $10</option>
-            <option value="10-20">$10 - $20</option>
-            <option value="20+">$20+</option>
+            <option value="0-10">Rs. 0 - Rs. 10</option>
+            <option value="10-20">Rs. 10 - Rs. 20</option>
+            <option value="20+">Rs. 20+</option>
           </select>
 
           <select
@@ -311,7 +311,7 @@ export default function Marketplace() {
                 <div className="flex justify-between items-center mb-4">
                   <div>
                     <p className="text-2xl font-bold text-green-600">
-                      ${project.price}
+                      Rs. {project.price.toFixed(2)}
                     </p>
                     <p className="text-sm text-gray-600">per credit</p>
                   </div>

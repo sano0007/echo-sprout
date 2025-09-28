@@ -11,6 +11,8 @@ import ProjectTypeChart, {
 import MonthlyProgressChart from '../../components/charts/MonthlyProgressChart';
 import { useCertificate } from '@/hooks/useCertificate';
 
+import ProjectTracking from '../../components/buyer/ProjectTracking';
+
 export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const { user, isSignedIn, isLoaded } = useUser();
@@ -530,97 +532,81 @@ export default function BuyerDashboard() {
                 Project Progress Tracking
               </h3>
 
-              {purchaseHistory.filter((p) => p.status === 'Active').length ===
-              0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500 text-lg">
-                    No active projects to track
-                  </p>
-                  <p className="text-gray-400">
-                    Purchase carbon credits to start tracking project progress.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {purchaseHistory
-                    .filter((p) => p.status === 'Active')
-                    .map((purchase) => (
-                      <div key={purchase.id} className="border rounded-lg p-6">
-                        <h4 className="text-lg font-semibold mb-4">
-                          {purchase.project}
-                        </h4>
+              <div className="space-y-6">
+                {purchaseHistory
+                  .filter((p) => p.status === 'Active')
+                  .map((purchase) => (
+                    <div key={purchase.id} className="border rounded-lg p-6">
+                      <h4 className="text-lg font-semibold mb-4">
+                        {purchase.project}
+                      </h4>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          <div>
-                            <h5 className="font-medium mb-3">
-                              Progress Overview
-                            </h5>
-                            <div className="space-y-3">
-                              <div>
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-sm">
-                                    Overall Progress
-                                  </span>
-                                  <span className="text-sm font-medium">
-                                    75%
-                                  </span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                  <div
-                                    className="bg-blue-600 h-2 rounded-full"
-                                    style={{ width: '75%' }}
-                                  ></div>
-                                </div>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                          <h5 className="font-medium mb-3">
+                            Progress Overview
+                          </h5>
+                          <div className="space-y-3">
+                            <div>
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm">
+                                  Overall Progress
+                                </span>
+                                <span className="text-sm font-medium">75%</span>
                               </div>
-
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <p className="text-gray-600">Phase</p>
-                                  <p className="font-medium">Implementation</p>
-                                </div>
-                                <div>
-                                  <p className="text-gray-600">
-                                    Next Milestone
-                                  </p>
-                                  <p className="font-medium">Q2 2024</p>
-                                </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-blue-600 h-2 rounded-full"
+                                  style={{ width: '75%' }}
+                                ></div>
                               </div>
                             </div>
-                          </div>
 
-                          <div>
-                            <h5 className="font-medium mb-3">Recent Updates</h5>
-                            <div className="space-y-2 text-sm">
-                              <div className="bg-green-50 p-2 rounded">
-                                <p className="font-medium">Jan 15, 2024</p>
-                                <p>Completed reforestation of 250 hectares</p>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <p className="text-gray-600">Phase</p>
+                                <p className="font-medium">Implementation</p>
                               </div>
-                              <div className="bg-blue-50 p-2 rounded">
-                                <p className="font-medium">Jan 10, 2024</p>
-                                <p>
-                                  Monthly environmental monitoring report
-                                  submitted
-                                </p>
-                              </div>
-                              <div className="bg-yellow-50 p-2 rounded">
-                                <p className="font-medium">Jan 5, 2024</p>
-                                <p>
-                                  Phase 2 milestone achieved ahead of schedule
-                                </p>
+                              <div>
+                                <p className="text-gray-600">Next Milestone</p>
+                                <p className="font-medium">Q2 2024</p>
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        <div className="mt-4 pt-4 border-t">
-                          <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm">
-                            View Full Project Details
-                          </button>
+                        <div>
+                          <h5 className="font-medium mb-3">Recent Updates</h5>
+                          <div className="space-y-2 text-sm">
+                            <div className="bg-green-50 p-2 rounded">
+                              <p className="font-medium">Jan 15, 2024</p>
+                              <p>Completed reforestation of 250 hectares</p>
+                            </div>
+                            <div className="bg-blue-50 p-2 rounded">
+                              <p className="font-medium">Jan 10, 2024</p>
+                              <p>
+                                Monthly environmental monitoring report
+                                submitted
+                              </p>
+                            </div>
+                            <div className="bg-yellow-50 p-2 rounded">
+                              <p className="font-medium">Jan 5, 2024</p>
+                              <p>
+                                Phase 2 milestone achieved ahead of schedule
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    ))}
-                </div>
-              )}
+
+                      <div className="mt-4 pt-4 border-t">
+                        <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                          View Full Project Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           )}
         </div>

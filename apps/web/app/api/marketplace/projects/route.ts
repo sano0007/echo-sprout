@@ -1,40 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@packages/backend';
 import { ConvexHttpClient } from 'convex/browser';
-import { api } from '@packages/backend/convex/_generated/api';
+import { NextRequest, NextResponse } from 'next/server';
 
-const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    // Extract query parameters
-    const priceRange = searchParams.get('priceRange') || undefined;
-    const location = searchParams.get('location') || undefined;
-    const projectType = searchParams.get('projectType') || undefined;
-    const sortBy = searchParams.get('sortBy') || undefined;
-    const searchQuery = searchParams.get('searchQuery') || undefined;
-    const page = searchParams.get('page')
-      ? parseInt(searchParams.get('page')!)
-      : undefined;
-    const limit = searchParams.get('limit')
-      ? parseInt(searchParams.get('limit')!)
-      : undefined;
+    const filters = {
+      priceRange: searchParams.get('priceRange') || undefined,
+      location: searchParams.get('location') || undefined,
+      projectType: searchParams.get('projectType') || undefined,
+      sortBy: searchParams.get('sortBy') || 'newest',
+      searchQuery: searchParams.get('searchQuery') || undefined,
+      page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
+      limit: searchParams.get('limit')
+        ? parseInt(searchParams.get('limit')!)
+        : 6,
+    };
 
-    // Call the Convex query
-    const result = await client.query(api.marketplace.getMarketplaceProjects, {
-      priceRange,
-      location,
-      projectType,
-      sortBy,
-      searchQuery,
-      page,
-      limit,
-    });
+    const result = await convex.query(
+      api.marketplace.getMarketplaceProjects,
+      filters
+    );
 
     return NextResponse.json({
       success: true,
       data: result.data,
+      count: result.data.length,
       totalCount: result.totalCount,
       page: result.page,
       limit: result.limit,
@@ -48,7 +42,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch projects',
+        error: 'Failed to fetch marketplace projects',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
