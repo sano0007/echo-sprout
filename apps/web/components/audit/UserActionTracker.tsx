@@ -388,17 +388,22 @@ export function UserActionTracker({
       for (const entry of list.getEntries()) {
         if (entry.entryType === 'navigation') {
           const navEntry = entry as PerformanceNavigationTiming;
+          const navigationStart = navEntry.fetchStart || 0; // Use fetchStart as fallback for navigationStart
+          const loadTime = navEntry.loadEventEnd - navigationStart;
+          const domContentLoaded =
+            navEntry.domContentLoadedEventEnd - navigationStart;
+          const responseTime = navEntry.responseEnd - navEntry.requestStart;
+
           const auditEntry = createAuditEntry(
             'Page Load Performance',
-            `Page loaded in ${Math.round(navEntry.loadEventEnd - navEntry.navigationStart)}ms`,
+            `Page loaded in ${Math.round(loadTime)}ms`,
             'system_event',
             'performance',
             'low',
             {
-              loadTime: navEntry.loadEventEnd - navEntry.navigationStart,
-              domContentLoaded:
-                navEntry.domContentLoadedEventEnd - navEntry.navigationStart,
-              responseTime: navEntry.responseEnd - navEntry.requestStart,
+              loadTime,
+              domContentLoaded,
+              responseTime,
             }
           );
 

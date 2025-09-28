@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
   AlertTriangle,
@@ -15,6 +14,7 @@ import {
   TrendingUp,
   User,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
 import type { TimelineEntry } from './types';
 

@@ -1,11 +1,11 @@
 'use client';
 
+import { api } from '@packages/backend';
+import { useQuery } from 'convex/react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
-import { useQuery } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Recharts = require('recharts') as typeof import('recharts');
 
@@ -80,7 +80,11 @@ export default function LearnAnalyticsPage() {
       const imgData = canvas.toDataURL('image/png');
 
       // Create a landscape A4 PDF in points
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'pt',
+        format: 'a4',
+      });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
@@ -90,7 +94,16 @@ export default function LearnAnalyticsPage() {
       // Add first page image
       let heightLeft = imgHeight;
       let position = 0;
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      pdf.addImage(
+        imgData,
+        'PNG',
+        0,
+        position,
+        imgWidth,
+        imgHeight,
+        undefined,
+        'FAST'
+      );
       heightLeft -= pageHeight;
 
       // Use a small overlap between pages to reduce text being cut between pages
@@ -99,8 +112,17 @@ export default function LearnAnalyticsPage() {
       while (heightLeft > 0) {
         pdf.addPage();
         position = heightLeft - imgHeight + overlap; // shift up with small overlap
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= (pageHeight - overlap);
+        pdf.addImage(
+          imgData,
+          'PNG',
+          0,
+          position,
+          imgWidth,
+          imgHeight,
+          undefined,
+          'FAST'
+        );
+        heightLeft -= pageHeight - overlap;
       }
 
       pdf.save('learn-analytics-report.pdf');

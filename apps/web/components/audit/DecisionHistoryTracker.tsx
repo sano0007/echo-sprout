@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
   AlertTriangle,
@@ -17,6 +16,7 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
 import type { DecisionHistory } from './types';
 
@@ -80,10 +80,11 @@ export function DecisionHistoryTracker({
           case 'timestamp':
             comparison = a.timestamp - b.timestamp;
             break;
-          case 'impact':
+          case 'impact': {
             const impactOrder = { low: 1, medium: 2, high: 3, critical: 4 };
             comparison = impactOrder[a.impact] - impactOrder[b.impact];
             break;
+          }
           case 'score':
             comparison = (a.score || 0) - (b.score || 0);
             break;

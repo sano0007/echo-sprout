@@ -1,5 +1,7 @@
 'use client';
 
+import { api } from '@packages/backend';
+import type { Id } from '@packages/backend/convex/_generated/dataModel';
 import { useMutation, useQuery } from 'convex/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
@@ -9,7 +11,6 @@ import {
   ProjectCommunicationDashboard,
 } from '../../components/communication';
 import { useRealTimeMessaging } from '../../hooks/useRealTimeMessaging';
-import { api } from '@packages/backend';
 
 export default function CommunicationsPage() {
   const router = useRouter();
@@ -25,13 +26,74 @@ export default function CommunicationsPage() {
   );
 
   // Real-time messaging
-  const { notifications, unreadCount, urgentCount, isConnected } =
-    useRealTimeMessaging({
-      userId: currentUser?._id || '',
-      onNewMessage: (message) => {
-        console.log('New message in communications dashboard:', message);
-      },
-    });
+  const {
+    notifications: rawNotifications,
+    unreadCount,
+    urgentCount,
+    isConnected,
+  } = useRealTimeMessaging({
+    userId: currentUser?._id || '',
+    onNewMessage: (message) => {
+      console.log('New message in communications dashboard:', message);
+    },
+  });
+
+  // Transform notifications to match MessageNotificationSystem interface
+  const notifications = (rawNotifications || []).map((notification: any) => ({
+    id: notification._id,
+    type:
+      notification.type === 'message_received'
+        ? ('message' as const)
+        : notification.priority === 'urgent'
+          ? ('urgent' as const)
+          : ('reply' as const),
+    title: notification.title,
+    content: notification.message,
+    projectId: notification.relatedEntityId || 'unknown',
+    projectTitle: notification.title.includes('project')
+      ? notification.message.match(/project "([^"]+)"/)?.[1] ||
+        'Unknown Project'
+      : 'Communication',
+    senderId: notification.recipientId, // This might need adjustment based on actual data structure
+    senderName: notification.message.match(/from ([^:]+):/)?.[1] || 'System',
+    timestamp: notification._creationTime || Date.now(),
+    isRead: notification.isRead || false,
+    priority: notification.priority || 'normal',
+  }));
+
+  // Transform project conversations to match ProjectConversation interface
+  const transformedProjectConversations = (projectConversations || []).map(
+    (conversation: any) => ({
+      projectId: conversation.projectId,
+      projectTitle: conversation.projectTitle,
+      verifierId: conversation.verificationId, // Map verificationId to verifierId
+      verifierName: 'Verifier', // Default name since not provided by backend
+      lastMessage: conversation.lastMessage
+        ? {
+            _id: conversation.lastMessage._id,
+            subject: conversation.lastMessage.subject,
+            message: conversation.lastMessage.message,
+            senderId: conversation.lastMessage.senderId,
+            senderName: conversation.lastMessage.senderName || 'Unknown',
+            _creationTime: conversation.lastMessage._creationTime,
+            isRead: conversation.lastMessage.isRead,
+            priority: conversation.lastMessage.priority || 'normal',
+          }
+        : {
+            _id: '',
+            subject: 'No messages',
+            message: 'No messages yet',
+            senderId: '',
+            senderName: '',
+            _creationTime: Date.now(),
+            isRead: true,
+            priority: 'normal' as const,
+          },
+      unreadCount: conversation.unreadCount || 0,
+      totalMessages: conversation.messageCount || 0, // Map messageCount to totalMessages
+      verificationStatus: 'in_progress' as const, // Default status since not provided by backend
+    })
+  );
 
   // Mutations
   const markNotificationAsRead = useMutation(
@@ -60,7 +122,7 @@ export default function CommunicationsPage() {
 
       try {
         await markProjectMessagesAsRead({
-          projectId,
+          projectId: projectId as Id<'projects'>,
           userId: currentUser._id,
         });
       } catch (error) {
@@ -74,7 +136,9 @@ export default function CommunicationsPage() {
   const handleMarkNotificationAsRead = useCallback(
     async (notificationId: string) => {
       try {
-        await markNotificationAsRead({ notificationId });
+        await markNotificationAsRead({
+          notificationId: notificationId as Id<'notifications'>,
+        });
       } catch (error) {
         console.error('Error marking notification as read:', error);
         throw error;
@@ -87,7 +151,7 @@ export default function CommunicationsPage() {
     if (!currentUser?._id) return;
 
     try {
-      await markAllNotificationsAsRead({ userId: currentUser._id });
+      await markAllNotificationsAsRead({});
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       throw error;
@@ -97,7 +161,9 @@ export default function CommunicationsPage() {
   const handleClearNotification = useCallback(
     async (notificationId: string) => {
       try {
-        await clearNotification({ notificationId });
+        await clearNotification({
+          notificationId: notificationId as Id<'notifications'>,
+        });
       } catch (error) {
         console.error('Error clearing notification:', error);
         throw error;
@@ -216,7 +282,7 @@ export default function CommunicationsPage() {
               name: `${currentUser.firstName} ${currentUser.lastName}`,
               role: currentUser.role,
             }}
-            conversations={projectConversations || []}
+            conversations={transformedProjectConversations}
             onSelectProject={handleSelectProject}
             onMarkAsRead={handleMarkProjectAsRead}
             isLoading={!projectConversations}

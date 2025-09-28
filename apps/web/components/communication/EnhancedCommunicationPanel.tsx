@@ -271,9 +271,9 @@ export default function EnhancedCommunicationPanel({
   const getMessageStatusIcon = (message: Message) => {
     if (message.senderId === currentUser.id) {
       return message.isRead ? (
-        <CheckCheck className="w-4 h-4 text-blue-500" title="Read" />
+        <CheckCheck className="w-4 h-4 text-blue-500" />
       ) : (
-        <Check className="w-4 h-4 text-gray-400" title="Sent" />
+        <Check className="w-4 h-4 text-gray-400" />
       );
     }
     return null;
@@ -487,7 +487,7 @@ export default function EnhancedCommunicationPanel({
                   const isOwn = message.senderId === currentUser.id;
                   const showAvatar =
                     index === 0 ||
-                    messageThreads[activeThread][index - 1].senderId !==
+                    messageThreads[activeThread]?.[index - 1]?.senderId !==
                       message.senderId;
 
                   return (

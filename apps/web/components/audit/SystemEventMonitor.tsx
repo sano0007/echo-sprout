@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
   Activity,
@@ -24,6 +23,7 @@ import {
   XCircle,
   Zap,
 } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import type { SystemEvent } from './types';
 

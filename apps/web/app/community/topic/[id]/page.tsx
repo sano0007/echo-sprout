@@ -1,10 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-import { useMutation, useQuery } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
-import { useParams } from 'next/navigation';
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
+import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function TopicDetailPage() {
@@ -55,9 +55,10 @@ export default function TopicDetailPage() {
         viewed.push(sid);
         if (typeof window !== 'undefined')
           sessionStorage.setItem(key, JSON.stringify(viewed));
-        // @ts-ignore Convex validates id at runtime
         await incrementViews({ id: idParam });
-      } catch {}
+      } catch {
+        // Silently ignore view increment errors
+      }
     })();
   }, [idParam]);
 
@@ -163,7 +164,9 @@ export default function TopicDetailPage() {
                     onClick={async () => {
                       try {
                         await upvoteReply({ id: r.id });
-                      } catch {}
+                      } catch {
+                        // Silently ignore upvote errors
+                      }
                     }}
                   >
                     ⬆ Upvote
@@ -178,7 +181,9 @@ export default function TopicDetailPage() {
                     onClick={async () => {
                       try {
                         await downvoteReply({ id: r.id });
-                      } catch {}
+                      } catch {
+                        // Silently ignore downvote errors
+                      }
                     }}
                   >
                     ⬇ Downvote

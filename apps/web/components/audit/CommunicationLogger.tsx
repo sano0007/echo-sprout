@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
   AlertTriangle,
@@ -23,8 +22,9 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
-import type { CommunicationLog } from './types';
+import type { CommunicationLog, GroupedCommunication } from './types';
 
 interface CommunicationLoggerProps {
   communications: CommunicationLog[];
@@ -112,13 +112,18 @@ export function CommunicationLogger({
     selectedUsers,
   ]);
 
-  const groupedCommunications = useMemo(() => {
+  const groupedCommunications = useMemo((): GroupedCommunication[] => {
     if (!groupByThread) {
       return [
         {
           threadId: 'all',
           communications: filteredCommunications,
           subject: 'All Communications',
+          messageCount: filteredCommunications.length,
+          unreadCount: filteredCommunications.filter((c) => c.status !== 'read')
+            .length,
+          lastMessage:
+            filteredCommunications[filteredCommunications.length - 1],
         },
       ];
     }

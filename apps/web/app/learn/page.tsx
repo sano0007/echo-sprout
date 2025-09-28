@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState, useMemo } from 'react';
-import type React from 'react';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
 import { useUser } from '@clerk/nextjs';
+import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import type React from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function LearnHub() {
   const router = useRouter();
@@ -136,7 +136,9 @@ export default function LearnHub() {
     enteredRef.current = true;
     try {
       recordLearnEnter({} as any).catch(() => {});
-    } catch {}
+    } catch {
+      // Silently ignore learn entry recording errors
+    }
   }, [recordLearnEnter]);
 
   const openModal = () => {

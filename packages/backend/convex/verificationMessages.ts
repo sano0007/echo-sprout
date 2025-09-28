@@ -404,3 +404,181 @@ export const searchMessages = query({
     };
   },
 });
+
+// Get user project conversations
+export const getUserProjectConversations = query({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('Unauthorized');
+    }
+
+    // Check permissions
+    if (currentUser.role !== 'admin' && userId !== currentUser._id) {
+      throw new Error('Unauthorized: You can only view your own conversations');
+    }
+
+    // Get all verifications where user is involved
+    const verifications = await ctx.db
+      .query('verifications')
+      .filter((q) => q.eq(q.field('verifierId'), userId))
+      .collect();
+
+    // Get project conversations for each verification
+    const conversations = [];
+    for (const verification of verifications) {
+      const project = await ctx.db.get(verification.projectId);
+      if (!project) continue;
+
+      const messages = await ctx.db
+        .query('verificationMessages')
+        .withIndex('by_verification', (q) =>
+          q.eq('verificationId', verification._id)
+        )
+        .order('desc')
+        .collect();
+
+      const unreadCount = messages.filter(
+        (m) => m.recipientId === userId && !m.isRead
+      ).length;
+
+      conversations.push({
+        projectId: project._id,
+        projectTitle: project.title,
+        verificationId: verification._id,
+        messageCount: messages.length,
+        unreadCount,
+        lastMessage: messages[0] || null,
+        lastActivity: messages[0]?._creationTime || verification._creationTime,
+      });
+    }
+
+    return conversations.sort((a, b) => b.lastActivity - a.lastActivity);
+  },
+});
+
+// Mark notification as read
+export const markNotificationAsRead = mutation({
+  args: { notificationId: v.id('notifications') },
+  handler: async (ctx, { notificationId }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('Unauthorized');
+    }
+
+    const notification = await ctx.db.get(notificationId);
+    if (!notification) {
+      throw new Error('Notification not found');
+    }
+
+    if (notification.recipientId !== currentUser._id) {
+      throw new Error(
+        'Unauthorized: You can only mark your own notifications as read'
+      );
+    }
+
+    return await ctx.db.patch(notificationId, { isRead: true });
+  },
+});
+
+// Mark all notifications as read
+export const markAllNotificationsAsRead = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('Unauthorized');
+    }
+
+    const notifications = await ctx.db
+      .query('notifications')
+      .withIndex('by_recipient', (q) => q.eq('recipientId', currentUser._id))
+      .filter((q) => q.eq(q.field('isRead'), false))
+      .collect();
+
+    const updates = notifications.map((notification) =>
+      ctx.db.patch(notification._id, { isRead: true })
+    );
+
+    await Promise.all(updates);
+    return { markedCount: notifications.length };
+  },
+});
+
+// Clear notification
+export const clearNotification = mutation({
+  args: { notificationId: v.id('notifications') },
+  handler: async (ctx, { notificationId }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('Unauthorized');
+    }
+
+    const notification = await ctx.db.get(notificationId);
+    if (!notification) {
+      throw new Error('Notification not found');
+    }
+
+    if (notification.recipientId !== currentUser._id) {
+      throw new Error(
+        'Unauthorized: You can only clear your own notifications'
+      );
+    }
+
+    return await ctx.db.delete(notificationId);
+  },
+});
+
+// Mark project messages as read
+export const markProjectMessagesAsRead = mutation({
+  args: {
+    projectId: v.id('projects'),
+    userId: v.id('users'),
+  },
+  handler: async (ctx, { projectId, userId }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('Unauthorized');
+    }
+
+    // Check permissions
+    if (currentUser.role !== 'admin' && userId !== currentUser._id) {
+      throw new Error(
+        'Unauthorized: You can only mark your own messages as read'
+      );
+    }
+
+    // Get all verifications for this project
+    const verifications = await ctx.db
+      .query('verifications')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+
+    // Mark all messages in these verifications as read for this user
+    const updates = [];
+    for (const verification of verifications) {
+      const messages = await ctx.db
+        .query('verificationMessages')
+        .withIndex('by_verification', (q) =>
+          q.eq('verificationId', verification._id)
+        )
+        .filter((q) =>
+          q.and(
+            q.eq(q.field('recipientId'), userId),
+            q.eq(q.field('isRead'), false)
+          )
+        )
+        .collect();
+
+      updates.push(
+        ...messages.map((message) =>
+          ctx.db.patch(message._id, { isRead: true })
+        )
+      );
+    }
+
+    await Promise.all(updates);
+    return { markedCount: updates.length };
+  },
+});

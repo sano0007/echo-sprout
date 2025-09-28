@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import { useParams } from 'next/navigation';
+import { useMemo, useState } from 'react';
 
 export default function GuideSlidesPage() {
   const params = useParams();

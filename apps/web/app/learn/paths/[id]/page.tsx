@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function LearningPathDetailsPage() {
   const params = useParams();
@@ -55,7 +55,9 @@ export default function LearningPathDetailsPage() {
       }
       setVideoChecked(v);
       setPdfChecked(p);
-    } catch {}
+    } catch {
+      // Silently ignore progress loading errors
+    }
   }, [progress]);
 
   const recordedRef = useRef(false);
@@ -71,11 +73,15 @@ export default function LearningPathDetailsPage() {
           .finally(() => {
             try {
               router.replace(`/learn/paths/${id}`);
-            } catch {}
+            } catch {
+              // Silently ignore navigation errors
+            }
           });
         recordStart({ pathId: String(id) } as any).catch(() => {});
       }
-    } catch {}
+    } catch {
+      // Silently ignore entry recording errors
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -526,7 +532,9 @@ export default function LearningPathDetailsPage() {
                                 itemIndex: 0,
                                 completed: next,
                               } as any);
-                            } catch {}
+                            } catch {
+                              // Silently ignore video progress update errors
+                            }
                           }}
                         />
                         <svg
@@ -622,7 +630,9 @@ export default function LearningPathDetailsPage() {
                                           itemIndex: i,
                                           completed: next,
                                         } as any);
-                                      } catch {}
+                                      } catch {
+                                        // Silently ignore PDF progress update errors
+                                      }
                                     }}
                                   />
                                   <svg

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { useMutation } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
 import { useUser } from '@clerk/nextjs';
+import { api } from '@packages/backend';
+import { useMutation } from 'convex/react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function CreateGuidePage() {
   const { isSignedIn } = useUser();

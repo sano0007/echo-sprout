@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import {
   AlertTriangle,
@@ -16,6 +15,7 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
 import type {
   AuditCategory,

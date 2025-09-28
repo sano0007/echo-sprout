@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 type Slide = {
   image: string;
@@ -31,6 +31,20 @@ export default function WalkthroughPage() {
   const next = () => setIndex((i) => (i === slides.length - 1 ? 0 : i + 1));
 
   const current = slides[index];
+
+  if (!current) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Project Walkthrough</h1>
+          <Link href="/learn" className="text-blue-600 hover:underline">
+            Back to Learn
+          </Link>
+        </div>
+        <div className="text-center text-gray-500">No slides available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-6">

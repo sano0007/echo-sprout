@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
-import Link from 'next/link';
+import { api } from '@packages/backend';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 type Post = {
   id: string | number;
@@ -95,7 +95,7 @@ export default function MyTopicsPage() {
   }, [queryMine]);
 
   const openEdit = (post: Post) => {
-    setEditingId(post.id);
+    setEditingId(typeof post.id === 'string' ? parseInt(post.id, 10) : post.id);
     setTitle(post.title);
     setCategory(post.category);
     setTags(post.tags?.join(', ') || '');

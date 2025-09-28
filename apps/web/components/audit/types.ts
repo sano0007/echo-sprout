@@ -167,6 +167,15 @@ export interface CommunicationLog {
   metadata?: any;
 }
 
+export interface GroupedCommunication {
+  threadId: string;
+  communications: CommunicationLog[];
+  subject: string;
+  messageCount: number;
+  unreadCount: number;
+  lastMessage: CommunicationLog | undefined;
+}
+
 export interface SystemEvent {
   id: string;
   timestamp: number;

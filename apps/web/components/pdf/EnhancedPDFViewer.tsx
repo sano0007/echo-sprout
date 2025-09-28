@@ -8,8 +8,8 @@ import {
   Search,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
 import { toast } from 'react-hot-toast';
+import { Document, Page, pdfjs } from 'react-pdf';
 import { v4 as uuidv4 } from 'uuid';
 
 import AnnotationToolbar from './AnnotationToolbar';

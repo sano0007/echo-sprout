@@ -255,7 +255,7 @@ export const getTopContributors = query({
     const topics = await ctx.db.query('forumTopics').collect();
     const counts = new Map<string, number>();
     for (const t of topics) {
-      const key = t.authorId.id as unknown as string; // stable string id
+      const key = t.authorId as unknown as string; // stable string id
       counts.set(key, (counts.get(key) || 0) + 1);
     }
 
@@ -271,7 +271,7 @@ export const getTopContributors = query({
       // Convex allows using the original id object, but we only have the string here.
       // We can find by scanning since we have topics collected.
       const anyTopic = topics.find(
-        (t) => (t.authorId.id as unknown as string) === authorKey
+        (t) => (t.authorId as unknown as string) === authorKey
       );
       if (!anyTopic) {
         results.push({ name: 'Unknown', posts: postCount });
@@ -293,10 +293,10 @@ export const getActiveUsersCount = query({
     const replies = await ctx.db.query('forumReplies').collect();
     const unique = new Set<string>();
     for (const t of topics) {
-      unique.add((t.authorId.id as unknown as string) || String(t.authorId));
+      unique.add((t.authorId as unknown as string) || String(t.authorId));
     }
     for (const r of replies) {
-      unique.add((r.authorId.id as unknown as string) || String(r.authorId));
+      unique.add((r.authorId as unknown as string) || String(r.authorId));
     }
     return unique.size;
   },
