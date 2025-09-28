@@ -391,6 +391,133 @@ a {
   }
 }
 
+/* Force solid white backgrounds for all Radix UI components */
+@layer components {
+  /* Dialog/Modal components */
+  [data-radix-dialog-content],
+  [role="dialog"],
+  .dialog-content,
+  [data-state="open"][role="dialog"] {
+    @apply bg-white !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Popover components */
+  [data-radix-popover-content],
+  [role="dialog"][data-radix-popover-content],
+  .popover-content,
+  [data-state="open"][data-radix-popover-content] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Dropdown Menu components */
+  [data-radix-dropdown-menu-content],
+  [role="menu"],
+  .dropdown-content,
+  [data-state="open"][role="menu"] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Select components */
+  [data-radix-select-content],
+  [role="listbox"],
+  .select-content,
+  [data-state="open"][role="listbox"] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Tooltip components */
+  [data-radix-tooltip-content],
+  [role="tooltip"],
+  .tooltip-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Context Menu components */
+  [data-radix-context-menu-content],
+  [role="menu"][data-radix-context-menu-content],
+  .context-menu-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Menubar components */
+  [data-radix-menubar-content],
+  .menubar-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Navigation Menu components */
+  [data-radix-navigation-menu-content],
+  .navigation-menu-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Hover Card components */
+  [data-radix-hover-card-content],
+  .hover-card-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Sheet/Drawer components */
+  [data-radix-dialog-content][data-sheet],
+  .sheet-content {
+    @apply bg-white !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Command components */
+  [cmdk-root],
+  .command-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Calendar components */
+  [data-radix-calendar-content],
+  .calendar-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Toast components */
+  [data-radix-toast-root],
+  .toast-content,
+  [data-state="open"][data-radix-toast-root] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Alert Dialog components */
+  [data-radix-alert-dialog-content],
+  [role="alertdialog"],
+  .alert-dialog-content {
+    @apply bg-white !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+}
+
 
 
 input{

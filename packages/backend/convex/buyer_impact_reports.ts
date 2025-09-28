@@ -602,18 +602,22 @@ export const getBuyerImpactTrends = query({
 async function verifyBuyerAccess(
   ctx: any,
   buyerId: string,
-  userId: string
+  clerkId: string
 ): Promise<boolean> {
-  // User can access their own reports
-  if (buyerId === userId) return true;
+  // Get the user record for the given buyerId
+  const buyerUser = await ctx.db.get(buyerId);
+  if (!buyerUser) return false;
 
-  // Check if user has admin/verifier role
-  const user = await ctx.db
+  // User can access their own reports if their Clerk ID matches
+  if (buyerUser.clerkId === clerkId) return true;
+
+  // Check if the authenticated user has admin/verifier role
+  const authUser = await ctx.db
     .query('users')
-    .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', userId))
+    .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', clerkId))
     .first();
 
-  return user?.role === 'admin' || user?.role === 'verifier';
+  return authUser?.role === 'admin' || authUser?.role === 'verifier';
 }
 
 async function gatherBuyerReportData(ctx: any, args: any) {

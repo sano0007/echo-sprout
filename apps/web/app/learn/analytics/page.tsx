@@ -1,8 +1,20 @@
-import LearnAnalytics from '@/components/learn/LearnAnalytics';
+'use client';
+
+import Link from 'next/link';
+import { useMemo, useRef, useState } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '@packages/backend';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Recharts = require('recharts') as typeof import('recharts');
 
 export default function LearnAnalyticsPage() {
-  return <LearnAnalytics />;
-}
+  const learningPaths = useQuery(api.learn.listLearningPaths);
+  const views = useQuery(api.learn.totalPathsEntries);
+  const engagement = useQuery(api.learn.engagementPercent);
+  const totalUsers = useQuery((api as any).users.totalUsers, {});
+  const reportTemplateRef = useRef<string | HTMLElement>('');
 
   const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const defaultFromIso = useMemo(() => {
@@ -84,17 +96,11 @@ export default function LearnAnalyticsPage() {
       if (blocks.length === 0) {
         // Fallback to whole-page capture (should be rare now)
         const canvas = await html2canvas(root, {
-          scale: 3,
           useCORS: true,
           logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: root.scrollWidth,
-          windowHeight: root.scrollHeight,
+          background: '#ffffff',
           width: root.scrollWidth,
           height: root.scrollHeight,
-          foreignObjectRendering: true,
-          scrollX: 0,
-          scrollY: -window.scrollY,
         });
 
         const imgData = canvas.toDataURL('image/png');
@@ -154,19 +160,11 @@ export default function LearnAnalyticsPage() {
           const h = el.scrollHeight || el.clientHeight;
 
           const canvas = await html2canvas(el, {
-            scale: 3,
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff',
-            windowWidth: w,
-            windowHeight: h,
+            background: '#ffffff',
             width: w,
             height: h,
-            // For header, use foreignObject to render text precisely; default for others
-            foreignObjectRendering: isHeaderBlock ? true : false,
-            letterRendering: true,
-            scrollX: 0,
-            scrollY: 0,
           });
 
           // Restore padding

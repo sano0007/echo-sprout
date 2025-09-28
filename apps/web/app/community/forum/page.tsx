@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 
 // Define the shape of a forum post including optional fields used conditionally
 type Post = {
@@ -234,7 +234,6 @@ export default function CommunityForum() {
     // Remove in backend if this is a Convex id
     if (typeof id === 'string') {
       try {
-        // @ts-ignore Convex runtime validates id
         await deleteTopicMutation({ id });
       } catch (e) {
         // Optional: show toast; for now ignore
@@ -281,8 +280,7 @@ export default function CommunityForum() {
         // Backend update via Convex
         if (typeof editingPostId === 'string') {
           try {
-            // @ts-ignore Convex runtime validates id
-            await updateTopicMutation({
+                await updateTopicMutation({
               id: editingPostId,
               title: title.trim(),
               category,

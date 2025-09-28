@@ -80,7 +80,7 @@ interface ProjectData {
 }
 
 interface ProjectManagementProps {
-  projects: ProjectData[];
+  projects?: ProjectData[];
   onViewProject?: (projectId: string) => void;
   onEditProject?: (projectId: string) => void;
   onDeleteProject?: (projectId: string) => void;
@@ -116,7 +116,7 @@ export default function ProjectManagement({
 
   // Mock projects data if not provided
   const mockProjects: ProjectData[] =
-    projects.length > 0
+    projects && projects.length > 0
       ? projects
       : [
           {

@@ -115,11 +115,11 @@ export default defineSchema({
     assignedVerifierId: v.optional(v.id('users')),
     verificationStartedAt: v.optional(v.float64()),
     verificationCompletedAt: v.optional(v.float64()),
-    qualityScore: v.optional(v.number()), // 1-10 scale
-    // Document requirements tracking
+    qualityScore: v.optional(v.number()),
     requiredDocuments: v.array(v.string()), // todo: enum of document types
     submittedDocuments: v.array(v.string()), // todo: enum of document types
     isDocumentationComplete: v.boolean(),
+    images: v.optional(v.array(v.string())), // Array of image URLs
     // Progress tracking
     progressPercentage: v.optional(v.number()), // 0-100
     lastProgressUpdate: v.optional(v.number()), // timestamp
@@ -157,19 +157,14 @@ export default defineSchema({
     .index('by_reserved_by', ['reservedBy']),
 
   transactions: defineTable({
-    buyerId: v.id('users'),
-    projectId: v.id('projects'),
+    // todo: replace when auth is set up
+    // buyerId: v.id('users'),
+    buyerId: v.string(), // Clerk user ID of the buyer
+    projectId: v.optional(v.id('projects')), // Link to specific project for project-specific purchases
     creditAmount: v.number(),
     unitPrice: v.number(),
     totalAmount: v.number(),
-    platformFee: v.number(), // platform fee
-    netAmount: v.number(), // Amount after platform fee
-    // paymentMethod: v.union(
-    //     v.literal("stripe"),
-    //     v.literal("paypal"),
-    //     v.literal("bank_transfer"),
-    //     v.literal("crypto"),
-    // ),
+    // platformFee: v.number(), // consider having a platform fee in the future
     paymentStatus: v.union(
       v.literal('pending'),
       v.literal('processing'),
@@ -181,8 +176,15 @@ export default defineSchema({
     stripePaymentIntentId: v.optional(v.string()),
     stripeSessionId: v.optional(v.string()),
     certificateUrl: v.optional(v.string()),
-    impactDescription: v.string(),
     transactionReference: v.string(), // Unique transaction reference
+    refundDetails: v.optional(
+      v.object({
+        refundReason: v.string(),
+        refundAmount: v.number(),
+        adminNotes: v.string(),
+        processedAt: v.number()
+      })
+    ),
   })
     .index('by_buyer', ['buyerId'])
     .index('by_project', ['projectId'])
@@ -699,7 +701,7 @@ export default defineSchema({
     totalPurchased: v.number(),
     totalAllocated: v.number(),
     totalSpent: v.number(),
-    lifetimeImpact: v.number(),
+    lifetimeImpact: v.number(), // Total CO2 offset by user's purchases
     lastTransactionAt: v.optional(v.float64()),
   }).index('by_user', ['userId']),
 
@@ -1181,4 +1183,15 @@ export default defineSchema({
     .index('by_user', ['generatedBy'])
     .index('by_date', ['generatedAt'])
     .index('by_public', ['isPublic']),
+
+
+// ============= FILE STORAGE =============
+  files: defineTable({
+    storageId: v.id('_storage'),
+    filename: v.string(),
+    contentType: v.string(),
+    uploadedAt: v.number(),
+  })
+    .index('by_filename', ['filename'])
+    .index('by_upload_date', ['uploadedAt'])
 });

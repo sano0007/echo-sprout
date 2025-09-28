@@ -6,6 +6,8 @@ import React from 'react';
 import './globals.css';
 
 import Footer from '../components/Footer';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navigation from '../components/Navigation';
 import ConvexClientProvider from '../providers/ConvexProviderWithClerk';
 import { Toaster } from '../components/ui/toaster';
@@ -39,7 +41,18 @@ export default function RootLayout({
               <Navigation />
               <main className="flex-1">{children}</main>
               <Footer />
-              <Toaster />
+              <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
             </div>
           </ConvexClientProvider>
         </ClerkProvider>

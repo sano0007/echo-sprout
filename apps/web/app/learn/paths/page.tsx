@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 import { useUser } from '@clerk/nextjs';
 import { useToast } from '@/hooks/use-toast';
 

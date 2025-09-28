@@ -2,13 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 function renderFormattedContent(raw: string) {
   const lines = raw.split(/\r?\n/);
-  const nodes: JSX.Element[] = [];
+  const nodes: React.JSX.Element[] = [];
   let para: string[] = [];
   let list: string[] = [];
   let inCode = false;
