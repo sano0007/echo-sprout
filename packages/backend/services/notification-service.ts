@@ -229,7 +229,6 @@ export class NotificationService {
     };
   }
 
-
   // Verification-specific notification helpers
   public static async notifyVerificationAssigned(
     ctx: MutationCtx,
