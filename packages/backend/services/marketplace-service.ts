@@ -115,12 +115,22 @@ export class MarketplaceService {
     projects: MarketplaceProject[],
     priceRange: string
   ): MarketplaceProject[] {
-    const [min, max] = priceRange.split('-').map(Number);
+    // Handle different price range formats
+    if (priceRange.includes('+')) {
+      // Handle "20+" format
+      const min = parseFloat(priceRange.replace('+', ''));
+      if (!isNaN(min)) {
+        return projects.filter((p) => p.price >= min);
+      }
+    } else if (priceRange.includes('-')) {
+      // Handle "0-10" or "10-20" format
+      const [minStr, maxStr] = priceRange.split('-');
+      const min = parseFloat(minStr);
+      const max = parseFloat(maxStr);
 
-    if (min && max) {
-      return projects.filter((p) => p.price >= min && p.price <= max);
-    } else if (min) {
-      return projects.filter((p) => p.price >= min);
+      if (!isNaN(min) && !isNaN(max)) {
+        return projects.filter((p) => p.price >= min && p.price <= max);
+      }
     }
 
     return projects;
