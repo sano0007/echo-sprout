@@ -24,7 +24,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { SystemOverviewMetrics } from '@/types/dashboard.types';
-import LearnAnalytics from '../../../learn/analytics/page';
+import LearnAnalytics from '@/components/learn/LearnAnalytics';
 
 // Mock user data for the admin
 const mockAdminUser = {
@@ -200,7 +200,7 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="analytics" className="space-y-6">
           <div className="p-6 pt-0">
-            <LearnAnalytics />
+            <LearnAnalytics embed />
           </div>
         </TabsContent>
 
