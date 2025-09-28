@@ -41,6 +41,7 @@ export default function RootLayout({
               <Navigation />
               <main className="flex-1">{children}</main>
               <Footer />
+              <Toaster />
               <ToastContainer
                 position="top-right"
                 autoClose={5000}

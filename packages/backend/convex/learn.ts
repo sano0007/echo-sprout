@@ -921,11 +921,10 @@ export const pathsByViews = query({
     const result: { id: string; title: string; views: number }[] = [];
     for (const [pid, views] of counts) {
       const normalized = await ctx.db.normalizeId('learningPaths', pid);
-      let title = 'Unknown';
-      if (normalized) {
-        const doc = await ctx.db.get(normalized);
-        if (doc) title = doc.title;
-      }
+      if (!normalized) continue; // Skip deleted/non-existent paths
+      const doc = await ctx.db.get(normalized);
+      if (!doc) continue; // Skip if the path no longer exists
+      const title = doc.title;
       result.push({ id: pid, title, views });
     }
 
@@ -1022,12 +1021,11 @@ export const pathsByEngagement = query({
       const pct = denom === 0 ? 0 : Math.round((progressedCount / denom) * 100);
 
       // Fetch title
-      let title = 'Unknown';
       const normalized = await ctx.db.normalizeId('learningPaths', pid);
-      if (normalized) {
-        const doc = await ctx.db.get(normalized);
-        if (doc) title = doc.title;
-      }
+      if (!normalized) continue; // Skip deleted/non-existent paths
+      const doc = await ctx.db.get(normalized);
+      if (!doc) continue; // Skip if the path no longer exists
+      const title = doc.title;
 
       result.push({
         id: pid,
