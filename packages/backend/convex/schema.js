@@ -892,4 +892,38 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_user', ['generatedBy'])
         .index('by_date', ['generatedAt'])
         .index('by_public', ['isPublic']),
+    // ============= PDF REPORT GENERATION =============
+    pdf_reports: (0, server_1.defineTable)({
+        templateType: values_1.v.union(values_1.v.literal('analytics'), values_1.v.literal('monitoring')),
+        reportType: values_1.v.string(), // 'comprehensive', 'platform', 'environmental', 'financial', 'system', 'project', 'alerts', 'performance'
+        title: values_1.v.string(),
+        status: values_1.v.union(values_1.v.literal('pending'), values_1.v.literal('processing'), values_1.v.literal('completed'), values_1.v.literal('failed')),
+        progress: values_1.v.number(), // 0-100
+        requestedBy: values_1.v.string(), // Clerk user ID
+        requestedAt: values_1.v.number(),
+        completedAt: values_1.v.optional(values_1.v.number()),
+        errorMessage: values_1.v.optional(values_1.v.string()),
+        fileUrl: values_1.v.optional(values_1.v.string()),
+        fileSize: values_1.v.optional(values_1.v.number()),
+        expiresAt: values_1.v.number(), // Auto-cleanup after expiration
+        timeframe: values_1.v.object({
+            start: values_1.v.number(),
+            end: values_1.v.number(),
+            period: values_1.v.string(),
+        }),
+        filters: values_1.v.optional(values_1.v.any()),
+        userInfo: values_1.v.object({
+            userId: values_1.v.string(),
+            name: values_1.v.string(),
+            email: values_1.v.string(),
+            role: values_1.v.string(),
+        }),
+    })
+        .index('by_user', ['requestedBy'])
+        .index('by_status', ['status'])
+        .index('by_template_type', ['templateType'])
+        .index('by_report_type', ['reportType'])
+        .index('by_requested_at', ['requestedAt'])
+        .index('by_expires_at', ['expiresAt'])
+        .index('by_user_status', ['requestedBy', 'status']),
 });

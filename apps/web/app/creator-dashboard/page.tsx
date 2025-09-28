@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import {
@@ -27,6 +27,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ProgressSubmissionForm from "@/components/monitoring/ProgressSubmissionForm";
+import { formatUSDToLKR } from "@/lib/currency-utils";
+import { LKRDisplay } from "@/components/ui/lkr-display";
 
 export default function CreatorDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -46,16 +48,16 @@ export default function CreatorDashboard() {
   // Calculate dynamic stats from real data
   const creatorStats = {
     totalProjects: userProjects?.length || 0,
-    activeProjects: userProjects?.filter(p => p.status === 'active')?.length || 0,
-    completedProjects: userProjects?.filter(p => p.status === 'completed')?.length || 0,
-    totalCreditsGenerated: userProjects?.reduce((sum, p) => sum + (p.totalCarbonCredits || 0), 0) || 0,
-    totalRevenue: userProjects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
-    pendingReports: userProjects?.filter(p => p.status === 'active')?.length || 0,
-    upcomingMilestones: (userProjects?.filter(p => p.status === 'active')?.length || 0) * 2
+    activeProjects: userProjects?.filter((p: any) => p.status === 'active')?.length || 0,
+    completedProjects: userProjects?.filter((p: any) => p.status === 'completed')?.length || 0,
+    totalCreditsGenerated: userProjects?.reduce((sum: any, p: any) => sum + (p.totalCarbonCredits || 0), 0) || 0,
+    totalRevenue: userProjects?.reduce((sum: any, p: any) => sum + (p.budget || 0), 0) || 0,
+    pendingReports: userProjects?.filter((p: any) => p.status === 'active')?.length || 0,
+    upcomingMilestones: (userProjects?.filter((p: any) => p.status === 'active')?.length || 0) * 2
   };
 
   // Use real projects data from backend
-  const projects = userProjects?.map(project => ({
+  const projects = userProjects?.map((project: any) => ({
     ...project,
     id: project._id,
     type: project.projectType,
@@ -78,7 +80,7 @@ export default function CreatorDashboard() {
   })) || [];
 
   // Generate pending tasks based on active projects
-  const pendingTasks = userProjects?.filter(p => p.status === 'active')?.map((project, index) => ({
+  const pendingTasks = userProjects?.filter((p: any) => p.status === 'active')?.map((project: any, index: any) => ({
     id: `task-${index}`,
     task: 'Submit Monthly Progress Report',
     project: project.title,
@@ -88,7 +90,7 @@ export default function CreatorDashboard() {
   })) || [];
 
   // Generate recent activity based on projects
-  const recentActivity = userProjects?.slice(0, 4)?.map((project, index) => ({
+  const recentActivity = userProjects?.slice(0, 4)?.map((project: any, index: any) => ({
     id: `activity-${index}`,
     action: index % 2 === 0 ? 'Progress report submitted' : 'Verification approved',
     project: project.title,
@@ -176,6 +178,7 @@ export default function CreatorDashboard() {
     setShowProgressModal(true);
   };
 
+
   // Loading states
   if (!currentUser) {
     return (
@@ -204,10 +207,12 @@ export default function CreatorDashboard() {
           <h1 className="text-3xl font-bold">Project Creator Dashboard</h1>
           <p className="text-gray-600">Manage your carbon credit projects and track performance</p>
         </div>
-        <Button className="bg-green-600 hover:bg-green-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Project
-        </Button>
+        <div className="flex items-center gap-4">
+          <Button className="bg-green-600 hover:bg-green-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Project
+          </Button>
+        </div>
       </div>
 
       {/* Stats Overview */}
@@ -265,7 +270,11 @@ export default function CreatorDashboard() {
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-green-600" />
               <div className="ml-4">
-                <p className="text-2xl font-bold text-gray-900">₹{creatorStats.totalRevenue.toLocaleString()}</p>
+                <LKRDisplay
+                  usdAmount={creatorStats.totalRevenue}
+                  size="lg"
+                  className="text-gray-900"
+                />
                 <p className="text-sm text-gray-600">Total Revenue</p>
               </div>
             </div>
@@ -318,7 +327,7 @@ export default function CreatorDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {projects.filter(p => p.status === 'active').map((project) => (
+                  {projects.filter((p: any) => p.status === 'active').map((project: any) => (
                     <div key={project.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -353,7 +362,11 @@ export default function CreatorDashboard() {
                           </span>
                           <span className="flex items-center gap-1">
                             <DollarSign className="w-4 h-4" />
-                            ₹{project.revenue.toLocaleString()}
+                            <LKRDisplay
+                              usdAmount={project.revenue}
+                              size="sm"
+                              className=""
+                            />
                           </span>
                         </div>
                         <div className="flex gap-2">
@@ -454,7 +467,7 @@ export default function CreatorDashboard() {
                     <div className="text-gray-600">No projects found. Create your first project to get started!</div>
                   </div>
                 ) : (
-                  projects.map((project) => (
+                  projects.map((project: any) => (
                     <Card key={project.id} className="border">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
@@ -478,7 +491,11 @@ export default function CreatorDashboard() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Revenue</p>
-                          <p className="text-lg font-semibold text-green-600">₹{project.revenue.toLocaleString()}</p>
+                          <LKRDisplay
+                            usdAmount={project.revenue}
+                            size="md"
+                            className="text-green-600"
+                          />
                         </div>
                       </div>
 
@@ -543,12 +560,12 @@ export default function CreatorDashboard() {
                       <div className="text-center py-4">
                         <div className="text-gray-600">Loading projects...</div>
                       </div>
-                    ) : projects.filter(p => p.status === 'active').length === 0 ? (
+                    ) : projects.filter((p: any) => p.status === 'active').length === 0 ? (
                       <div className="text-center py-4">
                         <div className="text-gray-600">No active projects to submit updates for.</div>
                       </div>
                     ) : (
-                      projects.filter(p => p.status === 'active').map((project) => (
+                      projects.filter((p: any) => p.status === 'active').map((project: any) => (
                       <div key={project.id} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -803,7 +820,7 @@ export default function CreatorDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {projects.map((project) => (
+                  {projects.map((project: any) => (
                     <div key={project.id} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-lg">{getProjectTypeIcon(project.type)}</span>
@@ -816,7 +833,11 @@ export default function CreatorDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium">₹{project.revenue.toLocaleString()}</p>
+                        <LKRDisplay
+                          usdAmount={project.revenue}
+                          size="sm"
+                          className="text-sm font-medium"
+                        />
                         <p className="text-xs text-gray-500">{project.creditsGenerated} credits</p>
                       </div>
                     </div>

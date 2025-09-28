@@ -1181,4 +1181,44 @@ export default defineSchema({
     .index('by_user', ['generatedBy'])
     .index('by_date', ['generatedAt'])
     .index('by_public', ['isPublic']),
+
+  // ============= PDF REPORT GENERATION =============
+  pdf_reports: defineTable({
+    templateType: v.union(v.literal('analytics'), v.literal('monitoring')),
+    reportType: v.string(), // 'comprehensive', 'platform', 'environmental', 'financial', 'system', 'project', 'alerts', 'performance'
+    title: v.string(),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('processing'),
+      v.literal('completed'),
+      v.literal('failed')
+    ),
+    progress: v.number(), // 0-100
+    requestedBy: v.string(), // Clerk user ID
+    requestedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+    fileUrl: v.optional(v.string()),
+    fileSize: v.optional(v.number()),
+    expiresAt: v.number(), // Auto-cleanup after expiration
+    timeframe: v.object({
+      start: v.number(),
+      end: v.number(),
+      period: v.string(),
+    }),
+    filters: v.optional(v.any()),
+    userInfo: v.object({
+      userId: v.string(),
+      name: v.string(),
+      email: v.string(),
+      role: v.string(),
+    }),
+  })
+    .index('by_user', ['requestedBy'])
+    .index('by_status', ['status'])
+    .index('by_template_type', ['templateType'])
+    .index('by_report_type', ['reportType'])
+    .index('by_requested_at', ['requestedAt'])
+    .index('by_expires_at', ['expiresAt'])
+    .index('by_user_status', ['requestedBy', 'status']),
 });

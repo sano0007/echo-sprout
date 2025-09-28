@@ -15,6 +15,8 @@ import {
   Users,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAnalyticsPDFReports } from '@/hooks/usePDFReports';
+import { PDFReportGenerator } from '@/components/pdf-reports/PDFReportGenerator';
 
 interface AnalyticsMetric {
   id: string;
@@ -51,6 +53,7 @@ interface AnalyticsDashboardProps {
   onExportReport?: (type: string, timeframe: string) => void;
   onDrillDown?: (metric: string, filters: any) => void;
   onRefreshData?: () => void;
+  showPDFGenerator?: boolean;
 }
 
 export default function AnalyticsDashboard({
@@ -58,6 +61,7 @@ export default function AnalyticsDashboard({
   onExportReport,
   onDrillDown,
   onRefreshData,
+  showPDFGenerator = true,
 }: AnalyticsDashboardProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState<
     '7d' | '30d' | '90d' | '1y'
@@ -67,6 +71,9 @@ export default function AnalyticsDashboard({
   >('all');
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [showPDFReports, setShowPDFReports] = useState(false);
+
+  const { generateAnalyticsReport, reports, hasProcessingReports } = useAnalyticsPDFReports();
 
   // Mock analytics data - in real implementation, this would come from props or API calls
   const [analyticsMetrics] = useState<AnalyticsMetric[]>([
@@ -365,6 +372,49 @@ export default function AnalyticsDashboard({
     }
   };
 
+  // Handle PDF generation
+  const handleGeneratePDF = async (reportType: 'comprehensive' | 'platform' | 'environmental' | 'financial') => {
+    try {
+      const startDate = new Date();
+      const endDate = new Date();
+
+      // Calculate date range based on selected timeframe
+      switch (selectedTimeframe) {
+        case '7d':
+          startDate.setDate(endDate.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(endDate.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(endDate.getDate() - 90);
+          break;
+        case '1y':
+          startDate.setFullYear(endDate.getFullYear() - 1);
+          break;
+      }
+
+      const filters = {
+        category: selectedCategory !== 'all' ? selectedCategory : undefined,
+        timeframe: selectedTimeframe,
+        metrics: selectedMetrics.length > 0 ? selectedMetrics : undefined,
+      };
+
+      await generateAnalyticsReport(
+        reportType,
+        `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Analytics Report`,
+        {
+          start: startDate,
+          end: endDate,
+          period: `Last ${selectedTimeframe}`,
+        },
+        filters
+      );
+    } catch (error) {
+      console.error('Failed to generate PDF report:', error);
+    }
+  };
+
   // Simple chart components (in a real implementation, you'd use a proper charting library)
   const SimpleLineChart = ({ data }: { data: ChartDataPoint[] }) => {
     const maxValue = Math.max(...data.map((d) => d.value));
@@ -513,14 +563,76 @@ export default function AnalyticsDashboard({
               <RotateCcw className="h-4 w-4" />
               <span>Refresh</span>
             </button>
+
+            {showPDFGenerator && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowPDFReports(!showPDFReports)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Generate PDF</span>
+                  {hasProcessingReports() && (
+                    <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                  )}
+                </button>
+
+                {showPDFReports && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="p-3">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-2">PDF Report Types</h4>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            handleGeneratePDF('comprehensive');
+                            setShowPDFReports(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        >
+                          Comprehensive Report
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleGeneratePDF('platform');
+                            setShowPDFReports(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        >
+                          Platform Performance
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleGeneratePDF('environmental');
+                            setShowPDFReports(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        >
+                          Environmental Impact
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleGeneratePDF('financial');
+                            setShowPDFReports(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        >
+                          Financial Performance
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               onClick={() =>
                 onExportReport?.('comprehensive', selectedTimeframe)
               }
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <Download className="h-4 w-4" />
-              <span>Export Report</span>
+              <span>Export Data</span>
             </button>
           </div>
         </div>
@@ -766,6 +878,65 @@ export default function AnalyticsDashboard({
           </div>
         </div>
       </div>
+
+      {/* Recent PDF Reports */}
+      {showPDFGenerator && reports.length > 0 && (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Recent PDF Reports
+          </h3>
+          <div className="grid gap-3">
+            {reports.slice(0, 3).map((report: any) => (
+              <div
+                key={report._id}
+                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+              >
+                <div className="flex items-center space-x-3">
+                  <FileText className="h-5 w-5 text-gray-600" />
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-800">
+                      {report.title}
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      {new Date(report.requestedAt).toLocaleDateString()} • {report.reportType}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      report.status === 'completed'
+                        ? 'bg-green-100 text-green-800'
+                        : report.status === 'processing'
+                        ? 'bg-blue-100 text-blue-800'
+                        : report.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {report.status}
+                  </span>
+                  {report.status === 'completed' && report.fileUrl && (
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = report.fileUrl!;
+                        link.download = `${report.title.replace(/\s+/g, '_')}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      className="p-1 text-gray-400 hover:text-blue-600"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
