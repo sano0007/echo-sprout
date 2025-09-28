@@ -605,3 +605,148 @@ function mapStripeStatusToConvex(
       return 'pending';
   }
 }
+
+// Admin query to get all transactions with pagination
+export const getAllTransactionsAdmin = query({
+  args: {
+    limit: v.optional(v.number()),
+    status: v.optional(v.union(
+      v.literal('pending'),
+      v.literal('processing'),
+      v.literal('completed'),
+      v.literal('failed'),
+      v.literal('refunded'),
+      v.literal('expired')
+    )),
+  },
+  handler: async (ctx, args) => {
+    const { limit = 50, status } = args;
+
+    let transactionsQuery = ctx.db.query('transactions');
+
+    if (status) {
+      transactionsQuery = transactionsQuery.withIndex('by_payment_status', (q) => q.eq('paymentStatus', status));
+    }
+
+    const transactions = await transactionsQuery
+      .order('desc')
+      .take(limit);
+
+    // Enrich transactions with project and buyer data
+    return await Promise.all(
+      transactions.map(async (transaction) => {
+        let project = null;
+        let buyer = null;
+
+        if (transaction.projectId) {
+          project = await ctx.db.get(transaction.projectId);
+        }
+
+        // Get buyer details from users table using clerkId
+        const users = await ctx.db
+          .query('users')
+          .withIndex('by_clerk_id', (q) => q.eq('clerkId', transaction.buyerId))
+          .first();
+
+        if (users) {
+          buyer = {
+            name: users.name || 'Unknown User',
+            email: users.email || '',
+            clerkId: users.clerkId
+          };
+        }
+
+        return {
+          ...transaction,
+          project,
+          buyer,
+        };
+      })
+    );
+  },
+});
+
+// Admin mutation to update transaction status
+export const updateTransactionStatus = mutation({
+  args: {
+    transactionId: v.id('transactions'),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('processing'),
+      v.literal('completed'),
+      v.literal('failed'),
+      v.literal('refunded'),
+      v.literal('expired')
+    ),
+  },
+  handler: async (ctx, args) => {
+    const { transactionId, status } = args;
+
+    await ctx.db.patch(transactionId, {
+      paymentStatus: status,
+    });
+
+    return { success: true };
+  },
+});
+
+// Admin mutation to add certificate URL
+export const addCertificateUrl = mutation({
+  args: {
+    transactionId: v.id('transactions'),
+    certificateUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { transactionId, certificateUrl } = args;
+
+    await ctx.db.patch(transactionId, {
+      certificateUrl,
+    });
+
+    return { success: true };
+  },
+});
+
+// Admin mutation to process refund with details
+export const processRefund = mutation({
+  args: {
+    transactionId: v.id('transactions'),
+    refundReason: v.string(),
+    refundAmount: v.number(),
+    adminNotes: v.optional(v.string())
+  },
+  handler: async (ctx, args) => {
+    const { transactionId, refundReason, refundAmount, adminNotes } = args;
+
+    // Get the transaction to validate
+    const transaction = await ctx.db.get(transactionId);
+    if (!transaction) {
+      throw new Error('Transaction not found');
+    }
+
+    // Validate refund amount
+    if (refundAmount > transaction.totalAmount) {
+      throw new Error('Refund amount cannot exceed transaction amount');
+    }
+
+    if (refundAmount <= 0) {
+      throw new Error('Refund amount must be greater than 0');
+    }
+
+    // Update transaction status and add refund details
+    await ctx.db.patch(transactionId, {
+      paymentStatus: 'refunded',
+      refundDetails: {
+        refundReason,
+        refundAmount,
+        adminNotes: adminNotes || '',
+        processedAt: Date.now()
+      },
+    });
+
+    return {
+      success: true,
+      message: `Refund of $${refundAmount} processed successfully`
+    };
+  },
+});

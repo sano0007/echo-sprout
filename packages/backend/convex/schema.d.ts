@@ -236,6 +236,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
         stripePaymentIntentId?: string | undefined;
         stripeSessionId?: string | undefined;
         certificateUrl?: string | undefined;
+        refundDetails?: {
+            refundReason: string;
+            refundAmount: number;
+            adminNotes: string;
+            processedAt: number;
+        } | undefined;
         creditAmount: number;
         buyerId: string;
         unitPrice: number;
@@ -253,7 +259,18 @@ declare const _default: import("convex/server").SchemaDefinition<{
         stripeSessionId: import("convex/values").VString<string | undefined, "optional">;
         certificateUrl: import("convex/values").VString<string | undefined, "optional">;
         transactionReference: import("convex/values").VString<string, "required">;
-    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "transactionReference">, {
+        refundDetails: import("convex/values").VObject<{
+            refundReason: string;
+            refundAmount: number;
+            adminNotes: string;
+            processedAt: number;
+        } | undefined, {
+            refundReason: import("convex/values").VString<string, "required">;
+            refundAmount: import("convex/values").VFloat64<number, "required">;
+            adminNotes: import("convex/values").VString<string, "required">;
+            processedAt: import("convex/values").VFloat64<number, "required">;
+        }, "optional", "refundReason" | "refundAmount" | "adminNotes" | "processedAt">;
+    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "transactionReference" | "refundDetails" | "refundDetails.refundReason" | "refundDetails.refundAmount" | "refundDetails.adminNotes" | "refundDetails.processedAt">, {
         by_buyer: ["buyerId", "_creationTime"];
         by_project: ["projectId", "_creationTime"];
         by_payment_status: ["paymentStatus", "_creationTime"];

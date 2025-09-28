@@ -177,6 +177,14 @@ export default defineSchema({
     stripeSessionId: v.optional(v.string()),
     certificateUrl: v.optional(v.string()),
     transactionReference: v.string(), // Unique transaction reference
+    refundDetails: v.optional(
+      v.object({
+        refundReason: v.string(),
+        refundAmount: v.number(),
+        adminNotes: v.string(),
+        processedAt: v.number()
+      })
+    ),
   })
     .index('by_buyer', ['buyerId'])
     .index('by_project', ['projectId'])

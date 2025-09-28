@@ -131,6 +131,12 @@ exports.default = (0, server_1.defineSchema)({
         stripeSessionId: values_1.v.optional(values_1.v.string()),
         certificateUrl: values_1.v.optional(values_1.v.string()),
         transactionReference: values_1.v.string(), // Unique transaction reference
+        refundDetails: values_1.v.optional(values_1.v.object({
+            refundReason: values_1.v.string(),
+            refundAmount: values_1.v.number(),
+            adminNotes: values_1.v.string(),
+            processedAt: values_1.v.number()
+        })),
     })
         .index('by_buyer', ['buyerId'])
         .index('by_project', ['projectId'])

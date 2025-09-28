@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Edit, Plus, MoreHorizontal, Check, X, Eye } from "lucide-react";
+import { ExternalLink, FileText, MoreHorizontal, RefreshCw, DollarSign, CreditCard, AlertTriangle, CheckCircle, Clock, XCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,265 +10,653 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from '@packages/backend';
+import { useCertificate } from '@/hooks/useCertificate';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RefundForm } from "@/components/admin/RefundForm";
 
-interface LearningPath {
-  id: string;
-  title: string;
-  description: string;
-  level: "beginner" | "intermediate" | "advanced";
-  estimatedDuration: number;
-  moduleCount: number;
-  status: "published" | "draft";
-  isPublished: boolean;
-  createdByName: string;
-  enrollmentCount?: number;
-  publishedAt?: string | null;
-  lastUpdatedAt: number;
+interface Transaction {
+  _id: string;
+  buyerId: string;
+  projectId?: string;
+  creditAmount: number;
+  unitPrice: number;
+  totalAmount: number;
+  paymentStatus: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'expired';
+  stripePaymentIntentId?: string;
+  stripeSessionId?: string;
+  certificateUrl?: string;
+  transactionReference: string;
+  _creationTime: number;
+  refundDetails?: {
+    refundReason: string;
+    refundAmount: number;
+    adminNotes: string;
+    processedAt: number;
+  };
+  project?: {
+    title: string;
+    projectType: string;
+    location: {
+      name: string;
+      lat: number;
+      long: number;
+    };
+  } | null;
+  buyer?: {
+    name: string;
+    email: string;
+    clerkId: string;
+  } | null;
 }
 
-const LearningPathsTable = () => {
-  const learningPaths = useQuery(api.learn.listLearningPaths) || [];
-  const updateLearningPath = useMutation(api.learn.updateLearningPath);
-  const deleteLearningPath = useMutation(api.learn.deleteLearningPath);
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return <Badge className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Completed</Badge>;
+    case 'pending':
+      return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+    case 'processing':
+      return <Badge className="bg-blue-100 text-blue-800 border-blue-200"><RefreshCw className="w-3 h-3 mr-1" />Processing</Badge>;
+    case 'failed':
+      return <Badge className="bg-red-100 text-red-800 border-red-200"><XCircle className="w-3 h-3 mr-1" />Failed</Badge>;
+    case 'refunded':
+      return <Badge className="bg-gray-100 text-gray-800 border-gray-200"><RefreshCw className="w-3 h-3 mr-1" />Refunded</Badge>;
+    case 'expired':
+      return <Badge className="bg-gray-100 text-gray-800 border-gray-200"><AlertTriangle className="w-3 h-3 mr-1" />Expired</Badge>;
+    default:
+      return <Badge variant="secondary">{status}</Badge>;
+  }
+};
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+const RefundDetailsModal = ({
+  refundDetails,
+  transactionReference
+}: {
+  refundDetails: {
+    refundReason: string;
+    refundAmount: number;
+    adminNotes: string;
+    processedAt: number;
+  };
+  transactionReference: string;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleApprove = async (pathId: string) => {
-    try {
-      await updateLearningPath({
-        id: pathId,
-        publish: true
-      });
-    } catch (error) {
-      console.error("Failed to approve learning path:", error);
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsOpen(true)}
+        className="h-6 px-2 text-xs"
+      >
+        <Info className="w-3 h-3 mr-1" />
+        Details
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Refund Details</DialogTitle>
+            <DialogDescription>
+              Refund information for transaction {transactionReference}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Refund Amount</Label>
+              <p className="text-lg font-semibold text-green-600">
+                ${refundDetails.refundAmount.toLocaleString()}
+              </p>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Refund Reason</Label>
+              <p className="text-sm text-gray-900 capitalize">
+                {refundDetails.refundReason.replace(/_/g, ' ')}
+              </p>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Admin Notes</Label>
+              <p className="text-sm text-gray-900">
+                {refundDetails.adminNotes || 'No notes provided'}
+              </p>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Processed Date</Label>
+              <p className="text-sm text-gray-900">
+                {new Date(refundDetails.processedAt).toLocaleString()}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+const TransactionStatsCards = ({ transactions }: { transactions: Transaction[] }) => {
+  const stats = transactions.reduce((acc, transaction) => {
+    acc.total++;
+    acc.totalValue += transaction.totalAmount;
+    acc.totalCredits += transaction.creditAmount;
+
+    if (transaction.paymentStatus === 'completed') {
+      acc.completed++;
+      acc.revenue += transaction.totalAmount;
+    } else if (transaction.paymentStatus === 'pending') {
+      acc.pending++;
+    } else if (transaction.paymentStatus === 'failed') {
+      acc.failed++;
     }
-  };
 
-  const handleReject = async (pathId: string) => {
-    try {
-      await updateLearningPath({
-        id: pathId,
-        publish: false
-      });
-    } catch (error) {
-      console.error("Failed to reject learning path:", error);
+    return acc;
+  }, {
+    total: 0,
+    completed: 0,
+    pending: 0,
+    failed: 0,
+    totalValue: 0,
+    revenue: 0,
+    totalCredits: 0
+  });
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+          <CreditCard className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.total.toLocaleString()}</div>
+          <p className="text-xs text-muted-foreground">
+            {stats.completed} completed, {stats.pending} pending
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+          <DollarSign className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">${stats.revenue.toLocaleString()}</div>
+          <p className="text-xs text-muted-foreground">
+            From {stats.completed} completed transactions
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Credits Sold</CardTitle>
+          <FileText className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalCredits.toLocaleString()}</div>
+          <p className="text-xs text-muted-foreground">
+            Carbon credits purchased
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Failed Rate</CardTitle>
+          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">
+            {stats.total > 0 ? ((stats.failed / stats.total) * 100).toFixed(1) : 0}%
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {stats.failed} failed transactions
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const TransactionTable = ({
+  transactions,
+  onUpdateStatus,
+  onAddCertificate,
+  onDownloadCertificate,
+  onViewCertificate,
+  onRefreshTransactions,
+  isDownloading,
+  isViewing
+}: {
+  transactions: Transaction[];
+  onUpdateStatus: (transactionId: string, status: string) => void;
+  onAddCertificate: (transactionId: string, certificateUrl: string) => void;
+  onDownloadCertificate: (transactionId: string, certificateUrl?: string, certificateId?: string) => void;
+  onViewCertificate: (transactionId: string, certificateUrl?: string) => void;
+  onRefreshTransactions: () => void;
+  isDownloading: boolean;
+  isViewing: boolean;
+}) => {
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [refundingTransaction, setRefundingTransaction] = useState<Transaction | null>(null);
+  const [certificateUrl, setCertificateUrl] = useState("");
+
+  const handleAddCertificate = () => {
+    if (editingTransaction && certificateUrl.trim()) {
+      onAddCertificate(editingTransaction._id, certificateUrl.trim());
+      setEditingTransaction(null);
+      setCertificateUrl("");
     }
-  };
-
-  const handleDelete = async (pathId: string) => {
-    if (confirm("Are you sure you want to delete this learning path?")) {
-      try {
-        await deleteLearningPath({ id: pathId });
-      } catch (error) {
-        console.error("Failed to delete learning path:", error);
-      }
-    }
-  };
-
-  const getLevelBadgeColor = (level: string) => {
-    switch (level) {
-      case "beginner":
-        return "bg-green-100 text-green-800";
-      case "intermediate":
-        return "bg-yellow-100 text-yellow-800";
-      case "advanced":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusBadgeColor = (isPublished: boolean) => {
-    return isPublished
-      ? "bg-green-100 text-green-800"
-      : "bg-gray-100 text-gray-800";
-  };
-
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString();
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Learning Paths</CardTitle>
-            <CardDescription>
-              Manage and approve learning paths for the education hub
-            </CardDescription>
-          </div>
-          <Button className="bg-green-600 hover:bg-green-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Learning Path
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Level</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead>Modules</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead>Last Updated</TableHead>
-              <TableHead>Actions</TableHead>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Transaction ID</TableHead>
+            <TableHead>Buyer</TableHead>
+            <TableHead>Project</TableHead>
+            <TableHead>Credits</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Certificate</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transactions.map((transaction) => (
+            <TableRow key={transaction._id}>
+              <TableCell className="font-medium">
+                {transaction.transactionReference}
+              </TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{transaction.buyer?.name || 'Unknown'}</div>
+                  <div className="text-sm text-gray-500">{transaction.buyer?.email}</div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{transaction.project?.title || 'General Credits'}</div>
+                  <div className="text-sm text-gray-500">{transaction.project?.location?.name || 'Global'}</div>
+                </div>
+              </TableCell>
+              <TableCell>{transaction.creditAmount.toLocaleString()}</TableCell>
+              <TableCell>${transaction.totalAmount.toLocaleString()}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(transaction.paymentStatus)}
+                  {transaction.paymentStatus === 'refunded' && transaction.refundDetails && (
+                    <RefundDetailsModal
+                      refundDetails={transaction.refundDetails}
+                      transactionReference={transaction.transactionReference}
+                    />
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                {transaction.certificateUrl ? (
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewCertificate(transaction._id, transaction.certificateUrl)}
+                      disabled={isViewing}
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      {isViewing ? 'Opening...' : 'View'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDownloadCertificate(transaction._id, transaction.certificateUrl, `CERT-${transaction.transactionReference}`)}
+                      disabled={isDownloading}
+                    >
+                      <FileText className="w-3 h-3 mr-1" />
+                      {isDownloading ? 'Downloading...' : 'Download'}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewCertificate(transaction._id)}
+                      disabled={isViewing || transaction.paymentStatus !== 'completed'}
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      {isViewing ? 'Opening...' : 'View'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDownloadCertificate(transaction._id)}
+                      disabled={isDownloading || transaction.paymentStatus !== 'completed'}
+                    >
+                      <FileText className="w-3 h-3 mr-1" />
+                      {isDownloading ? 'Downloading...' : 'Download'}
+                    </Button>
+                  </div>
+                )}
+              </TableCell>
+              <TableCell>
+                {new Date(transaction._creationTime).toLocaleDateString()}
+              </TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onUpdateStatus(transaction._id, 'completed')}>
+                      Mark as Completed
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onUpdateStatus(transaction._id, 'failed')}>
+                      Mark as Failed
+                    </DropdownMenuItem>
+                    {(transaction.paymentStatus === 'completed' || transaction.paymentStatus === 'processing') && (
+                      <DropdownMenuItem onClick={() => setRefundingTransaction(transaction)}>
+                        <RefreshCw className="w-3 h-3 mr-1" />
+                        Mark as Refunded
+                      </DropdownMenuItem>
+                    )}
+                    {transaction.stripePaymentIntentId && (
+                      <DropdownMenuItem
+                        onClick={() => window.open(`https://dashboard.stripe.com/payments/${transaction.stripePaymentIntentId}`, '_blank')}
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        View in Stripe
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {learningPaths.map((path) => (
-              <TableRow key={path.id}>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{path.title}</div>
-                    <div className="text-sm text-gray-500 truncate max-w-xs">
-                      {path.description}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge className={getLevelBadgeColor(path.level)}>
-                    {path.level}
-                  </Badge>
-                </TableCell>
-                <TableCell>{formatDuration(path.estimatedDuration)}</TableCell>
-                <TableCell>{path.moduleCount}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusBadgeColor(path.isPublished)}>
-                    {path.isPublished ? "Published" : "Draft"}
-                  </Badge>
-                </TableCell>
-                <TableCell>{path.createdByName || "Unknown"}</TableCell>
-                <TableCell>{formatDate(path.lastUpdatedAt)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    {!path.isPublished && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-green-600 border-green-600 hover:bg-green-50"
-                        onClick={() => handleApprove(path.id)}
-                      >
-                        <Check className="w-4 h-4" />
-                      </Button>
-                    )}
-                    {path.isPublished && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
-                        onClick={() => handleReject(path.id)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleDelete(path.id)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+          ))}
+        </TableBody>
+      </Table>
+
+      <Dialog open={!!editingTransaction} onOpenChange={() => setEditingTransaction(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Certificate URL</DialogTitle>
+            <DialogDescription>
+              Add a certificate URL for transaction {editingTransaction?.transactionReference}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="certificateUrl">Certificate URL</Label>
+              <Input
+                id="certificateUrl"
+                value={certificateUrl}
+                onChange={(e) => setCertificateUrl(e.target.value)}
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingTransaction(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCertificate}>
+              Add Certificate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {refundingTransaction && (
+        <RefundForm
+          transactionId={refundingTransaction._id as any}
+          transactionAmount={refundingTransaction.totalAmount}
+          customerEmail={refundingTransaction.buyer?.email || 'Unknown'}
+          isOpen={!!refundingTransaction}
+          onClose={() => setRefundingTransaction(null)}
+          onSuccess={() => {
+            setRefundingTransaction(null);
+            onRefreshTransactions();
+          }}
+        />
+      )}
+    </>
   );
 };
 
-const EducationAnalytics = () => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Education Analytics</CardTitle>
-        <CardDescription>
-          View analytics and insights about the education hub
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center p-6 bg-green-50 rounded-lg">
-            <h3 className="text-2xl font-bold text-green-600">24</h3>
-            <p className="text-sm text-gray-600">Total Learning Paths</p>
-          </div>
-          <div className="text-center p-6 bg-blue-50 rounded-lg">
-            <h3 className="text-2xl font-bold text-blue-600">156</h3>
-            <p className="text-sm text-gray-600">Active Learners</p>
-          </div>
-          <div className="text-center p-6 bg-purple-50 rounded-lg">
-            <h3 className="text-2xl font-bold text-purple-600">89%</h3>
-            <p className="text-sm text-gray-600">Completion Rate</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
+export default function TransactionsPage() {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [refreshKey, setRefreshKey] = useState(0);
 
-export default function EducationHubPage() {
+  const allTransactions = useQuery(api.transactions.getAllTransactionsAdmin, {
+    limit: 100,
+    status: statusFilter === "all" ? undefined : statusFilter as any
+  }) || [];
+
+  const handleRefreshTransactions = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const updateTransactionStatus = useMutation(api.transactions.updateTransactionStatus);
+  const addCertificateUrl = useMutation(api.transactions.addCertificateUrl);
+
+  // Certificate download and view functionality
+  const {
+    downloadCertificateDirectly,
+    downloadFromStorage,
+    viewCertificateInBrowserDirectly,
+    viewCertificateFromStorage,
+    isDownloading,
+    isViewing,
+  } = useCertificate();
+
+  const handleUpdateStatus = async (transactionId: string, status: string) => {
+    try {
+      await updateTransactionStatus({
+        transactionId: transactionId as any,
+        status: status as any
+      });
+    } catch (error) {
+      console.error("Failed to update transaction status:", error);
+    }
+  };
+
+  const handleAddCertificate = async (transactionId: string, certificateUrl: string) => {
+    try {
+      await addCertificateUrl({
+        transactionId: transactionId as any,
+        certificateUrl
+      });
+    } catch (error) {
+      console.error("Failed to add certificate URL:", error);
+    }
+  };
+
+  // Certificate download handlers
+  const handleDownloadCertificate = async (transactionId: string, certificateUrl?: string, certificateId?: string) => {
+    try {
+      if (certificateUrl && certificateId) {
+        // Download from storage if already exists
+        await downloadFromStorage(certificateUrl, certificateId);
+      } else {
+        // Generate and download directly
+        await downloadCertificateDirectly(transactionId as any);
+      }
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      alert('Failed to download certificate. Please try again.');
+    }
+  };
+
+  // Certificate view handlers
+  const handleViewCertificate = async (transactionId: string, certificateUrl?: string) => {
+    try {
+      if (certificateUrl) {
+        // View from storage if already exists
+        await viewCertificateFromStorage(certificateUrl);
+      } else {
+        // Generate and view directly
+        await viewCertificateInBrowserDirectly(transactionId as any);
+      }
+    } catch (error) {
+      console.error('Error viewing certificate:', error);
+      alert('Failed to view certificate. Please try again.');
+    }
+  };
+
+  const getFilteredTransactions = (status: string) => {
+    if (status === "all") return allTransactions;
+    return allTransactions.filter(t => t.paymentStatus === status);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Education Hub Management</h1>
-        <p className="text-gray-600">
-          Manage learning paths, courses, and educational content
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Transaction Management</h1>
+          <p className="text-muted-foreground">
+            Monitor and manage all transactions across the platform
+          </p>
+        </div>
       </div>
 
-      <Tabs defaultValue="learning-paths" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="learning-paths">Learning Paths</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+      <TransactionStatsCards transactions={allTransactions} />
+
+      <Tabs defaultValue="all" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="all">All Transactions</TabsTrigger>
+          <TabsTrigger value="completed">Completed</TabsTrigger>
+          <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="failed">Failed</TabsTrigger>
+          <TabsTrigger value="refunded">Refunded</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="learning-paths">
-          <LearningPathsTable />
-        </TabsContent>
-
-        <TabsContent value="analytics">
-          <EducationAnalytics />
-        </TabsContent>
-
-        <TabsContent value="settings">
+        <TabsContent value="all" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Education Hub Settings</CardTitle>
+              <CardTitle>All Transactions</CardTitle>
               <CardDescription>
-                Configure settings for the education hub
+                Complete overview of all transactions in the system
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500">Settings panel coming soon...</p>
+              <TransactionTable
+                transactions={getFilteredTransactions("all")}
+                onUpdateStatus={handleUpdateStatus}
+                onAddCertificate={handleAddCertificate}
+                onDownloadCertificate={handleDownloadCertificate}
+                onViewCertificate={handleViewCertificate}
+                onRefreshTransactions={handleRefreshTransactions}
+                isDownloading={isDownloading}
+                isViewing={isViewing}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Completed Transactions</CardTitle>
+              <CardDescription>
+                Successfully processed transactions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TransactionTable
+                transactions={getFilteredTransactions("completed")}
+                onUpdateStatus={handleUpdateStatus}
+                onAddCertificate={handleAddCertificate}
+                onDownloadCertificate={handleDownloadCertificate}
+                onViewCertificate={handleViewCertificate}
+                onRefreshTransactions={handleRefreshTransactions}
+                isDownloading={isDownloading}
+                isViewing={isViewing}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pending" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Transactions</CardTitle>
+              <CardDescription>
+                Transactions awaiting processing or payment
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TransactionTable
+                transactions={getFilteredTransactions("pending")}
+                onUpdateStatus={handleUpdateStatus}
+                onAddCertificate={handleAddCertificate}
+                onDownloadCertificate={handleDownloadCertificate}
+                onViewCertificate={handleViewCertificate}
+                onRefreshTransactions={handleRefreshTransactions}
+                isDownloading={isDownloading}
+                isViewing={isViewing}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="failed" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Failed Transactions</CardTitle>
+              <CardDescription>
+                Transactions that failed to process
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TransactionTable
+                transactions={getFilteredTransactions("failed")}
+                onUpdateStatus={handleUpdateStatus}
+                onAddCertificate={handleAddCertificate}
+                onDownloadCertificate={handleDownloadCertificate}
+                onViewCertificate={handleViewCertificate}
+                onRefreshTransactions={handleRefreshTransactions}
+                isDownloading={isDownloading}
+                isViewing={isViewing}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="refunded" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Refunded Transactions</CardTitle>
+              <CardDescription>
+                Transactions that have been refunded to customers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TransactionTable
+                transactions={getFilteredTransactions("refunded")}
+                onUpdateStatus={handleUpdateStatus}
+                onAddCertificate={handleAddCertificate}
+                onDownloadCertificate={handleDownloadCertificate}
+                onViewCertificate={handleViewCertificate}
+                onRefreshTransactions={handleRefreshTransactions}
+                isDownloading={isDownloading}
+                isViewing={isViewing}
+              />
             </CardContent>
           </Card>
         </TabsContent>

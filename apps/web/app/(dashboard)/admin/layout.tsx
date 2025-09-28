@@ -30,12 +30,13 @@ const adminNavItems = [
         title: "User Management",
         icon: Users,
         url: "/admin/users",
-        badge: "12",
+        badge: null,
     },
     {
         title: "Transactions",
         icon: Coins,
-        url: "/admin/transactions"
+        url: "/admin/transactions",
+        badge: null,
     },
     {
         title: "Education Hub",
@@ -47,7 +48,7 @@ const adminNavItems = [
         title: "Monitoring System",
         icon: Monitor,
         url: "/admin/monitoring",
-        badge: "5",
+        badge: null,
     },
     {
         title: "System Health",
@@ -65,7 +66,7 @@ const adminNavItems = [
         title: "Support Center",
         icon: HelpCircle,
         url: "/admin/support",
-        badge: "3",
+        badge: null,
     },
     {
         title: "Settings",
