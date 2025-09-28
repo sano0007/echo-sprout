@@ -7,8 +7,8 @@ import {
   generateCertificateForUpload,
   viewCertificateInBrowser,
   viewStoredCertificateInBrowser,
-} from '../utils/certificateGenerator';
-import { uploadCertificate } from '../utils/fileUpload';
+} from '@/utils/certificateGenerator';
+import { uploadCertificate } from '@/utils/fileUpload';
 
 export function useCertificate() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -87,6 +87,8 @@ export function useCertificate() {
       }
 
       const certificateData = await certificateDataResponse.json();
+
+      console.log('Certificate Data:', certificateData);
 
       // Generate and download PDF
       await downloadCertificate(

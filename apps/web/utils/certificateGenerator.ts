@@ -10,7 +10,11 @@ export interface CertificateData {
   co2Offset: number;
   purchaseDate: string;
   transactionReference: string;
-  projectLocation?: string;
+  projectLocation?: {
+    lat: number
+    lon: number
+    name: string
+  };
   verificationStandard?: string;
 }
 
@@ -214,7 +218,7 @@ function createCertificateHTML(data: CertificateData): string {
     co2Offset,
     purchaseDate,
     transactionReference,
-    projectLocation = 'Global',
+    projectLocation = { name: 'Unknown Location', lat: 0, lon: 0 },
     verificationStandard = 'Verified Carbon Standard (VCS)',
   } = data;
 
@@ -238,7 +242,7 @@ function createCertificateHTML(data: CertificateData): string {
       position: relative;
       overflow: hidden;
       font-family: serif;
-      padding: 16px;
+      padding: 12px;
       box-sizing: border-box;
     ">
       <!-- Decorative border -->
@@ -260,41 +264,13 @@ function createCertificateHTML(data: CertificateData): string {
         ">
 
           <!-- Header -->
-          <div style="text-align: center; padding-bottom: 16px;">
+          <div style="text-align: center; padding-bottom: 10px;">
             <div style="margin-bottom: 16px;">
-              <div style="
-                width: 64px;
-                height: 64px;
-                background: #059669;
-                border-radius: 50%;
-                margin: 0 auto 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 32px;
-                color: white;
-                font-weight: bold;
-              ">🌱</div>
-              <h1 style="
-                font-size: 32px;
-                font-weight: bold;
-                color: #065f46;
-                margin: 0 0 4px 0;
-              ">ECHO SPROUT</h1>
-              <p style="
-                font-size: 12px;
-                color: #6b7280;
-                text-transform: uppercase;
-                letter-spacing: 2px;
-                margin: 0;
-              ">Carbon Credit Marketplace</p>
-            </div>
-
             <h2 style="
               font-size: 24px;
               font-weight: bold;
               color: #374151;
-              margin: 0 0 8px 0;
+              margin: 0 0 5px 0;
             ">CERTIFICATE OF CONTRIBUTION</h2>
             <p style="
               font-size: 18px;
@@ -304,33 +280,33 @@ function createCertificateHTML(data: CertificateData): string {
           </div>
 
           <!-- Certificate Body -->
-          <div style="padding: 0 24px;">
-            <div style="text-align: center; margin-bottom: 24px;">
+          <div style="padding: 0 20px">
+            <div style="text-align: center">
               <p style="
                 font-size: 18px;
                 color: #374151;
                 line-height: 1.6;
-                margin: 0 0 16px 0;
+                margin: 0 0 5px 0;
               ">
                 This certifies that
               </p>
               <div style="
-                margin: 16px 0;
-                padding: 8px 0;
+                margin: 10px 0;
+                padding: 6px 0;
                 border-bottom: 2px solid #059669;
               ">
                 <p style="
-                  font-size: 24px;
+                  font-size: 18px;
                   font-weight: bold;
                   color: #065f46;
-                  margin: 0;
+                  margin-bottom: 0;
                 ">${buyerName}</p>
               </div>
               <p style="
-                font-size: 18px;
+                font-size: 14px;
                 color: #374151;
                 line-height: 1.6;
-                margin: 0;
+                margin-bottom: 10px;
               ">
                 has successfully contributed to environmental sustainability by purchasing
               </p>
@@ -340,15 +316,15 @@ function createCertificateHTML(data: CertificateData): string {
             <div style="
               background: #ecfdf5;
               border-radius: 8px;
-              padding: 24px;
-              margin-bottom: 24px;
+              padding: 20px;
+              margin-bottom: 10px;
               border: 1px solid #bbf7d0;
               display: flex;
               justify-content: space-around;
             ">
               <div style="text-align: center;">
                 <div style="
-                  font-size: 36px;
+                  font-size: 20px;
                   font-weight: bold;
                   color: #059669;
                 ">${credits}</div>
@@ -361,7 +337,7 @@ function createCertificateHTML(data: CertificateData): string {
               </div>
               <div style="text-align: center;">
                 <div style="
-                  font-size: 36px;
+                  font-size: 20px;
                   font-weight: bold;
                   color: #059669;
                 ">${co2Offset.toFixed(1)}</div>
@@ -377,12 +353,12 @@ function createCertificateHTML(data: CertificateData): string {
             <!-- Project Details -->
             <div style="text-align: center; margin-bottom: 24px;">
               <p style="
-                font-size: 18px;
+                font-size: 14px;
                 color: #374151;
                 margin: 0 0 8px 0;
               ">from the project</p>
               <p style="
-                font-size: 20px;
+                font-size: 16px;
                 font-weight: bold;
                 color: #374151;
                 margin: 0 0 4px 0;
@@ -392,44 +368,16 @@ function createCertificateHTML(data: CertificateData): string {
                 color: #6b7280;
                 text-transform: capitalize;
                 margin: 0;
-              ">${projectType.replace('_', ' ')} • ${projectLocation}</p>
-            </div>
-
-            <!-- Environmental Impact -->
-            <div style="
-              background: #eff6ff;
-              border-radius: 8px;
-              padding: 16px;
-              margin-bottom: 24px;
-              border: 1px solid #bfdbfe;
-              text-align: center;
-            ">
-              <p style="
-                font-size: 14px;
-                font-weight: 500;
-                color: #1e40af;
-                margin: 0 0 8px 0;
-              ">Environmental Impact Equivalent</p>
-              <div style="
-                display: flex;
-                justify-content: center;
-                gap: 32px;
-                font-size: 12px;
-                color: #1d4ed8;
-              ">
-                <div>🌳 ${Math.round(co2Offset * 40)} trees planted</div>
-                <div>🚗 ${Math.round(co2Offset / 4.6)} cars off road/year</div>
-                <div>⚡ ${Math.round(co2Offset * 3000)} kWh clean energy</div>
-              </div>
+              ">${projectType.replace('_', ' ')} • ${projectLocation.name}</p>
             </div>
           </div>
 
           <!-- Footer -->
           <div style="
-            position: absolute;
             bottom: 32px;
             left: 32px;
             right: 32px;
+            margin-top: 20px;
           ">
             <div style="
               display: grid;
@@ -468,56 +416,6 @@ function createCertificateHTML(data: CertificateData): string {
               <div>
                 <p style="font-weight: 500; margin: 0 0 4px 0;">Verification Standard</p>
                 <p style="margin: 0;">${verificationStandard}</p>
-              </div>
-            </div>
-
-            <!-- Digital Signature -->
-            <div style="
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-end;
-            ">
-              <div style="text-align: center;">
-                <div style="
-                  width: 128px;
-                  border-bottom: 1px solid #9ca3af;
-                  margin-bottom: 4px;
-                "></div>
-                <p style="
-                  font-size: 12px;
-                  color: #6b7280;
-                  margin: 0;
-                ">Echo Sprout Platform</p>
-                <p style="
-                  font-size: 10px;
-                  color: #9ca3af;
-                  margin: 0;
-                ">Digital Certificate</p>
-              </div>
-
-              <div style="text-align: right;">
-                <div style="
-                  width: 80px;
-                  height: 64px;
-                  background: #ecfdf5;
-                  border-radius: 4px;
-                  border: 1px solid #86efac;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  margin-bottom: 4px;
-                ">
-                  <span style="
-                    font-size: 12px;
-                    color: #065f46;
-                    font-weight: bold;
-                  ">VERIFIED</span>
-                </div>
-                <p style="
-                  font-size: 10px;
-                  color: #9ca3af;
-                  margin: 0;
-                ">Blockchain Verified</p>
               </div>
             </div>
           </div>

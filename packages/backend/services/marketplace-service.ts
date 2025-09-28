@@ -125,8 +125,8 @@ export class MarketplaceService {
     } else if (priceRange.includes('-')) {
       // Handle "0-10" or "10-20" format
       const [minStr, maxStr] = priceRange.split('-');
-      const min = parseFloat(minStr);
-      const max = parseFloat(maxStr);
+      const min = parseFloat(minStr!);
+      const max = parseFloat(maxStr!);
 
       if (!isNaN(min) && !isNaN(max)) {
         return projects.filter((p) => p.price >= min && p.price <= max);
@@ -144,7 +144,7 @@ export class MarketplaceService {
     location: string
   ): MarketplaceProject[] {
     return projects.filter((p) =>
-      p.location.toLowerCase().includes(location.toLowerCase())
+      p.location.replace(/\s/g, '').toLowerCase().includes(location.replace(/\s/g, '').toLowerCase())
     );
   }
 

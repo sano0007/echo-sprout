@@ -213,6 +213,7 @@ export default function Marketplace() {
             <option value="india">India</option>
             <option value="denmark">Denmark</option>
             <option value="germany">Germany</option>
+            <option value="srilanka">Sri Lanka</option>
           </select>
 
           <select
