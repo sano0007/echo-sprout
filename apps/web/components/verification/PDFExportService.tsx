@@ -1,6 +1,8 @@
 'use client';
 
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 import type { VerificationCertificate, VerificationReport } from './types';
 
@@ -26,22 +28,118 @@ export class PDFExportService {
 
   // Generate PDF report from verification report data
   static async generateReportPDF(report: VerificationReport): Promise<Blob> {
-    // In a real implementation, this would use a library like jsPDF or Puppeteer
-    // For now, we'll create a comprehensive HTML document that can be printed to PDF
+    try {
+      // Create a temporary container for HTML content
+      const tempContainer = document.createElement('div');
+      tempContainer.innerHTML = this.generateReportHTML(report);
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.width = '210mm'; // A4 width
+      tempContainer.style.background = 'white';
+      document.body.appendChild(tempContainer);
 
-    const htmlContent = this.generateReportHTML(report);
+      // Generate canvas from HTML
+      const canvas = await html2canvas(tempContainer, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      });
 
-    // Convert HTML to PDF using browser's print functionality
-    // In production, you'd use a proper PDF generation service
-    return new Blob([htmlContent], { type: 'application/pdf' });
+      // Remove temporary container
+      document.body.removeChild(tempContainer);
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      // Add additional pages if needed
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      return pdf.output('blob');
+    } catch (error) {
+      console.error('Error generating PDF report:', error);
+      // Fallback to text-based PDF
+      return this.generateFallbackPDF(
+        'Verification Report',
+        report.projectName
+      );
+    }
   }
 
   // Generate PDF certificate from certificate data
   static async generateCertificatePDF(
     certificate: VerificationCertificate
   ): Promise<Blob> {
-    const htmlContent = this.generateCertificateHTML(certificate);
-    return new Blob([htmlContent], { type: 'application/pdf' });
+    try {
+      // Create a temporary container for HTML content
+      const tempContainer = document.createElement('div');
+      tempContainer.innerHTML = this.generateCertificateHTML(certificate);
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.width = '210mm'; // A4 width
+      tempContainer.style.background = 'white';
+      document.body.appendChild(tempContainer);
+
+      // Generate canvas from HTML
+      const canvas = await html2canvas(tempContainer, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+      });
+
+      // Remove temporary container
+      document.body.removeChild(tempContainer);
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape for certificate
+      const imgWidth = 297; // A4 landscape width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+      return pdf.output('blob');
+    } catch (error) {
+      console.error('Error generating PDF certificate:', error);
+      // Fallback to text-based PDF
+      return this.generateFallbackPDF(
+        'Verification Certificate',
+        certificate.projectName
+      );
+    }
+  }
+
+  // Fallback PDF generation for errors
+  private static generateFallbackPDF(title: string, projectName: string): Blob {
+    const pdf = new jsPDF();
+    pdf.setFontSize(20);
+    pdf.text(title, 20, 30);
+    pdf.setFontSize(14);
+    pdf.text(`Project: ${projectName}`, 20, 50);
+    pdf.text('Generated on: ' + new Date().toLocaleDateString(), 20, 70);
+    pdf.text(
+      'Note: This is a simplified PDF due to generation issues.',
+      20,
+      90
+    );
+    return pdf.output('blob');
   }
 
   // Generate comprehensive HTML report

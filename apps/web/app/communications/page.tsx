@@ -39,7 +39,9 @@ export default function CommunicationsPage() {
   });
 
   // Transform notifications to match MessageNotificationSystem interface
-  const notifications = (rawNotifications || []).map((notification: any) => ({
+  const notifications = (
+    Array.isArray(rawNotifications) ? [] : rawNotifications?.notifications || []
+  ).map((notification: any) => ({
     id: notification._id,
     type:
       notification.type === 'message_received'

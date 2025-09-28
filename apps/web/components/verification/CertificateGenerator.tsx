@@ -13,23 +13,23 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useRef, useState } from 'react';
 
-import type {
-  CertificateTemplate,
-  VerificationCertificate,
-  VerificationReport,
-} from './types';
+import type { CertificateTemplate, VerificationCertificate } from './types';
 
 interface CertificateGeneratorProps {
-  verificationReport: VerificationReport;
-  onGenerateCertificate: (certificate: VerificationCertificate) => void;
+  projectData: any;
+  verificationData: any;
+  onCertificateGenerated: (certificate: VerificationCertificate) => void;
   onExportCertificate: (format: 'pdf' | 'png' | 'svg') => void;
+  existingCertificate?: VerificationCertificate | null;
   className?: string;
 }
 
 export function CertificateGenerator({
-  verificationReport,
-  onGenerateCertificate,
+  projectData,
+  verificationData,
+  onCertificateGenerated,
   onExportCertificate,
+  existingCertificate,
   className = '',
 }: CertificateGeneratorProps) {
   const [selectedTemplate, setSelectedTemplate] = useState('standard');
@@ -41,8 +41,7 @@ export function CertificateGenerator({
   const [includeBlockchain, setIncludeBlockchain] = useState(false);
   const [expiryMonths, setExpiryMonths] = useState(12);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedCertificate, setGeneratedCertificate] =
-    useState<VerificationCertificate | null>(null);
+  // Use existingCertificate prop instead of local state
   const certificateRef = useRef<HTMLDivElement>(null);
 
   const templates: CertificateTemplate[] = [
@@ -128,21 +127,23 @@ export function CertificateGenerator({
   ];
 
   const certificateData = useMemo(() => {
-    if (!verificationReport) return null;
+    if (!projectData || !verificationData) return null;
 
     return {
-      projectName: verificationReport.projectName,
-      projectCreator: verificationReport.projectCreatorInfo.name,
+      projectName: projectData.name || 'Project',
+      projectCreator:
+        projectData.studentName || projectData.creatorName || 'Unknown Student',
       organization:
-        verificationReport.projectCreatorInfo.organization || 'Individual',
-      verifier: verificationReport.verifierInfo.name,
-      verifierOrg: verificationReport.verifierInfo.organization,
-      score: verificationReport.verificationResults.overallScore,
-      status: verificationReport.verificationResults.status,
-      verifiedAt: verificationReport.verifiedAt,
+        projectData.institutionName || projectData.organization || 'Individual',
+      verifier: verificationData.verifierName || 'Unknown Verifier',
+      verifierOrg:
+        verificationData.organization || 'Independent Verification Authority',
+      score: verificationData.qualityScore || 0,
+      status: verificationData.recommendation || 'pending',
+      verifiedAt: verificationData.completionDate || Date.now(),
       expiresAt: Date.now() + expiryMonths * 30 * 24 * 60 * 60 * 1000,
     };
-  }, [verificationReport, expiryMonths]);
+  }, [projectData, verificationData, expiryMonths]);
 
   const generateCertificateNumber = () => {
     const year = new Date().getFullYear();
@@ -175,8 +176,8 @@ export function CertificateGenerator({
       const certificate: VerificationCertificate = {
         id: `cert_${Date.now()}`,
         certificateNumber,
-        verificationReportId: verificationReport.id,
-        projectId: verificationReport.projectId,
+        verificationReportId: `report_${projectData.id}`,
+        projectId: projectData.id,
         projectName: certificateData.projectName,
         projectCreator: {
           name: certificateData.projectCreator,
@@ -185,7 +186,9 @@ export function CertificateGenerator({
         verifier: {
           name: certificateData.verifier,
           organization: certificateData.verifierOrg,
-          credentials: verificationReport.verifierInfo.credentials,
+          credentials: verificationData.credentials || [
+            'Certified Project Auditor',
+          ],
         },
         issuedAt: Date.now(),
         expiresAt: certificateData.expiresAt,
@@ -215,8 +218,7 @@ export function CertificateGenerator({
         },
       };
 
-      setGeneratedCertificate(certificate);
-      onGenerateCertificate(certificate);
+      onCertificateGenerated(certificate);
     } catch (error) {
       console.error('Error generating certificate:', error);
     } finally {
@@ -285,7 +287,7 @@ export function CertificateGenerator({
               Generate official verification certificates
             </p>
           </div>
-          {generatedCertificate && (
+          {existingCertificate && (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onExportCertificate('pdf')}
@@ -391,17 +393,6 @@ export function CertificateGenerator({
                 />
                 <span className="ml-2 text-sm text-gray-700">
                   Digital Signature
-                </span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={includeBlockchain}
-                  onChange={(e) => setIncludeBlockchain(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">
-                  Blockchain Verification
                 </span>
               </label>
             </div>
@@ -518,7 +509,7 @@ export function CertificateGenerator({
       )}
 
       {/* Generated Certificate Details */}
-      {generatedCertificate && (
+      {existingCertificate && (
         <div className="p-6">
           <h4 className="text-md font-medium text-gray-900 mb-4">
             Generated Certificate
@@ -532,11 +523,11 @@ export function CertificateGenerator({
                 </label>
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-gray-900 font-mono">
-                    {generatedCertificate.certificateNumber}
+                    {existingCertificate.certificateNumber}
                   </p>
                   <button
                     onClick={() =>
-                      copyToClipboard(generatedCertificate.certificateNumber)
+                      copyToClipboard(existingCertificate.certificateNumber)
                     }
                     className="text-gray-400 hover:text-gray-600"
                   >
@@ -550,11 +541,11 @@ export function CertificateGenerator({
                 </label>
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-gray-900 font-mono truncate">
-                    {generatedCertificate.securityHash}
+                    {existingCertificate.securityHash}
                   </p>
                   <button
                     onClick={() =>
-                      copyToClipboard(generatedCertificate.securityHash)
+                      copyToClipboard(existingCertificate.securityHash)
                     }
                     className="text-gray-400 hover:text-gray-600"
                   >
@@ -567,7 +558,7 @@ export function CertificateGenerator({
                   Issued At
                 </label>
                 <p className="text-sm text-gray-900">
-                  {format(new Date(generatedCertificate.issuedAt), 'PPpp')}
+                  {format(new Date(existingCertificate.issuedAt), 'PPpp')}
                 </p>
               </div>
               <div>
@@ -575,9 +566,9 @@ export function CertificateGenerator({
                   Status
                 </label>
                 <span
-                  className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(generatedCertificate.status)}`}
+                  className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(existingCertificate.status)}`}
                 >
-                  {generatedCertificate.status.toUpperCase()}
+                  {existingCertificate.status.toUpperCase()}
                 </span>
               </div>
             </div>
@@ -587,7 +578,7 @@ export function CertificateGenerator({
                 Verification Scope
               </label>
               <div className="flex flex-wrap gap-2">
-                {generatedCertificate.scope.map((item, index) => (
+                {existingCertificate.scope.map((item, index) => (
                   <span
                     key={index}
                     className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded"
@@ -598,7 +589,7 @@ export function CertificateGenerator({
               </div>
             </div>
 
-            {generatedCertificate.metadata.blockchain && (
+            {existingCertificate.metadata.blockchain && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Blockchain Verification
@@ -612,15 +603,14 @@ export function CertificateGenerator({
                   </div>
                   <div className="text-xs text-blue-700 space-y-1">
                     <p>
-                      Network:{' '}
-                      {generatedCertificate.metadata.blockchain.network}
+                      Network: {existingCertificate.metadata.blockchain.network}
                     </p>
                     <p>
                       Block: #
-                      {generatedCertificate.metadata.blockchain.blockNumber}
+                      {existingCertificate.metadata.blockchain.blockNumber}
                     </p>
                     <p className="font-mono break-all">
-                      TX: {generatedCertificate.metadata.blockchain.txHash}
+                      TX: {existingCertificate.metadata.blockchain.txHash}
                     </p>
                   </div>
                 </div>
@@ -647,7 +637,7 @@ export function CertificateGenerator({
                   copyToClipboard(
                     window.location.href +
                       '/certificate/' +
-                      generatedCertificate.id
+                      existingCertificate.id
                   )
                 }
                 className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"

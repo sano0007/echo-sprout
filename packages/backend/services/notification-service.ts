@@ -59,13 +59,11 @@ export class NotificationService {
       expiresAt: undefined,
       metadata: undefined,
       isRead: false,
-      isEmailSent: false,
-      isPushSent: false,
-        isArchived: false,
-        tags: undefined,
-        batchId: undefined,
-        parentNotificationId: undefined,
-        isTest: false,
+      isArchived: false,
+      tags: undefined,
+      batchId: undefined,
+      parentNotificationId: undefined,
+      isTest: false,
     };
 
     const notificationId = await ctx.db.insert(

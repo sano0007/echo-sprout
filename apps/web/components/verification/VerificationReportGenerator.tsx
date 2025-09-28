@@ -127,10 +127,10 @@ export function VerificationReportGenerator({
   ];
 
   const reportMetrics = useMemo(() => {
-    const overallScore = verificationResults?.score || 0;
-    const totalDocuments = projectData?.documents?.length || 0;
+    const overallScore = verificationResults?.qualityScore || 0;
+    const totalDocuments = verificationResults?.documents?.length || 0;
     const verifiedDocuments =
-      projectData?.documents?.filter((d: any) => d.status === 'verified')
+      verificationResults?.documents?.filter((d: any) => d.verified === true)
         .length || 0;
     const totalMessages = communicationData?.messages?.length || 0;
     const urgentMessages =
@@ -171,38 +171,41 @@ export function VerificationReportGenerator({
         submittedAt: projectData.submissionDate || Date.now(),
         verifiedAt: Date.now(),
         verifierInfo: {
-          id: 'verifier_id', // This would come from auth context
-          name: 'Dr. Sarah Johnson',
-          email: 'sarah.johnson@verification.org',
-          role: 'Senior Verification Specialist',
-          credentials: [
-            'PhD in Computer Science',
+          id: verificationResults.verifierId || 'unknown_verifier',
+          name: verificationResults.verifierName || 'Unknown Verifier',
+          email: verificationResults.verifierEmail || '',
+          role: verificationResults.verifierRole || 'Verification Specialist',
+          credentials: verificationResults.verifierCredentials || [
             'Certified Project Auditor',
-            '10+ years experience',
+            'Academic Assessment Expert',
+            'Quality Assurance Specialist',
           ],
-          organization: 'Independent Verification Authority',
+          organization:
+            verificationResults.verifierOrganization ||
+            'Independent Verification Authority',
         },
         projectCreatorInfo: {
-          id: projectData.creatorId,
-          name: projectData.creatorName,
-          email: projectData.creatorEmail,
-          organization: projectData.organization,
+          id: projectData.creatorId || 'unknown',
+          name: projectData.creatorName || 'Unknown Creator',
+          email: projectData.creatorEmail || '',
+          organization: projectData.organization || '',
         },
         verificationResults: {
           overallScore: reportMetrics.overallScore,
           status: reportMetrics.status as any,
           categories: verificationResults?.categories || [],
-          summary: generateSummary(),
-          recommendations: generateRecommendations(),
-          strengths: generateStrengths(),
-          weaknesses: generateWeaknesses(),
+          summary: verificationResults?.summary || generateSummary(),
+          recommendations:
+            verificationResults?.recommendations || generateRecommendations(),
+          strengths: verificationResults?.strengths || generateStrengths(),
+          weaknesses: verificationResults?.weaknesses || generateWeaknesses(),
         },
         documents:
-          projectData.documents?.map((doc: any) => ({
+          verificationResults.documents?.map((doc: any) => ({
             id: doc.id,
             name: doc.name,
             type: doc.type,
-            status: doc.status,
+            status: doc.verified ? 'verified' : 'pending',
             comments: doc.comments || [],
             annotations: doc.annotations || 0,
           })) || [],
@@ -221,8 +224,8 @@ export function VerificationReportGenerator({
           duration:
             Date.now() -
             new Date(projectData.submissionDate || Date.now()).getTime(),
-          complexity: getComplexityLevel(),
-          riskLevel: getRiskLevel(),
+          complexity: projectData.metadata?.complexity || getComplexityLevel(),
+          riskLevel: projectData.metadata?.riskLevel || getRiskLevel(),
           compliance: projectData.compliance || [],
           tags: projectData.tags || [],
         },
