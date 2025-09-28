@@ -8,6 +8,7 @@ import './globals.css';
 import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
 import ConvexClientProvider from '../providers/ConvexProviderWithClerk';
+import { Toaster } from '../components/ui/toaster';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -38,6 +39,7 @@ export default function RootLayout({
               <Navigation />
               <main className="flex-1">{children}</main>
               <Footer />
+              <Toaster />
             </div>
           </ConvexClientProvider>
         </ClerkProvider>

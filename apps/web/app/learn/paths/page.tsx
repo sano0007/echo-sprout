@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import { useUser } from '@clerk/nextjs';
+import { useToast } from '@/hooks/use-toast';
 
 type FormState = {
   title: string;
@@ -25,12 +26,21 @@ type FormState = {
 
 export default function LearningPathsCreatePage() {
   const { isSignedIn } = useUser();
+  const { toast } = useToast();
   const createLearningPath = useMutation(api.learn.createLearningPath);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<null | {
-    type: 'success' | 'error';
-    text: string;
-  }>(null);
+  const [errors, setErrors] = useState<{
+    title?: string;
+    description?: string;
+    estimatedDuration?: string;
+    coverImageUrl?: string;
+    tags?: string;
+    lessons?: Array<{
+      title?: string;
+      videoUrl?: string;
+      pdfs?: string;
+    }>;
+  }>({});
   const [form, setForm] = useState<FormState>({
     title: '',
     description: '',
@@ -46,33 +56,127 @@ export default function LearningPathsCreatePage() {
 
   // Note: We intentionally do NOT record views on the paths index page.
 
-  const update = (name: keyof FormState, value: string | number | boolean) =>
+const update = (name: keyof FormState, value: string | number | boolean) =>
     setForm((f) => ({ ...f, [name]: value }));
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const isValidUrl = (url: string) => {
+    try {
+      const u = new URL(url);
+      return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  const validateForm = (f: FormState) => {
+    const fieldErrors: any = {};
+    const messages: string[] = [];
+
+    if (!f.title.trim()) {
+      fieldErrors.title = 'Title is required.';
+      messages.push(fieldErrors.title);
+    } else if (f.title.trim().length < 3) {
+      fieldErrors.title = 'Title must be at least 3 characters.';
+      messages.push(fieldErrors.title);
+    } else if (f.title.trim().length > 120) {
+      fieldErrors.title = 'Title must be at most 120 characters.';
+      messages.push(fieldErrors.title);
+    }
+
+    if (!f.description.trim()) {
+      fieldErrors.description = 'Description is required.';
+      messages.push(fieldErrors.description);
+    } else if (f.description.trim().length < 20) {
+      fieldErrors.description = 'Description must be at least 20 characters.';
+      messages.push(fieldErrors.description);
+    }
+
+    if (!Number.isFinite(f.estimatedDuration)) {
+      fieldErrors.estimatedDuration = 'Estimated duration is required.';
+      messages.push(fieldErrors.estimatedDuration);
+    } else if (f.estimatedDuration <= 0 || !Number.isInteger(f.estimatedDuration)) {
+      fieldErrors.estimatedDuration = 'Duration must be a positive whole number.';
+      messages.push(fieldErrors.estimatedDuration);
+    } else if (f.estimatedDuration > 24 * 60) {
+      fieldErrors.estimatedDuration = 'Duration seems too large (max 1440 minutes).';
+      messages.push(fieldErrors.estimatedDuration);
+    }
+
+    if (f.coverImageUrl && f.coverImageUrl.trim()) {
+      if (!isValidUrl(f.coverImageUrl.trim())) {
+        fieldErrors.coverImageUrl = 'Cover Image URL must be a valid http(s) URL.';
+        messages.push(fieldErrors.coverImageUrl);
+      }
+    }
+
+    if (f.tags && f.tags.trim()) {
+      const tags = f.tags
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (tags.length > 10) {
+        fieldErrors.tags = 'Please use at most 10 tags.';
+        messages.push(fieldErrors.tags);
+      }
+      for (const t of tags) {
+        if (t.length < 1 || t.length > 24) {
+          fieldErrors.tags = 'Each tag must be between 1 and 24 characters.';
+          messages.push(fieldErrors.tags);
+          break;
+        }
+      }
+    }
+
+    if (Array.isArray(f.lessons) && f.lessons.length > 0) {
+      fieldErrors.lessons = [] as any[];
+      f.lessons.forEach((l, idx) => {
+        const le: any = {};
+        if (!l.title.trim()) {
+          le.title = 'Lesson title is required.';
+          messages.push(`Lesson ${idx + 1}: ${le.title}`);
+        } else if (l.title.trim().length < 3) {
+          le.title = 'Lesson title must be at least 3 characters.';
+          messages.push(`Lesson ${idx + 1}: ${le.title}`);
+        }
+        if (l.videoUrl && l.videoUrl.trim() && !isValidUrl(l.videoUrl.trim())) {
+          le.videoUrl = 'Video URL must be a valid http(s) URL.';
+          messages.push(`Lesson ${idx + 1}: ${le.videoUrl}`);
+        }
+        if (l.pdfs && l.pdfs.trim()) {
+          const pdfs = l.pdfs
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+          for (const p of pdfs) {
+            if (!isValidUrl(p)) {
+              le.pdfs = 'All PDF URLs must be valid http(s) URLs.';
+              messages.push(`Lesson ${idx + 1}: ${le.pdfs}`);
+              break;
+            }
+          }
+        }
+        fieldErrors.lessons[idx] = le;
+      });
+    }
+
+    return {
+      fieldErrors,
+      messages,
+      hasErrors: messages.length > 0,
+    };
+  };
+
+    const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSignedIn) {
-      setMessage({
-        type: 'error',
-        text: 'Please sign in to create a learning path.',
-      });
+      toast({ title: 'Sign-in required', description: 'Please sign in to create a learning path.', variant: 'destructive' as any });
       return;
     }
-    if (!form.title.trim() || !form.description.trim()) {
-      setMessage({
-        type: 'error',
-        text: 'Title and description are required.',
-      });
-      return;
-    }
-    if (
-      !Number.isFinite(form.estimatedDuration) ||
-      form.estimatedDuration <= 0
-    ) {
-      setMessage({
-        type: 'error',
-        text: 'Estimated duration must be a positive number.',
-      });
+
+    const { fieldErrors, messages, hasErrors } = validateForm(form);
+    setErrors(fieldErrors);
+    if (hasErrors) {
+      toast({ title: 'Please fix the highlighted errors', description: messages[0], variant: 'destructive' as any });
       return;
     }
 
@@ -108,10 +212,7 @@ export default function LearningPathsCreatePage() {
         publish: form.publish,
         lessons: lessonsPayload,
       });
-      setMessage({
-        type: 'success',
-        text: 'Learning path created successfully.',
-      });
+      toast({ title: 'Success', description: 'Learning path created successfully.' });
       setForm({
         title: '',
         description: '',
@@ -124,11 +225,11 @@ export default function LearningPathsCreatePage() {
         publish: false,
         lessons: [],
       });
+      setErrors({});
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to create learning path.' });
+      toast({ title: 'Error', description: 'Failed to create learning path.', variant: 'destructive' as any });
     } finally {
       setIsSubmitting(false);
-      setTimeout(() => setMessage(null), 3000);
     }
   };
 
@@ -139,16 +240,6 @@ export default function LearningPathsCreatePage() {
         Define the structure and details for a new learning path.
       </p>
 
-      {message && (
-        <div
-          className={`mb-4 rounded px-4 py-3 text-white ${
-            message.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
-
       <form
         onSubmit={onSubmit}
         className="space-y-6 bg-white rounded-lg border p-6"
@@ -156,24 +247,32 @@ export default function LearningPathsCreatePage() {
         <div>
           <label className="block text-sm font-medium mb-1">Title</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className={`w-full border rounded px-3 py-2 ${errors.title ? 'border-red-500' : ''}`}
+            aria-invalid={!!errors.title}
             value={form.title}
             onChange={(e) => update('title', e.target.value)}
             placeholder="e.g., Carbon Markets Fundamentals"
             required
           />
+          {errors.title && (
+            <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+          )}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Description</label>
           <textarea
-            className="w-full border rounded px-3 py-2"
+            className={`w-full border rounded px-3 py-2 ${errors.description ? 'border-red-500' : ''}`}
+            aria-invalid={!!errors.description}
             rows={4}
             value={form.description}
             onChange={(e) => update('description', e.target.value)}
             placeholder="Brief overview of what learners will achieve"
             required
           />
+          {errors.description && (
+            <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+          )}
         </div>
 
         <div>
@@ -210,12 +309,16 @@ export default function LearningPathsCreatePage() {
             <input
               type="number"
               min={1}
-              className="w-full border rounded px-3 py-2"
+              className={`w-full border rounded px-3 py-2 ${errors.estimatedDuration ? 'border-red-500' : ''}`}
+              aria-invalid={!!errors.estimatedDuration}
               value={form.estimatedDuration}
               onChange={(e) =>
                 update('estimatedDuration', Number(e.target.value))
               }
             />
+            {errors.estimatedDuration && (
+              <p className="mt-1 text-sm text-red-600">{errors.estimatedDuration}</p>
+            )}
           </div>
 
           <div>
@@ -236,22 +339,30 @@ export default function LearningPathsCreatePage() {
           <div>
             <label className="block text-sm font-medium mb-1">Tags</label>
             <input
-              className="w-full border rounded px-3 py-2"
+              className={`w-full border rounded px-3 py-2 ${errors.tags ? 'border-red-500' : ''}`}
+              aria-invalid={!!errors.tags}
               value={form.tags}
               onChange={(e) => update('tags', e.target.value)}
               placeholder="Comma-separated, e.g., Carbon, Markets, Policy"
             />
+            {errors.tags && (
+              <p className="mt-1 text-sm text-red-600">{errors.tags}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
               Cover Image URL (optional)
             </label>
             <input
-              className="w-full border rounded px-3 py-2"
+              className={`w-full border rounded px-3 py-2 ${errors.coverImageUrl ? 'border-red-500' : ''}`}
+              aria-invalid={!!errors.coverImageUrl}
               value={form.coverImageUrl}
               onChange={(e) => update('coverImageUrl', e.target.value)}
               placeholder="https://..."
             />
+            {errors.coverImageUrl && (
+              <p className="mt-1 text-sm text-red-600">{errors.coverImageUrl}</p>
+            )}
           </div>
         </div>
 
@@ -307,7 +418,8 @@ export default function LearningPathsCreatePage() {
                       Title
                     </label>
                     <input
-                      className="w-full border rounded px-3 py-2"
+                      className={`w-full border rounded px-3 py-2 ${errors.lessons?.[idx]?.title ? 'border-red-500' : ''}`}
+                      aria-invalid={!!errors.lessons?.[idx]?.title}
                       value={lesson.title}
                       onChange={(e) =>
                         setForm((f) => ({
@@ -319,13 +431,17 @@ export default function LearningPathsCreatePage() {
                       }
                       placeholder="e.g., Introduction to Carbon Credits"
                     />
+                    {errors.lessons?.[idx]?.title && (
+                      <p className="mt-1 text-sm text-red-600">{errors.lessons[idx]?.title}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       Video URL (placeholder)
                     </label>
                     <input
-                      className="w-full border rounded px-3 py-2"
+                      className={`w-full border rounded px-3 py-2 ${errors.lessons?.[idx]?.videoUrl ? 'border-red-500' : ''}`}
+                      aria-invalid={!!errors.lessons?.[idx]?.videoUrl}
                       value={lesson.videoUrl}
                       onChange={(e) =>
                         setForm((f) => ({
@@ -337,6 +453,9 @@ export default function LearningPathsCreatePage() {
                       }
                       placeholder="https://..."
                     />
+                    {errors.lessons?.[idx]?.videoUrl && (
+                      <p className="mt-1 text-sm text-red-600">{errors.lessons[idx]?.videoUrl}</p>
+                    )}
                   </div>
                 </div>
 
@@ -365,7 +484,8 @@ export default function LearningPathsCreatePage() {
                     PDF URLs (comma separated, placeholders)
                   </label>
                   <input
-                    className="w-full border rounded px-3 py-2"
+                    className={`w-full border rounded px-3 py-2 ${errors.lessons?.[idx]?.pdfs ? 'border-red-500' : ''}`}
+                    aria-invalid={!!errors.lessons?.[idx]?.pdfs}
                     value={lesson.pdfs}
                     onChange={(e) =>
                       setForm((f) => ({
@@ -377,6 +497,9 @@ export default function LearningPathsCreatePage() {
                     }
                     placeholder="https://...intro.pdf, https://...guide.pdf"
                   />
+                  {errors.lessons?.[idx]?.pdfs && (
+                    <p className="mt-1 text-sm text-red-600">{errors.lessons[idx]?.pdfs}</p>
+                  )}
                 </div>
               </div>
             ))}
