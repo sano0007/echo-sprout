@@ -286,7 +286,7 @@ export const getBuyerDashboardMetrics = query({
     // Get all user transactions
     const transactions = await ctx.db
       .query('transactions')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', user._id))
+      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
       .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
       .collect();
 

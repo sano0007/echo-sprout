@@ -1,13 +1,13 @@
-"use client"
+'use client';
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useMutation } from 'convex/react'
-import { api } from '@packages/backend'
-import { useToast } from '@/hooks/use-toast'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation } from 'convex/react';
+import { api } from '@packages/backend';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -24,48 +24,47 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2 } from 'lucide-react'
-import { Id } from '@packages/backend/convex/_generated/dataModel'
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2 } from 'lucide-react';
+import { Id } from '@packages/backend/convex/_generated/dataModel';
 
 const refundFormSchema = z.object({
   refundReason: z.string().min(1, 'Please select a refund reason'),
-  refundAmount: z.number()
+  refundAmount: z
+    .number()
     .positive('Refund amount must be positive')
     .max(999999, 'Refund amount is too large'),
-  adminNotes: z.string().optional()
-})
+  adminNotes: z.string().optional(),
+});
 
-type RefundFormData = z.infer<typeof refundFormSchema>
+type RefundFormData = z.infer<typeof refundFormSchema>;
 
 interface RefundFormProps {
-  transactionId: Id<'transactions'>
-  transactionAmount: number
-  customerEmail: string
-  isOpen: boolean
-  onClose: () => void
-  onSuccess: () => void
+  transactionId: Id<'transactions'>;
+  transactionAmount: number;
+  customerEmail: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
 const refundReasons = [
   { value: 'customer_request', label: 'Customer Request' },
   { value: 'duplicate_payment', label: 'Duplicate Payment' },
   { value: 'fraudulent_transaction', label: 'Fraudulent Transaction' },
-  { value: 'product_not_delivered', label: 'Product Not Delivered' },
-  { value: 'quality_issue', label: 'Quality Issue' },
+  { value: 'project_issues', label: 'Issues with the project' },
   { value: 'technical_error', label: 'Technical Error' },
   { value: 'other', label: 'Other' },
-]
+];
 
 export function RefundForm({
   transactionId,
@@ -75,57 +74,60 @@ export function RefundForm({
   onClose,
   onSuccess,
 }: RefundFormProps) {
-  const { toast } = useToast()
-  const processRefund = useMutation(api.transactions.processRefund)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast();
+  const processRefund = useMutation(api.transactions.processRefund);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<RefundFormData>({
     resolver: zodResolver(refundFormSchema),
     defaultValues: {
       refundReason: '',
       refundAmount: transactionAmount,
-      adminNotes: ''
+      adminNotes: '',
     },
-  })
+  });
 
   const onSubmit = async (data: RefundFormData) => {
     try {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
 
       await processRefund({
         transactionId,
         refundReason: data.refundReason,
         refundAmount: data.refundAmount,
-        adminNotes: data.adminNotes
-      })
+        adminNotes: data.adminNotes,
+      });
 
       toast({
         title: 'Refund Processed',
         description: `Successfully processed refund of $${data.refundAmount.toFixed(2)} for ${customerEmail}`,
         variant: 'default',
-      })
+      });
 
-      form.reset()
-      onSuccess()
-      onClose()
+      form.reset();
+      onSuccess();
+      onClose();
     } catch (error) {
-      console.error('Refund processing error:', error)
+      console.error('Refund processing error:', error);
       toast({
         title: 'Refund Failed',
-        description: error instanceof Error ? error.message : 'Failed to process refund. Please try again.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to process refund. Please try again.',
         variant: 'destructive',
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleClose = () => {
     if (!isSubmitting) {
-      form.reset()
-      onClose()
+      form.reset();
+      onClose();
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -145,7 +147,10 @@ export function RefundForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Refund Reason *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a reason for the refund" />
@@ -178,7 +183,9 @@ export function RefundForm({
                       max={transactionAmount}
                       placeholder="0.00"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        field.onChange(parseFloat(e.target.value) || 0)
+                      }
                     />
                   </FormControl>
                   <FormDescription>
@@ -220,7 +227,9 @@ export function RefundForm({
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Process Refund
               </Button>
             </DialogFooter>
@@ -228,5 +237,5 @@ export function RefundForm({
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
