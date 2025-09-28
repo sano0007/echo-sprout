@@ -170,6 +170,10 @@ export default function ProjectRegister() {
         totalCarbonCredits: data.totalCarbonCredits,
         pricePerCredit: data.pricePerCredit,
         requiredDocuments: data.requiredDocuments,
+        creditsAvailable: data.totalCarbonCredits,
+        creditsSold: 0,
+        submittedDocuments: [],
+        isDocumentationComplete: false
       });
 
       // Now upload the files if any exist

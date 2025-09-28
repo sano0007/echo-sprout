@@ -18,13 +18,20 @@ export interface TrackingApiClient {
 export function createTrackingApi(convex: ConvexReactClient, store: TrackingStore) {
 
   // Fetch all projects for a buyer
-  const fetchProjects = async (userId: string): Promise<void> => {
+  const fetchProjects = async (clerkUserId: string): Promise<void> => {
     try {
       store.loading.projects = true;
       store.errors.projects = null;
 
+      // First get the Convex user ID from the Clerk user ID
+      const currentUser = await convex.query(api.users.getCurrentUser, {});
+
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
       const projects = await convex.query(api.buyer_impact_reports.getBuyerProjectTracking, {
-        userId: userId as any // Convert string to Convex ID
+        userId: currentUser._id // Use Convex user ID
       });
 
       // Transform and validate the data
@@ -79,14 +86,21 @@ export function createTrackingApi(convex: ConvexReactClient, store: TrackingStor
   };
 
   // Fetch detailed project data
-  const fetchSelectedProject = async (projectId: string, userId: string): Promise<void> => {
+  const fetchSelectedProject = async (projectId: string, clerkUserId: string): Promise<void> => {
     try {
       store.loading.selectedProject = true;
       store.errors.selectedProject = null;
 
+      // First get the Convex user ID from the Clerk user ID
+      const currentUser = await convex.query(api.users.getCurrentUser, {});
+
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
       const projectData = await convex.query(api.buyer_impact_reports.getDetailedProjectTracking, {
         projectId: projectId as any, // Convert string to Convex ID
-        userId: userId as any // Convert string to Convex ID
+        userId: currentUser._id // Use Convex user ID
       });
 
       if (projectData) {
@@ -155,13 +169,20 @@ export function createTrackingApi(convex: ConvexReactClient, store: TrackingStor
   };
 
   // Fetch portfolio summary
-  const fetchPortfolioSummary = async (userId: string): Promise<void> => {
+  const fetchPortfolioSummary = async (clerkUserId: string): Promise<void> => {
     try {
       store.loading.portfolio = true;
       store.errors.portfolio = null;
 
+      // First get the Convex user ID from the Clerk user ID
+      const currentUser = await convex.query(api.users.getCurrentUser, {});
+
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
       const summary = await convex.query(api.buyer_impact_reports.getBuyerPortfolioSummary, {
-        userId: userId as any // Convert string to Convex ID
+        userId: currentUser._id // Use Convex user ID
       });
 
       if (summary) {
@@ -193,10 +214,10 @@ export function createTrackingApi(convex: ConvexReactClient, store: TrackingStor
   };
 
   // Refresh all data
-  const refreshAllData = async (userId: string): Promise<void> => {
+  const refreshAllData = async (clerkUserId: string): Promise<void> => {
     await Promise.all([
-      fetchProjects(userId),
-      fetchPortfolioSummary(userId)
+      fetchProjects(clerkUserId),
+      fetchPortfolioSummary(clerkUserId)
     ]);
   };
 

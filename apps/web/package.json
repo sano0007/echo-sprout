@@ -61,6 +61,8 @@
     "react-hook-form": "^7.63.0",
     "react-hot-toast": "^2.6.0",
     "react-paginate": "^8.3.0",
+    "react-toastify": "^11.0.5",
+    "stripe": "^18.5.0",
     "react-pdf": "^10.1.0",
     "recharts": "^3.2.1",
     "react-resizable-panels": "^3.0.6",

@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { action, mutation, query } from './_generated/server';
+import { action, mutation, query, internalMutation } from './_generated/server';
 import { WorkflowService } from '../services/workflow-service';
 import { VerifierAssignmentService } from '../services/verifier-assignment-service';
 
@@ -35,7 +35,11 @@ export const createProject = mutation({
     expectedCompletionDate: v.string(),
     totalCarbonCredits: v.number(),
     pricePerCredit: v.number(),
+    creditsAvailable: v.number(),
+    creditsSold: v.number(),
     requiredDocuments: v.array(v.string()),
+    submittedDocuments: v.array(v.string()),
+    isDocumentationComplete: v.boolean(),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -53,7 +57,6 @@ export const createProject = mutation({
       throw new Error('User not found');
     }
 
-    // Create the project
     const projectId = await ctx.db.insert('projects', {
       creatorId: user._id,
       title: args.title,
@@ -65,25 +68,129 @@ export const createProject = mutation({
       budget: args.budget,
       startDate: args.startDate,
       expectedCompletionDate: args.expectedCompletionDate,
-      status: 'draft',
-      verificationStatus: 'pending',
+      actualCompletionDate: undefined,
+      status: 'active' as const,
+      verificationStatus: 'verified' as const,
       totalCarbonCredits: args.totalCarbonCredits,
       pricePerCredit: args.pricePerCredit,
-      creditsAvailable: args.totalCarbonCredits,
-      creditsSold: 0,
+      creditsAvailable: args.creditsAvailable,
+      creditsSold: args.creditsSold,
       assignedVerifierId: undefined,
       verificationStartedAt: undefined,
       verificationCompletedAt: undefined,
       qualityScore: undefined,
       requiredDocuments: args.requiredDocuments,
-      submittedDocuments: [],
-      isDocumentationComplete: false,
-      actualCompletionDate: undefined,
+      submittedDocuments: args.submittedDocuments,
+      isDocumentationComplete: args.isDocumentationComplete,
     });
 
     return projectId;
   },
 });
+
+// Internal mutation for seeding (bypasses auth)
+export const createProjectForSeeding = internalMutation({
+  args: {
+    creatorId: v.id('users'),
+    title: v.string(),
+    description: v.string(),
+    projectType: v.union(
+      v.literal('reforestation'),
+      v.literal('solar'),
+      v.literal('wind'),
+      v.literal('biogas'),
+      v.literal('waste_management'),
+      v.literal('mangrove_restoration')
+    ),
+    location: v.object({
+      lat: v.float64(),
+      long: v.float64(),
+      name: v.string(),
+    }),
+    areaSize: v.number(),
+    estimatedCO2Reduction: v.number(),
+    budget: v.number(),
+    startDate: v.string(),
+    expectedCompletionDate: v.string(),
+    status: v.union(
+      v.literal('draft'),
+      v.literal('submitted'),
+      v.literal('under_review'),
+      v.literal('approved'),
+      v.literal('rejected'),
+      v.literal('active'),
+      v.literal('completed'),
+      v.literal('suspended')
+    ),
+    verificationStatus: v.union(
+      v.literal('pending'),
+      v.literal('in_progress'),
+      v.literal('verified'),
+      v.literal('rejected'),
+      v.literal('revision_required')
+    ),
+    totalCarbonCredits: v.number(),
+    pricePerCredit: v.number(),
+    creditsAvailable: v.number(),
+    creditsSold: v.number(),
+    requiredDocuments: v.array(v.string()),
+    submittedDocuments: v.array(v.string()),
+    isDocumentationComplete: v.boolean(),
+    images: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const projectId = await ctx.db.insert('projects', {
+      creatorId: args.creatorId,
+      title: args.title,
+      description: args.description,
+      projectType: args.projectType,
+      location: args.location,
+      areaSize: args.areaSize,
+      estimatedCO2Reduction: args.estimatedCO2Reduction,
+      budget: args.budget,
+      startDate: args.startDate,
+      expectedCompletionDate: args.expectedCompletionDate,
+      actualCompletionDate: undefined,
+      status: args.status,
+      verificationStatus: args.verificationStatus,
+      totalCarbonCredits: args.totalCarbonCredits,
+      pricePerCredit: args.pricePerCredit,
+      creditsAvailable: args.creditsAvailable,
+      creditsSold: args.creditsSold,
+      assignedVerifierId: undefined,
+      verificationStartedAt: undefined,
+      verificationCompletedAt: undefined,
+      qualityScore: undefined,
+      requiredDocuments: args.requiredDocuments,
+      submittedDocuments: args.submittedDocuments,
+      isDocumentationComplete: args.isDocumentationComplete,
+      images: args.images,
+    });
+
+    return projectId;
+  },
+});
+
+// Get all projects
+export const getAllProjects = query({
+  handler: async (ctx) => {
+    return await ctx.db.query('projects').collect();
+  },
+});
+
+// Delete all projects (for testing/seeding purposes)
+export const deleteAllProjects = internalMutation({
+  handler: async (ctx) => {
+    const projects = await ctx.db.query('projects').collect();
+
+    for (const project of projects) {
+      await ctx.db.delete(project._id);
+    }
+
+    return { deleted: projects.length };
+  },
+});
+
 
 export const getUserProjects = query({
   args: {},
@@ -117,15 +224,15 @@ export const getUserProjects = query({
           ...project,
           creator: creator
             ? {
-                firstName: creator.firstName,
-                lastName: creator.lastName,
-                email: creator.email,
-              }
+              firstName: creator.firstName,
+              lastName: creator.lastName,
+              email: creator.email,
+            }
             : {
-                firstName: 'Unknown',
-                lastName: 'User',
-                email: '',
-              },
+              firstName: 'Unknown',
+              lastName: 'User',
+              email: '',
+            },
         };
       })
     );
@@ -365,6 +472,7 @@ export const deleteProject = mutation({
   },
 });
 
+
 // Get project verification status and details
 export const getProjectVerificationStatus = query({
   args: {
@@ -439,12 +547,12 @@ export const getProjectVerificationStatus = query({
         verification,
         assignedVerifier: assignedVerifier
           ? {
-              _id: assignedVerifier._id,
-              firstName: assignedVerifier.firstName,
-              lastName: assignedVerifier.lastName,
-              email: assignedVerifier.email,
-              verifierSpecialty: assignedVerifier.verifierSpecialty,
-            }
+            _id: assignedVerifier._id,
+            firstName: assignedVerifier.firstName,
+            lastName: assignedVerifier.lastName,
+            email: assignedVerifier.email,
+            verifierSpecialty: assignedVerifier.verifierSpecialty,
+          }
           : null,
         recentMessages: messages,
         documents,
@@ -540,6 +648,7 @@ export const submitProjectForVerification = mutation({
     }
   },
 });
+
 
 // Get project timeline and verification events
 export const getProjectTimeline = query({

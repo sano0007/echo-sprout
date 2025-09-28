@@ -1,6 +1,6 @@
 'use client';
 
-import type { Id } from '@packages/backend/convex/_generated/dataModel';
+import type { Id } from '@packages/backend';
 import { useMutation, useQuery } from 'convex/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useRef, useState } from 'react';

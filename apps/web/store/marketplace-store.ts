@@ -20,6 +20,9 @@ interface MarketplaceStore {
   hasNextPage: boolean;
   hasPrevPage: boolean;
 
+  // Purchase state
+  isProcessing: boolean;
+
   // getters
   projectCount: () => number;
   hasActiveFilters: () => boolean;
@@ -31,6 +34,7 @@ interface MarketplaceStore {
   clearError: () => void;
   resetFilters: () => void;
   refreshProjects: () => Promise<void>;
+  purchaseToken: (dollarAmount: number, creditAmount: number) => Promise<void>;
 }
 
 const defaultFilters: MarketplaceFilters = {
@@ -57,6 +61,9 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
   totalPages: 0,
   hasNextPage: false,
   hasPrevPage: false,
+
+  // Purchase state
+  isProcessing: false,
 
   // Computed getters
   projectCount: () => get().projects.length,
@@ -155,5 +162,35 @@ export const useMarketplaceStore = create<MarketplaceStore>((set, get) => ({
   resetFilters: () => {
     set({ filters: defaultFilters });
     get().fetchProjects();
+  },
+
+  purchaseToken: async (dollarAmount: number, creditAmount: number) => {
+    set({ isProcessing: true, error: null });
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: dollarAmount,
+          credits: creditAmount,
+        }),
+      });
+
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create checkout session';
+      set({ error: errorMessage });
+    } finally {
+      set({ isProcessing: false });
+    }
   },
 }));

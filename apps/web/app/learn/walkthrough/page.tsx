@@ -44,14 +44,14 @@ export default function WalkthroughPage() {
       <div className="relative bg-white rounded-lg shadow-md p-4">
         <div className="flex justify-center">
           <img
-            src={current.image}
+            src={current?.image ?? "https://placehold.co/800x450?text=No+Image"}
             alt={`Slide ${index + 1}`}
             className="w-full max-h-[60vh] object-contain rounded border"
           />
         </div>
 
         <div className="mt-4 border-t pt-3 text-gray-700">
-          {current.details}
+          {current?.details}
         </div>
 
         <button

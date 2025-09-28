@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import type React from 'react';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

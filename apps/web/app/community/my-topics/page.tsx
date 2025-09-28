@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 
 type Post = {
   id: string | number;
@@ -61,7 +61,7 @@ function RelativeTime({
 export default function MyTopicsPage() {
   const [myTopics, setMyTopics] = useState<Post[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | number | null>(null);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('general');
   const [tags, setTags] = useState('');

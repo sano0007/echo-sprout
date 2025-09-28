@@ -350,6 +350,12 @@ export const listLearningPaths = query({
       level: d.level,
       estimatedDuration: d.estimatedDuration,
       moduleCount: d.moduleCount,
+      status: d.status,
+      isPublished: d.isPublished,
+      createdByName: d.createdBy,
+      enrollmentCount: d.enrollmentCount,
+      publishedAt: d.publishedAt,
+      lastUpdatedAt: d.lastUpdatedAt,
     }));
   },
 });
