@@ -299,11 +299,11 @@ export default function LearnHub() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                 {modulesList.map((module) => (
                   <div
                     key={module.id}
-                    className="border rounded-lg p-6 hover:shadow-lg transition-shadow"
+                    className="border rounded-lg p-6 hover:shadow-lg transition-shadow h-full flex flex-col"
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
@@ -395,7 +395,7 @@ export default function LearnHub() {
                               : 'Continue Course';
                         return (
                           <button
-                            className="block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                            className="mt-auto block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
                             onClick={() => {
                               if (!isSignedIn) {
                                 alert('Please sign in to start the course.');
@@ -412,7 +412,7 @@ export default function LearnHub() {
                       })()
                     ) : (
                       <button
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded opacity-50 cursor-not-allowed"
+                        className="mt-auto w-full bg-blue-600 text-white py-2 px-4 rounded opacity-50 cursor-not-allowed"
                         title="Create a Learning Path to view details"
                       >
                         Start Course
