@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { StripeService } from '@packages/backend/services/stripe-service';
+import { StripeService } from '@packages/backend';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 
 export async function POST(request: NextRequest) {

@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@packages/backend/convex/_generated/api";
+import { api } from "@packages/backend";
 import AlertManagement from "@/components/monitoring/AlertManagement";
 import AnalyticsDashboard from "@/components/monitoring/AnalyticsDashboard";
 import ProjectManagement from "@/components/monitoring/ProjectManagement";

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
 import { useQuery } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -96,17 +96,11 @@ export default function LearnAnalyticsPage() {
       if (blocks.length === 0) {
         // Fallback to whole-page capture (should be rare now)
         const canvas = await html2canvas(root, {
-          scale: 3,
           useCORS: true,
           logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: root.scrollWidth,
-          windowHeight: root.scrollHeight,
+          background: '#ffffff',
           width: root.scrollWidth,
           height: root.scrollHeight,
-          foreignObjectRendering: true,
-          scrollX: 0,
-          scrollY: -window.scrollY,
         });
 
         const imgData = canvas.toDataURL('image/png');
@@ -166,19 +160,11 @@ export default function LearnAnalyticsPage() {
           const h = el.scrollHeight || el.clientHeight;
 
           const canvas = await html2canvas(el, {
-            scale: 3,
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff',
-            windowWidth: w,
-            windowHeight: h,
+            background: '#ffffff',
             width: w,
             height: h,
-            // For header, use foreignObject to render text precisely; default for others
-            foreignObjectRendering: isHeaderBlock ? true : false,
-            letterRendering: true,
-            scrollX: 0,
-            scrollY: 0,
           });
 
           // Restore padding

@@ -1,4 +1,4 @@
-import {Activity, BarChart3, Bell, BookOpen, HelpCircle, Home, LogOut, Monitor, Search, Settings, Shield, User, Users} from "lucide-react";
+import {Activity, BarChart3, Bell, BookOpen, HelpCircle, Home, LogOut, Monitor, Search, Settings, Shield, User, Users, Coins} from "lucide-react";
 import React from 'react';
 
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
@@ -31,6 +31,11 @@ const adminNavItems = [
         icon: Users,
         url: "/admin/users",
         badge: "12",
+    },
+    {
+        title: "Transactions",
+        icon: Coins,
+        url: "/admin/transactions"
     },
     {
         title: "Education Hub",

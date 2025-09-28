@@ -133,6 +133,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         verificationStartedAt?: number | undefined;
         verificationCompletedAt?: number | undefined;
         qualityScore?: number | undefined;
+        images?: string[] | undefined;
         progressPercentage?: number | undefined;
         lastProgressUpdate?: number | undefined;
         creatorId: import("convex/values").GenericId<"users">;
@@ -149,8 +150,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         budget: number;
         startDate: string;
         expectedCompletionDate: string;
-        status: "rejected" | "draft" | "submitted" | "under_review" | "approved" | "active" | "completed" | "suspended";
-        verificationStatus: "pending" | "in_progress" | "verified" | "rejected" | "revision_required";
+        status: "draft" | "submitted" | "under_review" | "approved" | "rejected" | "active" | "completed" | "suspended";
+        verificationStatus: "rejected" | "pending" | "in_progress" | "verified" | "revision_required";
         totalCarbonCredits: number;
         pricePerCredit: number;
         creditsAvailable: number;
@@ -178,8 +179,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         startDate: import("convex/values").VString<string, "required">;
         expectedCompletionDate: import("convex/values").VString<string, "required">;
         actualCompletionDate: import("convex/values").VString<string | undefined, "optional">;
-        status: import("convex/values").VUnion<"rejected" | "draft" | "submitted" | "under_review" | "approved" | "active" | "completed" | "suspended", [import("convex/values").VLiteral<"draft", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"active", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"suspended", "required">], "required", never>;
-        verificationStatus: import("convex/values").VUnion<"pending" | "in_progress" | "verified" | "rejected" | "revision_required", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"verified", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
+        status: import("convex/values").VUnion<"draft" | "submitted" | "under_review" | "approved" | "rejected" | "active" | "completed" | "suspended", [import("convex/values").VLiteral<"draft", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"active", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"suspended", "required">], "required", never>;
+        verificationStatus: import("convex/values").VUnion<"rejected" | "pending" | "in_progress" | "verified" | "revision_required", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"verified", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
         totalCarbonCredits: import("convex/values").VFloat64<number, "required">;
         pricePerCredit: import("convex/values").VFloat64<number, "required">;
         creditsAvailable: import("convex/values").VFloat64<number, "required">;
@@ -191,9 +192,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         requiredDocuments: import("convex/values").VArray<string[], import("convex/values").VString<string, "required">, "required">;
         submittedDocuments: import("convex/values").VArray<string[], import("convex/values").VString<string, "required">, "required">;
         isDocumentationComplete: import("convex/values").VBoolean<boolean, "required">;
+        images: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         progressPercentage: import("convex/values").VFloat64<number | undefined, "optional">;
         lastProgressUpdate: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "creatorId" | "title" | "description" | "projectType" | "location" | "areaSize" | "estimatedCO2Reduction" | "budget" | "startDate" | "expectedCompletionDate" | "actualCompletionDate" | "status" | "verificationStatus" | "totalCarbonCredits" | "pricePerCredit" | "creditsAvailable" | "creditsSold" | "assignedVerifierId" | "verificationStartedAt" | "verificationCompletedAt" | "qualityScore" | "requiredDocuments" | "submittedDocuments" | "isDocumentationComplete" | "progressPercentage" | "lastProgressUpdate" | "location.name" | "location.lat" | "location.long">, {
+    }, "required", "creatorId" | "title" | "description" | "projectType" | "location" | "areaSize" | "estimatedCO2Reduction" | "budget" | "startDate" | "expectedCompletionDate" | "actualCompletionDate" | "status" | "verificationStatus" | "totalCarbonCredits" | "pricePerCredit" | "creditsAvailable" | "creditsSold" | "assignedVerifierId" | "verificationStartedAt" | "verificationCompletedAt" | "qualityScore" | "requiredDocuments" | "submittedDocuments" | "isDocumentationComplete" | "images" | "progressPercentage" | "lastProgressUpdate" | "location.name" | "location.lat" | "location.long">, {
         by_creator: ["creatorId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_type: ["projectType", "_creationTime"];
@@ -230,34 +232,28 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_reserved_by: ["reservedBy", "_creationTime"];
     }, {}, {}>;
     transactions: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        projectId?: import("convex/values").GenericId<"projects"> | undefined;
         stripePaymentIntentId?: string | undefined;
         stripeSessionId?: string | undefined;
         certificateUrl?: string | undefined;
-        projectId: import("convex/values").GenericId<"projects">;
         creditAmount: number;
-        buyerId: import("convex/values").GenericId<"users">;
+        buyerId: string;
         unitPrice: number;
         totalAmount: number;
-        platformFee: number;
-        netAmount: number;
-        paymentStatus: "pending" | "completed" | "processing" | "failed" | "refunded" | "expired";
-        impactDescription: string;
+        paymentStatus: "completed" | "pending" | "processing" | "failed" | "refunded" | "expired";
         transactionReference: string;
     }, {
-        buyerId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
+        buyerId: import("convex/values").VString<string, "required">;
+        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects"> | undefined, "optional">;
         creditAmount: import("convex/values").VFloat64<number, "required">;
         unitPrice: import("convex/values").VFloat64<number, "required">;
         totalAmount: import("convex/values").VFloat64<number, "required">;
-        platformFee: import("convex/values").VFloat64<number, "required">;
-        netAmount: import("convex/values").VFloat64<number, "required">;
-        paymentStatus: import("convex/values").VUnion<"pending" | "completed" | "processing" | "failed" | "refunded" | "expired", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"processing", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"failed", "required">, import("convex/values").VLiteral<"refunded", "required">, import("convex/values").VLiteral<"expired", "required">], "required", never>;
+        paymentStatus: import("convex/values").VUnion<"completed" | "pending" | "processing" | "failed" | "refunded" | "expired", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"processing", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"failed", "required">, import("convex/values").VLiteral<"refunded", "required">, import("convex/values").VLiteral<"expired", "required">], "required", never>;
         stripePaymentIntentId: import("convex/values").VString<string | undefined, "optional">;
         stripeSessionId: import("convex/values").VString<string | undefined, "optional">;
         certificateUrl: import("convex/values").VString<string | undefined, "optional">;
-        impactDescription: import("convex/values").VString<string, "required">;
         transactionReference: import("convex/values").VString<string, "required">;
-    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "platformFee" | "netAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "impactDescription" | "transactionReference">, {
+    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "transactionReference">, {
         by_buyer: ["buyerId", "_creationTime"];
         by_project: ["projectId", "_creationTime"];
         by_payment_status: ["paymentStatus", "_creationTime"];
@@ -337,7 +333,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         overallScore?: number | undefined;
         confidenceLevel?: "low" | "high" | "medium" | undefined;
         recommendationJustification?: string | undefined;
-        status: "in_progress" | "rejected" | "revision_required" | "approved" | "completed" | "assigned" | "accepted";
+        status: "approved" | "rejected" | "completed" | "in_progress" | "revision_required" | "assigned" | "accepted";
         projectId: import("convex/values").GenericId<"projects">;
         verifierId: import("convex/values").GenericId<"users">;
         assignedAt: number;
@@ -347,7 +343,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {
         projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
         verifierId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        status: import("convex/values").VUnion<"in_progress" | "rejected" | "revision_required" | "approved" | "completed" | "assigned" | "accepted", [import("convex/values").VLiteral<"assigned", "required">, import("convex/values").VLiteral<"accepted", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
+        status: import("convex/values").VUnion<"approved" | "rejected" | "completed" | "in_progress" | "revision_required" | "assigned" | "accepted", [import("convex/values").VLiteral<"assigned", "required">, import("convex/values").VLiteral<"accepted", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
         assignedAt: import("convex/values").VFloat64<number, "required">;
         acceptedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         startedAt: import("convex/values").VFloat64<number | undefined, "optional">;
@@ -682,15 +678,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_date_type: ["reportingDate", "updateType", "_creationTime"];
     }, {}, {}>;
     educationalContent: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        rejectionReason?: string | undefined;
         images?: string[] | undefined;
+        rejectionReason?: string | undefined;
         reviewedBy?: import("convex/values").GenericId<"users"> | undefined;
         reviewedAt?: number | undefined;
         reviewNotes?: string | undefined;
         estimatedReadTime?: number | undefined;
         publishedAt?: number | undefined;
         title: string;
-        status: "rejected" | "draft" | "submitted" | "under_review" | "approved" | "published";
+        status: "draft" | "submitted" | "under_review" | "approved" | "rejected" | "published";
         content: string;
         contentType: "article" | "video" | "case_study";
         category: string;
@@ -710,7 +706,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         tags: import("convex/values").VArray<string[], import("convex/values").VString<string, "required">, "required">;
         images: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         authorId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        status: import("convex/values").VUnion<"rejected" | "draft" | "submitted" | "under_review" | "approved" | "published", [import("convex/values").VLiteral<"draft", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"published", "required">], "required", never>;
+        status: import("convex/values").VUnion<"draft" | "submitted" | "under_review" | "approved" | "rejected" | "published", [import("convex/values").VLiteral<"draft", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"published", "required">], "required", never>;
         reviewedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
         reviewedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         reviewNotes: import("convex/values").VString<string | undefined, "optional">;
@@ -723,7 +719,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isPublished: import("convex/values").VBoolean<boolean, "required">;
         publishedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         lastUpdatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "title" | "status" | "rejectionReason" | "content" | "contentType" | "category" | "tags" | "images" | "authorId" | "reviewedBy" | "reviewedAt" | "reviewNotes" | "estimatedReadTime" | "difficultyLevel" | "viewCount" | "likeCount" | "shareCount" | "isPublished" | "publishedAt" | "lastUpdatedAt">, {
+    }, "required", "title" | "status" | "images" | "rejectionReason" | "content" | "contentType" | "category" | "tags" | "authorId" | "reviewedBy" | "reviewedAt" | "reviewNotes" | "estimatedReadTime" | "difficultyLevel" | "viewCount" | "likeCount" | "shareCount" | "isPublished" | "publishedAt" | "lastUpdatedAt">, {
         by_author: ["authorId", "_creationTime"];
         by_category: ["category", "_creationTime"];
         by_status: ["status", "_creationTime"];
@@ -889,10 +885,10 @@ declare const _default: import("convex/server").SchemaDefinition<{
         projectId: import("convex/values").GenericId<"projects">;
         buyerId: import("convex/values").GenericId<"users">;
         certificateUrl: string;
-        impactDescription: string;
         transactionId: import("convex/values").GenericId<"transactions">;
         certificateNumber: string;
         creditsAmount: number;
+        impactDescription: string;
         issueDate: number;
         qrCodeUrl: string;
         isValid: boolean;
@@ -907,7 +903,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         certificateUrl: import("convex/values").VString<string, "required">;
         qrCodeUrl: import("convex/values").VString<string, "required">;
         isValid: import("convex/values").VBoolean<boolean, "required">;
-    }, "required", "projectId" | "buyerId" | "certificateUrl" | "impactDescription" | "transactionId" | "certificateNumber" | "creditsAmount" | "issueDate" | "qrCodeUrl" | "isValid">, {
+    }, "required", "projectId" | "buyerId" | "certificateUrl" | "transactionId" | "certificateNumber" | "creditsAmount" | "impactDescription" | "issueDate" | "qrCodeUrl" | "isValid">, {
         by_transaction: ["transactionId", "_creationTime"];
         by_buyer: ["buyerId", "_creationTime"];
         by_project: ["projectId", "_creationTime"];
@@ -1285,7 +1281,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         impactOnTimeline?: string | undefined;
         title: string;
         description: string;
-        status: "pending" | "in_progress" | "completed" | "delayed" | "skipped";
+        status: "completed" | "pending" | "in_progress" | "delayed" | "skipped";
         projectId: import("convex/values").GenericId<"projects">;
         isRequired: boolean;
         order: number;
@@ -1298,7 +1294,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         description: import("convex/values").VString<string, "required">;
         plannedDate: import("convex/values").VFloat64<number, "required">;
         actualDate: import("convex/values").VFloat64<number | undefined, "optional">;
-        status: import("convex/values").VUnion<"pending" | "in_progress" | "completed" | "delayed" | "skipped", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"delayed", "required">, import("convex/values").VLiteral<"skipped", "required">], "required", never>;
+        status: import("convex/values").VUnion<"completed" | "pending" | "in_progress" | "delayed" | "skipped", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"delayed", "required">, import("convex/values").VLiteral<"skipped", "required">], "required", never>;
         delayReason: import("convex/values").VString<string | undefined, "optional">;
         impactOnTimeline: import("convex/values").VString<string | undefined, "optional">;
         order: import("convex/values").VFloat64<number, "required">;
@@ -1672,6 +1668,20 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_user: ["generatedBy", "_creationTime"];
         by_date: ["generatedAt", "_creationTime"];
         by_public: ["isPublic", "_creationTime"];
+    }, {}, {}>;
+    files: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        contentType: string;
+        storageId: import("convex/values").GenericId<"_storage">;
+        filename: string;
+        uploadedAt: number;
+    }, {
+        storageId: import("convex/values").VId<import("convex/values").GenericId<"_storage">, "required">;
+        filename: import("convex/values").VString<string, "required">;
+        contentType: import("convex/values").VString<string, "required">;
+        uploadedAt: import("convex/values").VFloat64<number, "required">;
+    }, "required", "contentType" | "storageId" | "filename" | "uploadedAt">, {
+        by_filename: ["filename", "_creationTime"];
+        by_upload_date: ["uploadedAt", "_creationTime"];
     }, {}, {}>;
 }, true>;
 export default _default;

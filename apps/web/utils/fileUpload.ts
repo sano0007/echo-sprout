@@ -1,4 +1,4 @@
-import { api } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend';
 import { ConvexHttpClient } from 'convex/browser';
 
 // Initialize Convex client for file uploads
