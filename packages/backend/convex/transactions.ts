@@ -751,3 +751,29 @@ export const processRefund = mutation({
     };
   },
 });
+
+// Admin mutation to delete a transaction
+export const deleteTransaction = mutation({
+  args: {
+    transactionId: v.id('transactions'),
+  },
+  handler: async (ctx, args) => {
+    const { transactionId } = args;
+
+    // Get the transaction to validate it exists
+    const transaction = await ctx.db.get(transactionId);
+    if (!transaction) {
+      throw new ConvexError('Transaction not found');
+    }
+
+    // Delete the transaction
+    await ctx.db.delete(transactionId);
+
+    console.log(`🗑️ Transaction deleted: ${transaction.transactionReference}`);
+
+    return {
+      success: true,
+      message: `Transaction ${transaction.transactionReference} deleted successfully`
+    };
+  },
+});

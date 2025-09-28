@@ -205,7 +205,7 @@ export default function MonthlyProgressChart({
       </div>
 
       {/* Additional insights */}
-      <div className="mt-4 grid grid-cols-3 gap-4 text-center text-xs">
+      <div className="mt-4 grid grid-cols-2 gap-4 text-center text-xs">
         <div className="bg-emerald-50 p-2 rounded">
           <div className="font-medium text-emerald-700">Best Month</div>
           <div className="text-emerald-600">
@@ -224,13 +224,6 @@ export default function MonthlyProgressChart({
               Math.max(monthlyProgress.filter((m) => m.co2Offset > 0).length, 1)
             ).toFixed(1)}{' '}
             tons
-          </div>
-        </div>
-        <div className="bg-purple-50 p-2 rounded">
-          <div className="font-medium text-purple-700">Active Months</div>
-          <div className="text-purple-600">
-            {monthlyProgress.filter((m) => m.co2Offset > 0).length} of{' '}
-            {monthlyProgress.length}
           </div>
         </div>
       </div>

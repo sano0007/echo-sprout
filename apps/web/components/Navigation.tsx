@@ -41,12 +41,12 @@ export default function Navigation() {
       label: 'Marketplace',
       dropdown: [
         {
-          label: 'Browse Credits',
+          label: 'Browse Projects',
           href: '/marketplace',
-          description: 'Find and purchase credits',
+          description: 'Find and contribute to projects',
         },
         {
-          label: 'My Purchases',
+          label: 'Buyer Dashboard',
           href: '/buyer-dashboard',
           description: 'Track your carbon offset impact',
         },

@@ -480,7 +480,7 @@ export default function ProjectRegister() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Project Budget (Rs.)
+                  Project Budget ($)
                 </label>
                 <input
                   type="number"
