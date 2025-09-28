@@ -264,7 +264,7 @@ export default function RegisterPage() {
                             firstName: e.target.value,
                           })
                         }
-                        className={`w-full p-3 border rounded ${errors.firstName ? 'border-red-300' : 'border-gray-300'}`}
+                        className={`w-full p-3 border rounded ${errors.firstName ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="John"
                         required
                       />
@@ -275,7 +275,7 @@ export default function RegisterPage() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2 ">
                         Last Name *
                       </label>
                       <input
@@ -284,7 +284,7 @@ export default function RegisterPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, lastName: e.target.value })
                         }
-                        className={`w-full p-3 border rounded ${errors.lastName ? 'border-red-300' : 'border-gray-300'}`}
+                        className={`w-full p-3 border rounded ${errors.lastName ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="Doe"
                         required
                       />
@@ -304,7 +304,7 @@ export default function RegisterPage() {
                       type="email"
                       value={formData.email}
                       readOnly
-                      className={`w-full p-3 border rounded bg-gray-100 cursor-not-allowed ${errors.email ? 'border-red-300' : 'border-gray-300'}`}
+                      className={`w-full p-3 border rounded bg-gray-100 cursor-not-allowed ${errors.email ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                       placeholder="your@email.com"
                       title="Email cannot be modified"
                     />
@@ -332,7 +332,7 @@ export default function RegisterPage() {
                           phoneNumber: e.target.value,
                         })
                       }
-                      className={`w-full p-3 border rounded ${errors.phoneNumber ? 'border-red-300' : 'border-gray-300'}`}
+                      className={`w-full p-3 border rounded ${errors.phoneNumber ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900 `}
                       placeholder="+1 (555) 123-4567"
                       required
                     />
@@ -359,13 +359,13 @@ export default function RegisterPage() {
                           organizationName: e.target.value,
                         })
                       }
-                      className="w-full p-3 border border-gray-300 rounded"
+                      className="w-full p-3 border border-gray-300 rounded  bg-white text-gray-900"
                       placeholder="Your organization name (optional)"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
+                    <label className="block text-sm font-medium mb-2  bg-white text-gray-900">
                       Organization Type
                     </label>
                     <select
@@ -376,7 +376,7 @@ export default function RegisterPage() {
                           organizationType: e.target.value as any,
                         })
                       }
-                      className="w-full p-3 border border-gray-300 rounded"
+                      className="w-full p-3 border border-gray-300 rounded  bg-white text-gray-900"
                     >
                       <option value="">Select organization type</option>
                       {organizationTypes.map((type) => (
@@ -398,7 +398,7 @@ export default function RegisterPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, address: e.target.value })
                       }
-                      className={`w-full p-3 border rounded ${errors.address ? 'border-red-300' : 'border-gray-300'}`}
+                      className={`w-full p-3 border rounded ${errors.address ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                       placeholder="Street address"
                       required
                     />
@@ -420,7 +420,7 @@ export default function RegisterPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, city: e.target.value })
                         }
-                        className={`w-full p-3 border rounded ${errors.city ? 'border-red-300' : 'border-gray-300'}`}
+                        className={`w-full p-3 border rounded ${errors.city ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="City"
                         required
                       />
@@ -440,7 +440,7 @@ export default function RegisterPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, country: e.target.value })
                         }
-                        className={`w-full p-3 border rounded ${errors.country ? 'border-red-300' : 'border-gray-300'}`}
+                        className={`w-full p-3 border rounded ${errors.country ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="Country"
                         required
                       />
@@ -462,7 +462,7 @@ export default function RegisterPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, website: e.target.value })
                       }
-                      className="w-full p-3 border border-gray-300 rounded"
+                      className="w-full p-3 border border-gray-300 rounded  bg-white text-gray-900"
                       placeholder="https://yourwebsite.com"
                     />
                   </div>
@@ -471,7 +471,7 @@ export default function RegisterPage() {
 
               <div className="mt-6 pt-6 border-t">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-2 ">
                     Description
                   </label>
                   <textarea
@@ -479,7 +479,7 @@ export default function RegisterPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="w-full h-32 p-3 border border-gray-300 rounded"
+                    className="w-full h-32 p-3 border border-gray-300 rounded  bg-white text-gray-900"
                     placeholder="Tell us about yourself or your organization..."
                   />
                 </div>
@@ -641,26 +641,26 @@ export default function RegisterPage() {
                 {/*  </div>*/}
                 {/*</div>*/}
 
-                <div className="border-t pt-6">
-                  <label className="flex items-start">
-                    <input type="checkbox" className="mt-1 mr-3" required />
-                    <span className="text-sm text-gray-600">
-                      I agree to the{' '}
-                      <a href="#" className="text-blue-600 hover:underline">
-                        Terms of Service
-                      </a>{' '}
-                      and
-                      <a
-                        href="#"
-                        className="text-blue-600 hover:underline ml-1"
-                      >
-                        Privacy Policy
-                      </a>
-                      . I understand that my account will be subject to
-                      verification and may take 2-3 business days to activate.
-                    </span>
-                  </label>
-                </div>
+                {/*<div className="border-t pt-6">*/}
+                {/*  <label className="flex items-start">*/}
+                {/*    <input type="checkbox" className="mt-1 mr-3" required />*/}
+                {/*    <span className="text-sm text-gray-600">*/}
+                {/*      I agree to the{' '}*/}
+                {/*      <a href="#" className="text-blue-600 hover:underline">*/}
+                {/*        Terms of Service*/}
+                {/*      </a>{' '}*/}
+                {/*      and*/}
+                {/*      <a*/}
+                {/*        href="#"*/}
+                {/*        className="text-blue-600 hover:underline ml-1"*/}
+                {/*      >*/}
+                {/*        Privacy Policy*/}
+                {/*      </a>*/}
+                {/*      . I understand that my account will be subject to*/}
+                {/*      verification and may take 2-3 business days to activate.*/}
+                {/*    </span>*/}
+                {/*  </label>*/}
+                {/*</div>*/}
               </div>
             </div>
           )}
