@@ -8,8 +8,13 @@ import {
   Info,
   Search,
   XCircle,
+  Trash2,
+  Settings,
+  Shield,
 } from 'lucide-react';
 import { useEffect,useState } from 'react';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@packages/backend/convex/_generated/api';
 
 interface Alert {
   id: string;
@@ -65,6 +70,47 @@ export default function AlertManagement({
     isOpen: false,
   });
   const [resolutionText, setResolutionText] = useState('');
+
+  // Admin cleanup state
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [cleanupDays, setCleanupDays] = useState(30);
+
+  // Get current user to check admin permissions
+  const currentUser = useQuery(api.users.getCurrentUser, {});
+  const isAdmin = currentUser?.role === 'admin';
+
+  // Admin cleanup mutations
+  const deleteAlert = useMutation(api.alert_management.deleteAlert);
+  const bulkDeleteResolvedAlerts = useMutation(api.alert_management.bulkDeleteResolvedAlerts);
+
+  // Admin cleanup functions
+  const handleDeleteAlert = async (alertId: string) => {
+    if (!isAdmin) return;
+
+    if (confirm('Are you sure you want to delete this alert? This action cannot be undone.')) {
+      try {
+        await deleteAlert({ alertId: alertId as any });
+        // Refresh alerts would happen automatically with Convex
+      } catch (error) {
+        console.error('Failed to delete alert:', error);
+        alert('Failed to delete alert. Please try again.');
+      }
+    }
+  };
+
+  const handleBulkCleanup = async () => {
+    if (!isAdmin) return;
+
+    if (confirm(`Are you sure you want to delete all resolved alerts older than ${cleanupDays} days? This action cannot be undone.`)) {
+      try {
+        const result = await bulkDeleteResolvedAlerts({ olderThanDays: cleanupDays });
+        alert(`Successfully deleted ${result.deletedCount} resolved alerts.`);
+      } catch (error) {
+        console.error('Failed to cleanup alerts:', error);
+        alert('Failed to cleanup alerts. Please try again.');
+      }
+    }
+  };
 
   // Filter and sort alerts
   useEffect(() => {
@@ -216,9 +262,72 @@ export default function AlertManagement({
           <div className="text-right">
             <div className="text-3xl font-bold">{activeAlerts.length}</div>
             <div className="text-red-100 text-sm">Active Alerts</div>
+            {isAdmin && (
+              <button
+                onClick={() => setShowAdminPanel(!showAdminPanel)}
+                className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-400 text-white rounded text-sm flex items-center gap-1"
+              >
+                <Settings className="h-4 w-4" />
+                Admin
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Admin Cleanup Panel */}
+      {isAdmin && showAdminPanel && (
+        <div className="bg-gray-50 border-b border-gray-200 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="h-5 w-5 text-red-600" />
+            <h3 className="font-semibold text-gray-900">Admin Data Cleanup</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Bulk Cleanup */}
+            <div className="bg-white p-3 rounded border">
+              <h4 className="font-medium text-gray-900 mb-2">Bulk Cleanup</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <label className="text-sm text-gray-600">Delete resolved alerts older than:</label>
+                <input
+                  type="number"
+                  value={cleanupDays}
+                  onChange={(e) => setCleanupDays(Number(e.target.value))}
+                  className="w-16 px-2 py-1 border rounded text-sm"
+                  min="1"
+                  max="365"
+                />
+                <span className="text-sm text-gray-600">days</span>
+              </div>
+              <button
+                onClick={handleBulkCleanup}
+                className="w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm flex items-center justify-center gap-1"
+              >
+                <Trash2 className="h-4 w-4" />
+                Cleanup Resolved Alerts
+              </button>
+            </div>
+
+            {/* Cleanup Stats */}
+            <div className="bg-white p-3 rounded border">
+              <h4 className="font-medium text-gray-900 mb-2">Cleanup Statistics</h4>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Alerts:</span>
+                  <span className="font-medium">{alerts.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Active Alerts:</span>
+                  <span className="font-medium text-red-600">{activeAlerts.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Resolved Alerts:</span>
+                  <span className="font-medium text-green-600">{alerts.length - activeAlerts.length}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="bg-gray-50 p-4 border-b">
@@ -427,30 +536,44 @@ export default function AlertManagement({
                   </div>
 
                   {/* Actions */}
-                  {!alert.isResolved && (
-                    <div className="flex flex-col space-y-2 ml-4">
-                      <button
-                        onClick={() => handleResolveAlert(alert.id)}
-                        className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                      >
-                        Resolve
-                      </button>
-                      <button
-                        onClick={() => onSnoozeAlert(alert.id, 24)}
-                        className="px-4 py-2 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700"
-                      >
-                        Snooze 24h
-                      </button>
-                      {alert.severity !== 'critical' && (
+                  <div className="flex flex-col space-y-2 ml-4">
+                    {!alert.isResolved && (
+                      <>
                         <button
-                          onClick={() => onEscalateAlert(alert.id, 'high')}
-                          className="px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                          onClick={() => handleResolveAlert(alert.id)}
+                          className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700"
                         >
-                          Escalate
+                          Resolve
                         </button>
-                      )}
-                    </div>
-                  )}
+                        <button
+                          onClick={() => onSnoozeAlert(alert.id, 24)}
+                          className="px-4 py-2 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700"
+                        >
+                          Snooze 24h
+                        </button>
+                        {alert.severity !== 'critical' && (
+                          <button
+                            onClick={() => onEscalateAlert(alert.id, 'high')}
+                            className="px-4 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                          >
+                            Escalate
+                          </button>
+                        )}
+                      </>
+                    )}
+
+                    {/* Admin Delete Button */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeleteAlert(alert.id)}
+                        className="px-4 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 flex items-center justify-center gap-1"
+                        title="Delete Alert (Admin Only)"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

@@ -397,56 +397,6 @@ export default defineSchema({
     .index('by_verification_status', ['isVerified'])
     .index('by_required', ['entityType', 'isRequired']),
 
-  // ============= PROGRESS TRACKING =============
-  progressUpdates: defineTable({
-    projectId: v.id('projects'),
-    reportedBy: v.id('users'),
-    updateType: v.union(
-      v.literal('milestone'),
-      v.literal('measurement'),
-      v.literal('photo'),
-      v.literal('issue'),
-      v.literal('completion')
-    ),
-    title: v.string(),
-    description: v.string(),
-    progressPercentage: v.number(), // 0-100
-    measurementData: v.optional(v.any()), // JSON data for specific measurements
-    location: v.optional(
-      v.object({
-        lat: v.float64(),
-        long: v.float64(),
-        name: v.string(),
-      })
-    ),
-    photos: v.array(
-      v.object({
-        cloudinary_public_id: v.string(),
-        cloudinary_url: v.string(),
-      })
-    ),
-    reportingDate: v.float64(),
-    // Impact tracking
-    carbonImpactToDate: v.optional(v.number()), // CO2 reduction achieved so far
-    treesPlanted: v.optional(v.number()),
-    energyGenerated: v.optional(v.number()),
-    wasteProcessed: v.optional(v.number()),
-    // Verification
-    isVerified: v.boolean(),
-    verifiedBy: v.optional(v.id('users')),
-    verifiedAt: v.optional(v.float64()),
-    verificationNotes: v.optional(v.string()),
-  })
-    .index('by_project', ['projectId'])
-    .index('by_reporter', ['reportedBy'])
-    .index('by_date', ['reportingDate'])
-    .index('by_type', ['updateType'])
-    .index('by_verification', ['isVerified'])
-    // Enhanced indexes for monitoring
-    .index('by_project_date', ['projectId', 'reportingDate'])
-    .index('by_project_type', ['projectId', 'updateType'])
-    .index('by_project_verified', ['projectId', 'isVerified'])
-    .index('by_date_type', ['reportingDate', 'updateType']),
 
   // ============= EDUCATIONAL CONTENT =============
   educationalContent: defineTable({
@@ -1221,4 +1171,80 @@ export default defineSchema({
     .index('by_requested_at', ['requestedAt'])
     .index('by_expires_at', ['expiresAt'])
     .index('by_user_status', ['requestedBy', 'status']),
+
+  // ============= PROGRESS UPDATES =============
+  progressUpdates: defineTable({
+    projectId: v.id('projects'),
+    // New format (Convex storage)
+    submittedBy: v.optional(v.id('users')),
+    // Old format (Cloudinary) - for backward compatibility
+    reportedBy: v.optional(v.id('users')),
+    updateType: v.union(
+      v.literal('milestone'),
+      v.literal('measurement'),
+      v.literal('photo'),
+      v.literal('issue'),
+      v.literal('completion')
+    ),
+    title: v.string(),
+    description: v.string(),
+    progressPercentage: v.float64(),
+    // New format (Convex storage)
+    photoStorageIds: v.optional(v.array(v.id('_storage'))),
+    photoUrls: v.optional(v.array(v.string())), // Cached URLs for quick access
+    // Old format (Cloudinary) - for backward compatibility
+    photos: v.optional(v.array(
+      v.object({
+        cloudinary_public_id: v.string(),
+        cloudinary_url: v.string(),
+      })
+    )),
+    location: v.optional(
+      v.object({
+        lat: v.float64(),
+        long: v.float64(),
+        name: v.string(),
+      })
+    ),
+    measurementData: v.optional(
+      v.object({
+        treesPlanted: v.optional(v.number()),
+        survivalRate: v.optional(v.number()),
+        energyGenerated: v.optional(v.number()),
+        systemUptime: v.optional(v.number()),
+        gasProduced: v.optional(v.number()),
+        wasteProcessed: v.optional(v.number()),
+        recyclingRate: v.optional(v.number()),
+        areaRestored: v.optional(v.number()),
+        mangrovesPlanted: v.optional(v.number()),
+        carbonImpactToDate: v.optional(v.number()),
+      })
+    ),
+    nextSteps: v.optional(v.string()),
+    challenges: v.optional(v.string()),
+    submittedAt: v.optional(v.float64()),
+    reportingDate: v.float64(),
+    status: v.union(
+      v.literal('pending_review'),
+      v.literal('approved'),
+      v.literal('rejected'),
+      v.literal('needs_revision')
+    ),
+    isVerified: v.boolean(),
+    verifiedBy: v.optional(v.id('users')),
+    verifiedAt: v.optional(v.float64()),
+    verificationNotes: v.optional(v.string()),
+    // Legacy fields for backward compatibility
+    carbonImpactToDate: v.optional(v.float64()),
+    treesPlanted: v.optional(v.float64()),
+    energyGenerated: v.optional(v.float64()),
+    wasteProcessed: v.optional(v.float64()),
+  })
+    .index('by_project', ['projectId'])
+    .index('by_submitter', ['submittedBy'])
+    .index('by_reporter', ['reportedBy']) // Legacy index
+    .index('by_status', ['status'])
+    .index('by_project_status', ['projectId', 'status'])
+    .index('by_submitted_at', ['submittedAt'])
+    .index('by_reporting_date', ['reportingDate']),
 });

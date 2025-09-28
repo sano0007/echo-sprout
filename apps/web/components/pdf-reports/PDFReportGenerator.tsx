@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Download, FileText, Clock, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
-import { Id } from '@packages/backend/convex/_generated/dataModel';
+import { api } from '../../packages/backend/convex/_generated/api';
+import { Id } from '../../packages/backend/convex/_generated/dataModel';
 
 interface PDFReport {
   _id: Id<'pdf_reports'>;

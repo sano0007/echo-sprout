@@ -1,11 +1,213 @@
 import { mutation, query, internalMutation, internalQuery } from './_generated/server';
 import { v } from 'convex/values';
 import { UserService } from '../services/user-service';
-import { CloudinaryService } from '../services/cloudinary-service';
 import type {
   ProgressValidationResult,
 } from '../types/monitoring-types';
 
+// Generate upload URL for files
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+// Get progress updates for a project
+export const getProjectProgressUpdates = query({
+  args: {
+    projectId: v.id('projects'),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+
+    // Check if user can view this project's progress updates
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    const canView =
+      user.role === 'admin' ||
+      user.role === 'verifier' ||
+      (user.role === 'project_creator' && project.creatorId === user._id) ||
+      (user.role === 'credit_buyer' && project.status === 'active'); // Credit buyers can see active project updates
+
+    if (!canView) {
+      throw new Error('Access denied: Cannot view progress updates for this project');
+    }
+
+    const updates = await ctx.db
+      .query('progressUpdates')
+      .filter(q => q.eq(q.field('projectId'), args.projectId))
+      .order('desc')
+      .take(args.limit || 50);
+
+    // Enhance with user information
+    const enhancedUpdates = await Promise.all(
+      updates.map(async (update) => {
+        const submitter = await ctx.db.get(update.submittedBy);
+        return {
+          ...update,
+          submitterName: 'Project Creator',
+          submitterEmail: submitter?.email || '',
+        };
+      })
+    );
+
+    return enhancedUpdates;
+  },
+});
+
+// Get file URL from storage ID
+export const getFileUrl = query({
+  args: { storageId: v.id('_storage') },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
+  },
+});
+
+// New progress update mutation using Convex storage - Updated for lat/long format
+export const submitProgressUpdateWithFiles = mutation({
+  args: {
+    projectId: v.id('projects'),
+    updateType: v.union(
+      v.literal('milestone'),
+      v.literal('measurement'),
+      v.literal('photo'),
+      v.literal('issue'),
+      v.literal('completion')
+    ),
+    title: v.string(),
+    description: v.string(),
+    progressPercentage: v.number(),
+    photoStorageIds: v.array(v.id('_storage')), // Convex storage IDs
+    location: v.optional(
+      v.object({
+        lat: v.float64(),
+        long: v.float64(),
+        name: v.string(),
+      })
+    ),
+    measurementData: v.optional(
+      v.object({
+        treesPlanted: v.optional(v.number()),
+        survivalRate: v.optional(v.number()),
+
+        energyGenerated: v.optional(v.number()),
+        systemUptime: v.optional(v.number()),
+
+        gasProduced: v.optional(v.number()),
+
+        wasteProcessed: v.optional(v.number()),
+        recyclingRate: v.optional(v.number()),
+
+        areaRestored: v.optional(v.number()),
+        mangrovesPlanted: v.optional(v.number()),
+
+        carbonImpactToDate: v.optional(v.number()),
+      })
+    ),
+    nextSteps: v.optional(v.string()),
+    challenges: v.optional(v.string()),
+    reportingDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('Authentication required');
+    }
+
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // Check permissions
+    const canSubmit =
+      currentUser.role === 'admin' ||
+      (currentUser.role === 'project_creator' && project.creatorId === currentUser._id) ||
+      (currentUser.role === 'verifier' && project.assignedVerifierId === currentUser._id);
+
+    if (!canSubmit) {
+      throw new Error('Access denied: Cannot submit progress updates for this project');
+    }
+
+    // Validation
+    if (!args.title?.trim()) {
+      throw new Error('Title is required');
+    }
+    if (!args.description?.trim()) {
+      throw new Error('Description is required');
+    }
+    if (args.progressPercentage < 0 || args.progressPercentage > 100) {
+      throw new Error('Progress percentage must be between 0 and 100');
+    }
+
+    // Get photo URLs from storage IDs
+    const photoUrls: string[] = [];
+    for (const storageId of args.photoStorageIds) {
+      const url = await ctx.storage.getUrl(storageId);
+      if (url) {
+        photoUrls.push(url);
+      }
+    }
+
+    // Create progress update
+    const progressUpdateId = await ctx.db.insert('progressUpdates', {
+      projectId: args.projectId,
+      submittedBy: currentUser._id,
+      updateType: args.updateType,
+      title: args.title.trim(),
+      description: args.description.trim(),
+      progressPercentage: args.progressPercentage,
+      photoStorageIds: args.photoStorageIds,
+      photoUrls, // Store URLs for quick access
+      location: args.location,
+      measurementData: args.measurementData,
+      nextSteps: args.nextSteps,
+      challenges: args.challenges,
+      submittedAt: Date.now(),
+      reportingDate: args.reportingDate || Date.now(),
+      status: 'pending_review',
+      isVerified: false,
+    });
+
+    // Update project progress if this is a new maximum
+    if (args.progressPercentage > (project.progressPercentage || 0)) {
+      await ctx.db.patch(args.projectId, {
+        progressPercentage: args.progressPercentage,
+        lastProgressUpdate: Date.now(),
+      });
+    }
+
+    // Create audit log
+    await ctx.db.insert('auditLogs', {
+      userId: currentUser._id,
+      action: 'progress_update_submitted',
+      entityType: 'progress_update',
+      entityId: progressUpdateId,
+      metadata: {
+        projectId: args.projectId,
+        updateType: args.updateType,
+        progressPercentage: args.progressPercentage,
+        submittedAt: Date.now(),
+      },
+    });
+
+    return progressUpdateId;
+  },
+});
+
+// Keep the old mutation for backward compatibility
 export const submitProgressUpdate = mutation({
   args: {
     projectId: v.id('projects'),
@@ -87,34 +289,27 @@ export const submitProgressUpdate = mutation({
       throw new Error('Progress percentage must be between 0 and 100');
     }
 
-    const photoPreparation = CloudinaryService.preparePhotosForStorage(
-      args.photos,
-      project.projectType
-    );
-
-    if (!photoPreparation.validation.isValid) {
-      throw new Error(
-        `Photo validation failed: ${photoPreparation.validation.errors.join(', ')}`
-      );
+    // Basic photo validation for Convex storage
+    if (args.photos.length > 10) {
+      throw new Error('Maximum 10 photos allowed per update');
     }
 
     const updateId = await ctx.db.insert('progressUpdates', {
       projectId: args.projectId,
-      reportedBy: currentUser._id,
+      submittedBy: currentUser._id,
       updateType: args.updateType,
       title: args.title,
       description: args.description,
       progressPercentage: args.progressPercentage,
-      photos: photoPreparation.photos,
+      photoStorageIds: [],
+      photoUrls: args.photos.map(p => p.cloudinary_url),
       location: args.location,
       measurementData: args.measurementData,
       reportingDate: args.reportingDate || Date.now(),
+      submittedAt: Date.now(),
+      status: 'pending_review',
       isVerified: false,
 
-      carbonImpactToDate: args.measurementData?.carbonImpactToDate,
-      treesPlanted: args.measurementData?.treesPlanted,
-      energyGenerated: args.measurementData?.energyGenerated,
-      wasteProcessed: args.measurementData?.wasteProcessed,
     });
 
     if (args.progressPercentage > (project.progressPercentage || 0)) {
@@ -208,8 +403,8 @@ export const submitProgressUpdate = mutation({
       },
       photoProcessing: {
         uploadedCount: args.photos.length,
-        thumbnailsGenerated: photoPreparation.thumbnails.length,
-        warnings: photoPreparation.validation.warnings,
+        thumbnailsGenerated: 0,
+        warnings: [],
       },
       milestones: await ctx.db
         .query('projectMilestones')
@@ -285,14 +480,15 @@ export const getProjectProgress = query({
     // Get reporter information for each update
     const updatesWithReporter = await Promise.all(
       updates.map(async (update) => {
-        const reporter = await ctx.db.get(update.reportedBy);
+        const reporterId = update.submittedBy || update.reportedBy;
+        const reporter = reporterId ? await ctx.db.get(reporterId) : null;
         return {
           ...update,
           reporter: reporter
             ? {
                 _id: reporter._id,
-                firstName: reporter.firstName,
-                lastName: reporter.lastName,
+                firstName: reporter.firstName || '',
+                lastName: reporter.lastName || '',
                 role: reporter.role,
               }
             : null,
@@ -433,10 +629,10 @@ export const getProgressSummary = query({
 
     const latestImpactUpdate = recentUpdates.find(
       (u) =>
-        u.carbonImpactToDate ||
-        u.treesPlanted ||
-        u.energyGenerated ||
-        u.wasteProcessed
+        u.measurementData?.carbonImpactToDate ||
+        u.measurementData?.treesPlanted ||
+        u.measurementData?.energyGenerated ||
+        u.measurementData?.wasteProcessed
     );
 
     const daysSinceLastUpdate =
@@ -472,10 +668,10 @@ export const getProgressSummary = query({
       },
       impact: latestImpactUpdate
         ? {
-            carbonImpactToDate: latestImpactUpdate.carbonImpactToDate,
-            treesPlanted: latestImpactUpdate.treesPlanted,
-            energyGenerated: latestImpactUpdate.energyGenerated,
-            wasteProcessed: latestImpactUpdate.wasteProcessed,
+            carbonImpactToDate: latestImpactUpdate.measurementData?.carbonImpactToDate,
+            treesPlanted: latestImpactUpdate.measurementData?.treesPlanted,
+            energyGenerated: latestImpactUpdate.measurementData?.energyGenerated,
+            wasteProcessed: latestImpactUpdate.measurementData?.wasteProcessed,
             lastUpdated: latestImpactUpdate.reportingDate,
           }
         : null,
@@ -516,7 +712,14 @@ export const getUploadConfig = query({
       throw new Error('Access denied');
     }
 
-    return CloudinaryService.getUploadConfig(project.projectType, updateType);
+    // Return Convex storage upload config
+    return {
+      maxFileSize: 10 * 1024 * 1024, // 10MB
+      allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      maxFiles: 10,
+      projectType: project.projectType,
+      updateType
+    };
   },
 });
 
@@ -562,13 +765,17 @@ export const validateProgressUpdateData = internalQuery({
       warnings.push('Progress appears to have decreased significantly');
     }
 
-    const photoValidation = CloudinaryService.validatePhotoUpload(
-      updateData.photos || [],
-      project.projectType
-    );
+    // Basic photo validation for Convex storage
+    const photos = updateData.photos || [];
+    if (photos.length > 10) {
+      errors.push('Maximum 10 photos allowed per update');
+    }
 
-    errors.push(...photoValidation.errors);
-    warnings.push(...photoValidation.warnings);
+    for (const photo of photos) {
+      if (!photo.cloudinary_url && !photo.storageId) {
+        errors.push('Invalid photo format - missing URL or storage ID');
+      }
+    }
 
     if (updateData.measurementData) {
       for (const [key, value] of Object.entries(updateData.measurementData)) {
@@ -684,94 +891,4 @@ export const checkMilestoneCompletion = internalMutation({
   },
 });
 
-export const analyzeProgressForAlerts = internalMutation({
-  args: {
-    projectId: v.id('projects'),
-    newUpdate: v.object({
-      updateId: v.id('progressUpdates'),
-      progressPercentage: v.number(),
-      measurementData: v.optional(v.any()),
-    }),
-  },
-  handler: async (ctx, { projectId, newUpdate }) => {
-    const project = await ctx.db.get(projectId);
-    if (!project) return;
-
-    const recentUpdates = await ctx.db
-      .query('progressUpdates')
-      .withIndex('by_project', (q) => q.eq('projectId', projectId))
-      .order('desc')
-      .take(5);
-
-    const alerts = [];
-
-    if (recentUpdates.length > 1 && recentUpdates[1]) {
-      const previousProgress = recentUpdates[1].progressPercentage;
-      const progressJump = newUpdate.progressPercentage - previousProgress;
-
-      if (progressJump > 30) {
-        const alertId = await ctx.db.insert('systemAlerts', {
-          projectId,
-          alertType: 'quality_concern',
-          severity: 'medium',
-          message: 'Significant Progress Jump Detected',
-          description: `Progress increased by ${progressJump}% in a single update. Please verify accuracy.`,
-          isResolved: false,
-          escalationLevel: 0,
-          nextEscalationTime: Date.now() + 24 * 60 * 60 * 1000,
-          metadata: {
-            updateId: newUpdate.updateId,
-            progressJump,
-            previousProgress,
-            newProgress: newUpdate.progressPercentage,
-          },
-        });
-        alerts.push(alertId);
-      }
-    }
-
-    const projectStart = new Date(project.startDate).getTime();
-    const projectEnd = new Date(project.expectedCompletionDate).getTime();
-    const now = Date.now();
-
-    const timeElapsed = (now - projectStart) / (projectEnd - projectStart);
-    const progressRatio = newUpdate.progressPercentage / 100;
-
-    if (timeElapsed > progressRatio + 0.1 && timeElapsed > 0.5) {
-      const alertId = await ctx.db.insert('systemAlerts', {
-        projectId,
-        alertType: 'milestone_delay',
-        severity: 'medium',
-        message: 'Project Behind Schedule',
-        description: `Project is ${Math.round((timeElapsed - progressRatio) * 100)}% behind schedule based on timeline.`,
-        isResolved: false,
-        escalationLevel: 0,
-        nextEscalationTime: Date.now() + 3 * 24 * 60 * 60 * 1000,
-        metadata: {
-          timeElapsed: Math.round(timeElapsed * 100),
-          progressAchieved: Math.round(progressRatio * 100),
-          scheduleVariance: Math.round((timeElapsed - progressRatio) * 100),
-        },
-      });
-      alerts.push(alertId);
-    }
-
-    return alerts;
-  },
-});
-
-export const getUpcomingMilestones = internalQuery({
-  args: {
-    projectId: v.id('projects'),
-  },
-  handler: async (ctx, { projectId }) => {
-    return await ctx.db
-      .query('projectMilestones')
-      .withIndex('by_project_status', (q) =>
-        q.eq('projectId', projectId).eq('status', 'pending')
-      )
-      .order('asc')
-      .take(3);
-  },
-});
 

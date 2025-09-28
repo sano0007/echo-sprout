@@ -286,46 +286,6 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_type', ['documentType'])
         .index('by_verification_status', ['isVerified'])
         .index('by_required', ['entityType', 'isRequired']),
-    // ============= PROGRESS TRACKING =============
-    progressUpdates: (0, server_1.defineTable)({
-        projectId: values_1.v.id('projects'),
-        reportedBy: values_1.v.id('users'),
-        updateType: values_1.v.union(values_1.v.literal('milestone'), values_1.v.literal('measurement'), values_1.v.literal('photo'), values_1.v.literal('issue'), values_1.v.literal('completion')),
-        title: values_1.v.string(),
-        description: values_1.v.string(),
-        progressPercentage: values_1.v.number(), // 0-100
-        measurementData: values_1.v.optional(values_1.v.any()), // JSON data for specific measurements
-        location: values_1.v.optional(values_1.v.object({
-            lat: values_1.v.float64(),
-            long: values_1.v.float64(),
-            name: values_1.v.string(),
-        })),
-        photos: values_1.v.array(values_1.v.object({
-            cloudinary_public_id: values_1.v.string(),
-            cloudinary_url: values_1.v.string(),
-        })),
-        reportingDate: values_1.v.float64(),
-        // Impact tracking
-        carbonImpactToDate: values_1.v.optional(values_1.v.number()), // CO2 reduction achieved so far
-        treesPlanted: values_1.v.optional(values_1.v.number()),
-        energyGenerated: values_1.v.optional(values_1.v.number()),
-        wasteProcessed: values_1.v.optional(values_1.v.number()),
-        // Verification
-        isVerified: values_1.v.boolean(),
-        verifiedBy: values_1.v.optional(values_1.v.id('users')),
-        verifiedAt: values_1.v.optional(values_1.v.float64()),
-        verificationNotes: values_1.v.optional(values_1.v.string()),
-    })
-        .index('by_project', ['projectId'])
-        .index('by_reporter', ['reportedBy'])
-        .index('by_date', ['reportingDate'])
-        .index('by_type', ['updateType'])
-        .index('by_verification', ['isVerified'])
-        // Enhanced indexes for monitoring
-        .index('by_project_date', ['projectId', 'reportingDate'])
-        .index('by_project_type', ['projectId', 'updateType'])
-        .index('by_project_verified', ['projectId', 'isVerified'])
-        .index('by_date_type', ['reportingDate', 'updateType']),
     // ============= EDUCATIONAL CONTENT =============
     educationalContent: (0, server_1.defineTable)({
         title: values_1.v.string(),
@@ -926,4 +886,62 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_requested_at', ['requestedAt'])
         .index('by_expires_at', ['expiresAt'])
         .index('by_user_status', ['requestedBy', 'status']),
+    // ============= PROGRESS UPDATES =============
+    progressUpdates: (0, server_1.defineTable)({
+        projectId: values_1.v.id('projects'),
+        // New format (Convex storage)
+        submittedBy: values_1.v.optional(values_1.v.id('users')),
+        // Old format (Cloudinary) - for backward compatibility
+        reportedBy: values_1.v.optional(values_1.v.id('users')),
+        updateType: values_1.v.union(values_1.v.literal('milestone'), values_1.v.literal('measurement'), values_1.v.literal('photo'), values_1.v.literal('issue'), values_1.v.literal('completion')),
+        title: values_1.v.string(),
+        description: values_1.v.string(),
+        progressPercentage: values_1.v.float64(),
+        // New format (Convex storage)
+        photoStorageIds: values_1.v.optional(values_1.v.array(values_1.v.id('_storage'))),
+        photoUrls: values_1.v.optional(values_1.v.array(values_1.v.string())), // Cached URLs for quick access
+        // Old format (Cloudinary) - for backward compatibility
+        photos: values_1.v.optional(values_1.v.array(values_1.v.object({
+            cloudinary_public_id: values_1.v.string(),
+            cloudinary_url: values_1.v.string(),
+        }))),
+        location: values_1.v.optional(values_1.v.object({
+            lat: values_1.v.float64(),
+            long: values_1.v.float64(),
+            name: values_1.v.string(),
+        })),
+        measurementData: values_1.v.optional(values_1.v.object({
+            treesPlanted: values_1.v.optional(values_1.v.number()),
+            survivalRate: values_1.v.optional(values_1.v.number()),
+            energyGenerated: values_1.v.optional(values_1.v.number()),
+            systemUptime: values_1.v.optional(values_1.v.number()),
+            gasProduced: values_1.v.optional(values_1.v.number()),
+            wasteProcessed: values_1.v.optional(values_1.v.number()),
+            recyclingRate: values_1.v.optional(values_1.v.number()),
+            areaRestored: values_1.v.optional(values_1.v.number()),
+            mangrovesPlanted: values_1.v.optional(values_1.v.number()),
+            carbonImpactToDate: values_1.v.optional(values_1.v.number()),
+        })),
+        nextSteps: values_1.v.optional(values_1.v.string()),
+        challenges: values_1.v.optional(values_1.v.string()),
+        submittedAt: values_1.v.optional(values_1.v.float64()),
+        reportingDate: values_1.v.float64(),
+        status: values_1.v.union(values_1.v.literal('pending_review'), values_1.v.literal('approved'), values_1.v.literal('rejected'), values_1.v.literal('needs_revision')),
+        isVerified: values_1.v.boolean(),
+        verifiedBy: values_1.v.optional(values_1.v.id('users')),
+        verifiedAt: values_1.v.optional(values_1.v.float64()),
+        verificationNotes: values_1.v.optional(values_1.v.string()),
+        // Legacy fields for backward compatibility
+        carbonImpactToDate: values_1.v.optional(values_1.v.float64()),
+        treesPlanted: values_1.v.optional(values_1.v.float64()),
+        energyGenerated: values_1.v.optional(values_1.v.float64()),
+        wasteProcessed: values_1.v.optional(values_1.v.float64()),
+    })
+        .index('by_project', ['projectId'])
+        .index('by_submitter', ['submittedBy'])
+        .index('by_reporter', ['reportedBy']) // Legacy index
+        .index('by_status', ['status'])
+        .index('by_project_status', ['projectId', 'status'])
+        .index('by_submitted_at', ['submittedAt'])
+        .index('by_reporting_date', ['reportingDate']),
 });

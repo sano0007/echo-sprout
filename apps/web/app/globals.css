@@ -389,4 +389,16 @@ a {
   .enhanced-table-row {
     @apply border-cloud-gray hover:bg-whisper-gray transition-colors duration-150;
   }
+
+    input{
+        background-color: white !important;
+    }
+
+    textarea{
+            background-color: white !important;
+    }
+
+    select{
+            background-color: white !important;
+    }
 }

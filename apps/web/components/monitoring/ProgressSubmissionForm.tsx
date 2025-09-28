@@ -2,10 +2,12 @@
 
 import {
   CloudUpload,
-  MapPin,
   X,
+  Upload,
 } from 'lucide-react';
 import { useRef,useState } from 'react';
+import { useMutation } from 'convex/react';
+import { api } from '@packages/backend/convex/_generated/api';
 
 interface ProgressSubmissionFormProps {
   projectId: string;
@@ -26,11 +28,6 @@ interface ProgressUpdateData {
     wasteProcessed?: number;
   };
   photos: File[];
-  location?: {
-    latitude: number;
-    longitude: number;
-    address: string;
-  };
   nextSteps?: string;
   challenges?: string;
 }
@@ -54,7 +51,12 @@ export default function ProgressSubmissionForm({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
+  const [uploadedFileIds, setUploadedFileIds] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Convex mutations
+  const generateUploadUrl = useMutation(api.progress_updates.generateUploadUrl);
+  const submitProgressUpdate = useMutation(api.progress_updates.submitProgressUpdateWithFiles);
 
   const updateTypeOptions = [
     { value: 'measurement', label: 'Environmental Measurement', icon: '📊' },
@@ -108,44 +110,78 @@ export default function ProgressSubmissionForm({
     }));
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const newPhotos = [...formData.photos, ...files];
-    setFormData((prev) => ({ ...prev, photos: newPhotos }));
 
-    // Create preview URLs
-    const newPreviews = files.map((file) => URL.createObjectURL(file));
-    setPreviewPhotos((prev) => [...prev, ...newPreviews]);
+
+  // Handle file upload to Convex storage
+  const handlePhotoUpload = async (files: FileList) => {
+    const uploadPromises = Array.from(files).map(async (file) => {
+      try {
+        // Get upload URL from Convex
+        const uploadUrl = await generateUploadUrl();
+
+        // Upload file to Convex storage
+        const result = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        });
+
+        if (!result.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const { storageId } = await result.json();
+
+        // Create preview URL
+        const previewUrl = URL.createObjectURL(file);
+
+        return { storageId, previewUrl };
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        throw error;
+      }
+    });
+
+    try {
+      const uploadResults = await Promise.all(uploadPromises);
+
+      // Update state with new uploads
+      setUploadedFileIds(prev => [...prev, ...uploadResults.map(r => r.storageId)]);
+      setPreviewPhotos(prev => [...prev, ...uploadResults.map(r => r.previewUrl)]);
+
+    } catch (error) {
+      alert('Failed to upload some files. Please try again.');
+    }
   };
 
   const removePhoto = (index: number) => {
-    const newPhotos = formData.photos.filter((_, i) => i !== index);
-    const newPreviews = previewPhotos.filter((_, i) => i !== index);
-    setFormData((prev) => ({ ...prev, photos: newPhotos }));
-    setPreviewPhotos(newPreviews);
-  };
-
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        setFormData((prev) => ({
-          ...prev,
-          location: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            address: 'Current Location',
-          },
-        }));
-      });
-    }
+    setPreviewPhotos(prev => prev.filter((_, i) => i !== index));
+    setUploadedFileIds(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // Submit using the new Convex function
+      await submitProgressUpdate({
+        projectId: projectId as any,
+        updateType: formData.updateType,
+        title: formData.title,
+        description: formData.description,
+        progressPercentage: formData.progressPercentage,
+        photoStorageIds: uploadedFileIds as any[],
+        location: undefined,
+        measurementData: formData.measurementData,
+        nextSteps: formData.nextSteps,
+        challenges: formData.challenges,
+      });
+
+      // Call the parent onSubmit for any additional handling
       await onSubmit(formData);
+
     } catch (error) {
       console.error('Error submitting progress update:', error);
+      alert('Failed to submit progress update. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -406,7 +442,11 @@ export default function ProgressSubmissionForm({
                 type="file"
                 multiple
                 accept="image/*"
-                onChange={handlePhotoUpload}
+                onChange={async (e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    await handlePhotoUpload(e.target.files);
+                  }
+                }}
                 className="hidden"
               />
 
@@ -431,28 +471,6 @@ export default function ProgressSubmissionForm({
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location Data
-              </label>
-              <div className="flex items-center space-x-4">
-                <button
-                  type="button"
-                  onClick={getCurrentLocation}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <MapPin className="h-5 w-5" />
-                  <span>Use Current Location</span>
-                </button>
-                {formData.location && (
-                  <div className="text-sm text-gray-600">
-                    📍 Location captured (
-                    {formData.location.latitude.toFixed(4)},{' '}
-                    {formData.location.longitude.toFixed(4)})
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         )}
 

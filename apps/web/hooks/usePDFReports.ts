@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from 'convex/react';
-import { api } from '@packages/backend/convex/_generated/api';
-import { Id } from '@packages/backend/convex/_generated/dataModel';
+import { api, Id } from '@packages/backend/convex/_generated/api';
 
 export interface PDFReportRequest {
   templateType: 'analytics' | 'monitoring';

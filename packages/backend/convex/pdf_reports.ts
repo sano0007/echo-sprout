@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
-import { mutation, query, action } from './_generated/server';
+import { mutation, query, action, internalQuery } from './_generated/server';
 import { api } from './_generated/api';
+import { internal } from './_generated/api';
 import { Doc } from './_generated/dataModel';
 
 // PDF Report types
@@ -87,6 +88,16 @@ export const getPDFReport = query({
       }
     }
 
+    return report;
+  },
+});
+
+// Internal query for actions to access reports without authentication
+export const _getPDFReportInternal = internalQuery({
+  args: { reportId: v.id('pdf_reports') },
+  handler: async (ctx, args) => {
+    const report = await ctx.db.get(args.reportId);
+    if (!report) throw new Error('Report not found');
     return report;
   },
 });
@@ -231,7 +242,7 @@ export const generatePDFReport = action({
       });
 
       // Get report details
-      const report = await ctx.runQuery(api.pdf_reports.getPDFReport, {
+      const report = await ctx.runQuery(internal.pdf_reports._getPDFReportInternal, {
         reportId: args.reportId,
       });
 
@@ -382,7 +393,7 @@ async function generateMonitoringReportData(ctx: any, report: any) {
   };
 }
 
-async function generateAnalyticsPDF(analyticsData: any, report: any): Promise<Buffer> {
+async function generateAnalyticsPDF(analyticsData: any, report: any): Promise<Uint8Array> {
   // This would integrate with the analytics PDF templates
   // For now, return a placeholder
   const { AnalyticsPDFTemplates } = await import('../lib/analytics-pdf-templates');
@@ -421,13 +432,14 @@ async function generateAnalyticsPDF(analyticsData: any, report: any): Promise<Bu
       );
   }
 
-  // For now, return a mock PDF buffer
+  // For now, return a mock PDF as Uint8Array
   // In a real implementation, you would use a server-side PDF library like Puppeteer
   const mockPdfContent = JSON.stringify(templateData);
-  return Buffer.from(mockPdfContent, 'utf-8');
+  const encoder = new TextEncoder();
+  return encoder.encode(mockPdfContent);
 }
 
-async function generateMonitoringPDF(monitoringData: any, report: any): Promise<Buffer> {
+async function generateMonitoringPDF(monitoringData: any, report: any): Promise<Uint8Array> {
   // This would integrate with the monitoring PDF templates
   const { MonitoringPDFTemplates } = await import('../lib/monitoring-pdf-templates');
 
@@ -465,13 +477,14 @@ async function generateMonitoringPDF(monitoringData: any, report: any): Promise<
       );
   }
 
-  // For now, return a mock PDF buffer
+  // For now, return a mock PDF as Uint8Array
   // In a real implementation, you would use a server-side PDF library like Puppeteer
   const mockPdfContent = JSON.stringify(templateData);
-  return Buffer.from(mockPdfContent, 'utf-8');
+  const encoder = new TextEncoder();
+  return encoder.encode(mockPdfContent);
 }
 
-async function savePDFToStorage(pdfData: Buffer, report: any): Promise<string> {
+async function savePDFToStorage(pdfData: Uint8Array, report: any): Promise<string> {
   // This would integrate with your file storage solution (S3, Cloudinary, etc.)
   // For now, return a placeholder URL
   const filename = `${report.reportType}_${report.title.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
