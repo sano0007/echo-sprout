@@ -532,9 +532,15 @@ export const compareProjectPerformance = query({
           .collect();
 
         // Calculate score components
-        const timelineScore = calculateTimelineCompliance(similarProject, similarMilestones);
+        const timelineScore = calculateTimelineCompliance(
+          similarProject,
+          similarMilestones
+        );
         const updateFrequencyScore = calculateUpdateFrequency(similarUpdates);
-        const impactScore = calculateImpactAchievement(similarUpdates, similarProject);
+        const impactScore = calculateImpactAchievement(
+          similarUpdates,
+          similarProject
+        );
         const qualityScore = calculateUpdateQuality(similarUpdates);
 
         // Weighted overall score

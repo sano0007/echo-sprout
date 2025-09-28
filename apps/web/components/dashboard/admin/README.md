@@ -9,6 +9,7 @@ The admin dashboard provides comprehensive platform management capabilities for 
 ## Components
 
 ### 1. AdminDashboardLayout (`/components/layout/AdminDashboardLayout.tsx`)
+
 - **Purpose**: Main layout wrapper using the existing shadcn sidebar component
 - **Features**:
   - Responsive sidebar navigation with collapse/expand functionality
@@ -17,6 +18,7 @@ The admin dashboard provides comprehensive platform management capabilities for 
   - Mobile-friendly responsive design
 
 ### 2. SystemMetricsOverview (`SystemMetricsOverview.tsx`)
+
 - **Purpose**: High-level platform metrics and KPIs
 - **Features**:
   - Real-time system statistics (users, projects, revenue, uptime)
@@ -25,6 +27,7 @@ The admin dashboard provides comprehensive platform management capabilities for 
   - Responsive grid layout
 
 ### 3. UserManagementTable (`UserManagementTable.tsx`)
+
 - **Purpose**: Comprehensive user management interface
 - **Features**:
   - Sortable and filterable user table
@@ -35,6 +38,7 @@ The admin dashboard provides comprehensive platform management capabilities for 
   - Responsive design with mobile-friendly cards
 
 ### 4. PlatformAnalyticsCharts (`PlatformAnalyticsCharts.tsx`)
+
 - **Purpose**: Data visualization and analytics
 - **Features**:
   - Multi-tab chart interface (Revenue, Users, Projects, Geographic)
@@ -44,6 +48,7 @@ The admin dashboard provides comprehensive platform management capabilities for 
   - Custom tooltips and styling
 
 ### 5. QuickActionsPanel (`QuickActionsPanel.tsx`)
+
 - **Purpose**: Common administrative actions and tasks
 - **Features**:
   - Grid of actionable admin tasks
@@ -53,6 +58,7 @@ The admin dashboard provides comprehensive platform management capabilities for 
   - Responsive button grid
 
 ### 6. RecentActivityFeed (`RecentActivityFeed.tsx`)
+
 - **Purpose**: Platform activity monitoring
 - **Features**:
   - Real-time activity stream
@@ -62,6 +68,7 @@ The admin dashboard provides comprehensive platform management capabilities for 
   - Timestamp formatting
 
 ### 7. SystemHealthMonitor (`SystemHealthMonitor.tsx`)
+
 - **Purpose**: System status and health monitoring
 - **Features**:
   - Service status monitoring
@@ -73,12 +80,14 @@ The admin dashboard provides comprehensive platform management capabilities for 
 ## Design Principles
 
 ### Minimalistic Approach
+
 - Clean, uncluttered interfaces
 - Subtle shadows and borders
 - Focused on essential functionality
 - Consistent spacing and typography
 
 ### Color Palette
+
 - **Primary**: `bangladesh-green` (#006A4E)
 - **Secondary**: `mountain-meadow` (#2ECC71)
 - **Accent**: `caribbean-green` (#00F5B8)
@@ -86,12 +95,14 @@ The admin dashboard provides comprehensive platform management capabilities for 
 - **Background**: `anti-flash-white` (#F1F2F6)
 
 ### Responsive Design
+
 - Mobile-first approach
 - Flexible grid layouts
 - Collapsible sidebar for mobile
 - Touch-friendly interface elements
 
 ### Accessibility
+
 - WCAG 2.1 AA compliant
 - Semantic HTML structure
 - Proper ARIA attributes
@@ -139,6 +150,7 @@ export default function AdminDashboard() {
 ### Component Props
 
 Each component is fully typed with TypeScript interfaces defined in `/types/dashboard.types.ts`. Components support:
+
 - Loading states
 - Error handling
 - Custom event handlers
@@ -148,6 +160,7 @@ Each component is fully typed with TypeScript interfaces defined in `/types/dash
 ## Dependencies
 
 The admin dashboard relies on the following dependencies:
+
 - **shadcn/ui**: Complete UI component library
 - **Recharts**: Chart visualization library
 - **Lucide React**: Icon library
@@ -157,18 +170,22 @@ The admin dashboard relies on the following dependencies:
 ## Integration Points
 
 ### Data Sources
+
 Components are designed to work with:
+
 - REST APIs for real-time data
 - WebSocket connections for live updates
 - Local state management
 - External monitoring services
 
 ### Authentication
+
 - Role-based access control
 - Admin-only routes
 - Secure session management
 
 ### Performance
+
 - Lazy loading for chart components
 - Virtualized tables for large datasets
 - Optimized re-renders
@@ -177,20 +194,23 @@ Components are designed to work with:
 ## Customization
 
 ### Theming
+
 The dashboard uses CSS variables for theming, allowing easy customization:
 
 ```css
 :root {
-  --primary: 0 106 78;        /* bangladesh-green */
-  --secondary: 46 204 113;    /* mountain-meadow */
-  --accent: 0 245 184;        /* caribbean-green */
+  --primary: 0 106 78; /* bangladesh-green */
+  --secondary: 46 204 113; /* mountain-meadow */
+  --accent: 0 245 184; /* caribbean-green */
 }
 ```
 
 ### Layout
+
 The sidebar navigation can be customized by modifying the `adminNavItems` array in `AdminDashboardLayout.tsx`.
 
 ### Metrics
+
 System metrics can be extended by adding new metric types to the `SystemOverviewMetrics` interface.
 
 ## Future Enhancements

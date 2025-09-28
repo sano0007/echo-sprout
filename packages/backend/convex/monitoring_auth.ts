@@ -129,7 +129,9 @@ export const requireMonitoringPermission = query({
   handler: async (ctx, { permission }) => {
     const user = await UserService.getCurrentUser(ctx);
     const userPermissions = MONITORING_PERMISSIONS[user?.role || ''] || [];
-    const hasPermission = userPermissions.includes(permission as MonitoringPermission);
+    const hasPermission = userPermissions.includes(
+      permission as MonitoringPermission
+    );
 
     if (!hasPermission) {
       const user = await UserService.getCurrentUser(ctx);

@@ -647,7 +647,9 @@ function getDefaultMethodology(projectType: string): CreditMethodology {
 
   const methodology = methodologies[projectType] || methodologies.reforestation;
   if (!methodology) {
-    throw new Error(`No methodology available for project type: ${projectType}`);
+    throw new Error(
+      `No methodology available for project type: ${projectType}`
+    );
   }
   return methodology;
 }

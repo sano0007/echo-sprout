@@ -863,8 +863,7 @@ export default defineSchema({
       weekly: v.boolean(),
     }),
     lastUpdated: v.number(),
-  })
-    .index('by_user', ['userId']),
+  }).index('by_user', ['userId']),
 
   // ============= ANALYTICS & REPORTING =============
   analytics: defineTable({

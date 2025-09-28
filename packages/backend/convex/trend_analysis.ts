@@ -636,7 +636,8 @@ function assessDataQuality(
     expectedIntervalMs[timeframe as keyof typeof expectedIntervalMs];
   const lastPoint = dataPoints[dataPoints.length - 1];
   const firstPoint = dataPoints[0];
-  const timeSpan = lastPoint && firstPoint ? lastPoint.timestamp - firstPoint.timestamp : 0;
+  const timeSpan =
+    lastPoint && firstPoint ? lastPoint.timestamp - firstPoint.timestamp : 0;
   const expectedPoints = Math.floor(timeSpan / interval) + 1;
   const completeness = Math.min(dataPoints.length / expectedPoints, 1);
 

@@ -1,26 +1,26 @@
 'use client';
 
 import {
-  Download,
-  FlaskConical,
-  Calendar,
+  AlertTriangle,
   BarChart3,
+  Calendar,
   CheckCircle,
   Clock,
   DollarSign,
-  FileText,
-  AlertTriangle,
+  Download,
   Eye,
+  FileText,
+  FlaskConical,
   Globe,
   Heart,
-  MapPin,
   Image,
+  MapPin,
   Share,
+  Star,
   Trophy,
   Users,
-  Star,
 } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ProjectDetailData {
   id: string;
@@ -1165,7 +1165,9 @@ export default function ProjectDetailView({
                   >
                     <Star
                       className={`h-6 w-6 ${
-                        star <= userRating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                        star <= userRating
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300'
                       }`}
                     />
                   </button>

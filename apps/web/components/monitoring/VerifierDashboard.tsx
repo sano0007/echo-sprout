@@ -18,7 +18,7 @@ import {
   TrendingUp,
   User,
 } from 'lucide-react';
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import CommunicationInterface from './CommunicationInterface';
 import ProgressReviewTools from './ProgressReviewTools';

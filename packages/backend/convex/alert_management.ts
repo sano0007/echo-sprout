@@ -71,16 +71,21 @@ export const createAlert = mutation({
     // Create alert directly with proper urgency calculation
     const urgencyScore = calculateUrgencyScore(args.severity, args.alertType);
 
-    function calculateUrgencyScore(severity: string, alertType: string): number {
+    function calculateUrgencyScore(
+      severity: string,
+      alertType: string
+    ): number {
       const severityWeights = { critical: 90, high: 70, medium: 50, low: 30 };
       const typeWeights: Record<string, number> = {
-        'system_failure': 20,
-        'deadline_overdue': 15,
-        'verification_delay': 10,
-        'data_anomaly': 5,
+        system_failure: 20,
+        deadline_overdue: 15,
+        verification_delay: 10,
+        data_anomaly: 5,
       };
-      return (severityWeights[severity as keyof typeof severityWeights] || 50) +
-             (typeWeights[alertType] || 0);
+      return (
+        (severityWeights[severity as keyof typeof severityWeights] || 50) +
+        (typeWeights[alertType] || 0)
+      );
     }
 
     const alertId = await ctx.db.insert('systemAlerts', {
@@ -199,16 +204,17 @@ export const getAlerts = query({
     }
 
     if (filters.category) {
-      query = query.filter((q: any) => q.eq(q.field('category'), filters.category));
+      query = query.filter((q: any) =>
+        q.eq(q.field('category'), filters.category)
+      );
     }
 
     if (filters.dateRange) {
-      query = query.filter(
-        (q: any) =>
-          q.and(
-            q.gte(q.field('_creationTime'), filters.dateRange!.start),
-            q.lte(q.field('_creationTime'), filters.dateRange!.end)
-          )
+      query = query.filter((q: any) =>
+        q.and(
+          q.gte(q.field('_creationTime'), filters.dateRange!.start),
+          q.lte(q.field('_creationTime'), filters.dateRange!.end)
+        )
       );
     }
 

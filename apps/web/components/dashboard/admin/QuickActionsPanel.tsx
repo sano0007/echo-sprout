@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   AlertTriangle,
@@ -14,7 +14,8 @@ import {
   RefreshCw,
   Settings,
   Shield,
-  UserPlus} from 'lucide-react';
+  UserPlus,
+} from 'lucide-react';
 import React from 'react';
 
 import { cn } from '@/lib/utils';
@@ -101,7 +102,7 @@ const quickActions: QuickAction[] = [
     description: 'Run comprehensive security check',
     icon: Shield,
     variant: 'outline',
-  }
+  },
 ];
 
 const recentTasks = [
@@ -141,7 +142,7 @@ const recentTasks = [
 
 const ActionButton: React.FC<{ action: QuickAction; onClick?: () => void }> = ({
   action,
-  onClick
+  onClick,
 }) => {
   const Icon = action.icon;
 
@@ -152,7 +153,8 @@ const ActionButton: React.FC<{ action: QuickAction; onClick?: () => void }> = ({
       onClick={onClick}
       className={cn(
         'h-auto p-4 flex-col gap-2 relative min-h-[100px] justify-start text-left',
-        action.variant === 'default' && 'bg-bangladesh-green hover:bg-bangladesh-green/90',
+        action.variant === 'default' &&
+          'bg-bangladesh-green hover:bg-bangladesh-green/90',
         action.urgent && 'ring-2 ring-red-200 ring-offset-2'
       )}
     >
@@ -191,7 +193,13 @@ const TaskItem: React.FC<{ task: any }> = ({ task }) => {
 
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-      <div className={cn('mt-0.5', statusColors[task.status as keyof typeof statusColors] || 'text-gray-600')}>
+      <div
+        className={cn(
+          'mt-0.5',
+          statusColors[task.status as keyof typeof statusColors] ||
+            'text-gray-600'
+        )}
+      >
         <Icon className="h-4 w-4" />
       </div>
       <div className="flex-1 min-w-0">
@@ -201,9 +209,7 @@ const TaskItem: React.FC<{ task: any }> = ({ task }) => {
         <p className="text-xs text-muted-foreground leading-tight mt-1">
           {task.description}
         </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {task.timestamp}
-        </p>
+        <p className="text-xs text-muted-foreground mt-1">{task.timestamp}</p>
       </div>
     </div>
   );
@@ -212,7 +218,7 @@ const TaskItem: React.FC<{ task: any }> = ({ task }) => {
 export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
   loading = false,
   onActionClick = () => {},
-  className
+  className,
 }) => {
   if (loading) {
     return (
@@ -327,7 +333,11 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                   Database response time increased by 15% in the last hour
                 </p>
               </div>
-              <Button variant="outline" size="sm" className="text-red-700 border-red-200">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-700 border-red-200"
+              >
                 Investigate
               </Button>
             </div>
@@ -341,7 +351,11 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                   12 user registrations waiting for admin approval
                 </p>
               </div>
-              <Button variant="outline" size="sm" className="text-amber-700 border-amber-200">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-amber-700 border-amber-200"
+              >
                 Review
               </Button>
             </div>

@@ -1,11 +1,7 @@
 'use client';
 
-import {
-  CloudUpload,
-  MapPin,
-  X,
-} from 'lucide-react';
-import { useRef,useState } from 'react';
+import { CloudUpload, MapPin, X } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 interface ProgressSubmissionFormProps {
   projectId: string;

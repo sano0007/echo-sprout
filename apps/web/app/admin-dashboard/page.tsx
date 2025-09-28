@@ -117,7 +117,9 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Platform overview and management tools</p>
+          <p className="text-gray-600 mt-2">
+            Platform overview and management tools
+          </p>
         </div>
         <div className="flex gap-3">
           <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
@@ -136,21 +138,31 @@ export default function AdminDashboard() {
             {platformMetrics.totalProjects}
           </p>
           <p className="text-sm text-gray-600">Total Projects</p>
-          <p className="text-xs text-green-600 mt-1">+{platformMetrics.projectsThisMonth} this month</p>
+          <p className="text-xs text-green-600 mt-1">
+            +{platformMetrics.projectsThisMonth} this month
+          </p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-2xl font-bold text-green-600">
             {platformMetrics.activeProjects}
           </p>
           <p className="text-sm text-gray-600">Active Projects</p>
-          <p className="text-xs text-blue-600 mt-1">{Math.round((platformMetrics.activeProjects / platformMetrics.totalProjects) * 100)}% of total</p>
+          <p className="text-xs text-blue-600 mt-1">
+            {Math.round(
+              (platformMetrics.activeProjects / platformMetrics.totalProjects) *
+                100
+            )}
+            % of total
+          </p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-2xl font-bold text-purple-600">
             {platformMetrics.totalUsers.toLocaleString()}
           </p>
           <p className="text-sm text-gray-600">Total Users</p>
-          <p className="text-xs text-green-600 mt-1">+{platformMetrics.recentSignups} this month</p>
+          <p className="text-xs text-green-600 mt-1">
+            +{platformMetrics.recentSignups} this month
+          </p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-2xl font-bold text-orange-600">
@@ -220,27 +232,43 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Projects */}
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4">Recent Projects</h3>
+                  <h3 className="text-lg font-semibold mb-4">
+                    Recent Projects
+                  </h3>
                   <div className="space-y-4">
                     {recentProjects.slice(0, 4).map((project) => (
-                      <div key={project.id} className="bg-white p-4 rounded-lg border">
+                      <div
+                        key={project.id}
+                        className="bg-white p-4 rounded-lg border"
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex-1">
-                            <h4 className="font-medium text-gray-800">{project.title}</h4>
-                            <p className="text-sm text-gray-600">by {project.creator}</p>
+                            <h4 className="font-medium text-gray-800">
+                              {project.title}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              by {project.creator}
+                            </p>
                           </div>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            project.status === 'Active' ? 'bg-green-100 text-green-800' :
-                            project.status === 'Under Review' ? 'bg-yellow-100 text-yellow-800' :
-                            project.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              project.status === 'Active'
+                                ? 'bg-green-100 text-green-800'
+                                : project.status === 'Under Review'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : project.status === 'Completed'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
                             {project.status}
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-600">{project.type}</span>
-                          <span className="text-gray-600">{project.progress}% complete</span>
+                          <span className="text-gray-600">
+                            {project.progress}% complete
+                          </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                           <div
@@ -258,22 +286,38 @@ export default function AdminDashboard() {
 
                 {/* Recent Activities */}
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4">Recent Activities</h3>
+                  <h3 className="text-lg font-semibold mb-4">
+                    Recent Activities
+                  </h3>
                   <div className="space-y-4">
                     {recentActivities.map((activity) => (
-                      <div key={activity.id} className="bg-white p-4 rounded-lg border">
+                      <div
+                        key={activity.id}
+                        className="bg-white p-4 rounded-lg border"
+                      >
                         <div className="flex items-start space-x-3">
-                          <div className={`w-2 h-2 rounded-full mt-2 ${
-                            activity.severity === 'success' ? 'bg-green-500' :
-                            activity.severity === 'warning' ? 'bg-yellow-500' :
-                            activity.severity === 'error' ? 'bg-red-500' :
-                            'bg-blue-500'
-                          }`}></div>
+                          <div
+                            className={`w-2 h-2 rounded-full mt-2 ${
+                              activity.severity === 'success'
+                                ? 'bg-green-500'
+                                : activity.severity === 'warning'
+                                  ? 'bg-yellow-500'
+                                  : activity.severity === 'error'
+                                    ? 'bg-red-500'
+                                    : 'bg-blue-500'
+                            }`}
+                          ></div>
                           <div className="flex-1">
-                            <p className="text-sm text-gray-800">{activity.message}</p>
+                            <p className="text-sm text-gray-800">
+                              {activity.message}
+                            </p>
                             <div className="flex justify-between items-center mt-1">
-                              <span className="text-xs text-gray-600">{activity.user}</span>
-                              <span className="text-xs text-gray-500">{activity.timestamp}</span>
+                              <span className="text-xs text-gray-600">
+                                {activity.user}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {activity.timestamp}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -289,43 +333,61 @@ export default function AdminDashboard() {
               {/* Platform Performance Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4">Monthly Project Submissions</h3>
+                  <h3 className="text-lg font-semibold mb-4">
+                    Monthly Project Submissions
+                  </h3>
                   <div className="h-64 flex items-center justify-center bg-white rounded">
-                    <p className="text-gray-500">Chart showing monthly project submissions trend</p>
+                    <p className="text-gray-500">
+                      Chart showing monthly project submissions trend
+                    </p>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4">Credits Issued vs Revenue</h3>
+                  <h3 className="text-lg font-semibold mb-4">
+                    Credits Issued vs Revenue
+                  </h3>
                   <div className="h-64 flex items-center justify-center bg-white rounded">
-                    <p className="text-gray-500">Chart showing credits issued and revenue correlation</p>
+                    <p className="text-gray-500">
+                      Chart showing credits issued and revenue correlation
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Environmental Impact Summary */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Platform Environmental Impact</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  Platform Environmental Impact
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="bg-green-50 p-4 rounded-lg text-center">
                     <p className="text-3xl font-bold text-green-600">🌳</p>
                     <p className="text-lg font-semibold">47,500</p>
-                    <p className="text-sm text-gray-600">Equivalent trees planted</p>
+                    <p className="text-sm text-gray-600">
+                      Equivalent trees planted
+                    </p>
                   </div>
                   <div className="bg-blue-50 p-4 rounded-lg text-center">
                     <p className="text-3xl font-bold text-blue-600">🚗</p>
                     <p className="text-lg font-semibold">4,100</p>
-                    <p className="text-sm text-gray-600">Cars off road equivalent</p>
+                    <p className="text-sm text-gray-600">
+                      Cars off road equivalent
+                    </p>
                   </div>
                   <div className="bg-purple-50 p-4 rounded-lg text-center">
                     <p className="text-3xl font-bold text-purple-600">⚡</p>
                     <p className="text-lg font-semibold">2.1M</p>
-                    <p className="text-sm text-gray-600">kWh clean energy supported</p>
+                    <p className="text-sm text-gray-600">
+                      kWh clean energy supported
+                    </p>
                   </div>
                   <div className="bg-orange-50 p-4 rounded-lg text-center">
                     <p className="text-3xl font-bold text-orange-600">🏠</p>
                     <p className="text-lg font-semibold">2,590</p>
-                    <p className="text-sm text-gray-600">Homes powered for a year</p>
+                    <p className="text-sm text-gray-600">
+                      Homes powered for a year
+                    </p>
                   </div>
                 </div>
               </div>
@@ -333,14 +395,10 @@ export default function AdminDashboard() {
           )}
 
           {/* Project Management Tab */}
-          {activeTab === 'projects' && (
-            <AdminProjectManagement />
-          )}
+          {activeTab === 'projects' && <AdminProjectManagement />}
 
           {/* User Management Tab */}
-          {activeTab === 'users' && (
-            <AdminUserManagement />
-          )}
+          {activeTab === 'users' && <AdminUserManagement />}
 
           {/* Analytics Tab */}
           {activeTab === 'analytics' && (
@@ -365,69 +423,111 @@ export default function AdminDashboard() {
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <h4 className="text-md font-medium mb-4">User Growth</h4>
                   <div className="h-64 flex items-center justify-center bg-white rounded">
-                    <p className="text-gray-500">User registration and activity trends</p>
+                    <p className="text-gray-500">
+                      User registration and activity trends
+                    </p>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h4 className="text-md font-medium mb-4">Project Type Distribution</h4>
+                  <h4 className="text-md font-medium mb-4">
+                    Project Type Distribution
+                  </h4>
                   <div className="h-64 flex items-center justify-center bg-white rounded">
-                    <p className="text-gray-500">Breakdown of project types on platform</p>
+                    <p className="text-gray-500">
+                      Breakdown of project types on platform
+                    </p>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <h4 className="text-md font-medium mb-4">Revenue Trends</h4>
                   <div className="h-64 flex items-center justify-center bg-white rounded">
-                    <p className="text-gray-500">Platform revenue and commission trends</p>
+                    <p className="text-gray-500">
+                      Platform revenue and commission trends
+                    </p>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h4 className="text-md font-medium mb-4">Credit Market Activity</h4>
+                  <h4 className="text-md font-medium mb-4">
+                    Credit Market Activity
+                  </h4>
                   <div className="h-64 flex items-center justify-center bg-white rounded">
-                    <p className="text-gray-500">Credit trading volume and pricing trends</p>
+                    <p className="text-gray-500">
+                      Credit trading volume and pricing trends
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Key Metrics Table */}
               <div className="bg-gray-50 p-6 rounded-lg">
-                <h4 className="text-md font-medium mb-4">Key Performance Indicators</h4>
+                <h4 className="text-md font-medium mb-4">
+                  Key Performance Indicators
+                </h4>
                 <div className="overflow-x-auto">
                   <table className="min-w-full bg-white rounded">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Metric</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Current</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Previous Period</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Change</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                          Metric
+                        </th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                          Current
+                        </th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                          Previous Period
+                        </th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                          Change
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       <tr>
-                        <td className="px-4 py-2 text-sm">Monthly Active Users</td>
+                        <td className="px-4 py-2 text-sm">
+                          Monthly Active Users
+                        </td>
                         <td className="px-4 py-2 text-sm font-medium">1,847</td>
                         <td className="px-4 py-2 text-sm">1,623</td>
-                        <td className="px-4 py-2 text-sm text-green-600">+13.8%</td>
+                        <td className="px-4 py-2 text-sm text-green-600">
+                          +13.8%
+                        </td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-2 text-sm">Project Completion Rate</td>
+                        <td className="px-4 py-2 text-sm">
+                          Project Completion Rate
+                        </td>
                         <td className="px-4 py-2 text-sm font-medium">87.2%</td>
                         <td className="px-4 py-2 text-sm">84.1%</td>
-                        <td className="px-4 py-2 text-sm text-green-600">+3.1%</td>
+                        <td className="px-4 py-2 text-sm text-green-600">
+                          +3.1%
+                        </td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-2 text-sm">Average Credit Price</td>
-                        <td className="px-4 py-2 text-sm font-medium">₹16.50</td>
+                        <td className="px-4 py-2 text-sm">
+                          Average Credit Price
+                        </td>
+                        <td className="px-4 py-2 text-sm font-medium">
+                          ₹16.50
+                        </td>
                         <td className="px-4 py-2 text-sm">₹15.80</td>
-                        <td className="px-4 py-2 text-sm text-green-600">+4.4%</td>
+                        <td className="px-4 py-2 text-sm text-green-600">
+                          +4.4%
+                        </td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-2 text-sm">Platform Commission</td>
-                        <td className="px-4 py-2 text-sm font-medium">₹42,300</td>
+                        <td className="px-4 py-2 text-sm">
+                          Platform Commission
+                        </td>
+                        <td className="px-4 py-2 text-sm font-medium">
+                          ₹42,300
+                        </td>
                         <td className="px-4 py-2 text-sm">₹38,900</td>
-                        <td className="px-4 py-2 text-sm text-green-600">+8.7%</td>
+                        <td className="px-4 py-2 text-sm text-green-600">
+                          +8.7%
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -439,15 +539,21 @@ export default function AdminDashboard() {
           {/* System Health Tab */}
           {activeTab === 'system' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold">System Health & Monitoring</h3>
+              <h3 className="text-lg font-semibold">
+                System Health & Monitoring
+              </h3>
 
               {/* System Status Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-green-50 p-6 rounded-lg border border-green-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-lg font-medium text-green-800">API Status</h4>
-                      <p className="text-sm text-green-600">All endpoints operational</p>
+                      <h4 className="text-lg font-medium text-green-800">
+                        API Status
+                      </h4>
+                      <p className="text-sm text-green-600">
+                        All endpoints operational
+                      </p>
                     </div>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   </div>
@@ -460,8 +566,12 @@ export default function AdminDashboard() {
                 <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-lg font-medium text-blue-800">Database</h4>
-                      <p className="text-sm text-blue-600">Performance optimal</p>
+                      <h4 className="text-lg font-medium text-blue-800">
+                        Database
+                      </h4>
+                      <p className="text-sm text-blue-600">
+                        Performance optimal
+                      </p>
                     </div>
                     <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                   </div>
@@ -474,14 +584,20 @@ export default function AdminDashboard() {
                 <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-lg font-medium text-yellow-800">Storage</h4>
-                      <p className="text-sm text-yellow-600">78% capacity used</p>
+                      <h4 className="text-lg font-medium text-yellow-800">
+                        Storage
+                      </h4>
+                      <p className="text-sm text-yellow-600">
+                        78% capacity used
+                      </p>
                     </div>
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                   </div>
                   <div className="mt-4">
                     <p className="text-sm text-yellow-700">156GB / 200GB</p>
-                    <p className="text-xs text-yellow-600">Consider scaling soon</p>
+                    <p className="text-xs text-yellow-600">
+                      Consider scaling soon
+                    </p>
                   </div>
                 </div>
               </div>
@@ -489,7 +605,9 @@ export default function AdminDashboard() {
               {/* System Metrics */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h4 className="text-md font-medium mb-4">Server Performance</h4>
+                  <h4 className="text-md font-medium mb-4">
+                    Server Performance
+                  </h4>
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between text-sm mb-1">
@@ -497,7 +615,10 @@ export default function AdminDashboard() {
                         <span>34%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '34%' }}></div>
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: '34%' }}
+                        ></div>
                       </div>
                     </div>
                     <div>
@@ -506,7 +627,10 @@ export default function AdminDashboard() {
                         <span>67%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-green-600 h-2 rounded-full" style={{ width: '67%' }}></div>
+                        <div
+                          className="bg-green-600 h-2 rounded-full"
+                          style={{ width: '67%' }}
+                        ></div>
                       </div>
                     </div>
                     <div>
@@ -515,40 +639,53 @@ export default function AdminDashboard() {
                         <span>23%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-purple-600 h-2 rounded-full" style={{ width: '23%' }}></div>
+                        <div
+                          className="bg-purple-600 h-2 rounded-full"
+                          style={{ width: '23%' }}
+                        ></div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h4 className="text-md font-medium mb-4">Recent System Events</h4>
+                  <h4 className="text-md font-medium mb-4">
+                    Recent System Events
+                  </h4>
                   <div className="space-y-3">
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-sm">Database backup completed successfully</p>
+                        <p className="text-sm">
+                          Database backup completed successfully
+                        </p>
                         <p className="text-xs text-gray-500">2 hours ago</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-sm">Security scan completed - no vulnerabilities found</p>
+                        <p className="text-sm">
+                          Security scan completed - no vulnerabilities found
+                        </p>
                         <p className="text-xs text-gray-500">6 hours ago</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-sm">High API traffic detected - auto-scaling initiated</p>
+                        <p className="text-sm">
+                          High API traffic detected - auto-scaling initiated
+                        </p>
                         <p className="text-xs text-gray-500">1 day ago</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-sm">System update deployed successfully</p>
+                        <p className="text-sm">
+                          System update deployed successfully
+                        </p>
                         <p className="text-xs text-gray-500">2 days ago</p>
                       </div>
                     </div>
@@ -562,11 +699,15 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button className="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 text-center">
                     <p className="font-medium">Run System Diagnostics</p>
-                    <p className="text-sm opacity-90">Check all system components</p>
+                    <p className="text-sm opacity-90">
+                      Check all system components
+                    </p>
                   </button>
                   <button className="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 text-center">
                     <p className="font-medium">Force Database Backup</p>
-                    <p className="text-sm opacity-90">Create immediate backup</p>
+                    <p className="text-sm opacity-90">
+                      Create immediate backup
+                    </p>
                   </button>
                   <button className="bg-orange-600 text-white p-4 rounded-lg hover:bg-orange-700 text-center">
                     <p className="font-medium">View Detailed Logs</p>

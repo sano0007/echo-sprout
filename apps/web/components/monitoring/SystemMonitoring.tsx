@@ -1,25 +1,25 @@
 'use client';
 
 import {
-  TrendingDown,
-  TrendingUp,
-  Zap,
+  AlertTriangle,
   BarChart3,
   CheckCircle,
   Clock,
   Cloud,
-  Settings,
-  Monitor,
   Cpu,
-  FileText,
-  AlertTriangle,
   Eye,
+  FileText,
   Info,
+  Monitor,
   RefreshCw,
   Server,
+  Settings,
+  TrendingDown,
+  TrendingUp,
   Users,
+  Zap,
 } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface SystemMetric {
   id: string;

@@ -1,17 +1,17 @@
 'use client';
 
 import {
-  MessageSquare,
   FileText,
   Filter,
+  Image,
+  MessageSquare,
+  Paperclip,
   Search,
   Send,
-  Paperclip,
-  Image,
   User,
   X,
 } from 'lucide-react';
-import React, { useEffect, useRef,useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface Message {
   id: string;

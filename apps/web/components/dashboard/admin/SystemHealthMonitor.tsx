@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Activity,
@@ -16,7 +16,8 @@ import {
   Shield,
   Wifi,
   XCircle,
-  Zap} from 'lucide-react';
+  Zap,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -26,14 +27,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { ServiceStatus, SystemAlert, SystemHealthData, SystemMetric } from '@/types/dashboard.types';
+import {
+  ServiceStatus,
+  SystemAlert,
+  SystemHealthData,
+  SystemMetric,
+} from '@/types/dashboard.types';
 
 interface SystemHealthMonitorProps {
   data?: SystemHealthData;
@@ -57,7 +58,8 @@ const serviceIcons = {
 };
 
 const statusColors = {
-  operational: 'text-mountain-meadow bg-mountain-meadow/10 border-mountain-meadow/20',
+  operational:
+    'text-mountain-meadow bg-mountain-meadow/10 border-mountain-meadow/20',
   degraded: 'text-amber-600 bg-amber-50 border-amber-200',
   outage: 'text-red-600 bg-red-50 border-red-200',
 };
@@ -188,12 +190,15 @@ const mockHealthData: SystemHealthData = {
   ],
 };
 
-const ServiceCard: React.FC<{ service: ServiceStatus; onRefresh?: () => void }> = ({
-  service,
-  onRefresh
-}) => {
+const ServiceCard: React.FC<{
+  service: ServiceStatus;
+  onRefresh?: () => void;
+}> = ({ service, onRefresh }) => {
   const getServiceIcon = (serviceName: string) => {
-    const key = serviceName.toLowerCase().replace(/\s+/g, '').replace(/gateway|service/g, '');
+    const key = serviceName
+      .toLowerCase()
+      .replace(/\s+/g, '')
+      .replace(/gateway|service/g, '');
     return serviceIcons[key as keyof typeof serviceIcons] || Server;
   };
 
@@ -228,10 +233,7 @@ const ServiceCard: React.FC<{ service: ServiceStatus; onRefresh?: () => void }> 
             <span className="text-muted-foreground">Uptime</span>
             <span className="font-medium">{service.uptime.toFixed(2)}%</span>
           </div>
-          <Progress
-            value={service.uptime}
-            className="h-1.5"
-          />
+          <Progress value={service.uptime} className="h-1.5" />
 
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Response Time</span>
@@ -257,16 +259,20 @@ const ServiceCard: React.FC<{ service: ServiceStatus; onRefresh?: () => void }> 
   );
 };
 
-const AlertCard: React.FC<{ alert: SystemAlert; onAcknowledge?: (id: string) => void }> = ({
-  alert,
-  onAcknowledge
-}) => {
+const AlertCard: React.FC<{
+  alert: SystemAlert;
+  onAcknowledge?: (id: string) => void;
+}> = ({ alert, onAcknowledge }) => {
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case 'critical': return XCircle;
-      case 'high': return AlertTriangle;
-      case 'medium': return AlertTriangle;
-      default: return CheckCircle;
+      case 'critical':
+        return XCircle;
+      case 'high':
+        return AlertTriangle;
+      case 'medium':
+        return AlertTriangle;
+      default:
+        return CheckCircle;
     }
   };
 
@@ -277,17 +283,21 @@ const AlertCard: React.FC<{ alert: SystemAlert; onAcknowledge?: (id: string) => 
   };
 
   return (
-    <Card className={cn(
-      'border-0 shadow-sm',
-      alert.acknowledged ? 'opacity-60' : '',
-      alert.severity === 'critical' ? 'border-l-4 border-l-red-500' : ''
-    )}>
+    <Card
+      className={cn(
+        'border-0 shadow-sm',
+        alert.acknowledged ? 'opacity-60' : '',
+        alert.severity === 'critical' ? 'border-l-4 border-l-red-500' : ''
+      )}
+    >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <div className={cn(
-            'flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0',
-            alertSeverityColors[alert.severity]
-          )}>
+          <div
+            className={cn(
+              'flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0',
+              alertSeverityColors[alert.severity]
+            )}
+          >
             <Icon className="h-4 w-4" />
           </div>
 
@@ -295,7 +305,10 @@ const AlertCard: React.FC<{ alert: SystemAlert; onAcknowledge?: (id: string) => 
             <div className="flex items-center gap-2 mb-1">
               <Badge
                 variant="outline"
-                className={cn('text-xs capitalize', alertSeverityColors[alert.severity])}
+                className={cn(
+                  'text-xs capitalize',
+                  alertSeverityColors[alert.severity]
+                )}
               >
                 {alert.severity}
               </Badge>
@@ -349,7 +362,9 @@ const MetricCard: React.FC<{ metric: SystemMetric }> = ({ metric }) => {
   };
 
   const Icon = getMetricIcon(metric.name);
-  const percentage = metric.threshold ? (metric.value / metric.threshold) * 100 : 0;
+  const percentage = metric.threshold
+    ? (metric.value / metric.threshold) * 100
+    : 0;
 
   return (
     <Card className="border-0 shadow-sm">
@@ -377,16 +392,14 @@ const MetricCard: React.FC<{ metric: SystemMetric }> = ({ metric }) => {
             </span>
             {metric.threshold && (
               <span className="text-xs text-muted-foreground">
-                Threshold: {metric.threshold}{metric.unit}
+                Threshold: {metric.threshold}
+                {metric.unit}
               </span>
             )}
           </div>
 
           {metric.threshold && (
-            <Progress
-              value={Math.min(percentage, 100)}
-              className="h-1.5"
-            />
+            <Progress value={Math.min(percentage, 100)} className="h-1.5" />
           )}
         </div>
       </CardContent>
@@ -399,7 +412,7 @@ export const SystemHealthMonitor: React.FC<SystemHealthMonitorProps> = ({
   loading = false,
   onRefresh = () => {},
   onAlertAcknowledge = () => {},
-  className
+  className,
 }) => {
   const [refreshing, setRefreshing] = useState(false);
 
@@ -411,10 +424,14 @@ export const SystemHealthMonitor: React.FC<SystemHealthMonitorProps> = ({
 
   const getOverallStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-mountain-meadow bg-mountain-meadow/10 border-mountain-meadow/20';
-      case 'warning': return 'text-amber-600 bg-amber-50 border-amber-200';
-      case 'critical': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'healthy':
+        return 'text-mountain-meadow bg-mountain-meadow/10 border-mountain-meadow/20';
+      case 'warning':
+        return 'text-amber-600 bg-amber-50 border-amber-200';
+      case 'critical':
+        return 'text-red-600 bg-red-50 border-red-200';
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200';
     }
   };
 
@@ -455,7 +472,10 @@ export const SystemHealthMonitor: React.FC<SystemHealthMonitorProps> = ({
             <div className="flex items-center gap-2">
               <Badge
                 variant="outline"
-                className={cn('text-sm capitalize', getOverallStatusColor(data.status))}
+                className={cn(
+                  'text-sm capitalize',
+                  getOverallStatusColor(data.status)
+                )}
               >
                 {data.status}
               </Badge>
@@ -465,7 +485,9 @@ export const SystemHealthMonitor: React.FC<SystemHealthMonitorProps> = ({
                 onClick={handleRefresh}
                 disabled={refreshing}
               >
-                <RefreshCw className={cn('h-4 w-4 mr-2', refreshing && 'animate-spin')} />
+                <RefreshCw
+                  className={cn('h-4 w-4 mr-2', refreshing && 'animate-spin')}
+                />
                 Refresh
               </Button>
             </div>

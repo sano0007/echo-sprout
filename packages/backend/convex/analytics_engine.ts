@@ -2185,7 +2185,9 @@ async function generateProjectTimeSeries(
   // Group projects by time periods based on granularity
   const groupedData = groupByTimePeriod(projects, timeframe.granularity);
 
-  for (const [timestamp, projectsInPeriod] of Array.from(groupedData.entries())) {
+  for (const [timestamp, projectsInPeriod] of Array.from(
+    groupedData.entries()
+  )) {
     points.push({
       timestamp,
       value: projectsInPeriod.length,
@@ -2418,7 +2420,9 @@ async function generateTransactionTimeSeries(
   const grouped = groupByTimePeriod(transactions, timeframe.granularity);
   const points: TimeSeriesPoint[] = [];
 
-  for (const [timestamp, transactionsInPeriod] of Array.from(grouped.entries())) {
+  for (const [timestamp, transactionsInPeriod] of Array.from(
+    grouped.entries()
+  )) {
     const totalVolume = transactionsInPeriod.reduce(
       (sum, t) => sum + t.totalAmount,
       0
@@ -2583,7 +2587,10 @@ async function calculateImpactTrends(
   );
 
   // Simple trend calculation
-  const lastImpact = impactOverTime.length > 0 ? impactOverTime[impactOverTime.length - 1]?.impact : 0;
+  const lastImpact =
+    impactOverTime.length > 0
+      ? impactOverTime[impactOverTime.length - 1]?.impact
+      : 0;
   const firstImpact = impactOverTime.length > 0 ? impactOverTime[0]?.impact : 0;
   const trend =
     impactOverTime.length > 1 && firstImpact && lastImpact

@@ -1,13 +1,13 @@
 'use client';
 
 import {
+  BarChart3,
+  Calendar,
   Settings,
   TrendingDown,
   TrendingUp,
-  Calendar,
-  BarChart3,
 } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface MetricCard {
   id: string;

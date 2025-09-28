@@ -1,18 +1,18 @@
 'use client';
 
 import {
-  Download,
+  AlertTriangle,
   BarChart3,
   CheckCircle,
   Clock,
-  Settings,
-  TrendingUp,
-  FileText,
-  AlertTriangle,
+  Download,
   Eye,
+  FileText,
   Filter,
   Presentation,
+  Settings,
   Table,
+  TrendingUp,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -90,9 +90,10 @@ export default function ReportGeneration({
   const [customSections, setCustomSections] = useState<string[]>([]);
   const [filters, setFilters] = useState<ReportFilter>({
     dateRange: {
-      start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0] || '',
+      start:
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0] || '',
       end: new Date().toISOString().split('T')[0] || '',
       preset: '30d',
     },

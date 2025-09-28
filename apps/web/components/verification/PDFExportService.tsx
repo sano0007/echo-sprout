@@ -1,8 +1,8 @@
 'use client';
 
 import { format } from 'date-fns';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 import type { VerificationCertificate, VerificationReport } from './types';
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { api } from '@packages/backend';
+import { useQuery } from 'convex/react';
 import {
   Edit,
   Mail,
@@ -10,7 +12,6 @@ import {
   UserX,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { useQuery } from 'convex/react';
 
 import { cn } from '@/lib/utils';
 
@@ -43,8 +44,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
-import { api } from '@packages/backend';
 
 interface UserManagementTableProps {
   loading?: boolean;

@@ -9,7 +9,7 @@ import {
   Search,
   XCircle,
 } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Alert {
   id: string;

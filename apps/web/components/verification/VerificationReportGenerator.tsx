@@ -1,7 +1,6 @@
 'use client';
 
 import { format } from 'date-fns';
-import React, { useMemo, useState } from 'react';
 import {
   AlertTriangle,
   BarChart3,
@@ -14,6 +13,7 @@ import {
   Shield,
   XCircle,
 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
 import type { ReportTemplate, VerificationReport } from './types';
 
