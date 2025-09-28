@@ -386,7 +386,7 @@ function ChecklistSection({
                 onChange={(e) => setLocalScore(Number(e.target.value))}
                 onBlur={handleScoreUpdate}
                 disabled={!isEditable || isUpdating}
-                className="block w-20 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                className="block w-20 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 bg-white text-gray-900"
               />
               <div className="flex-1">
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -421,7 +421,7 @@ function ChecklistSection({
             onBlur={handleNotesUpdate}
             disabled={!isEditable || isUpdating}
             rows={3}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+            className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 bg-white text-gray-900"
             placeholder="Add notes about this assessment category..."
           />
         </div>

@@ -322,7 +322,7 @@ export function CertificateGenerator({
             <select
               value={selectedTemplate}
               onChange={(e) => setSelectedTemplate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent  bg-white text-gray-900"
             >
               {templates.map((template) => (
                 <option key={template.id} value={template.id}>
@@ -342,7 +342,7 @@ export function CertificateGenerator({
             <select
               value={certificateType}
               onChange={(e) => setCertificateType(e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent  bg-white text-gray-900"
             >
               <option value="full_verification">Full Verification</option>
               <option value="compliance">Compliance Only</option>
@@ -358,7 +358,7 @@ export function CertificateGenerator({
             <select
               value={expiryMonths}
               onChange={(e) => setExpiryMonths(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent  bg-white text-gray-900"
             >
               <option value={6}>6 Months</option>
               <option value={12}>12 Months</option>

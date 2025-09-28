@@ -1184,7 +1184,7 @@ export default function ProjectReview() {
                   <textarea
                     value={verificationNotes}
                     onChange={(e) => setVerificationNotes(e.target.value)}
-                    className={`w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                    className={`w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 ${
                       !verificationNotes.trim()
                         ? 'border-red-300 bg-red-50'
                         : 'border-gray-300'
@@ -1231,7 +1231,7 @@ export default function ProjectReview() {
                         onChange={(e) =>
                           setQualityScore(Number(e.target.value))
                         }
-                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                        className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 ${
                           qualityScore < 1 || qualityScore > 10
                             ? 'border-red-300 bg-red-50'
                             : 'border-gray-300'
@@ -1309,7 +1309,7 @@ export default function ProjectReview() {
                             | 'revision_required'
                         )
                       }
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
                       required
                     >
                       <option value="approved">

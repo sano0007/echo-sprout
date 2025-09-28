@@ -654,8 +654,7 @@ exports.default = (0, server_1.defineSchema)({
             weekly: values_1.v.boolean(),
         }),
         lastUpdated: values_1.v.number(),
-    })
-        .index('by_user', ['userId']),
+    }).index('by_user', ['userId']),
     // ============= ANALYTICS & REPORTING =============
     analytics: (0, server_1.defineTable)({
         metric: values_1.v.string(), // "daily_transactions", "project_completions", etc. todo: enum of metrics

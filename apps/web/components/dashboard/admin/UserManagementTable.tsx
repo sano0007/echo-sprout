@@ -231,25 +231,25 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
             />
           </div>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-full sm:w-40 bg-pure-white border-cloud-gray text-slate-gray hover:border-slate-gray">
+            <SelectTrigger className="w-full sm:w-40 bg-white border-gray-300 text-gray-900 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="project_creator">Project Creator</SelectItem>
-              <SelectItem value="credit_buyer">Credit Buyer</SelectItem>
-              <SelectItem value="verifier">Verifier</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md">
+              <SelectItem value="all" className="hover:bg-gray-50 focus:bg-gray-50">All Roles</SelectItem>
+              <SelectItem value="project_creator" className="hover:bg-gray-50 focus:bg-gray-50">Project Creator</SelectItem>
+              <SelectItem value="credit_buyer" className="hover:bg-gray-50 focus:bg-gray-50">Credit Buyer</SelectItem>
+              <SelectItem value="verifier" className="hover:bg-gray-50 focus:bg-gray-50">Verifier</SelectItem>
+              <SelectItem value="admin" className="hover:bg-gray-50 focus:bg-gray-50">Admin</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40 bg-pure-white border-cloud-gray text-slate-gray hover:border-slate-gray">
+            <SelectTrigger className="w-full sm:w-40 bg-white border-gray-300 text-gray-900 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md">
+              <SelectItem value="all" className="hover:bg-gray-50 focus:bg-gray-50">All Status</SelectItem>
+              <SelectItem value="active" className="hover:bg-gray-50 focus:bg-gray-50">Active</SelectItem>
+              <SelectItem value="inactive" className="hover:bg-gray-50 focus:bg-gray-50">Inactive</SelectItem>
             </SelectContent>
           </Select>
           {/*<Button variant="outline" size="icon" className="border-cloud-gray text-slate-gray hover:bg-whisper-gray hover:text-rich-black">*/}
