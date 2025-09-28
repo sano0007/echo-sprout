@@ -186,20 +186,20 @@ export default function RegisterPage() {
           <p className="text-lg text-gray-600">
             Create your account and start making environmental impact
           </p>
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center justify-center">
-              <span className="text-4xl mr-3">🏢</span>
-              <div className="text-left">
-                <h3 className="text-lg font-semibold text-blue-900">
-                  Credit Buyer Account
-                </h3>
-                <p className="text-sm text-blue-700">
-                  You'll start as a Credit Buyer with access to purchase carbon
-                  credits and track your environmental impact.
-                </p>
-              </div>
-            </div>
-          </div>
+          {/*<div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">*/}
+          {/*  <div className="flex items-center justify-center">*/}
+          {/*    <span className="text-4xl mr-3">🏢</span>*/}
+          {/*    <div className="text-left">*/}
+          {/*      <h3 className="text-lg font-semibold text-blue-900">*/}
+          {/*        Credit Buyer Account*/}
+          {/*      </h3>*/}
+          {/*      <p className="text-sm text-blue-700">*/}
+          {/*        You'll start as a Credit Buyer with access to purchase carbon*/}
+          {/*        credits and track your environmental impact.*/}
+          {/*      </p>*/}
+          {/*    </div>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
         </div>
 
         {/* Progress Steps */}

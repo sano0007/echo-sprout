@@ -87,24 +87,24 @@ export function CertificateGenerator({
         hologram: true,
       },
     },
-    {
-      id: 'blockchain',
-      name: 'Blockchain Certificate',
-      description: 'Blockchain-verified with immutable proof',
-      type: 'blockchain',
-      layout: {
-        orientation: 'portrait',
-        size: 'A4',
-        margins: { top: 25, bottom: 25, left: 20, right: 20 },
-      },
-      design: {
-        background: 'linear-gradient(180deg, #4facfe 0%, #00f2fe 100%)',
-        border: { style: 'solid', width: 2, color: '#0891b2' },
-        logo: { url: '/logo-blockchain.png', position: 'top-center', size: 70 },
-      },
-      fields: [],
-      security: { qrCode: true, digitalSignature: true, blockchain: true },
-    },
+    // {
+    //   id: 'blockchain',
+    //   name: 'Blockchain Certificate',
+    //   description: 'Blockchain-verified with immutable proof',
+    //   type: 'blockchain',
+    //   layout: {
+    //     orientation: 'portrait',
+    //     size: 'A4',
+    //     margins: { top: 25, bottom: 25, left: 20, right: 20 },
+    //   },
+    //   design: {
+    //     background: 'linear-gradient(180deg, #4facfe 0%, #00f2fe 100%)',
+    //     border: { style: 'solid', width: 2, color: '#0891b2' },
+    //     logo: { url: '/logo-blockchain.png', position: 'top-center', size: 70 },
+    //   },
+    //   fields: [],
+    //   security: { qrCode: true, digitalSignature: true, blockchain: true },
+    // },
     {
       id: 'academic',
       name: 'Academic Certificate',
