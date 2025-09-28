@@ -50,7 +50,6 @@ export default function ProjectReview() {
     setSelectedDocumentId(doc._id);
   }, []);
 
-  // Queries
   const verification = useQuery(api.verifications.getVerificationByProjectId, {
     projectId: projectId,
   });
@@ -64,7 +63,6 @@ export default function ProjectReview() {
   const permissions = useQuery(api.permissions.getCurrentUserPermissions);
   const currentUser = useQuery(api.users.getCurrentUser);
 
-  // Real-time messaging
   const {
     messages: realtimeMessages,
     unreadCount,
@@ -77,7 +75,6 @@ export default function ProjectReview() {
     },
   });
 
-  // Get unique user IDs from messages for user information lookup
   const userIds = Array.from(
     new Set(
       realtimeMessages?.flatMap((msg: any) => [
@@ -87,13 +84,11 @@ export default function ProjectReview() {
     )
   ).filter(Boolean);
 
-  // Fetch user information for all users involved in messages
   const messageUsers = useQuery(
     api.users.getUsersByIds,
     userIds.length > 0 ? { ids: userIds } : 'skip'
   );
 
-  // Transform messages to include user information
   const transformedMessages =
     realtimeMessages?.map((msg: any) => {
       const sender = messageUsers?.find(
@@ -126,13 +121,11 @@ export default function ProjectReview() {
     }
   );
 
-  // Get audit trail
   const auditTrail = useQuery(
     api.verifications.getVerificationAuditTrail,
     verification?._id ? { verificationId: verification._id } : 'skip'
   );
 
-  // Mutations
   const acceptVerification = useMutation(api.verifications.acceptVerification);
   const startVerification = useMutation(api.verifications.startVerification);
   const completeVerification = useMutation(
@@ -144,7 +137,6 @@ export default function ProjectReview() {
     api.verifications.saveDocumentAnnotations
   );
 
-  // Debounced save function
   const debouncedSave = useCallback(
     async (documentId: string, annotations: Annotation[]) => {
       if (!verification?._id) {
@@ -158,7 +150,6 @@ export default function ProjectReview() {
           annotationCount: annotations.length,
         });
 
-        // Convert annotations to the format expected by the API
         const apiAnnotations = annotations.map((annotation) => ({
           id: annotation.id,
           type: annotation.type,
@@ -188,7 +179,6 @@ export default function ProjectReview() {
     [verification?._id, saveAnnotations]
   );
 
-  // Annotation handling function with debouncing
   const handleAnnotationChange = useCallback(
     (documentId: string, annotations: Annotation[]) => {
       console.log('Annotation change detected:', {
@@ -196,43 +186,36 @@ export default function ProjectReview() {
         annotationCount: annotations.length,
       });
 
-      // Update local state immediately for UI responsiveness
       setDocumentAnnotations((prev) => ({
         ...prev,
         [documentId]: annotations,
       }));
 
-      // Clear previous timeout
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
 
-      // Set new timeout for debounced save
       saveTimeoutRef.current = setTimeout(async () => {
         await debouncedSave(documentId, annotations);
-      }, 1000); // 1 second delay
+      }, 1000);
     },
     [debouncedSave]
   );
 
-  // Manual save function for immediate saving
   const handleManualSave = useCallback(
     async (documentId: string) => {
       const annotations = documentAnnotations[documentId] || [];
 
-      // Clear any pending debounced save
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
         saveTimeoutRef.current = null;
       }
 
-      // Immediately save the current annotations
       await debouncedSave(documentId, annotations);
     },
     [documentAnnotations, debouncedSave]
   );
 
-  // Verification action handlers
   const handleAcceptVerification = useCallback(async () => {
     if (!verification?._id) return;
 
@@ -257,7 +240,6 @@ export default function ProjectReview() {
     }
   }, [verification?._id, startVerification]);
 
-  // Validation functions
   const validateVerificationForm = useCallback(() => {
     const errors: string[] = [];
 
@@ -288,7 +270,6 @@ export default function ProjectReview() {
     ) => {
       if (!verification?._id) return;
 
-      // Validate form before proceeding
       const validationErrors = validateVerificationForm();
       if (validationErrors.length > 0) {
         toast.error(
@@ -299,7 +280,6 @@ export default function ProjectReview() {
 
       const finalRecommendation = recommendationParam || recommendation;
 
-      // Additional validation for quality score vs recommendation consistency
       if (finalRecommendation === 'approved' && qualityScore < 6) {
         const confirmLowScore = confirm(
           `You're approving a project with a quality score of ${qualityScore}/10. Are you sure you want to proceed?`
@@ -314,20 +294,15 @@ export default function ProjectReview() {
         if (!confirmHighScore) return;
       }
 
-      // Check if minimum document requirements are met
-      // Try multiple approaches to detect verified documents
       const verifiedDocuments =
         documents?.filter((doc) => {
-          // Method 1: Check if document has isVerified field (from schema)
           if (doc.isVerified === true) return true;
 
-          // Method 2: Check documentVerificationStatus checklist
           const checklistVerified = documentVerificationStatus?.checklist?.find(
             (status) => status.document?._id === doc._id && status.verified
           );
           if (checklistVerified) return true;
 
-          // Method 3: Check if document is in the verified list
           const statusVerified = documentVerificationStatus?.checklist?.some(
             (status) => status.document?._id === doc._id && status.verified
           );
@@ -336,7 +311,6 @@ export default function ProjectReview() {
           return false;
         }).length || 0;
 
-      // Debug information about document verification
       console.log('Document verification debug:', {
         totalDocuments: documents?.length || 0,
         verifiedDocuments,
@@ -367,7 +341,6 @@ export default function ProjectReview() {
           `Verification completed successfully! Project has been ${finalRecommendation}.`
         );
 
-        // Refresh the page to show updated status
         setTimeout(() => {
           window.location.reload();
         }, 1500);
@@ -399,7 +372,6 @@ export default function ProjectReview() {
           `Document ${isVerified ? 'verified' : 'unverified'} successfully`
         );
 
-        // Force refresh the page data to ensure latest verification status
         setTimeout(() => {
           window.location.reload();
         }, 1000);
@@ -411,7 +383,6 @@ export default function ProjectReview() {
     [verifyDocument]
   );
 
-  // Report and Certificate handlers
   const handleGenerateReport = useCallback((report: VerificationReport) => {
     setGeneratedReport(report);
     toast.success('Verification report generated successfully');
@@ -480,7 +451,6 @@ export default function ProjectReview() {
             filename = `certificate-${generatedCertificate.certificateNumber}.pdf`;
             break;
           case 'png': {
-            // For demo purposes, we'll export as HTML
             const htmlContent =
               PDFExportService.generateCertificateHTML(generatedCertificate);
             blob = new Blob([htmlContent], { type: 'text/html' });
@@ -488,7 +458,6 @@ export default function ProjectReview() {
             break;
           }
           case 'svg': {
-            // For demo purposes, we'll export as HTML
             const svgContent =
               PDFExportService.generateCertificateHTML(generatedCertificate);
             blob = new Blob([svgContent], { type: 'text/html' });
@@ -509,10 +478,8 @@ export default function ProjectReview() {
     [generatedCertificate]
   );
 
-  // Convert 1-10 scale to 0-100 scale for proper status calculation
   const scaledQualityScore = useMemo(() => qualityScore * 10, [qualityScore]);
 
-  // Memoized computed values for performance optimization
   const memoizedProjectData = useMemo(
     () => ({
       id: projectId,
@@ -777,7 +744,6 @@ export default function ProjectReview() {
     [transformedMessages, auditTrail]
   );
 
-  // Loading states
   if (
     !verification ||
     !permissions ||
@@ -796,7 +762,6 @@ export default function ProjectReview() {
     );
   }
 
-  // Check permissions
   if (!permissions.canViewVerifierDashboard) {
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -1809,7 +1774,6 @@ export default function ProjectReview() {
   );
 }
 
-// Audit Trail Panel Component
 function AuditTrailPanel({ auditTrail }: { auditTrail: any[] | undefined }) {
   if (!auditTrail) {
     return (

@@ -9,24 +9,19 @@ import { toast } from 'react-hot-toast';
 export default function VerificationDashboard() {
   const [activeTab, setActiveTab] = useState('pendingAcceptance');
 
-  // Get current user permissions
   const permissions = useQuery(api.permissions.getCurrentUserPermissions);
 
-  // Get verifier stats for current user
   const verifierStats = useQuery(api.verifications.getVerifierStats, {});
 
-  // Get verifier acceptance stats
   const acceptanceStats = useQuery(
     api.verifications.getVerifierAcceptanceStats,
     {}
   );
 
-  // Get my verifications
   const myVerifications = useQuery(api.verifications.getMyVerifications, {
     paginationOpts: { numItems: 50, cursor: null },
   });
 
-  // Get pending verifications (for admins)
   const pendingVerifications = useQuery(
     api.verifications.getPendingVerifications,
     permissions?.isAdmin
@@ -34,7 +29,6 @@ export default function VerificationDashboard() {
       : 'skip'
   );
 
-  // Loading states
   if (!permissions || !verifierStats || !acceptanceStats || !myVerifications) {
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -48,7 +42,6 @@ export default function VerificationDashboard() {
     );
   }
 
-  // Check access permissions
   if (!permissions.canViewVerifierDashboard) {
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -64,7 +57,6 @@ export default function VerificationDashboard() {
     );
   }
 
-  // Process verifications data
   const allVerifications = myVerifications.page || [];
   const projects = {
     pendingAcceptance: allVerifications.filter((v) => v.status === 'assigned'),
@@ -77,7 +69,6 @@ export default function VerificationDashboard() {
     ),
   };
 
-  // Use real stats
   const stats = {
     totalProjects: verifierStats.totalVerifications || 0,
     pendingAcceptance: acceptanceStats.pendingAcceptance || 0,
@@ -260,7 +251,6 @@ export default function VerificationDashboard() {
   );
 }
 
-// Helper component for rendering verification cards
 function VerificationCard({
   verification,
   type,
@@ -434,7 +424,6 @@ function VerificationCard({
   );
 }
 
-// Accept Verification Button Component
 function AcceptVerificationButton({ verification }: { verification: any }) {
   const acceptVerification = useMutation(api.verifications.acceptVerification);
   const [isAccepting, setIsAccepting] = useState(false);
@@ -464,7 +453,6 @@ function AcceptVerificationButton({ verification }: { verification: any }) {
   );
 }
 
-// Start Verification Button Component
 function StartVerificationButton({ verification }: { verification: any }) {
   const startVerification = useMutation(api.verifications.startVerification);
   const [isStarting, setIsStarting] = useState(false);

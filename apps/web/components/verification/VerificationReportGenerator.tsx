@@ -17,7 +17,6 @@ import React, { useMemo, useState } from 'react';
 
 import type { ReportTemplate, VerificationReport } from './types';
 
-// Safe date formatting helper
 const formatDateSafely = (
   date: string | number | Date | null | undefined,
   formatString: string = 'PPP'

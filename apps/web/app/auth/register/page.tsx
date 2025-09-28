@@ -22,10 +22,8 @@ export default function RegisterPage() {
     api.users.upgradeToProjectCreator
   );
 
-  // Get existing user data
   const currentUser = useQuery(api.users.getCurrentUser);
   const [formData, setFormData] = useState<UserRegistrationData>({
-    // Basic user info from schema
     email: '',
     firstName: '',
     lastName: '',
@@ -38,13 +36,11 @@ export default function RegisterPage() {
     country: '',
     profileImage: '',
 
-    // Additional fields
     website: '',
     description: '',
-    location: '', // For backward compatibility
+    location: '',
   });
 
-  // Pre-populate form data with existing user information
   useEffect(() => {
     if (isLoaded && clerkUser) {
       const userData = {
@@ -64,7 +60,6 @@ export default function RegisterPage() {
         location: '',
       };
 
-      // If we have existing user data from the database, use that instead
       if (currentUser) {
         userData.firstName = currentUser.firstName || userData.firstName;
         userData.lastName = currentUser.lastName || userData.lastName;
@@ -116,7 +111,6 @@ export default function RegisterPage() {
     'Other',
   ];
 
-  // Zod validation function
   const validateStep = (step: number): boolean => {
     let validationResult;
     const newErrors: { [key: string]: string } = {};
@@ -143,13 +137,13 @@ export default function RegisterPage() {
   const nextStep = () => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length));
-      setErrors({}); // Clear errors when moving to next step
+      setErrors({});
     }
   };
 
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
-    setErrors({}); // Clear errors when moving to previous step
+    setErrors({});
   };
 
   const handleSubmit = async () => {
