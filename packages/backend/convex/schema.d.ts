@@ -134,7 +134,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
         verificationCompletedAt?: number | undefined;
         qualityScore?: number | undefined;
         images?: string[] | undefined;
-        images?: string[] | undefined;
         progressPercentage?: number | undefined;
         lastProgressUpdate?: number | undefined;
         creatorId: import("convex/values").GenericId<"users">;
@@ -1686,28 +1685,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_user: ["generatedBy", "_creationTime"];
         by_date: ["generatedAt", "_creationTime"];
         by_public: ["isPublic", "_creationTime"];
-    }, {}, {}>;
-    files: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        contentType: string;
-        storageId: import("convex/values").GenericId<"_storage">;
-        filename: string;
-        uploadedAt: number;
-    }, {
-        storageId: import("convex/values").VId<import("convex/values").GenericId<"_storage">, "required">;
-        filename: import("convex/values").VString<string, "required">;
-        contentType: import("convex/values").VString<string, "required">;
-        uploadedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "contentType" | "storageId" | "filename" | "uploadedAt">, {
-        by_filename: ["filename", "_creationTime"];
-        by_upload_date: ["uploadedAt", "_creationTime"];
-        status: "draft" | "submitted" | "under_review" | "approved" | "rejected" | "active" | "completed" | "suspended";
-        verificationStatus: "rejected" | "pending" | "in_progress" | "verified" | "revision_required";
-        status: import("convex/values").VUnion<"draft" | "submitted" | "under_review" | "approved" | "rejected" | "active" | "completed" | "suspended", [import("convex/values").VLiteral<"draft", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"active", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"suspended", "required">], "required", never>;
-        verificationStatus: import("convex/values").VUnion<"rejected" | "pending" | "in_progress" | "verified" | "revision_required", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"verified", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
-        images: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
-        projectId?: import("convex/values").GenericId<"projects"> | undefined;
-        rejectionReason?: string | undefined;
-        impactDescription: string;
     }, {}, {}>;
     files: import("convex/server").TableDefinition<import("convex/values").VObject<{
         contentType: string;

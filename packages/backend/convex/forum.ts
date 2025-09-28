@@ -148,14 +148,15 @@ export const listAllTopics = query({
   args: {},
   handler: async (ctx) => {
     const items = await ctx.db.query('forumTopics').collect();
-    const authors = new Map();
+    const authors = new Map<string, string>();
     const result = [] as any[];
-    for (const t of items) {
-      let name = authors.get(t.authorId as any);
+    for (const t of items as any[]) {
+      const authorKey = ((t.authorId?.id as unknown as string) || String(t.authorId));
+      let name = authors.get(authorKey);
       if (!name) {
-        const a = await ctx.db.get(t.authorId);
+        const a = (await ctx.db.get(t.authorId)) as any;
         name = a ? `${a.firstName} ${a.lastName}` : 'Unknown';
-        authors.set(t.authorId as any, name);
+        authors.set(authorKey, name);
       }
       result.push({
         id: t._id,
@@ -165,6 +166,7 @@ export const listAllTopics = query({
         tags: t.tags,
         lastReplyAt: t.lastReplyAt,
         replies: t.replyCount,
+        replyCount: t.replyCount,
         views: t.viewCount,
         author: name,
       });
@@ -172,7 +174,6 @@ export const listAllTopics = query({
     return result;
   },
 });
-
 // (removed duplicate definitions of getTopContributors and getActiveUsersCount)
 
 export const getTopicById = query({
@@ -254,8 +255,8 @@ export const getTopContributors = query({
   handler: async (ctx) => {
     const topics = await ctx.db.query('forumTopics').collect();
     const counts = new Map<string, number>();
-    for (const t of topics) {
-      const key = t.authorId.id as unknown as string; // stable string id
+    for (const t of topics as any[]) {
+      const key = String((t.authorId as any)?.id ?? t.authorId);
       counts.set(key, (counts.get(key) || 0) + 1);
     }
 
@@ -270,8 +271,8 @@ export const getTopContributors = query({
       // authorKey is the string form of the Id; reconstruct Id type
       // Convex allows using the original id object, but we only have the string here.
       // We can find by scanning since we have topics collected.
-      const anyTopic = topics.find(
-        (t) => (t.authorId.id as unknown as string) === authorKey
+      const anyTopic = (topics as any[]).find(
+        (t) => String((t.authorId as any)?.id ?? t.authorId) === authorKey
       );
       if (!anyTopic) {
         results.push({ name: 'Unknown', posts: postCount });
@@ -289,14 +290,14 @@ export const getTopContributors = query({
 export const getActiveUsersCount = query({
   args: {},
   handler: async (ctx) => {
-    const topics = await ctx.db.query('forumTopics').collect();
-    const replies = await ctx.db.query('forumReplies').collect();
+    const topics = (await ctx.db.query('forumTopics').collect()) as any[];
+    const replies = (await ctx.db.query('forumReplies').collect()) as any[];
     const unique = new Set<string>();
     for (const t of topics) {
-      unique.add((t.authorId.id as unknown as string) || String(t.authorId));
+      unique.add(String((t.authorId as any)?.id ?? t.authorId));
     }
     for (const r of replies) {
-      unique.add((r.authorId.id as unknown as string) || String(r.authorId));
+      unique.add(String((r.authorId as any)?.id ?? r.authorId));
     }
     return unique.size;
   },
