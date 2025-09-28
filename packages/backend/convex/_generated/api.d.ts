@@ -16,6 +16,7 @@ import type {
 import type * as alert_escalation from "../alert_escalation.js";
 import type * as alert_generation from "../alert_generation.js";
 import type * as alert_management from "../alert_management.js";
+import type * as analytics from "../analytics.js";
 import type * as analytics_dashboard_reports from "../analytics_dashboard_reports.js";
 import type * as analytics_engine from "../analytics_engine.js";
 import type * as automated_monitoring from "../automated_monitoring.js";
@@ -25,6 +26,7 @@ import type * as credit_batch_management from "../credit_batch_management.js";
 import type * as credit_calculation from "../credit_calculation.js";
 import type * as crons from "../crons.js";
 import type * as documents from "../documents.js";
+import type * as fixed_pdf_generation from "../fixed_pdf_generation.js";
 import type * as forum from "../forum.js";
 import type * as http from "../http.js";
 import type * as impact_validation from "../impact_validation.js";
@@ -34,6 +36,7 @@ import type * as monitoring from "../monitoring.js";
 import type * as monitoring_admin from "../monitoring_admin.js";
 import type * as monitoring_auth from "../monitoring_auth.js";
 import type * as monitoring_config from "../monitoring_config.js";
+import type * as monitoring_crud from "../monitoring_crud.js";
 import type * as monitoring_index from "../monitoring_index.js";
 import type * as monitoring_migration from "../monitoring_migration.js";
 import type * as monitoring_utils from "../monitoring_utils.js";
@@ -72,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   alert_escalation: typeof alert_escalation;
   alert_generation: typeof alert_generation;
   alert_management: typeof alert_management;
+  analytics: typeof analytics;
   analytics_dashboard_reports: typeof analytics_dashboard_reports;
   analytics_engine: typeof analytics_engine;
   automated_monitoring: typeof automated_monitoring;
@@ -81,6 +85,7 @@ declare const fullApi: ApiFromModules<{
   credit_calculation: typeof credit_calculation;
   crons: typeof crons;
   documents: typeof documents;
+  fixed_pdf_generation: typeof fixed_pdf_generation;
   forum: typeof forum;
   http: typeof http;
   impact_validation: typeof impact_validation;
@@ -90,6 +95,7 @@ declare const fullApi: ApiFromModules<{
   monitoring_admin: typeof monitoring_admin;
   monitoring_auth: typeof monitoring_auth;
   monitoring_config: typeof monitoring_config;
+  monitoring_crud: typeof monitoring_crud;
   monitoring_index: typeof monitoring_index;
   monitoring_migration: typeof monitoring_migration;
   monitoring_utils: typeof monitoring_utils;
