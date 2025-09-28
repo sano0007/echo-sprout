@@ -5,7 +5,6 @@ import { VerificationMessagesService } from '../services/verification-messages-s
 import { UserService } from '../services/user-service';
 import { paginationOptsValidator } from 'convex/server';
 
-// Send a verification message
 export const sendMessage = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -29,19 +28,16 @@ export const sendMessage = mutation({
       throw new Error('Unauthorized');
     }
 
-    // Verify user has access to this verification
     const verification = await ctx.db.get(args.verificationId);
     if (!verification) {
       throw new Error('Verification not found');
     }
 
-    // Get the project to check permissions
     const project = await ctx.db.get(verification.projectId);
     if (!project) {
       throw new Error('Project not found');
     }
 
-    // Check if user is involved in this verification (verifier, project creator, or admin)
     const hasAccess =
       currentUser.role === 'admin' ||
       verification.verifierId === currentUser._id ||
@@ -60,7 +56,6 @@ export const sendMessage = mutation({
   },
 });
 
-// Reply to a message
 export const replyToMessage = mutation({
   args: {
     originalMessageId: v.id('verificationMessages'),
@@ -81,13 +76,11 @@ export const replyToMessage = mutation({
       throw new Error('Unauthorized');
     }
 
-    // Verify the original message exists and user has access
     const originalMessage = await ctx.db.get(args.originalMessageId);
     if (!originalMessage) {
       throw new Error('Original message not found');
     }
 
-    // Check if user is sender or recipient of original message
     if (
       originalMessage.senderId !== currentUser._id &&
       originalMessage.recipientId !== currentUser._id
@@ -110,7 +103,6 @@ export const replyToMessage = mutation({
   },
 });
 
-// Get messages for a verification
 export const getMessagesByVerification = query({
   args: { verificationId: v.id('verifications') },
   handler: async (ctx, { verificationId }) => {
@@ -119,7 +111,6 @@ export const getMessagesByVerification = query({
       throw new Error('Unauthorized');
     }
 
-    // Verify user has access to this verification
     const verification = await ctx.db.get(verificationId);
     if (!verification) {
       throw new Error('Verification not found');
@@ -130,7 +121,6 @@ export const getMessagesByVerification = query({
       throw new Error('Project not found');
     }
 
-    // Check permissions
     const hasAccess =
       currentUser.role === 'admin' ||
       verification.verifierId === currentUser._id ||
@@ -147,7 +137,6 @@ export const getMessagesByVerification = query({
   },
 });
 
-// Get messages by thread
 export const getMessagesByThread = query({
   args: { threadId: v.string() },
   handler: async (ctx, { threadId }) => {
@@ -161,7 +150,6 @@ export const getMessagesByThread = query({
       threadId
     );
 
-    // Verify user has access to at least one message in the thread
     const hasAccess = messages.some(
       (m) =>
         m.senderId === currentUser._id ||
@@ -177,7 +165,6 @@ export const getMessagesByThread = query({
   },
 });
 
-// Get messages for current user
 export const getMyMessages = query({
   args: {
     type: v.optional(
@@ -197,7 +184,6 @@ export const getMyMessages = query({
       type
     );
 
-    // Manual pagination
     const startIndex =
       paginationOpts.numItems *
       (paginationOpts.cursor ? parseInt(paginationOpts.cursor) : 0);
@@ -213,7 +199,6 @@ export const getMyMessages = query({
   },
 });
 
-// Get unread messages
 export const getUnreadMessages = query({
   args: {},
   handler: async (ctx) => {
@@ -229,7 +214,6 @@ export const getUnreadMessages = query({
   },
 });
 
-// Mark message as read
 export const markMessageAsRead = mutation({
   args: { messageId: v.id('verificationMessages') },
   handler: async (ctx, { messageId }) => {
@@ -246,7 +230,6 @@ export const markMessageAsRead = mutation({
   },
 });
 
-// Mark thread as read
 export const markThreadAsRead = mutation({
   args: { threadId: v.string() },
   handler: async (ctx, { threadId }) => {
@@ -263,7 +246,6 @@ export const markThreadAsRead = mutation({
   },
 });
 
-// Get verification threads
 export const getVerificationThreads = query({
   args: { verificationId: v.id('verifications') },
   handler: async (ctx, { verificationId }) => {
@@ -272,7 +254,6 @@ export const getVerificationThreads = query({
       throw new Error('Unauthorized');
     }
 
-    // Verify user has access to this verification
     const verification = await ctx.db.get(verificationId);
     if (!verification) {
       throw new Error('Verification not found');
@@ -283,7 +264,6 @@ export const getVerificationThreads = query({
       throw new Error('Project not found');
     }
 
-    // Check permissions
     const hasAccess =
       currentUser.role === 'admin' ||
       verification.verifierId === currentUser._id ||
@@ -298,13 +278,11 @@ export const getVerificationThreads = query({
       verificationId
     );
 
-    // Resolve participant names
     const enrichedThreads = await Promise.all(
       threads.map(async (thread) => {
         const participantDetails = await Promise.all(
           thread.participants.map(async (participantId) => {
             const user = await ctx.db.get(participantId as Id<'users'>);
-            // Type guard to ensure we have a user object with the expected properties
             const isValidUser =
               user &&
               'firstName' in user &&
@@ -331,7 +309,6 @@ export const getVerificationThreads = query({
   },
 });
 
-// Delete message
 export const deleteMessage = mutation({
   args: { messageId: v.id('verificationMessages') },
   handler: async (ctx, { messageId }) => {
@@ -348,7 +325,6 @@ export const deleteMessage = mutation({
   },
 });
 
-// Get message statistics
 export const getMessageStats = query({
   args: { userId: v.optional(v.id('users')) },
   handler: async (ctx, { userId }) => {
@@ -357,10 +333,8 @@ export const getMessageStats = query({
       throw new Error('Unauthorized');
     }
 
-    // If no userId provided, use current user
     const targetUserId = userId || currentUser._id;
 
-    // Check permissions
     if (currentUser.role !== 'admin' && targetUserId !== currentUser._id) {
       throw new Error('Unauthorized: You can only view your own statistics');
     }
@@ -369,7 +343,6 @@ export const getMessageStats = query({
   },
 });
 
-// Search messages
 export const searchMessages = query({
   args: {
     searchTerm: v.string(),
@@ -389,7 +362,6 @@ export const searchMessages = query({
       verificationId
     );
 
-    // Manual pagination
     const startIndex =
       paginationOpts.numItems *
       (paginationOpts.cursor ? parseInt(paginationOpts.cursor) : 0);
@@ -405,7 +377,6 @@ export const searchMessages = query({
   },
 });
 
-// Get user project conversations
 export const getUserProjectConversations = query({
   args: { userId: v.id('users') },
   handler: async (ctx, { userId }) => {
@@ -414,18 +385,15 @@ export const getUserProjectConversations = query({
       throw new Error('Unauthorized');
     }
 
-    // Check permissions
     if (currentUser.role !== 'admin' && userId !== currentUser._id) {
       throw new Error('Unauthorized: You can only view your own conversations');
     }
 
-    // Get all verifications where user is involved
     const verifications = await ctx.db
       .query('verifications')
       .filter((q) => q.eq(q.field('verifierId'), userId))
       .collect();
 
-    // Get project conversations for each verification
     const conversations = [];
     for (const verification of verifications) {
       const project = await ctx.db.get(verification.projectId);
@@ -458,7 +426,6 @@ export const getUserProjectConversations = query({
   },
 });
 
-// Mark notification as read
 export const markNotificationAsRead = mutation({
   args: { notificationId: v.id('notifications') },
   handler: async (ctx, { notificationId }) => {
@@ -482,7 +449,6 @@ export const markNotificationAsRead = mutation({
   },
 });
 
-// Mark all notifications as read
 export const markAllNotificationsAsRead = mutation({
   args: {},
   handler: async (ctx) => {
@@ -506,7 +472,6 @@ export const markAllNotificationsAsRead = mutation({
   },
 });
 
-// Clear notification
 export const clearNotification = mutation({
   args: { notificationId: v.id('notifications') },
   handler: async (ctx, { notificationId }) => {
@@ -530,7 +495,6 @@ export const clearNotification = mutation({
   },
 });
 
-// Mark project messages as read
 export const markProjectMessagesAsRead = mutation({
   args: {
     projectId: v.id('projects'),
@@ -542,20 +506,17 @@ export const markProjectMessagesAsRead = mutation({
       throw new Error('Unauthorized');
     }
 
-    // Check permissions
     if (currentUser.role !== 'admin' && userId !== currentUser._id) {
       throw new Error(
         'Unauthorized: You can only mark your own messages as read'
       );
     }
 
-    // Get all verifications for this project
     const verifications = await ctx.db
       .query('verifications')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .collect();
 
-    // Mark all messages in these verifications as read for this user
     const updates = [];
     for (const verification of verifications) {
       const messages = await ctx.db

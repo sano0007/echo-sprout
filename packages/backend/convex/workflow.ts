@@ -2,7 +2,6 @@ import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { WorkflowService } from '../services/workflow-service';
 
-// Handle project submission workflow
 export const handleProjectSubmission = mutation({
   args: {
     projectId: v.id('projects'),
@@ -17,7 +16,6 @@ export const handleProjectSubmission = mutation({
   },
 });
 
-// Handle verification assignment workflow
 export const handleVerificationAssignment = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -45,7 +43,6 @@ export const handleVerificationAssignment = mutation({
   },
 });
 
-// Handle verification start workflow
 export const handleVerificationStart = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -73,7 +70,6 @@ export const handleVerificationStart = mutation({
   },
 });
 
-// Handle verification completion workflow
 export const handleVerificationCompletion = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -109,7 +105,6 @@ export const handleVerificationCompletion = mutation({
   },
 });
 
-// Get project workflow history
 export const getProjectWorkflowHistory = query({
   args: {
     projectId: v.id('projects'),
@@ -129,13 +124,11 @@ export const getProjectWorkflowHistory = query({
       throw new Error('User not found');
     }
 
-    // Check if user can view this project
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       throw new Error('Project not found');
     }
 
-    // Only project creator, assigned verifier, or admin can view workflow history
     const canView =
       project.creatorId === user._id ||
       project.assignedVerifierId === user._id ||
@@ -149,7 +142,6 @@ export const getProjectWorkflowHistory = query({
   },
 });
 
-// Get workflow statistics (admin only)
 export const getWorkflowStats = query({
   args: {
     timeframe: v.optional(
@@ -178,7 +170,6 @@ export const getWorkflowStats = query({
   },
 });
 
-// Scheduled function for deadline reminders
 export const sendDeadlineReminder = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -193,7 +184,6 @@ export const sendDeadlineReminder = mutation({
   },
 });
 
-// Scheduled function for overdue verification checks
 export const checkOverdue = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -206,7 +196,6 @@ export const checkOverdue = mutation({
   },
 });
 
-// Manual trigger for workflow events (admin only)
 export const triggerWorkflowEvent = mutation({
   args: {
     projectId: v.id('projects'),
@@ -239,7 +228,6 @@ export const triggerWorkflowEvent = mutation({
   },
 });
 
-// Get all active workflow events for monitoring
 export const getActiveWorkflows = query({
   args: {},
   handler: async (ctx) => {
@@ -257,7 +245,6 @@ export const getActiveWorkflows = query({
       throw new Error('Admin access required');
     }
 
-    // Get active verifications
     const activeVerifications = await ctx.db
       .query('verifications')
       .filter((q) =>
@@ -268,7 +255,6 @@ export const getActiveWorkflows = query({
       )
       .collect();
 
-    // Get projects pending verification
     const pendingProjects = await ctx.db
       .query('projects')
       .withIndex('by_verification_status', (q) =>
@@ -276,7 +262,6 @@ export const getActiveWorkflows = query({
       )
       .collect();
 
-    // Get overdue verifications
     const now = Date.now();
     const overdueVerifications = activeVerifications.filter(
       (v) => v.dueDate < now

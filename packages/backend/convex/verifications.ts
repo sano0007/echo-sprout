@@ -5,7 +5,6 @@ import { UserService } from '../services/user-service';
 import { WorkflowService } from '../services/workflow-service';
 import { paginationOptsValidator } from 'convex/server';
 
-// Create a new verification
 export const createVerification = mutation({
   args: {
     projectId: v.id('projects'),
@@ -31,7 +30,6 @@ export const createVerification = mutation({
       args
     );
 
-    // Trigger workflow assignment
     const { WorkflowService } = await import('../services/workflow-service');
     await WorkflowService.handleVerificationAssignment(
       ctx,
@@ -43,7 +41,6 @@ export const createVerification = mutation({
   },
 });
 
-// Get verification by ID
 export const getVerificationById = query({
   args: { verificationId: v.id('verifications') },
   handler: async (ctx, { verificationId }) => {
@@ -57,7 +54,6 @@ export const getVerificationById = query({
       verificationId
     );
 
-    // Check access permissions
     if (
       currentUser.role === 'verifier' &&
       verification?.verifierId !== currentUser._id
@@ -71,7 +67,6 @@ export const getVerificationById = query({
   },
 });
 
-// Get verification by project ID
 export const getVerificationByProjectId = query({
   args: { projectId: v.id('projects') },
   handler: async (ctx, { projectId }) => {
@@ -80,13 +75,11 @@ export const getVerificationByProjectId = query({
       throw new Error('Unauthorized');
     }
 
-    // Check if user has access to this project
     const project = await ctx.db.get(projectId);
     if (!project) {
       throw new Error('Project not found');
     }
 
-    // Allow access for project creator, assigned verifier, or admin
     const verification = await VerificationService.getVerificationByProjectId(
       ctx,
       projectId
@@ -110,7 +103,6 @@ export const getVerificationByProjectId = query({
   },
 });
 
-// Get verifications for current verifier
 export const getMyVerifications = query({
   args: {
     status: v.optional(
@@ -138,7 +130,6 @@ export const getMyVerifications = query({
         status
       );
 
-    // Manual pagination
     const startIndex =
       paginationOpts.numItems *
       (paginationOpts.cursor ? parseInt(paginationOpts.cursor) : 0);
@@ -154,7 +145,6 @@ export const getMyVerifications = query({
   },
 });
 
-// Get pending verifications (for admin assignment)
 export const getPendingVerifications = query({
   args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, { paginationOpts }) => {
@@ -166,7 +156,6 @@ export const getPendingVerifications = query({
     const pendingProjects =
       await VerificationService.getPendingVerifications(ctx);
 
-    // Manual pagination
     const startIndex =
       paginationOpts.numItems *
       (paginationOpts.cursor ? parseInt(paginationOpts.cursor) : 0);
@@ -182,7 +171,6 @@ export const getPendingVerifications = query({
   },
 });
 
-// Accept verification assignment
 export const acceptVerification = mutation({
   args: { verificationId: v.id('verifications') },
   handler: async (ctx, { verificationId }) => {
@@ -201,7 +189,6 @@ export const acceptVerification = mutation({
   },
 });
 
-// Start verification process
 export const startVerification = mutation({
   args: { verificationId: v.id('verifications') },
   handler: async (ctx, { verificationId }) => {
@@ -216,7 +203,6 @@ export const startVerification = mutation({
       currentUser._id
     );
 
-    // Trigger workflow start
     await WorkflowService.handleVerificationStart(
       ctx,
       verificationId,
@@ -227,7 +213,6 @@ export const startVerification = mutation({
   },
 });
 
-// Update verification checklist
 export const updateVerificationChecklist = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -247,7 +232,6 @@ export const updateVerificationChecklist = mutation({
       throw new Error('Unauthorized: Verifier access required');
     }
 
-    // Verify the verifier owns this verification
     const verification = await ctx.db.get(verificationId);
     if (!verification || verification.verifierId !== currentUser._id) {
       throw new Error(
@@ -263,7 +247,6 @@ export const updateVerificationChecklist = mutation({
   },
 });
 
-// Update enhanced verification checklist
 export const updateEnhancedChecklist = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -334,7 +317,6 @@ export const updateEnhancedChecklist = mutation({
   },
 });
 
-// Complete verification
 export const completeVerification = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -354,7 +336,6 @@ export const completeVerification = mutation({
       throw new Error('Unauthorized: Verifier access required');
     }
 
-    // Verify the verifier owns this verification
     const verification = await ctx.db.get(args.verificationId);
     if (!verification || verification.verifierId !== currentUser._id) {
       throw new Error(
@@ -369,7 +350,6 @@ export const completeVerification = mutation({
       data
     );
 
-    // Trigger workflow completion
     await WorkflowService.handleVerificationCompletion(
       ctx,
       verificationId,
@@ -382,7 +362,6 @@ export const completeVerification = mutation({
   },
 });
 
-// Get verifier statistics
 export const getVerifierStats = query({
   args: { verifierId: v.optional(v.id('users')) },
   handler: async (ctx, { verifierId }) => {
@@ -391,10 +370,8 @@ export const getVerifierStats = query({
       throw new Error('Unauthorized');
     }
 
-    // If no verifierId provided, use current user
     const targetVerifierId = verifierId || currentUser._id;
 
-    // Check permissions
     if (currentUser.role !== 'admin' && targetVerifierId !== currentUser._id) {
       throw new Error('Unauthorized: You can only view your own statistics');
     }
@@ -403,7 +380,6 @@ export const getVerifierStats = query({
   },
 });
 
-// Get overdue verifications (admin only)
 export const getOverdueVerifications = query({
   args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, { paginationOpts }) => {
@@ -415,7 +391,6 @@ export const getOverdueVerifications = query({
     const overdueVerifications =
       await VerificationService.getOverdueVerifications(ctx);
 
-    // Manual pagination
     const startIndex =
       paginationOpts.numItems *
       (paginationOpts.cursor ? parseInt(paginationOpts.cursor) : 0);
@@ -433,7 +408,6 @@ export const getOverdueVerifications = query({
   },
 });
 
-// Get verifications by priority
 export const getVerificationsByPriority = query({
   args: {
     priority: v.union(
@@ -455,14 +429,12 @@ export const getVerificationsByPriority = query({
       priority
     );
 
-    // If verifier, filter to only their verifications
     if (currentUser.role === 'verifier') {
       verifications = verifications.filter(
         (v) => v.verifierId === currentUser._id
       );
     }
 
-    // Manual pagination
     const startIndex =
       paginationOpts.numItems *
       (paginationOpts.cursor ? parseInt(paginationOpts.cursor) : 0);
@@ -478,7 +450,6 @@ export const getVerificationsByPriority = query({
   },
 });
 
-// Update verifier workload
 export const updateVerifierWorkload = mutation({
   args: { verifierId: v.id('users') },
   handler: async (ctx, { verifierId }) => {
@@ -491,7 +462,6 @@ export const updateVerifierWorkload = mutation({
   },
 });
 
-// Save document annotations
 export const saveDocumentAnnotations = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -527,7 +497,6 @@ export const saveDocumentAnnotations = mutation({
   },
 });
 
-// Generate verification certificate
 export const generateVerificationCertificate = mutation({
   args: {
     verificationId: v.id('verifications'),
@@ -560,7 +529,6 @@ export const generateVerificationCertificate = mutation({
   },
 });
 
-// Get verification audit trail
 export const getVerificationAuditTrail = query({
   args: { verificationId: v.id('verifications') },
   handler: async (ctx, { verificationId }) => {
@@ -569,7 +537,6 @@ export const getVerificationAuditTrail = query({
       throw new Error('Unauthorized: Admin or verifier access required');
     }
 
-    // Verify access to verification
     const verification = await ctx.db.get(verificationId);
     if (!verification) {
       throw new Error('Verification not found');
@@ -591,7 +558,6 @@ export const getVerificationAuditTrail = query({
   },
 });
 
-// Get verifier acceptance statistics
 export const getVerifierAcceptanceStats = query({
   args: { verifierId: v.optional(v.id('users')) },
   handler: async (ctx, { verifierId }) => {
@@ -602,7 +568,6 @@ export const getVerifierAcceptanceStats = query({
 
     const targetVerifierId = verifierId || currentUser._id;
 
-    // Check permissions
     if (currentUser.role !== 'admin' && targetVerifierId !== currentUser._id) {
       throw new Error(
         'Unauthorized: You can only view your own acceptance statistics'
