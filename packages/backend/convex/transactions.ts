@@ -622,15 +622,16 @@ export const getAllTransactionsAdmin = query({
   handler: async (ctx, args) => {
     const { limit = 50, status } = args;
 
-    let transactionsQuery = ctx.db.query('transactions');
-
-    if (status) {
-      transactionsQuery = transactionsQuery.withIndex('by_payment_status', (q) => q.eq('paymentStatus', status));
-    }
-
-    const transactions = await transactionsQuery
-      .order('desc')
-      .take(limit);
+    const transactions = status
+      ? await ctx.db
+          .query('transactions')
+          .withIndex('by_payment_status', (q) => q.eq('paymentStatus', status))
+          .order('desc')
+          .take(limit)
+      : await ctx.db
+          .query('transactions')
+          .order('desc')
+          .take(limit);
 
     // Enrich transactions with project and buyer data
     return await Promise.all(
