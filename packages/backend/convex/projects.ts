@@ -597,8 +597,11 @@ export const getProjectTimeline = query({
     // Get workflow events for this project
     const workflowEvents = await ctx.db
       .query('auditLogs')
-      .withIndex('by_entity', (q) =>
-        q.eq('entityType', 'workflow').eq('entityId', args.projectId)
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('entityType'), 'workflow'),
+          q.eq(q.field('entityId'), args.projectId)
+        )
       )
       .order('desc')
       .collect();
@@ -613,8 +616,11 @@ export const getProjectTimeline = query({
     if (verification) {
       verificationEvents = await ctx.db
         .query('auditLogs')
-        .withIndex('by_entity', (q) =>
-          q.eq('entityType', 'verification').eq('entityId', verification._id)
+        .filter((q) =>
+          q.and(
+            q.eq(q.field('entityType'), 'verification'),
+            q.eq(q.field('entityId'), verification._id)
+          )
         )
         .order('desc')
         .collect();

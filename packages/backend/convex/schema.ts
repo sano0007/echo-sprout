@@ -25,6 +25,39 @@ export default defineSchema({
     verifierSpecialty: v.optional(v.array(v.string())), // For verifiers: ["solar", "reforestation", etc.]
     isActive: v.boolean(),
     lastLoginAt: v.optional(v.string()),
+    // Notification preferences
+    notificationPreferences: v.optional(
+      v.object({
+        channels: v.array(
+          v.union(v.literal('email'), v.literal('in_app'), v.literal('sms'))
+        ),
+        alertTypes: v.object({
+          progress_reminders: v.boolean(),
+          milestone_delays: v.boolean(),
+          system_alerts: v.boolean(),
+          escalations: v.boolean(),
+          weekly_reports: v.boolean(),
+        }),
+        quietHours: v.optional(
+          v.object({
+            enabled: v.boolean(),
+            start: v.string(), // "22:00"
+            end: v.string(), // "08:00"
+            timezone: v.string(),
+          })
+        ),
+        frequency: v.object({
+          immediate: v.boolean(),
+          hourly: v.boolean(),
+          daily: v.boolean(),
+          weekly: v.boolean(),
+        }),
+      })
+    ),
+    preferencesUpdatedAt: v.optional(v.number()),
+    // Additional contact information
+    phone: v.optional(v.string()), // For SMS notifications
+    name: v.optional(v.string()), // Computed field for full name
   })
     .index('by_email', ['email'])
     .index('by_clerk_id', ['clerkId'])
@@ -87,13 +120,21 @@ export default defineSchema({
     requiredDocuments: v.array(v.string()), // todo: enum of document types
     submittedDocuments: v.array(v.string()), // todo: enum of document types
     isDocumentationComplete: v.boolean(),
+    // Progress tracking
+    progressPercentage: v.optional(v.number()), // 0-100
+    lastProgressUpdate: v.optional(v.number()), // timestamp
   })
     .index('by_creator', ['creatorId'])
     .index('by_status', ['status'])
     .index('by_type', ['projectType'])
     .index('by_verification_status', ['verificationStatus'])
     .index('by_verifier', ['assignedVerifierId'])
-    .index('by_credits_available', ['status', 'creditsAvailable']),
+    .index('by_credits_available', ['status', 'creditsAvailable'])
+    // Enhanced indexes for monitoring
+    .index('by_creator_status', ['creatorId', 'status'])
+    .index('by_type_status', ['projectType', 'status'])
+    .index('by_status_completion', ['status', 'expectedCompletionDate'])
+    .index('by_verifier_status', ['assignedVerifierId', 'status']),
 
   // ============= CARBON CREDITS & TRADING =============
   carbonCredits: defineTable({
@@ -400,7 +441,12 @@ export default defineSchema({
     .index('by_reporter', ['reportedBy'])
     .index('by_date', ['reportingDate'])
     .index('by_type', ['updateType'])
-    .index('by_verification', ['isVerified']),
+    .index('by_verification', ['isVerified'])
+    // Enhanced indexes for monitoring
+    .index('by_project_date', ['projectId', 'reportingDate'])
+    .index('by_project_type', ['projectId', 'updateType'])
+    .index('by_project_verified', ['projectId', 'isVerified'])
+    .index('by_date_type', ['reportingDate', 'updateType']),
 
   // ============= EDUCATIONAL CONTENT =============
   educationalContent: defineTable({
@@ -665,17 +711,16 @@ export default defineSchema({
     entityId: v.string(), // ID of the affected entity
     oldValues: v.optional(v.any()), // Previous state (JSON)
     newValues: v.optional(v.any()), // New state (JSON)
-    metadata: v.optional(v.any()), // Additional context (JSON)(
-    //     v.literal("info"),
-    //     v.literal("warning"),
-    //     v.literal("error"),
-    //     v.literal("critical")
-    // )
-    // severity: v.union,
-  })
-    .index('by_user', ['userId'])
-    .index('by_entity', ['entityType', 'entityId'])
-    .index('by_action', ['action']),
+    metadata: v.optional(v.any()), // Additional context (JSON)
+    severity: v.optional(
+      v.union(
+        v.literal('info'),
+        v.literal('warning'),
+        v.literal('error'),
+        v.literal('critical')
+      )
+    ),
+  }),
 
   // Enhanced verification audit trails
   verificationAuditLogs: defineTable({
@@ -713,22 +758,22 @@ export default defineSchema({
   // System notifications
   notifications: defineTable({
     recipientId: v.id('users'),
-    type: v.union(
-      v.literal('verification_assigned'),
-      v.literal('verification_started'),
-      v.literal('verification_completed'),
-      v.literal('project_approved'),
-      v.literal('project_rejected'),
-      v.literal('revision_required'),
-      v.literal('message_received'),
-      v.literal('deadline_approaching'),
-      v.literal('deadline_overdue'),
-      v.literal('document_uploaded'),
-      v.literal('document_verified'),
-      v.literal('quality_score_updated')
-    ),
-    title: v.string(),
+    senderId: v.optional(v.id('users')),
+    subject: v.string(),
     message: v.string(),
+    type: v.string(),
+    severity: v.optional(v.string()),
+    category: v.optional(v.string()),
+    channels: v.array(v.string()),
+    scheduledAt: v.optional(v.number()),
+    sentAt: v.optional(v.number()),
+    deliveredAt: v.optional(v.number()),
+    readAt: v.optional(v.number()),
+    retryCount: v.number(),
+    deliveryStatus: v.string(),
+    failureReason: v.optional(v.string()),
+    template: v.optional(v.string()),
+    templateData: v.optional(v.any()),
     priority: v.union(
       v.literal('low'),
       v.literal('normal'),
@@ -741,21 +786,85 @@ export default defineSchema({
         v.literal('project'),
         v.literal('verification'),
         v.literal('document'),
-        v.literal('message')
+        v.literal('message'),
+        v.literal('alert'),
+        v.literal('escalation')
       )
     ),
     actionUrl: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
+    metadata: v.optional(v.any()),
     isRead: v.boolean(),
-    readAt: v.optional(v.float64()),
-    isEmailSent: v.boolean(),
-    isPushSent: v.boolean(),
-    expiresAt: v.optional(v.float64()),
-    metadata: v.optional(v.any()), // Additional data (JSON)
+    isArchived: v.optional(v.boolean()),
+    tags: v.optional(v.array(v.string())),
+    batchId: v.optional(v.string()),
+    parentNotificationId: v.optional(v.id('notifications')),
+    isTest: v.optional(v.boolean()),
   })
     .index('by_recipient', ['recipientId'])
     .index('by_unread', ['recipientId', 'isRead'])
     .index('by_type', ['type'])
-    .index('by_priority', ['priority']),
+    .index('by_priority', ['priority'])
+    .index('by_scheduled', ['scheduledAt'])
+    .index('by_sent', ['sentAt'])
+    .index('by_status', ['deliveryStatus'])
+    .index('by_category', ['category'])
+    .index('by_severity', ['severity'])
+    .index('by_entity', ['relatedEntityType', 'relatedEntityId'])
+    .index('by_batch', ['batchId'])
+    .index('by_parent', ['parentNotificationId'])
+    .index('by_test', ['isTest']),
+
+  // Notification templates for reusable messaging
+  notificationTemplates: defineTable({
+    name: v.string(),
+    subject: v.string(),
+    message: v.string(),
+    type: v.string(),
+    category: v.string(),
+    defaultChannels: v.array(v.string()),
+    variables: v.array(v.string()),
+    isActive: v.boolean(),
+    createdBy: v.id('users'),
+    lastModifiedBy: v.id('users'),
+    version: v.number(),
+  })
+    .index('by_name', ['name'])
+    .index('by_type', ['type'])
+    .index('by_category', ['category'])
+    .index('by_active', ['isActive']),
+
+  // User notification preferences
+  userNotificationPreferences: defineTable({
+    userId: v.id('users'),
+    channels: v.array(v.string()),
+    alertTypes: v.object({
+      progress_reminders: v.boolean(),
+      milestone_delays: v.boolean(),
+      system_alerts: v.boolean(),
+      escalations: v.boolean(),
+      weekly_reports: v.boolean(),
+      verification_updates: v.boolean(),
+      project_updates: v.boolean(),
+      transaction_notifications: v.boolean(),
+    }),
+    quietHours: v.optional(
+      v.object({
+        enabled: v.boolean(),
+        start: v.string(),
+        end: v.string(),
+        timezone: v.string(),
+      })
+    ),
+    frequency: v.object({
+      immediate: v.boolean(),
+      hourly: v.boolean(),
+      daily: v.boolean(),
+      weekly: v.boolean(),
+    }),
+    lastUpdated: v.number(),
+  })
+    .index('by_user', ['userId']),
 
   // ============= ANALYTICS & REPORTING =============
   analytics: defineTable({
@@ -763,8 +872,313 @@ export default defineSchema({
     value: v.number(),
     date: v.float64(),
     metadata: v.optional(v.any()), // Context data (JSON)
+    // Additional fields for monitoring analytics
+    projectId: v.optional(v.id('projects')), // For project-specific metrics
+    category: v.optional(v.string()), // "monitoring", "performance", "impact", etc.
   })
     .index('by_metric', ['metric'])
     .index('by_date', ['date'])
-    .index('by_metric_date', ['metric', 'date']),
+    .index('by_metric_date', ['metric', 'date'])
+    // Enhanced indexes for monitoring analytics
+    .index('by_category', ['category'])
+    .index('by_project', ['projectId'])
+    .index('by_project_metric', ['projectId', 'metric'])
+    .index('by_category_date', ['category', 'date']),
+
+  // ============= MONITORING & TRACKING SYSTEM =============
+  projectMilestones: defineTable({
+    projectId: v.id('projects'),
+    milestoneType: v.union(
+      v.literal('setup'),
+      v.literal('progress_25'),
+      v.literal('progress_50'),
+      v.literal('progress_75'),
+      v.literal('impact_first'),
+      v.literal('verification'),
+      v.literal('completion')
+    ),
+    title: v.string(),
+    description: v.string(),
+    plannedDate: v.float64(),
+    actualDate: v.optional(v.float64()),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('in_progress'),
+      v.literal('completed'),
+      v.literal('delayed'),
+      v.literal('skipped')
+    ),
+    delayReason: v.optional(v.string()),
+    impactOnTimeline: v.optional(v.string()),
+    order: v.number(), // For milestone ordering
+    isRequired: v.boolean(), // Is this milestone mandatory
+  })
+    .index('by_project', ['projectId'])
+    .index('by_project_status', ['projectId', 'status'])
+    .index('by_project_order', ['projectId', 'order'])
+    .index('by_milestone_type', ['milestoneType'])
+    .index('by_planned_date', ['plannedDate'])
+    .index('by_status_date', ['status', 'plannedDate']),
+
+  systemAlerts: defineTable({
+    projectId: v.optional(v.id('projects')), // Optional for system-wide alerts
+    alertType: v.string(), // Flexible string for any alert type
+    severity: v.union(
+      v.literal('low'),
+      v.literal('medium'),
+      v.literal('high'),
+      v.literal('critical')
+    ),
+    message: v.string(),
+    description: v.optional(v.string()),
+    source: v.optional(v.string()), // 'system', 'manual_admin', etc.
+    category: v.optional(v.string()), // 'monitoring', 'system', 'performance', etc.
+    tags: v.optional(v.array(v.string())),
+
+    // Resolution tracking
+    isResolved: v.boolean(),
+    resolvedAt: v.optional(v.number()),
+    resolvedBy: v.optional(v.id('users')),
+    resolutionNotes: v.optional(v.string()),
+    resolutionType: v.optional(
+      v.union(
+        v.literal('fixed'),
+        v.literal('acknowledged'),
+        v.literal('dismissed'),
+        v.literal('duplicate')
+      )
+    ),
+
+    // Assignment and ownership
+    assignedTo: v.optional(v.id('users')),
+    assignedBy: v.optional(v.id('users')),
+    assignedAt: v.optional(v.number()),
+
+    // Escalation management
+    escalationLevel: v.number(), // 0-3 (0=initial, 3=final warning)
+    lastEscalationTime: v.optional(v.number()),
+    nextEscalationTime: v.optional(v.number()),
+    autoEscalationEnabled: v.optional(v.boolean()),
+    escalatedBy: v.optional(v.id('users')),
+    escalationReason: v.optional(v.string()),
+    deEscalatedAt: v.optional(v.number()),
+    deEscalatedBy: v.optional(v.id('users')),
+    deEscalationReason: v.optional(v.string()),
+
+    // Alert metrics and context
+    urgencyScore: v.optional(v.number()), // 0-100 calculated urgency score
+    estimatedResolutionTime: v.optional(v.number()), // Estimated time to resolve in ms
+    occurrenceCount: v.optional(v.number()), // How many times this alert occurred
+    firstOccurrence: v.optional(v.number()),
+    lastOccurrence: v.optional(v.number()),
+
+    // Reopening tracking
+    reopenedAt: v.optional(v.number()),
+    reopenedBy: v.optional(v.id('users')),
+    reopenReason: v.optional(v.string()),
+
+    // Additional context and metadata
+    metadata: v.optional(v.any()),
+    lastUpdatedBy: v.optional(v.id('users')),
+    lastUpdatedAt: v.optional(v.number()),
+  })
+    .index('by_project', ['projectId'])
+    .index('by_type', ['alertType'])
+    .index('by_severity', ['severity'])
+    .index('by_resolved', ['isResolved'])
+    .index('by_assigned', ['assignedTo'])
+    .index('by_escalation_time', ['nextEscalationTime'])
+    .index('by_category', ['category'])
+    .index('by_project_resolved', ['projectId', 'isResolved'])
+    .index('by_type_resolved', ['alertType', 'isResolved']),
+
+  monitoringConfig: defineTable({
+    projectType: v.string(),
+    configKey: v.string(), // "reminder_schedule", "thresholds", etc.
+    configValue: v.any(), // JSON configuration data
+    isActive: v.boolean(),
+    description: v.optional(v.string()),
+  })
+    .index('by_project_type', ['projectType'])
+    .index('by_project_type_key', ['projectType', 'configKey'])
+    .index('by_active', ['isActive']),
+
+  escalationConfig: defineTable({
+    alertType: v.string(),
+    severity: v.union(
+      v.literal('low'),
+      v.literal('medium'),
+      v.literal('high'),
+      v.literal('critical')
+    ),
+    rules: v.object({
+      escalationChain: v.array(
+        v.object({
+          level: v.number(),
+          roles: v.array(v.string()),
+          delayMinutes: v.number(),
+          specificUsers: v.optional(v.array(v.id('users'))),
+        })
+      ),
+      maxEscalationLevel: v.number(),
+      autoEscalationEnabled: v.boolean(),
+      businessHoursOnly: v.optional(v.boolean()),
+      cooldownPeriod: v.optional(v.number()),
+    }),
+    createdBy: v.id('users'),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_type_severity', ['alertType', 'severity'])
+    .index('by_created_by', ['createdBy']),
+
+  // ============= NOTIFICATION DELIVERY LOGS =============
+  emailDeliveryLog: defineTable({
+    recipientId: v.id('users'),
+    email: v.string(),
+    subject: v.string(),
+    body: v.string(),
+    type: v.string(),
+    status: v.union(
+      v.literal('sent'),
+      v.literal('delivered'),
+      v.literal('failed'),
+      v.literal('bounced')
+    ),
+    provider: v.optional(v.string()), // 'sendgrid', 'aws-ses', etc.
+    providerMessageId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    sentAt: v.number(),
+    deliveredAt: v.optional(v.number()),
+  })
+    .index('by_recipient', ['recipientId'])
+    .index('by_status', ['status'])
+    .index('by_type', ['type']),
+
+  smsDeliveryLog: defineTable({
+    recipientId: v.id('users'),
+    phone: v.string(),
+    message: v.string(),
+    type: v.string(),
+    status: v.union(
+      v.literal('sent'),
+      v.literal('delivered'),
+      v.literal('failed'),
+      v.literal('undelivered')
+    ),
+    provider: v.optional(v.string()), // 'twilio', 'aws-sns', etc.
+    providerMessageId: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    sentAt: v.number(),
+    deliveredAt: v.optional(v.number()),
+  })
+    .index('by_recipient', ['recipientId'])
+    .index('by_status', ['status'])
+    .index('by_type', ['type']),
+
+  notificationDeliveryLog: defineTable({
+    alertId: v.optional(v.id('systemAlerts')),
+    type: v.string(), // 'immediate_alert', 'escalation', 'reminder', etc.
+    results: v.any(), // Delivery results summary
+    timestamp: v.number(),
+  })
+    .index('by_alert', ['alertId'])
+    .index('by_type', ['type']),
+
+  // ============= ANALYTICS ENGINE =============
+  analyticsSnapshots: defineTable({
+    date: v.number(),
+    type: v.union(
+      v.literal('daily'),
+      v.literal('weekly'),
+      v.literal('monthly'),
+      v.literal('quarterly')
+    ),
+    projectData: v.any(), // AggregatedProjectData
+    userData: v.any(), // AggregatedUserData
+    transactionData: v.any(), // AggregatedTransactionData
+    impactData: v.any(), // AggregatedImpactData
+    timestamp: v.number(),
+  })
+    .index('by_date', ['date'])
+    .index('by_type', ['type'])
+    .index('by_timestamp', ['timestamp']),
+
+  performanceMetrics: defineTable({
+    timestamp: v.number(),
+    metrics: v.any(), // ProjectPerformanceMetrics | PlatformPerformanceMetrics
+    type: v.union(
+      v.literal('project'),
+      v.literal('platform'),
+      v.literal('user'),
+      v.literal('financial')
+    ),
+    projectId: v.optional(v.id('projects')), // For project-specific metrics
+  })
+    .index('by_timestamp', ['timestamp'])
+    .index('by_type', ['type'])
+    .index('by_project', ['projectId']),
+
+  projectPredictions: defineTable({
+    projectId: v.id('projects'),
+    prediction: v.any(), // ProjectPrediction
+    timestamp: v.number(),
+    version: v.string(),
+    accuracy: v.optional(v.number()), // To track prediction accuracy over time
+  })
+    .index('by_project', ['projectId'])
+    .index('by_timestamp', ['timestamp'])
+    .index('by_version', ['version']),
+
+  realTimeMetrics: defineTable({
+    timestamp: v.number(),
+    metrics: v.any(), // RealTimeMetrics
+    systemHealth: v.optional(v.any()), // SystemHealth
+  }).index('by_timestamp', ['timestamp']),
+
+  marketPredictions: defineTable({
+    timeHorizon: v.number(),
+    prediction: v.any(), // MarketPrediction
+    timestamp: v.number(),
+    version: v.string(),
+    accuracy: v.optional(v.number()),
+  })
+    .index('by_timestamp', ['timestamp'])
+    .index('by_horizon', ['timeHorizon']),
+
+  userPredictions: defineTable({
+    userId: v.string(),
+    prediction: v.any(), // UserPrediction
+    timestamp: v.number(),
+    segment: v.optional(v.string()),
+    accuracy: v.optional(v.number()),
+  })
+    .index('by_user', ['userId'])
+    .index('by_timestamp', ['timestamp'])
+    .index('by_segment', ['segment']),
+
+  analyticsReports: defineTable({
+    reportType: v.union(
+      v.literal('project_performance'),
+      v.literal('platform_analytics'),
+      v.literal('impact_summary'),
+      v.literal('user_engagement'),
+      v.literal('financial_metrics')
+    ),
+    title: v.string(),
+    description: v.string(),
+    reportData: v.any(),
+    generatedBy: v.id('users'),
+    generatedAt: v.number(),
+    filters: v.optional(v.any()), // DataFilters used
+    timeframe: v.any(), // TimeFrame
+    format: v.union(v.literal('json'), v.literal('pdf'), v.literal('csv')),
+    downloadUrl: v.optional(v.string()),
+    isPublic: v.boolean(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index('by_type', ['reportType'])
+    .index('by_user', ['generatedBy'])
+    .index('by_date', ['generatedAt'])
+    .index('by_public', ['isPublic']),
 });

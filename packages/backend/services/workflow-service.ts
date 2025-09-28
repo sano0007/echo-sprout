@@ -451,8 +451,11 @@ export class WorkflowService {
   ) {
     return await ctx.db
       .query('auditLogs')
-      .withIndex('by_entity', (q) =>
-        q.eq('entityType', 'workflow').eq('entityId', projectId)
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('entityType'), 'workflow'),
+          q.eq(q.field('entityId'), projectId)
+        )
       )
       .order('desc')
       .collect();
