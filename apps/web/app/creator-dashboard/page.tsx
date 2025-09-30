@@ -1,25 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
 import {
   BarChart3,
   Calendar,
   CheckCircle,
   Clock,
   DollarSign,
+  Download,
   Edit,
   Eye,
   FileText,
+  Monitor,
   Plus,
   Target,
   TrendingUp,
   Upload,
   Users,
-  Download,
-  Monitor,
 } from 'lucide-react';
+import { useState } from 'react';
+
+import ProgressSubmissionForm from '@/components/monitoring/ProgressSubmissionForm';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -28,9 +31,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import ProgressSubmissionForm from '@/components/monitoring/ProgressSubmissionForm';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function CreatorDashboard() {
   const [activeTab, setActiveTab] = useState('overview');

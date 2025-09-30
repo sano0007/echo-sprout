@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+
 import { PDFViewerProps } from './types';
 
 // Dynamically import the PDF viewer with no SSR to avoid DOMMatrix issues

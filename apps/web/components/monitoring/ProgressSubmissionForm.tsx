@@ -1,6 +1,7 @@
 'use client';
 
 import { CloudUpload, MapPin, X } from 'lucide-react';
+import Image from 'next/image';
 import { useRef, useState } from 'react';
 
 interface ProgressSubmissionFormProps {
@@ -409,11 +410,13 @@ export default function ProgressSubmissionForm({
               {previewPhotos.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                   {previewPhotos.map((preview, index) => (
-                    <div key={index} className="relative group">
-                      <img
+                    <div key={index} className="relative group w-full h-32">
+                      <Image
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        fill
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        className="object-cover rounded-lg"
                       />
                       <button
                         onClick={() => removePhoto(index)}

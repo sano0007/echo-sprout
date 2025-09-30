@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/nextjs';
-import Link from 'next/link';
-import { useMutation, useQuery } from 'convex/react';
 import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 
 // Define the shape of a forum post including optional fields used conditionally
 type Post = {

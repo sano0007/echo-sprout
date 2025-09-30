@@ -1,12 +1,12 @@
 'use client';
 
+import { MarketplaceProject } from '@echo-sprout/types';
+import { api } from '@packages/backend';
+import { useQuery } from 'convex/react';
+import _ from 'lodash';
 import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactPaginate from 'react-paginate';
-import { useQuery } from 'convex/react';
-import { api } from '@packages/backend';
-import _ from 'lodash';
-import { MarketplaceProject } from '@echo-sprout/types';
 
 export default function Marketplace() {
   const [filters, setFiltersState] = useState({

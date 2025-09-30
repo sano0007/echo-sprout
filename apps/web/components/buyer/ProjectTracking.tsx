@@ -9,6 +9,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { useState } from 'react';
+import Image from 'next/image';
 
 import {
   useProjectDetails,
@@ -517,12 +518,18 @@ export default function ProjectTracking({
                               {update.photos
                                 .slice(0, 3)
                                 .map((photo: string, index: number) => (
-                                  <img
+                                  <div
                                     key={index}
-                                    src={photo}
-                                    alt={`Update photo ${index + 1}`}
-                                    className="w-16 h-16 object-cover rounded"
-                                  />
+                                    className="relative w-16 h-16"
+                                  >
+                                    <Image
+                                      src={photo}
+                                      alt={`Update photo ${index + 1}`}
+                                      fill
+                                      sizes="64px"
+                                      className="object-cover rounded"
+                                    />
+                                  </div>
                                 ))}
                               {update.photos.length > 3 && (
                                 <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-500">

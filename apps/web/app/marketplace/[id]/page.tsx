@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import { useQuery } from 'convex/react';
 import { api } from '@packages/backend';
 import { Id } from '@packages/backend';
+import { useQuery } from 'convex/react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { toast } from 'react-toastify';
 
 export default function ProjectDetail() {
@@ -132,19 +133,23 @@ export default function ProjectDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2">
-          {/* Image Gallery */}
           <div className="mb-6">
             {project.images && project.images.length > 0 ? (
               <>
                 {/* Main Image with Navigation */}
                 <div className="relative w-full h-96 bg-gray-200 rounded-lg mb-4 overflow-hidden">
-                  <img
-                    src={project.images[currentImageIndex]}
+                  <Image
+                    src={
+                      project.images[currentImageIndex] ??
+                      'https://placehold.co/1200x600'
+                    }
                     alt={`${project.title} - Image ${currentImageIndex + 1}`}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
                     onError={(e) => {
-                      e.currentTarget.src =
-                        'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg';
+                      // Fallback handled via container style; Next/Image doesn't allow setting src directly on error
+                      console.warn('Image failed to load', e);
                     }}
                   />
 
@@ -199,15 +204,15 @@ export default function ProjectDetail() {
                             : 'border-gray-200 opacity-75 hover:opacity-100'
                         }`}
                       >
-                        <img
-                          src={image}
-                          alt={`${project.title} - Thumbnail ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src =
-                              'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg';
-                          }}
-                        />
+                        <div className="relative w-full h-full">
+                          <Image
+                            src={image ?? 'https://placehold.co/300x200'}
+                            alt={`${project.title} - Thumbnail ${index + 1}`}
+                            fill
+                            sizes="33vw"
+                            className="object-cover"
+                          />
+                        </div>
                       </div>
                     ))}
                     {project.images.length > 3 && (

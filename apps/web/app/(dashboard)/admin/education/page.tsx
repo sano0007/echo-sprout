@@ -1,7 +1,10 @@
 'use client';
 
+import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
+import { Check, Edit, Eye, MoreHorizontal, Plus, X } from 'lucide-react';
 import { useState } from 'react';
-import { Edit, Plus, MoreHorizontal, Check, X, Eye } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,8 +29,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '@packages/backend';
 
 interface LearningPath {
   id: string;

@@ -1,13 +1,13 @@
 'use client';
 
 import {
-  MessageSquare,
   FileText,
   Filter,
+  Image,
+  MessageSquare,
+  Paperclip,
   Search,
   Send,
-  Paperclip,
-  Image,
   User,
   X,
 } from 'lucide-react';

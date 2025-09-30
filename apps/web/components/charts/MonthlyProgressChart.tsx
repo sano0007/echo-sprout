@@ -1,17 +1,17 @@
 'use client';
 
-import React from 'react';
 import {
-  Chart as ChartJS,
   CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
   LinearScale,
-  PointElement,
   LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
-  Filler,
 } from 'chart.js';
+import React from 'react';
 import { Line } from 'react-chartjs-2';
 
 // Register Chart.js components

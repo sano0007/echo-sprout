@@ -1,10 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-import { useMutation, useQuery } from 'convex/react';
-import { api } from '@packages/backend';
-import { useParams } from 'next/navigation';
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
+import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function TopicDetailPage() {

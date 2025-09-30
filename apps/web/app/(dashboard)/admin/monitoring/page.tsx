@@ -1,20 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
 import {
   Activity,
   AlertTriangle,
   BarChart3,
+  CheckCircle,
   Clock,
   Download,
+  Eye,
   Monitor,
   RefreshCw,
-  Settings,
-  CheckCircle,
-  XCircle,
-  Eye,
   Search,
+  Settings,
+  XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
+
+import AlertManagement from '@/components/monitoring/AlertManagement';
+import AnalyticsDashboard from '@/components/monitoring/AnalyticsDashboard';
+import ProjectManagement from '@/components/monitoring/ProjectManagement';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,11 +47,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '@packages/backend';
-import AlertManagement from '@/components/monitoring/AlertManagement';
-import AnalyticsDashboard from '@/components/monitoring/AnalyticsDashboard';
-import ProjectManagement from '@/components/monitoring/ProjectManagement';
 
 const SystemOverview = () => {
   // Get current user to check permissions

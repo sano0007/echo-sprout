@@ -9,8 +9,8 @@ import {
   Settings,
   Users,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 
 import { PlatformAnalyticsCharts } from '@/components/dashboard/admin/PlatformAnalyticsCharts';
 import { QuickActionsPanel } from '@/components/dashboard/admin/QuickActionsPanel';
@@ -18,13 +18,13 @@ import { RecentActivityFeed } from '@/components/dashboard/admin/RecentActivityF
 import { SystemHealthMonitor } from '@/components/dashboard/admin/SystemHealthMonitor';
 import { SystemMetricsOverview } from '@/components/dashboard/admin/SystemMetricsOverview';
 import { UserManagementTable } from '@/components/dashboard/admin/UserManagementTable';
+import LearnAnalytics from '@/components/learn/LearnAnalytics';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { SystemOverviewMetrics } from '@/types/dashboard.types';
-import LearnAnalytics from '@/components/learn/LearnAnalytics';
 
 // Mock user data for the admin
 const mockAdminUser = {

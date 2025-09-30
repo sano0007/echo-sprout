@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function LearningPathDetailsPage() {
   const params = useParams();
@@ -258,11 +259,15 @@ export default function LearningPathDetailsPage() {
       </div>
 
       {data.coverImageUrl && (
-        <img
-          src={data.coverImageUrl}
-          alt="Cover"
-          className="w-full max-h-64 object-cover rounded mb-6"
-        />
+        <div className="relative w-full h-64 mb-6">
+          <Image
+            src={data.coverImageUrl}
+            alt={data.title}
+            fill
+            sizes="100vw"
+            className="object-cover rounded"
+          />
+        </div>
       )}
 
       {editingPath && (
