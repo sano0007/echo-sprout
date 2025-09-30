@@ -55,26 +55,15 @@ export {
   compareProjectPerformance as utilsCompareProjectPerformance,
 } from './monitoring_utils';
 
-export {
-  submitProgressUpdate,
-} from './progress_updates';
+export { submitProgressUpdate } from './progress_updates';
 
-export {
-  internal as progressValidationInternal,
-} from './progress_validation';
+export { internal as progressValidationInternal } from './progress_validation';
 
-export {
-  generateAlert,
-} from './alert_generation';
+export { generateAlert } from './alert_generation';
 
-export {
-  getAlerts,
-  updateAlert,
-} from './alert_management';
+export { getAlerts, updateAlert } from './alert_management';
 
-export {
-  processEscalation,
-} from './alert_escalation';
+export { processEscalation } from './alert_escalation';
 
 export {
   getNotificationStats,
@@ -91,9 +80,7 @@ export {
 // Environmental Impact Validation System - export types separately
 export type { ValidationResult as ImpactValidationResult } from './impact_validation';
 
-export {
-  validateEnvironmentalMetrics,
-} from './impact_validation';
+export { validateEnvironmentalMetrics } from './impact_validation';
 
 // Re-export types
 export * from '../types/monitoring-types';

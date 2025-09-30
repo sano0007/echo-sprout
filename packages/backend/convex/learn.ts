@@ -795,7 +795,7 @@ export const deleteLesson = mutation({
   },
 });
 
-// ============ SIMPLE ANALYTICS: LEARN PATH ENTRY VIEWS ============
+//SIMPLE ANALYTICS: LEARN PATH ENTRY VIEWS
 export const recordPathsEntry = mutation({
   args: { source: v.optional(v.string()), pathId: v.optional(v.string()) },
   async handler(ctx, { source, pathId }) {
@@ -825,7 +825,7 @@ export const totalPathsEntries = query({
   },
 });
 
-// Unique-user engagement metrics
+// Unique-user engagement counting
 export const recordLearnPageEnter = mutation({
   args: {},
   async handler(ctx) {

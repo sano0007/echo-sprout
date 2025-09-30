@@ -671,7 +671,8 @@ async function validateWithCertificationBody(
     completedAt: Date.now() + 20000,
   };
 
-  const certificationStatus = Math.random() > 0.1 ? 'certified' : 'pending_review';
+  const certificationStatus =
+    Math.random() > 0.1 ? 'certified' : 'pending_review';
   const isValid = certificationStatus === 'certified';
 
   result.validationResult = {
@@ -724,7 +725,10 @@ async function getAvailableProviders(
     .filter((provider: ThirdPartyProvider) =>
       metrics.some((metric) => provider.supportedMetrics.includes(metric))
     )
-    .sort((a: ThirdPartyProvider, b: ThirdPartyProvider) => b.reliability - a.reliability);
+    .sort(
+      (a: ThirdPartyProvider, b: ThirdPartyProvider) =>
+        b.reliability - a.reliability
+    );
 }
 
 function selectProviders(

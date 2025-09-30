@@ -7,7 +7,7 @@ import {
   Calendar,
   BarChart3,
 } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface MetricCard {
   id: string;

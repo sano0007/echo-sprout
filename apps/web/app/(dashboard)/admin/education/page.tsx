@@ -1,24 +1,42 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Edit, Plus, MoreHorizontal, Check, X, Eye } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery, useMutation } from "convex/react";
+import { useState } from 'react';
+import { Edit, Plus, MoreHorizontal, Check, X, Eye } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@packages/backend';
 
 interface LearningPath {
   id: string;
   title: string;
   description: string;
-  level: "beginner" | "intermediate" | "advanced";
+  level: 'beginner' | 'intermediate' | 'advanced';
   estimatedDuration: number;
   moduleCount: number;
-  status: "published" | "draft";
+  status: 'published' | 'draft';
   isPublished: boolean;
   createdByName: string;
   enrollmentCount?: number;
@@ -37,10 +55,10 @@ const LearningPathsTable = () => {
     try {
       await updateLearningPath({
         id: pathId,
-        publish: true
+        publish: true,
       });
     } catch (error) {
-      console.error("Failed to approve learning path:", error);
+      console.error('Failed to approve learning path:', error);
     }
   };
 
@@ -48,40 +66,40 @@ const LearningPathsTable = () => {
     try {
       await updateLearningPath({
         id: pathId,
-        publish: false
+        publish: false,
       });
     } catch (error) {
-      console.error("Failed to reject learning path:", error);
+      console.error('Failed to reject learning path:', error);
     }
   };
 
   const handleDelete = async (pathId: string) => {
-    if (confirm("Are you sure you want to delete this learning path?")) {
+    if (confirm('Are you sure you want to delete this learning path?')) {
       try {
         await deleteLearningPath({ id: pathId });
       } catch (error) {
-        console.error("Failed to delete learning path:", error);
+        console.error('Failed to delete learning path:', error);
       }
     }
   };
 
   const getLevelBadgeColor = (level: string) => {
     switch (level) {
-      case "beginner":
-        return "bg-green-100 text-green-800";
-      case "intermediate":
-        return "bg-yellow-100 text-yellow-800";
-      case "advanced":
-        return "bg-red-100 text-red-800";
+      case 'beginner':
+        return 'bg-green-100 text-green-800';
+      case 'intermediate':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'advanced':
+        return 'bg-red-100 text-red-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusBadgeColor = (isPublished: boolean) => {
     return isPublished
-      ? "bg-green-100 text-green-800"
-      : "bg-gray-100 text-gray-800";
+      ? 'bg-green-100 text-green-800'
+      : 'bg-gray-100 text-gray-800';
   };
 
   const formatDuration = (minutes: number) => {
@@ -144,10 +162,10 @@ const LearningPathsTable = () => {
                 <TableCell>{path.moduleCount}</TableCell>
                 <TableCell>
                   <Badge className={getStatusBadgeColor(path.isPublished)}>
-                    {path.isPublished ? "Published" : "Draft"}
+                    {path.isPublished ? 'Published' : 'Draft'}
                   </Badge>
                 </TableCell>
-                <TableCell>{path.createdByName || "Unknown"}</TableCell>
+                <TableCell>{path.createdByName || 'Unknown'}</TableCell>
                 <TableCell>{formatDate(path.lastUpdatedAt)}</TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">

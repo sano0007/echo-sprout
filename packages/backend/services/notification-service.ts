@@ -61,11 +61,11 @@ export class NotificationService {
       isRead: false,
       isEmailSent: false,
       isPushSent: false,
-        isArchived: false,
-        tags: undefined,
-        batchId: undefined,
-        parentNotificationId: undefined,
-        isTest: false,
+      isArchived: false,
+      tags: undefined,
+      batchId: undefined,
+      parentNotificationId: undefined,
+      isTest: false,
     };
 
     const notificationId = await ctx.db.insert(
@@ -230,7 +230,6 @@ export class NotificationService {
       ),
     };
   }
-
 
   // Verification-specific notification helpers
   public static async notifyVerificationAssigned(

@@ -6,8 +6,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@packages/backend';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const Recharts = require('recharts') as typeof import('recharts');
+import * as Recharts from 'recharts';
 
 export default function LearnAnalyticsPage() {
   const learningPaths = useQuery(api.learn.listLearningPaths);
@@ -62,7 +61,11 @@ export default function LearnAnalyticsPage() {
         style.visibility = 'hidden';
       });
 
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'pt',
+        format: 'a4',
+      });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 24; // page margin (pt)
@@ -98,7 +101,7 @@ export default function LearnAnalyticsPage() {
         const canvas = await html2canvas(root, {
           useCORS: true,
           logging: false,
-          background: '#ffffff',
+          backgroundColor: '#ffffff',
           width: root.scrollWidth,
           height: root.scrollHeight,
         });
@@ -162,7 +165,7 @@ export default function LearnAnalyticsPage() {
           const canvas = await html2canvas(el, {
             useCORS: true,
             logging: false,
-            background: '#ffffff',
+            backgroundColor: '#ffffff',
             width: w,
             height: h,
           });
@@ -208,8 +211,8 @@ export default function LearnAnalyticsPage() {
       untruncateEls.forEach((el: Element, i) => {
         const style = (el as HTMLElement).style;
         style.overflow = prevOverflow[i] ?? '';
-        style.textOverflow = prevTextOverflow[i] ?? '' as any;
-        style.whiteSpace = prevWhiteSpace[i] ?? '' as any;
+        style.textOverflow = prevTextOverflow[i] ?? ('' as any);
+        style.whiteSpace = prevWhiteSpace[i] ?? ('' as any);
       });
 
       // Restore control visibility
@@ -335,7 +338,10 @@ export default function LearnAnalyticsPage() {
                 (topByViews as any[]).length > 0 ? (
                 (topByViews as any[]).slice(0, 5).map((r: any) => (
                   <li key={r.id} className="py-2">
-                    <div className="text-sm font-medium text-gray-900 truncate" data-report-untruncate>
+                    <div
+                      className="text-sm font-medium text-gray-900 truncate"
+                      data-report-untruncate
+                    >
                       {r.title}
                     </div>
                     <div className="text-xs text-gray-500">{r.views} views</div>
@@ -368,7 +374,10 @@ export default function LearnAnalyticsPage() {
                 (topByEngagement as any[]).length > 0 ? (
                 (topByEngagement as any[]).slice(0, 5).map((r: any) => (
                   <li key={r.id} className="py-2">
-                    <div className="text-sm font-medium text-gray-900 truncate" data-report-untruncate>
+                    <div
+                      className="text-sm font-medium text-gray-900 truncate"
+                      data-report-untruncate
+                    >
                       {r.title}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -397,7 +406,10 @@ export default function LearnAnalyticsPage() {
                   return filtered.length ? (
                     filtered.slice(0, 5).map((t: any) => (
                       <li key={t.id as any} className="py-2">
-                        <div className="text-sm font-medium text-gray-900 truncate" data-report-untruncate>
+                        <div
+                          className="text-sm font-medium text-gray-900 truncate"
+                          data-report-untruncate
+                        >
                           {t.title}
                         </div>
                         <div className="text-xs text-gray-500">
@@ -432,7 +444,10 @@ export default function LearnAnalyticsPage() {
                 (contributors as any[]).length ? (
                   (contributors as any[]).slice(0, 5).map((c: any) => (
                     <li key={c.userId} className="py-2">
-                      <div className="text-sm font-medium text-gray-900 truncate" data-report-untruncate>
+                      <div
+                        className="text-sm font-medium text-gray-900 truncate"
+                        data-report-untruncate
+                      >
                         {c.name}
                       </div>
                       <div className="text-xs text-gray-500">
@@ -505,7 +520,6 @@ function DateRangePicker({
         <input
           type="date"
           className="border rounded bg-white px-2 py-1 text-sm dark:[color-scheme:dark]"
-
           value={from}
           max={to}
           onChange={(e) => onChange(e.target.value, to)}
@@ -696,4 +710,3 @@ function ViewsEngagementsAreaChart({
     </div>
   );
 }
-

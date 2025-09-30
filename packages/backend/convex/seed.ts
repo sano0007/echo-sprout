@@ -13,10 +13,14 @@ export const seedForumDemo = mutation({
         .query('users')
         .withIndex('by_active', (q) => q.eq('isActive', true))
         .collect();
-      if (activeUsers.length > 0) return activeUsers[0]._id;
+      const firstActive = activeUsers[0];
+      if (firstActive) return firstActive._id as any;
       const anyUsers = await ctx.db.query('users').collect();
-      if (anyUsers.length > 0) return anyUsers[0]._id;
-      throw new Error('No users found to assign as topic author. Please create a user first.');
+      const firstAny = anyUsers[0];
+      if (firstAny) return firstAny._id as any;
+      throw new Error(
+        'No users found to assign as topic author. Please create a user first.'
+      );
     }
 
     const authorId = await resolveUserId();
@@ -40,21 +44,72 @@ export const seedForumDemo = mutation({
     }
 
     const topics: { title: string; content: string }[] = [
-      { title: 'How do I verify additionality for small solar projects?', content: 'Looking for guidance on additionality tests applicable to <10MW distributed solar.' },
-      { title: 'Best way to track registry retirements?', content: 'What tools are you using to track retirements across multiple registries?' },
-      { title: 'MRV data quality checks — what’s essential?', content: 'Share your checklists for metering, calibration, and data integrity.' },
-      { title: 'Choosing a methodology for mangrove restoration', content: 'Pros/cons of leading methodologies for blue carbon projects.' },
-      { title: 'Carbon price outlook Q4 2025', content: 'Where do you see prices heading given recent rating changes?' },
-      { title: 'Community benefits documentation templates', content: 'Any templates for documenting co-benefits and SDG alignment?' },
-      { title: 'Wind project baselines', content: 'How are you establishing baselines for sites with historical data gaps?' },
-      { title: 'Handling leakage in reforestation', content: 'Approaches to minimize and account for leakage in forest projects.' },
-      { title: 'New verifier onboarding tips', content: 'Advice for teams onboarding new third-party verifiers.' },
-      { title: 'Public dashboards for transparency', content: 'Examples of good project transparency dashboards and datasets.' },
-      { title: 'Sampling strategies for field plots', content: 'Statistical approaches you trust for plot sampling.' },
-      { title: 'What’s your document control setup?', content: 'Systems for versioning methodologies, reports, and evidence.' },
-      { title: 'Addressing permanence risks', content: 'Risk registers and mitigation strategies for reversals.' },
-      { title: 'Data pipelines for MRV', content: 'ETL tools and architectures used for automated MRV.' },
-      { title: 'Registry APIs — any gotchas?', content: 'Gotchas when integrating with different registry APIs.' },
+      {
+        title: 'How do I verify additionality for small solar projects?',
+        content:
+          'Looking for guidance on additionality tests applicable to <10MW distributed solar.',
+      },
+      {
+        title: 'Best way to track registry retirements?',
+        content:
+          'What tools are you using to track retirements across multiple registries?',
+      },
+      {
+        title: 'MRV data quality checks — what’s essential?',
+        content:
+          'Share your checklists for metering, calibration, and data integrity.',
+      },
+      {
+        title: 'Choosing a methodology for mangrove restoration',
+        content: 'Pros/cons of leading methodologies for blue carbon projects.',
+      },
+      {
+        title: 'Carbon price outlook Q4 2025',
+        content: 'Where do you see prices heading given recent rating changes?',
+      },
+      {
+        title: 'Community benefits documentation templates',
+        content: 'Any templates for documenting co-benefits and SDG alignment?',
+      },
+      {
+        title: 'Wind project baselines',
+        content:
+          'How are you establishing baselines for sites with historical data gaps?',
+      },
+      {
+        title: 'Handling leakage in reforestation',
+        content:
+          'Approaches to minimize and account for leakage in forest projects.',
+      },
+      {
+        title: 'New verifier onboarding tips',
+        content: 'Advice for teams onboarding new third-party verifiers.',
+      },
+      {
+        title: 'Public dashboards for transparency',
+        content:
+          'Examples of good project transparency dashboards and datasets.',
+      },
+      {
+        title: 'Sampling strategies for field plots',
+        content: 'Statistical approaches you trust for plot sampling.',
+      },
+      {
+        title: 'What’s your document control setup?',
+        content: 'Systems for versioning methodologies, reports, and evidence.',
+      },
+      {
+        title: 'Addressing permanence risks',
+        content: 'Risk registers and mitigation strategies for reversals.',
+      },
+      {
+        title: 'Data pipelines for MRV',
+        content: 'ETL tools and architectures used for automated MRV.',
+      },
+      {
+        title: 'Registry APIs — any gotchas?',
+        content: 'Gotchas when integrating with different registry APIs.',
+      },
     ];
 
     // Helper to derive simple tags from title
@@ -78,9 +133,9 @@ export const seedForumDemo = mutation({
     }
 
     let inserted = 0;
-    for (let i = 0; i < topics.length; i++) {
-      const t = topics[i];
-      const category = categories[Math.floor(Math.random() * categories.length)];
+    for (const t of topics) {
+      const idx = Math.floor(Math.random() * categories.length);
+      const category = categories[idx] ?? 'general';
       const views = Math.floor(Math.random() * 500) + 10; // 10..509
       const replies = Math.floor(Math.random() * 20); // 0..19
       const lastReplyAt = randomTimestamp();

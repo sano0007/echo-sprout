@@ -52,7 +52,7 @@ export const sendImmediateAlert = action({
       alertType: 'immediate',
       message: 'System alert triggered',
       project: { title: 'System Alert' },
-      urgencyScore: 50
+      urgencyScore: 50,
     };
 
     // Get recipients based on alert context
@@ -121,7 +121,7 @@ export const sendEscalationNotification = action({
       message: 'Alert has been escalated',
       project: { title: 'System Alert' },
       projectId: undefined,
-      _creationTime: Date.now()
+      _creationTime: Date.now(),
     };
 
     // Get actual user recipients from roles
@@ -148,7 +148,9 @@ export const sendEscalationNotification = action({
       projectTitle: alert.project?.title || 'System',
       escalationLevel,
       escalationType,
-      escalatedByName: escalatedByUser ? `${escalatedByUser.firstName} ${escalatedByUser.lastName}` : 'System',
+      escalatedByName: escalatedByUser
+        ? `${escalatedByUser.firstName} ${escalatedByUser.lastName}`
+        : 'System',
       reason: reason || 'Automatic escalation due to timeout',
       alertUrl: `${process.env.APP_URL}/alerts/${alertId}`,
       ageHours: Math.floor(
@@ -197,8 +199,19 @@ export const sendProgressReminders = action({
         // Note: In production, project and creator data would be passed via mutation context
         console.log(`Processing progress reminder for project ${projectId}`);
 
-        const project = { title: 'Sample Project', projectType: 'reforestation', _creationTime: Date.now(), lastProgressUpdate: Date.now() - (7 * 24 * 60 * 60 * 1000) };
-        const creator = { _id: projectId, firstName: 'Project', lastName: 'Creator', email: 'creator@example.com', notificationPreferences: { channels: ['email' as const] } };
+        const project = {
+          title: 'Sample Project',
+          projectType: 'reforestation',
+          _creationTime: Date.now(),
+          lastProgressUpdate: Date.now() - 7 * 24 * 60 * 60 * 1000,
+        };
+        const creator = {
+          _id: projectId,
+          firstName: 'Project',
+          lastName: 'Creator',
+          email: 'creator@example.com',
+          notificationPreferences: { channels: ['email' as const] },
+        };
 
         const templateData = {
           projectTitle: project.title,
@@ -272,7 +285,7 @@ export const sendWeeklyReport = action({
       const user = {
         _id: recipient.userId,
         email: 'user@example.com',
-        notificationPreferences: { channels: ['email' as const] }
+        notificationPreferences: { channels: ['email' as const] },
       };
       if (user) {
         recipientData.push({
@@ -481,7 +494,10 @@ export const getUserNotifications = query({
     unreadOnly: v.optional(v.boolean()),
     type: v.optional(v.string()),
   },
-  handler: async (ctx, { limit = 50, offset = 0, unreadOnly = false, type }) => {
+  handler: async (
+    ctx,
+    { limit = 50, offset = 0, unreadOnly = false, type }
+  ) => {
     const user = await UserService.getCurrentUser(ctx);
     if (!user) {
       throw new Error('Authentication required');
@@ -556,7 +572,9 @@ export const getNotificationStats = query({
     const recentNotifications = await ctx.db
       .query('notifications')
       .withIndex('by_recipient', (q) => q.eq('recipientId', user._id))
-      .filter((q) => q.gte(q.field('_creationTime'), Date.now() - 7 * 24 * 60 * 60 * 1000))
+      .filter((q) =>
+        q.gte(q.field('_creationTime'), Date.now() - 7 * 24 * 60 * 60 * 1000)
+      )
       .collect()
       .then((notifications) => notifications.length);
 
@@ -722,7 +740,8 @@ export const cleanupOldNotifications = mutation({
     olderThanDays: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const cutoffDate = Date.now() - (args.olderThanDays || 30) * 24 * 60 * 60 * 1000;
+    const cutoffDate =
+      Date.now() - (args.olderThanDays || 30) * 24 * 60 * 60 * 1000;
 
     const oldNotifications = await ctx.db
       .query('notifications')
@@ -1065,7 +1084,8 @@ async function getUsersByRoles(
 
   // Remove duplicates
   return users.filter(
-    (user: any, index: number, array: any[]) => array.findIndex((u: any) => u._id === user._id) === index
+    (user: any, index: number, array: any[]) =>
+      array.findIndex((u: any) => u._id === user._id) === index
   );
 }
 

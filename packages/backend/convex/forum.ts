@@ -151,7 +151,8 @@ export const listAllTopics = query({
     const authors = new Map<string, string>();
     const result = [] as any[];
     for (const t of items as any[]) {
-      const authorKey = ((t.authorId?.id as unknown as string) || String(t.authorId));
+      const authorKey =
+        (t.authorId?.id as unknown as string) || String(t.authorId);
       let name = authors.get(authorKey);
       if (!name) {
         const a = (await ctx.db.get(t.authorId)) as any;
@@ -279,7 +280,11 @@ export const getTopContributors = query({
         continue;
       }
       const user = await ctx.db.get(anyTopic.authorId);
-      const name = user ? `${user.firstName} ${user.lastName}` : 'Unknown';
+      const name = user
+        ? `${(user as any).firstName ?? ''} ${(user as any).lastName ?? ''}`.trim() ||
+          (user as any).email ||
+          'Unknown'
+        : 'Unknown';
       results.push({ name, posts: postCount });
     }
 

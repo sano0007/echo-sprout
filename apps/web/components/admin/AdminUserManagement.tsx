@@ -164,10 +164,12 @@ export default function AdminUserManagement() {
   };
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+    const matchesStatus =
+      statusFilter === 'all' || user.status === statusFilter;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -178,7 +180,9 @@ export default function AdminUserManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-semibold">User Management</h3>
-          <p className="text-sm text-gray-600">Manage platform users and their activities</p>
+          <p className="text-sm text-gray-600">
+            Manage platform users and their activities
+          </p>
         </div>
         <div className="flex gap-3">
           <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2">
@@ -274,27 +278,38 @@ export default function AdminUserManagement() {
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                           <span className="text-sm font-medium text-gray-700">
-                            {user.name.split(' ').map(n => n[0]).join('')}
+                            {user.name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
                           </span>
                         </div>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {user.name}
+                        </div>
                         <div className="text-sm text-gray-500 flex items-center">
                           <Mail className="h-3 w-3 mr-1" />
                           {user.email}
                         </div>
-                        <div className="text-xs text-gray-500">{user.location}</div>
+                        <div className="text-xs text-gray-500">
+                          {user.location}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="space-y-2">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}
+                      >
                         {user.role}
                       </span>
                       <br />
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}
+                      >
                         {user.status}
                       </span>
                     </div>
@@ -303,14 +318,19 @@ export default function AdminUserManagement() {
                     <div className="text-sm text-gray-900">
                       <div className="flex items-center space-x-1 mb-1">
                         <Calendar className="h-3 w-3 text-gray-400" />
-                        <span className="text-xs">Joined: {new Date(user.joinDate).toLocaleDateString()}</span>
+                        <span className="text-xs">
+                          Joined: {new Date(user.joinDate).toLocaleDateString()}
+                        </span>
                       </div>
                       <div className="text-xs text-gray-500">
-                        Last login: {new Date(user.lastLogin).toLocaleDateString()}
+                        Last login:{' '}
+                        {new Date(user.lastLogin).toLocaleDateString()}
                       </div>
                       <div className="mt-2">
                         <div className="flex items-center space-x-2">
-                          <div className="text-xs font-medium">Activity: {user.activityScore}%</div>
+                          <div className="text-xs font-medium">
+                            Activity: {user.activityScore}%
+                          </div>
                           <div className="w-16 bg-gray-200 rounded-full h-1">
                             <div
                               className="bg-blue-600 h-1 rounded-full"
@@ -324,30 +344,55 @@ export default function AdminUserManagement() {
                   <td className="px-6 py-4">
                     {user.role === 'Project Creator' && (
                       <div className="text-sm text-gray-900">
-                        <div className="font-medium">{user.projectsCreated} projects</div>
-                        <div className="text-xs text-gray-500">{user.creditsEarned} credits earned</div>
-                        <div className="text-xs text-green-600">₹{user.totalRevenue.toLocaleString()} revenue</div>
+                        <div className="font-medium">
+                          {user.projectsCreated} projects
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {user.creditsEarned} credits earned
+                        </div>
+                        <div className="text-xs text-green-600">
+                          ₹{user.totalRevenue.toLocaleString()} revenue
+                        </div>
                       </div>
                     )}
                     {user.role === 'Buyer' && (
                       <div className="text-sm text-gray-900">
-                        <div className="font-medium">{user.creditsPurchased || 0} credits bought</div>
-                        <div className="text-xs text-blue-600">₹{(user.totalSpent || 0).toLocaleString()} spent</div>
+                        <div className="font-medium">
+                          {user.creditsPurchased || 0} credits bought
+                        </div>
+                        <div className="text-xs text-blue-600">
+                          ₹{(user.totalSpent || 0).toLocaleString()} spent
+                        </div>
                       </div>
                     )}
                     {user.role === 'Verifier' && (
                       <div className="text-sm text-gray-900">
-                        <div className="font-medium">{user.projectsVerified || 0} projects verified</div>
-                        <div className="text-xs text-green-600">₹{(user.verificationFees || 0).toLocaleString()} fees earned</div>
+                        <div className="font-medium">
+                          {user.projectsVerified || 0} projects verified
+                        </div>
+                        <div className="text-xs text-green-600">
+                          ₹{(user.verificationFees || 0).toLocaleString()} fees
+                          earned
+                        </div>
                       </div>
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <div className={`flex items-center space-x-1 ${getVerificationColor(user.verificationLevel)}`}>
-                      {user.verificationLevel === 'Verified' && <CheckCircle className="h-4 w-4" />}
-                      {user.verificationLevel === 'Expert' && <Shield className="h-4 w-4" />}
-                      {user.verificationLevel === 'Pending' && <Calendar className="h-4 w-4" />}
-                      {user.verificationLevel === 'Unverified' && <UserX className="h-4 w-4" />}
+                    <div
+                      className={`flex items-center space-x-1 ${getVerificationColor(user.verificationLevel)}`}
+                    >
+                      {user.verificationLevel === 'Verified' && (
+                        <CheckCircle className="h-4 w-4" />
+                      )}
+                      {user.verificationLevel === 'Expert' && (
+                        <Shield className="h-4 w-4" />
+                      )}
+                      {user.verificationLevel === 'Pending' && (
+                        <Calendar className="h-4 w-4" />
+                      )}
+                      {user.verificationLevel === 'Unverified' && (
+                        <UserX className="h-4 w-4" />
+                      )}
                       <span className="text-sm">{user.verificationLevel}</span>
                     </div>
                   </td>
@@ -396,7 +441,9 @@ export default function AdminUserManagement() {
 
         {filteredUsers.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-gray-500">No users found matching your criteria</div>
+            <div className="text-gray-500">
+              No users found matching your criteria
+            </div>
           </div>
         )}
       </div>
@@ -409,19 +456,19 @@ export default function AdminUserManagement() {
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
-            {users.filter(u => u.status === 'Active').length}
+            {users.filter((u) => u.status === 'Active').length}
           </div>
           <div className="text-sm text-green-800">Active Users</div>
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-yellow-600">
-            {users.filter(u => u.status === 'Pending').length}
+            {users.filter((u) => u.status === 'Pending').length}
           </div>
           <div className="text-sm text-yellow-800">Pending Verification</div>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-purple-600">
-            {users.filter(u => u.role === 'Verifier').length}
+            {users.filter((u) => u.role === 'Verifier').length}
           </div>
           <div className="text-sm text-purple-800">Active Verifiers</div>
         </div>

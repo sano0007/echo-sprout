@@ -173,6 +173,7 @@ export const createProjectForSeeding = internalMutation({
 
 // Get all projects
 export const getAllProjects = query({
+  args: {},
   handler: async (ctx) => {
     return await ctx.db.query('projects').collect();
   },
@@ -180,6 +181,7 @@ export const getAllProjects = query({
 
 // Delete all projects (for testing/seeding purposes)
 export const deleteAllProjects = internalMutation({
+  args: {},
   handler: async (ctx) => {
     const projects = await ctx.db.query('projects').collect();
 
@@ -190,7 +192,6 @@ export const deleteAllProjects = internalMutation({
     return { deleted: projects.length };
   },
 });
-
 
 export const getUserProjects = query({
   args: {},
@@ -224,15 +225,15 @@ export const getUserProjects = query({
           ...project,
           creator: creator
             ? {
-              firstName: creator.firstName,
-              lastName: creator.lastName,
-              email: creator.email,
-            }
+                firstName: creator.firstName,
+                lastName: creator.lastName,
+                email: creator.email,
+              }
             : {
-              firstName: 'Unknown',
-              lastName: 'User',
-              email: '',
-            },
+                firstName: 'Unknown',
+                lastName: 'User',
+                email: '',
+              },
         };
       })
     );
@@ -472,7 +473,6 @@ export const deleteProject = mutation({
   },
 });
 
-
 // Get project verification status and details
 export const getProjectVerificationStatus = query({
   args: {
@@ -547,12 +547,12 @@ export const getProjectVerificationStatus = query({
         verification,
         assignedVerifier: assignedVerifier
           ? {
-            _id: assignedVerifier._id,
-            firstName: assignedVerifier.firstName,
-            lastName: assignedVerifier.lastName,
-            email: assignedVerifier.email,
-            verifierSpecialty: assignedVerifier.verifierSpecialty,
-          }
+              _id: assignedVerifier._id,
+              firstName: assignedVerifier.firstName,
+              lastName: assignedVerifier.lastName,
+              email: assignedVerifier.email,
+              verifierSpecialty: assignedVerifier.verifierSpecialty,
+            }
           : null,
         recentMessages: messages,
         documents,
@@ -648,7 +648,6 @@ export const submitProjectForVerification = mutation({
     }
   },
 });
-
 
 // Get project timeline and verification events
 export const getProjectTimeline = query({

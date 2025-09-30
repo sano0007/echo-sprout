@@ -1002,8 +1002,10 @@ async function gatherPeriodMetrics(
       (earliestUpdate?.carbonImpactToDate || 0),
     updatesSubmitted: updates.length,
     averageProgress:
-      updates.reduce((sum: any, u: any) => sum + (u.progressPercentage || 0), 0) /
-      updates.length,
+      updates.reduce(
+        (sum: any, u: any) => sum + (u.progressPercentage || 0),
+        0
+      ) / updates.length,
   };
 }
 

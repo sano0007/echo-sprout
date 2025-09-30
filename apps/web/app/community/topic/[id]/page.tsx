@@ -50,14 +50,19 @@ export default function TopicDetailPage() {
         const now = Date.now();
         let last = 0;
         try {
-          const raw = typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
+          const raw =
+            typeof window !== 'undefined' ? sessionStorage.getItem(key) : null;
           last = raw ? parseInt(raw, 10) : 0;
-        } catch {}
+        } catch (_e) {
+          void _e;
+        }
         if (last && now - last < 3000) return; // skip if we already incremented very recently
-        if (typeof window !== 'undefined') sessionStorage.setItem(key, String(now));
-        // @ts-ignore Convex validates id at runtime
-        await incrementViews({ id: idParam });
-      } catch {}
+        if (typeof window !== 'undefined')
+          sessionStorage.setItem(key, String(now));
+        await incrementViews({ id: idParam as any });
+      } catch (_e) {
+        void _e;
+      }
     })();
   }, [idParam]);
 
@@ -163,7 +168,9 @@ export default function TopicDetailPage() {
                     onClick={async () => {
                       try {
                         await upvoteReply({ id: r.id });
-                      } catch {}
+                      } catch (_e) {
+                        void _e;
+                      }
                     }}
                   >
                     ⬆ Upvote
@@ -178,7 +185,9 @@ export default function TopicDetailPage() {
                     onClick={async () => {
                       try {
                         await downvoteReply({ id: r.id });
-                      } catch {}
+                      } catch (_e) {
+                        void _e;
+                      }
                     }}
                   >
                     ⬇ Downvote

@@ -55,7 +55,9 @@ export default function LearningPathDetailsPage() {
       }
       setVideoChecked(v);
       setPdfChecked(p);
-    } catch {}
+    } catch (_e) {
+      void _e;
+    }
   }, [progress]);
 
   const recordedRef = useRef(false);
@@ -67,15 +69,23 @@ export default function LearningPathDetailsPage() {
         recordedRef.current = true;
         // Record exactly once for this entry (view + course start), then strip the query param
         recordEntry({ source: 'learn', pathId: String(id) } as any)
-          .catch(() => {})
+          .catch((_e: unknown) => {
+            void _e;
+          })
           .finally(() => {
             try {
               router.replace(`/learn/paths/${id}`);
-            } catch {}
+            } catch (_e) {
+              void _e;
+            }
           });
-        recordStart({ pathId: String(id) } as any).catch(() => {});
+        recordStart({ pathId: String(id) } as any).catch((_e: unknown) => {
+          void _e;
+        });
       }
-    } catch {}
+    } catch (_e) {
+      void _e;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -526,7 +536,9 @@ export default function LearningPathDetailsPage() {
                                 itemIndex: 0,
                                 completed: next,
                               } as any);
-                            } catch {}
+                            } catch (_e) {
+                              void _e;
+                            }
                           }}
                         />
                         <svg
@@ -622,7 +634,9 @@ export default function LearningPathDetailsPage() {
                                           itemIndex: i,
                                           completed: next,
                                         } as any);
-                                      } catch {}
+                                      } catch (_e) {
+                                        void _e;
+                                      }
                                     }}
                                   />
                                   <svg

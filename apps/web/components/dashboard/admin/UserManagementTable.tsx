@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   ChevronDown,
@@ -12,8 +12,9 @@ import {
   Search,
   Trash2,
   UserCheck,
-  UserX} from 'lucide-react';
-import React, { useMemo,useState } from 'react';
+  UserX,
+} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -102,19 +103,19 @@ const mockUsers: UserWithDetails[] = [
           email: true,
           push: true,
           inApp: true,
-          marketing: false
+          marketing: false,
         },
         dashboard: {
           defaultView: 'table' as const,
           itemsPerPage: 10,
           showWelcome: true,
-          compactMode: false
-        }
-      }
+          compactMode: false,
+        },
+      },
     },
     registrationDate: new Date('2024-01-15'),
     lastActive: new Date('2024-09-25'),
-    totalProjects: 3
+    totalProjects: 3,
   },
   {
     id: '2',
@@ -138,19 +139,19 @@ const mockUsers: UserWithDetails[] = [
           email: true,
           push: false,
           inApp: true,
-          marketing: true
+          marketing: true,
         },
         dashboard: {
           defaultView: 'grid' as const,
           itemsPerPage: 20,
           showWelcome: false,
-          compactMode: true
-        }
-      }
+          compactMode: true,
+        },
+      },
     },
     registrationDate: new Date('2024-02-20'),
     lastActive: new Date('2024-09-26'),
-    totalPurchases: 150
+    totalPurchases: 150,
   },
   {
     id: '3',
@@ -174,19 +175,19 @@ const mockUsers: UserWithDetails[] = [
           email: true,
           push: true,
           inApp: false,
-          marketing: false
+          marketing: false,
         },
         dashboard: {
           defaultView: 'list' as const,
           itemsPerPage: 15,
           showWelcome: true,
-          compactMode: false
-        }
-      }
+          compactMode: false,
+        },
+      },
     },
     registrationDate: new Date('2024-01-10'),
     lastActive: new Date('2024-09-24'),
-    verificationCount: 45
+    verificationCount: 45,
   },
   {
     id: '4',
@@ -210,19 +211,19 @@ const mockUsers: UserWithDetails[] = [
           email: false,
           push: false,
           inApp: true,
-          marketing: false
+          marketing: false,
         },
         dashboard: {
           defaultView: 'table' as const,
           itemsPerPage: 5,
           showWelcome: false,
-          compactMode: true
-        }
-      }
+          compactMode: true,
+        },
+      },
     },
     registrationDate: new Date('2024-03-05'),
     lastActive: new Date('2024-09-20'),
-    totalProjects: 1
+    totalProjects: 1,
   },
   {
     id: '5',
@@ -246,40 +247,43 @@ const mockUsers: UserWithDetails[] = [
           email: false,
           push: false,
           inApp: false,
-          marketing: false
+          marketing: false,
         },
         dashboard: {
           defaultView: 'grid' as const,
           itemsPerPage: 25,
           showWelcome: false,
-          compactMode: false
-        }
-      }
+          compactMode: false,
+        },
+      },
     },
     registrationDate: new Date('2024-02-15'),
     lastActive: new Date('2024-08-15'),
-    totalPurchases: 25
-  }
+    totalPurchases: 25,
+  },
 ];
 
 export const UserManagementTable: React.FC<UserManagementTableProps> = ({
   users = mockUsers,
   loading = false,
   onUserAction = () => {},
-  className
+  className,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortField, setSortField] = useState<keyof UserWithDetails>('registrationDate');
+  const [sortField, setSortField] =
+    useState<keyof UserWithDetails>('registrationDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const filteredAndSortedUsers = useMemo(() => {
-    const filtered = users.filter(user => {
-      const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const filtered = users.filter((user) => {
+      const matchesSearch =
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-      const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'all' || user.status === statusFilter;
 
       return matchesSearch && matchesRole && matchesStatus;
     });
@@ -299,7 +303,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
 
   const handleSort = (field: keyof UserWithDetails) => {
     if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortDirection('asc');
@@ -310,7 +314,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     }).format(date);
   };
 
@@ -329,7 +333,9 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
 
   if (loading) {
     return (
-      <Card className={cn('bg-pure-white border-cloud-gray shadow-soft', className)}>
+      <Card
+        className={cn('bg-pure-white border-cloud-gray shadow-soft', className)}
+      >
         <CardHeader className="bg-snow-white border-b border-cloud-gray">
           <div className="flex items-center justify-between">
             <Skeleton className="h-6 w-48 loading-shimmer" />
@@ -345,7 +351,10 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
             </div>
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 border border-cloud-gray rounded-lg">
+                <div
+                  key={i}
+                  className="flex items-center gap-4 p-4 border border-cloud-gray rounded-lg"
+                >
                   <Skeleton className="h-10 w-10 rounded-full loading-shimmer" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-4 w-48 loading-shimmer" />
@@ -363,11 +372,18 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
   }
 
   return (
-    <Card className={cn('bg-pure-white border-cloud-gray shadow-soft overflow-hidden', className)}>
+    <Card
+      className={cn(
+        'bg-pure-white border-cloud-gray shadow-soft overflow-hidden',
+        className
+      )}
+    >
       <CardHeader className="bg-snow-white border-b border-cloud-gray">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-semibold text-rich-black">User Management</CardTitle>
+            <CardTitle className="text-lg font-semibold text-rich-black">
+              User Management
+            </CardTitle>
             <p className="text-sm text-light-gray mt-1">
               Manage platform users and their permissions
             </p>
@@ -414,7 +430,11 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
               <SelectItem value="suspended">Suspended</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon" className="border-cloud-gray text-slate-gray hover:bg-whisper-gray hover:text-rich-black">
+          <Button
+            variant="outline"
+            size="icon"
+            className="border-cloud-gray text-slate-gray hover:bg-whisper-gray hover:text-rich-black"
+          >
             <Download className="h-4 w-4" />
           </Button>
         </div>
@@ -424,7 +444,9 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
           <Table>
             <TableHeader className="bg-whisper-gray">
               <TableRow className="border-cloud-gray hover:bg-transparent">
-                <TableHead className="text-slate-gray font-medium py-4 px-6 first:pl-6 last:pr-6">User</TableHead>
+                <TableHead className="text-slate-gray font-medium py-4 px-6 first:pl-6 last:pr-6">
+                  User
+                </TableHead>
                 <TableHead className="text-slate-gray font-medium py-4 px-6">
                   <Button
                     variant="ghost"
@@ -433,17 +455,20 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                     className="h-auto p-0 font-medium text-slate-gray hover:text-rich-black"
                   >
                     Role
-                    {sortField === 'role' && (
-                      sortDirection === 'asc' ? (
+                    {sortField === 'role' &&
+                      (sortDirection === 'asc' ? (
                         <ChevronUp className="ml-1 h-3 w-3" />
                       ) : (
                         <ChevronDown className="ml-1 h-3 w-3" />
-                      )
-                    )}
+                      ))}
                   </Button>
                 </TableHead>
-                <TableHead className="text-slate-gray font-medium py-4 px-6">Status</TableHead>
-                <TableHead className="text-slate-gray font-medium py-4 px-6">Activity</TableHead>
+                <TableHead className="text-slate-gray font-medium py-4 px-6">
+                  Status
+                </TableHead>
+                <TableHead className="text-slate-gray font-medium py-4 px-6">
+                  Activity
+                </TableHead>
                 <TableHead className="text-slate-gray font-medium py-4 px-6">
                   <Button
                     variant="ghost"
@@ -452,13 +477,12 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                     className="h-auto p-0 font-medium text-slate-gray hover:text-rich-black"
                   >
                     Joined
-                    {sortField === 'registrationDate' && (
-                      sortDirection === 'asc' ? (
+                    {sortField === 'registrationDate' &&
+                      (sortDirection === 'asc' ? (
                         <ChevronUp className="ml-1 h-3 w-3" />
                       ) : (
                         <ChevronDown className="ml-1 h-3 w-3" />
-                      )
-                    )}
+                      ))}
                   </Button>
                 </TableHead>
                 <TableHead className="text-slate-gray font-medium py-4 px-6">
@@ -469,13 +493,12 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                     className="h-auto p-0 font-medium text-slate-gray hover:text-rich-black"
                   >
                     Last Active
-                    {sortField === 'lastActive' && (
-                      sortDirection === 'asc' ? (
+                    {sortField === 'lastActive' &&
+                      (sortDirection === 'asc' ? (
                         <ChevronUp className="ml-1 h-3 w-3" />
                       ) : (
                         <ChevronDown className="ml-1 h-3 w-3" />
-                      )
-                    )}
+                      ))}
                   </Button>
                 </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -484,31 +507,48 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
             <TableBody>
               {filteredAndSortedUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-light-gray">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-light-gray"
+                  >
                     No users found matching your criteria
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredAndSortedUsers.map((user) => (
-                  <TableRow key={user.id} className="border-cloud-gray hover:bg-whisper-gray transition-colors duration-150">
+                  <TableRow
+                    key={user.id}
+                    className="border-cloud-gray hover:bg-whisper-gray transition-colors duration-150"
+                  >
                     <TableCell className="py-4 px-6 first:pl-6 last:pr-6">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user.avatar} alt={user.name} />
                           <AvatarFallback className="bg-bangladesh-green text-white text-xs">
-                            {user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                            {user.name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')
+                              .slice(0, 2)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-sm text-rich-black">{user.name}</p>
-                          <p className="text-xs text-light-gray">{user.email}</p>
+                          <p className="font-medium text-sm text-rich-black">
+                            {user.name}
+                          </p>
+                          <p className="text-xs text-light-gray">
+                            {user.email}
+                          </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-4 px-6">
                       <Badge
                         variant="outline"
-                        className={cn('text-xs font-medium capitalize', roleColors[user.role])}
+                        className={cn(
+                          'text-xs font-medium capitalize',
+                          roleColors[user.role]
+                        )}
                       >
                         {user.role}
                       </Badge>
@@ -516,7 +556,10 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                     <TableCell className="py-4 px-6">
                       <Badge
                         variant="outline"
-                        className={cn('text-xs font-medium capitalize', statusColors[user.status])}
+                        className={cn(
+                          'text-xs font-medium capitalize',
+                          statusColors[user.status]
+                        )}
                       >
                         {user.status}
                       </Badge>
@@ -533,28 +576,40 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                     <TableCell className="py-4 px-6 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => onUserAction(user.id, 'view')}>
+                          <DropdownMenuItem
+                            onClick={() => onUserAction(user.id, 'view')}
+                          >
                             <Edit className="mr-2 h-4 w-4" />
                             Edit User
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onUserAction(user.id, 'message')}>
+                          <DropdownMenuItem
+                            onClick={() => onUserAction(user.id, 'message')}
+                          >
                             <Mail className="mr-2 h-4 w-4" />
                             Send Message
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {user.status === 'active' ? (
-                            <DropdownMenuItem onClick={() => onUserAction(user.id, 'suspend')}>
+                            <DropdownMenuItem
+                              onClick={() => onUserAction(user.id, 'suspend')}
+                            >
                               <UserX className="mr-2 h-4 w-4" />
                               Suspend User
                             </DropdownMenuItem>
                           ) : (
-                            <DropdownMenuItem onClick={() => onUserAction(user.id, 'activate')}>
+                            <DropdownMenuItem
+                              onClick={() => onUserAction(user.id, 'activate')}
+                            >
                               <UserCheck className="mr-2 h-4 w-4" />
                               Activate User
                             </DropdownMenuItem>

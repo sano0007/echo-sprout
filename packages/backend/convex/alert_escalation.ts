@@ -107,7 +107,9 @@ export const manualEscalation = mutation({
 
     // Send notifications for manual escalation
     const recipients =
-      escalationChain[newLevel] || escalationChain[escalationChain.length - 1] || [];
+      escalationChain[newLevel] ||
+      escalationChain[escalationChain.length - 1] ||
+      [];
     // Note: Notification sending would be implemented here
     // await sendEscalationNotification({
     //   alertId,
@@ -413,7 +415,9 @@ async function performEscalation(ctx: any, alert: any) {
 
   // Update alert escalation
   const nextEscalationTime =
-    newLevel < 3 ? calculateNextEscalationTime(alert.severity, newLevel) : undefined;
+    newLevel < 3
+      ? calculateNextEscalationTime(alert.severity, newLevel)
+      : undefined;
 
   await ctx.db.patch(alert._id, {
     escalationLevel: newLevel,
@@ -423,9 +427,13 @@ async function performEscalation(ctx: any, alert: any) {
 
   // Send notifications
   const recipients =
-    escalationChain[newLevel] || escalationChain[escalationChain.length - 1] || [];
+    escalationChain[newLevel] ||
+    escalationChain[escalationChain.length - 1] ||
+    [];
   // Note: Notification sending would be implemented here
-  console.log(`Sending escalation notification to ${recipients.length} recipients`);
+  console.log(
+    `Sending escalation notification to ${recipients.length} recipients`
+  );
 
   // Log escalation
   await ctx.db.insert('auditLogs', {
@@ -448,7 +456,9 @@ async function performEscalation(ctx: any, alert: any) {
       newLevel
     );
     // Schedule next escalation
-    console.log(`Next escalation scheduled for ${new Date(nextEscalationTime).toISOString()}`);
+    console.log(
+      `Next escalation scheduled for ${new Date(nextEscalationTime).toISOString()}`
+    );
   }
 
   return {
@@ -551,13 +561,19 @@ function getDefaultEscalationConfig(severity: string) {
 
   // Adjust delays based on severity
   if (severity === 'critical') {
-    if (baseConfig.escalationChain[1]) baseConfig.escalationChain[1].delayMinutes = 30;
-    if (baseConfig.escalationChain[2]) baseConfig.escalationChain[2].delayMinutes = 120;
-    if (baseConfig.escalationChain[3]) baseConfig.escalationChain[3].delayMinutes = 240;
+    if (baseConfig.escalationChain[1])
+      baseConfig.escalationChain[1].delayMinutes = 30;
+    if (baseConfig.escalationChain[2])
+      baseConfig.escalationChain[2].delayMinutes = 120;
+    if (baseConfig.escalationChain[3])
+      baseConfig.escalationChain[3].delayMinutes = 240;
   } else if (severity === 'high') {
-    if (baseConfig.escalationChain[1]) baseConfig.escalationChain[1].delayMinutes = 60;
-    if (baseConfig.escalationChain[2]) baseConfig.escalationChain[2].delayMinutes = 240;
-    if (baseConfig.escalationChain[3]) baseConfig.escalationChain[3].delayMinutes = 480;
+    if (baseConfig.escalationChain[1])
+      baseConfig.escalationChain[1].delayMinutes = 60;
+    if (baseConfig.escalationChain[2])
+      baseConfig.escalationChain[2].delayMinutes = 240;
+    if (baseConfig.escalationChain[3])
+      baseConfig.escalationChain[3].delayMinutes = 480;
   }
 
   return { rules: baseConfig };
@@ -608,7 +624,9 @@ export const updateAlertEscalation = mutation({
   },
   handler: async (ctx, { alertId, newLevel }) => {
     const nextEscalationTime =
-      newLevel < 3 ? calculateNextEscalationTime('medium', newLevel) : undefined;
+      newLevel < 3
+        ? calculateNextEscalationTime('medium', newLevel)
+        : undefined;
 
     await ctx.db.patch(alertId, {
       escalationLevel: newLevel,
@@ -715,7 +733,10 @@ async function getAlertsForEscalationData(ctx: any) {
     .take(100);
 }
 
-async function getEscalationConfigData(ctx: any, { alertType, severity }: { alertType: string; severity: string }) {
+async function getEscalationConfigData(
+  ctx: any,
+  { alertType, severity }: { alertType: string; severity: string }
+) {
   const config = await ctx.db
     .query('escalationConfig')
     .withIndex('by_type_severity', (q: any) =>

@@ -122,7 +122,9 @@ export const generateAlert = mutation({
     if (shouldEnableAutoEscalation(severity, alertType)) {
       const escalationTime = calculateNextEscalationTime(severity);
       // TODO: Implement escalation scheduling when escalation module is available
-      console.log(`Alert ${alertId} escalation scheduled for ${new Date(escalationTime).toISOString()}`);
+      console.log(
+        `Alert ${alertId} escalation scheduled for ${new Date(escalationTime).toISOString()}`
+      );
     }
 
     return {
@@ -301,7 +303,11 @@ export const generateProgressAlert = mutation({
         // Create alert directly to avoid circular reference
         const alertId = await ctx.db.insert('systemAlerts', {
           alertType: alertData.alertType,
-          severity: alertData.severity as 'low' | 'medium' | 'high' | 'critical',
+          severity: alertData.severity as
+            | 'low'
+            | 'medium'
+            | 'high'
+            | 'critical',
           message: alertData.message,
           projectId: alertData.projectId,
           metadata: alertData.metadata || {},
@@ -396,7 +402,11 @@ export const generateSystemAlert = mutation({
         try {
           const alertId = await ctx.db.insert('systemAlerts', {
             alertType: alertData.alertType,
-            severity: alertData.severity as 'low' | 'medium' | 'high' | 'critical',
+            severity: alertData.severity as
+              | 'low'
+              | 'medium'
+              | 'high'
+              | 'critical',
             message: alertData.message,
             metadata: alertData.metadata || {},
             category: alertData.category || 'monitoring',
@@ -411,7 +421,10 @@ export const generateSystemAlert = mutation({
           console.error('Failed to generate alert:', error);
         }
       }
-      return { alertsGenerated: generatedAlerts.length, alerts: generatedAlerts };
+      return {
+        alertsGenerated: generatedAlerts.length,
+        alerts: generatedAlerts,
+      };
     }
 
     return { alertsGenerated: 0, alerts: [] };

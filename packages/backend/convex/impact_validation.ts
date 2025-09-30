@@ -543,11 +543,17 @@ function analyzeTrend(
 
   const recentValues = values.slice(-3);
   const isIncreasing =
-    recentValues[2] !== undefined && recentValues[1] !== undefined && recentValues[0] !== undefined &&
-    recentValues[2] > recentValues[1] && recentValues[1] > recentValues[0];
+    recentValues[2] !== undefined &&
+    recentValues[1] !== undefined &&
+    recentValues[0] !== undefined &&
+    recentValues[2] > recentValues[1] &&
+    recentValues[1] > recentValues[0];
   const isDecreasing =
-    recentValues[2] !== undefined && recentValues[1] !== undefined && recentValues[0] !== undefined &&
-    recentValues[2] < recentValues[1] && recentValues[1] < recentValues[0];
+    recentValues[2] !== undefined &&
+    recentValues[1] !== undefined &&
+    recentValues[0] !== undefined &&
+    recentValues[2] < recentValues[1] &&
+    recentValues[1] < recentValues[0];
 
   return {
     isIncreasing,

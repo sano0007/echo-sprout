@@ -182,7 +182,7 @@ export default defineSchema({
         refundReason: v.string(),
         refundAmount: v.number(),
         adminNotes: v.string(),
-        processedAt: v.number()
+        processedAt: v.number(),
       })
     ),
   })
@@ -865,8 +865,7 @@ export default defineSchema({
       weekly: v.boolean(),
     }),
     lastUpdated: v.number(),
-  })
-    .index('by_user', ['userId']),
+  }).index('by_user', ['userId']),
 
   // ============= ANALYTICS & REPORTING =============
   analytics: defineTable({
@@ -1184,8 +1183,7 @@ export default defineSchema({
     .index('by_date', ['generatedAt'])
     .index('by_public', ['isPublic']),
 
-
-// ============= FILE STORAGE =============
+  // ============= FILE STORAGE =============
   files: defineTable({
     storageId: v.id('_storage'),
     filename: v.string(),
@@ -1193,5 +1191,5 @@ export default defineSchema({
     uploadedAt: v.number(),
   })
     .index('by_filename', ['filename'])
-    .index('by_upload_date', ['uploadedAt'])
+    .index('by_upload_date', ['uploadedAt']),
 });

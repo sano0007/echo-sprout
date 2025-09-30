@@ -45,16 +45,21 @@ const PROJECT_TYPE_LABELS = {
   mangrove_restoration: 'Mangrove Restoration',
 };
 
-export default function ProjectTypeChart({ projectTypes, className = '' }: ProjectTypeChartProps) {
+export default function ProjectTypeChart({
+  projectTypes,
+  className = '',
+}: ProjectTypeChartProps) {
   // Transform data for Chart.js
   const labels = Object.keys(projectTypes).map(
-    (type) => PROJECT_TYPE_LABELS[type as keyof typeof PROJECT_TYPE_LABELS] || type
+    (type) =>
+      PROJECT_TYPE_LABELS[type as keyof typeof PROJECT_TYPE_LABELS] || type
   );
 
   const dataValues = Object.values(projectTypes);
 
   const backgroundColors = Object.keys(projectTypes).map(
-    (type) => PROJECT_TYPE_COLORS[type as keyof typeof PROJECT_TYPE_COLORS] || '#6b7280'
+    (type) =>
+      PROJECT_TYPE_COLORS[type as keyof typeof PROJECT_TYPE_COLORS] || '#6b7280'
   );
 
   const data = {
@@ -64,7 +69,7 @@ export default function ProjectTypeChart({ projectTypes, className = '' }: Proje
         label: 'Projects Purchased',
         data: dataValues,
         backgroundColor: backgroundColors,
-        borderColor: backgroundColors.map(color => color),
+        borderColor: backgroundColors.map((color) => color),
         borderWidth: 1,
         borderRadius: 6,
         borderSkipped: false,
@@ -91,13 +96,13 @@ export default function ProjectTypeChart({ projectTypes, className = '' }: Proje
         cornerRadius: 8,
         displayColors: true,
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             const value = context.parsed.y;
             const total = dataValues.reduce((sum, val) => sum + val, 0);
             const percentage = ((value / total) * 100).toFixed(1);
             return `${value} projects (${percentage}%)`;
-          }
-        }
+          },
+        },
       },
     },
     scales: {
@@ -141,11 +146,15 @@ export default function ProjectTypeChart({ projectTypes, className = '' }: Proje
   // Show empty state if no data
   if (Object.keys(projectTypes).length === 0) {
     return (
-      <div className={`flex items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 ${className}`}>
+      <div
+        className={`flex items-center justify-center h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 ${className}`}
+      >
         <div className="text-center">
           <div className="text-4xl mb-2">📊</div>
           <p className="text-gray-500 font-medium">No project data yet</p>
-          <p className="text-gray-400 text-sm">Start purchasing carbon credits to see distribution</p>
+          <p className="text-gray-400 text-sm">
+            Start purchasing carbon credits to see distribution
+          </p>
         </div>
       </div>
     );
@@ -159,7 +168,10 @@ export default function ProjectTypeChart({ projectTypes, className = '' }: Proje
 }
 
 // Export a summary component for smaller spaces
-export function ProjectTypeSummary({ projectTypes, className = '' }: ProjectTypeChartProps) {
+export function ProjectTypeSummary({
+  projectTypes,
+  className = '',
+}: ProjectTypeChartProps) {
   const total = Object.values(projectTypes).reduce((sum, val) => sum + val, 0);
 
   if (total === 0) {
@@ -173,11 +185,15 @@ export function ProjectTypeSummary({ projectTypes, className = '' }: ProjectType
   return (
     <div className={`space-y-3 ${className}`}>
       {Object.entries(projectTypes)
-        .sort(([,a], [,b]) => b - a) // Sort by count descending
+        .sort(([, a], [, b]) => b - a) // Sort by count descending
         .map(([type, count]) => {
           const percentage = ((count / total) * 100).toFixed(0);
-          const label = PROJECT_TYPE_LABELS[type as keyof typeof PROJECT_TYPE_LABELS] || type;
-          const color = PROJECT_TYPE_COLORS[type as keyof typeof PROJECT_TYPE_COLORS] || '#6b7280';
+          const label =
+            PROJECT_TYPE_LABELS[type as keyof typeof PROJECT_TYPE_LABELS] ||
+            type;
+          const color =
+            PROJECT_TYPE_COLORS[type as keyof typeof PROJECT_TYPE_COLORS] ||
+            '#6b7280';
 
           return (
             <div key={type} className="flex items-center justify-between">
@@ -191,8 +207,12 @@ export function ProjectTypeSummary({ projectTypes, className = '' }: ProjectType
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-sm font-semibold text-gray-900">{count}</span>
-                <span className="text-xs text-gray-500 ml-1">({percentage}%)</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {count}
+                </span>
+                <span className="text-xs text-gray-500 ml-1">
+                  ({percentage}%)
+                </span>
               </div>
             </div>
           );

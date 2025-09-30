@@ -9,9 +9,19 @@ import { LucideIcon } from 'lucide-react';
 // GLOBAL UTILITY TYPES
 // ===============================
 
-export type Status = 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'rejected' | 'approved';
+export type Status =
+  | 'pending'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled'
+  | 'rejected'
+  | 'approved';
 
-export type UserRole = 'project-creator' | 'credit-buyer' | 'verifier' | 'admin';
+export type UserRole =
+  | 'project-creator'
+  | 'credit-buyer'
+  | 'verifier'
+  | 'admin';
 
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
@@ -203,7 +213,12 @@ export interface CarbonCredit {
   buyer?: User;
 }
 
-export type CreditStatus = 'issued' | 'available' | 'sold' | 'retired' | 'cancelled';
+export type CreditStatus =
+  | 'issued'
+  | 'available'
+  | 'sold'
+  | 'retired'
+  | 'cancelled';
 
 export interface CreditPurchase {
   id: string;
@@ -500,7 +515,17 @@ export interface BreadcrumbItem {
 export interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'email' | 'password' | 'number' | 'select' | 'textarea' | 'file' | 'checkbox' | 'radio' | 'date';
+  type:
+    | 'text'
+    | 'email'
+    | 'password'
+    | 'number'
+    | 'select'
+    | 'textarea'
+    | 'file'
+    | 'checkbox'
+    | 'radio'
+    | 'date';
   required?: boolean;
   placeholder?: string;
   validation?: any; // Zod schema

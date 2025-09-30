@@ -22,7 +22,7 @@ const nextConfig = {
     // Add module resolution for the backend package
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@packages/backend': path.resolve(__dirname, '../backend'),
+      '@packages/backend': path.resolve(__dirname, '../../packages/backend'),
     };
     return config;
   },

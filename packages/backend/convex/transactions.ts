@@ -610,14 +610,16 @@ function mapStripeStatusToConvex(
 export const getAllTransactionsAdmin = query({
   args: {
     limit: v.optional(v.number()),
-    status: v.optional(v.union(
-      v.literal('pending'),
-      v.literal('processing'),
-      v.literal('completed'),
-      v.literal('failed'),
-      v.literal('refunded'),
-      v.literal('expired')
-    )),
+    status: v.optional(
+      v.union(
+        v.literal('pending'),
+        v.literal('processing'),
+        v.literal('completed'),
+        v.literal('failed'),
+        v.literal('refunded'),
+        v.literal('expired')
+      )
+    ),
   },
   handler: async (ctx, args) => {
     const { limit = 50, status } = args;
@@ -628,10 +630,7 @@ export const getAllTransactionsAdmin = query({
           .withIndex('by_payment_status', (q) => q.eq('paymentStatus', status))
           .order('desc')
           .take(limit)
-      : await ctx.db
-          .query('transactions')
-          .order('desc')
-          .take(limit);
+      : await ctx.db.query('transactions').order('desc').take(limit);
 
     // Enrich transactions with project and buyer data
     return await Promise.all(
@@ -653,7 +652,7 @@ export const getAllTransactionsAdmin = query({
           buyer = {
             name: users.name || 'Unknown User',
             email: users.email || '',
-            clerkId: users.clerkId
+            clerkId: users.clerkId,
           };
         }
 
@@ -714,7 +713,7 @@ export const processRefund = mutation({
     transactionId: v.id('transactions'),
     refundReason: v.string(),
     refundAmount: v.number(),
-    adminNotes: v.optional(v.string())
+    adminNotes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { transactionId, refundReason, refundAmount, adminNotes } = args;
@@ -741,13 +740,13 @@ export const processRefund = mutation({
         refundReason,
         refundAmount,
         adminNotes: adminNotes || '',
-        processedAt: Date.now()
+        processedAt: Date.now(),
       },
     });
 
     return {
       success: true,
-      message: `Refund of $${refundAmount} processed successfully`
+      message: `Refund of $${refundAmount} processed successfully`,
     };
   },
 });

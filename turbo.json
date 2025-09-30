@@ -1,5 +1,5 @@
 {
-  "ui": "tui",
+
   "$schema": "https://turborepo.com/schema.json",
   "tasks": {
     "build": {

@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
 import {
   Calendar,
   DollarSign,
   FolderOpen,
   TrendingUp,
-  Users} from 'lucide-react';
+  Users,
+} from 'lucide-react';
 import React, { useState } from 'react';
 import {
   Area,
@@ -22,12 +23,19 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis} from 'recharts';
+  YAxis,
+} from 'recharts';
 
 import { cn } from '@/lib/utils';
 
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -100,7 +108,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="font-medium text-sm">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: {typeof entry.value === 'number' && entry.name.includes('revenue')
+            {entry.name}:{' '}
+            {typeof entry.value === 'number' && entry.name.includes('revenue')
               ? `$${entry.value.toLocaleString()}`
               : entry.value.toLocaleString()}
           </p>
@@ -111,10 +120,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = ({
-  loading = false,
-  className
-}) => {
+export const PlatformAnalyticsCharts: React.FC<
+  PlatformAnalyticsChartsProps
+> = ({ loading = false, className }) => {
   const [timeRange, setTimeRange] = useState('9m');
 
   if (loading) {
@@ -148,7 +156,9 @@ export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = (
     <div className={cn('space-y-6', className)}>
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Platform Analytics</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            Platform Analytics
+          </h2>
           <p className="text-sm text-muted-foreground">
             Comprehensive insights into platform performance and user behavior
           </p>
@@ -189,7 +199,9 @@ export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = (
                   <DollarSign className="h-4 w-4 text-bangladesh-green" />
                   Revenue Trends
                 </CardTitle>
-                <CardDescription>Monthly revenue and transaction volume</CardDescription>
+                <CardDescription>
+                  Monthly revenue and transaction volume
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -200,10 +212,7 @@ export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = (
                       tick={{ fontSize: 12 }}
                       stroke="#666"
                     />
-                    <YAxis
-                      tick={{ fontSize: 12 }}
-                      stroke="#666"
-                    />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#666" />
                     <Tooltip content={<CustomTooltip />} />
                     <Area
                       type="monotone"
@@ -224,7 +233,9 @@ export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = (
                   <Calendar className="h-4 w-4 text-bangladesh-green" />
                   Transaction Volume
                 </CardTitle>
-                <CardDescription>Number of transactions over time</CardDescription>
+                <CardDescription>
+                  Number of transactions over time
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -235,10 +246,7 @@ export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = (
                       tick={{ fontSize: 12 }}
                       stroke="#666"
                     />
-                    <YAxis
-                      tick={{ fontSize: 12 }}
-                      stroke="#666"
-                    />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#666" />
                     <Tooltip content={<CustomTooltip />} />
                     <Line
                       type="monotone"
@@ -261,21 +269,16 @@ export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = (
                 <Users className="h-4 w-4 text-bangladesh-green" />
                 User Growth by Role
               </CardTitle>
-              <CardDescription>User registration trends by role type</CardDescription>
+              <CardDescription>
+                User registration trends by role type
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
                 <AreaChart data={userGrowthData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 12 }}
-                    stroke="#666"
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12 }}
-                    stroke="#666"
-                  />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#666" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="#666" />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
                   <Area
@@ -343,12 +346,17 @@ export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = (
             <Card className="border-0 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Project Statistics</CardTitle>
-                <CardDescription>Detailed breakdown by project type</CardDescription>
+                <CardDescription>
+                  Detailed breakdown by project type
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {projectTypeData.map((type, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                    >
                       <div className="flex items-center gap-3">
                         <div
                           className="w-3 h-3 rounded-full"
@@ -357,8 +365,12 @@ export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = (
                         <span className="font-medium text-sm">{type.name}</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-sm">{type.count} projects</div>
-                        <div className="text-xs text-muted-foreground">{type.value}% of total</div>
+                        <div className="font-semibold text-sm">
+                          {type.count} projects
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {type.value}% of total
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -371,18 +383,16 @@ export const PlatformAnalyticsCharts: React.FC<PlatformAnalyticsChartsProps> = (
         <TabsContent value="geographic" className="space-y-6">
           <Card className="border-0 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">Geographic Distribution</CardTitle>
+              <CardTitle className="text-base">
+                Geographic Distribution
+              </CardTitle>
               <CardDescription>Platform usage by country</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={geographicData} layout="horizontal">
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 12 }}
-                    stroke="#666"
-                  />
+                  <XAxis type="number" tick={{ fontSize: 12 }} stroke="#666" />
                   <YAxis
                     type="category"
                     dataKey="country"

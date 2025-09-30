@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -13,21 +13,39 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Search
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@packages/backend";
-import AlertManagement from "@/components/monitoring/AlertManagement";
-import AnalyticsDashboard from "@/components/monitoring/AnalyticsDashboard";
-import ProjectManagement from "@/components/monitoring/ProjectManagement";
-
+  Search,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@packages/backend';
+import AlertManagement from '@/components/monitoring/AlertManagement';
+import AnalyticsDashboard from '@/components/monitoring/AnalyticsDashboard';
+import ProjectManagement from '@/components/monitoring/ProjectManagement';
 
 const SystemOverview = () => {
   // Get current user to check permissions
@@ -37,9 +55,11 @@ const SystemOverview = () => {
   // Get real data from backend - conditionally call admin-only APIs
   const analytics = useQuery(
     api.monitoring_admin.getMonitoringAnalytics,
-    isAdmin ? { timeframe: "7d" } : "skip"
+    isAdmin ? { timeframe: '7d' } : 'skip'
   );
-  const alertSummary = useQuery(api.alert_management.getAlertSummary, { timeframe: "7d" });
+  const alertSummary = useQuery(api.alert_management.getAlertSummary, {
+    timeframe: '7d',
+  });
   const userProjects = useQuery(api.projects.getUserProjects, {});
 
   // Check if we have an access error and provide fallback data
@@ -48,10 +68,15 @@ const SystemOverview = () => {
 
   // Calculate metrics from real data with fallbacks
   const totalProjects = userProjects?.length || 0;
-  const activeProjects = userProjects?.filter(p => p.status === 'active').length || 0;
+  const activeProjects =
+    userProjects?.filter((p) => p.status === 'active').length || 0;
   // Calculate pending reports from unresolved alerts related to reports
-  const pendingReports = hasAlertSummaryError ? 0 : (alertSummary?.unresolved || 0);
-  const criticalAlerts = hasAlertSummaryError ? 0 : (alertSummary?.bySeverity?.critical || 0);
+  const pendingReports = hasAlertSummaryError
+    ? 0
+    : alertSummary?.unresolved || 0;
+  const criticalAlerts = hasAlertSummaryError
+    ? 0
+    : alertSummary?.bySeverity?.critical || 0;
 
   return (
     <div className="space-y-6">
@@ -61,10 +86,14 @@ const SystemOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                <p className="text-3xl font-bold text-gray-900">{totalProjects.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Projects
+                </p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {totalProjects.toLocaleString()}
+                </p>
                 <p className="text-sm text-blue-600 mt-1">
-                  {userProjects ? `${userProjects.length} total` : "Loading..."}
+                  {userProjects ? `${userProjects.length} total` : 'Loading...'}
                 </p>
               </div>
               <Monitor className="h-12 w-12 text-blue-600 opacity-80" />
@@ -76,10 +105,16 @@ const SystemOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Projects</p>
-                <p className="text-3xl font-bold text-gray-900">{activeProjects.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Active Projects
+                </p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {activeProjects.toLocaleString()}
+                </p>
                 <p className="text-sm text-green-600 mt-1">
-                  {userProjects ? `${Math.round((activeProjects/totalProjects)*100) || 0}% of total` : "Loading..."}
+                  {userProjects
+                    ? `${Math.round((activeProjects / totalProjects) * 100) || 0}% of total`
+                    : 'Loading...'}
                 </p>
               </div>
               <Activity className="h-12 w-12 text-green-600 opacity-80" />
@@ -91,10 +126,14 @@ const SystemOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending Reports</p>
-                <p className="text-3xl font-bold text-gray-900">{pendingReports}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Pending Reports
+                </p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {pendingReports}
+                </p>
                 <p className="text-sm text-yellow-600 mt-1">
-                  {analytics ? "This week" : "Loading..."}
+                  {analytics ? 'This week' : 'Loading...'}
                 </p>
               </div>
               <Clock className="h-12 w-12 text-yellow-600 opacity-80" />
@@ -106,10 +145,14 @@ const SystemOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Critical Alerts</p>
-                <p className="text-3xl font-bold text-gray-900">{criticalAlerts}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Critical Alerts
+                </p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {criticalAlerts}
+                </p>
                 <p className="text-sm text-red-600 mt-1">
-                  {alertSummary ? "Requires attention" : "Loading..."}
+                  {alertSummary ? 'Requires attention' : 'Loading...'}
                 </p>
               </div>
               <AlertTriangle className="h-12 w-12 text-red-600 opacity-80" />
@@ -122,23 +165,37 @@ const SystemOverview = () => {
       <Card>
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common monitoring tasks and system operations</CardDescription>
+          <CardDescription>
+            Common monitoring tasks and system operations
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button className="h-20 flex flex-col gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100" variant="outline">
+            <Button
+              className="h-20 flex flex-col gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+              variant="outline"
+            >
               <Monitor className="h-6 w-6" />
               <span className="text-sm font-medium">View All Projects</span>
             </Button>
-            <Button className="h-20 flex flex-col gap-2 bg-red-50 text-red-700 border-red-200 hover:bg-red-100" variant="outline">
+            <Button
+              className="h-20 flex flex-col gap-2 bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+              variant="outline"
+            >
               <AlertTriangle className="h-6 w-6" />
               <span className="text-sm font-medium">Critical Alerts</span>
             </Button>
-            <Button className="h-20 flex flex-col gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100" variant="outline">
+            <Button
+              className="h-20 flex flex-col gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+              variant="outline"
+            >
               <BarChart3 className="h-6 w-6" />
               <span className="text-sm font-medium">Generate Report</span>
             </Button>
-            <Button className="h-20 flex flex-col gap-2 bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100" variant="outline">
+            <Button
+              className="h-20 flex flex-col gap-2 bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+              variant="outline"
+            >
               <Settings className="h-6 w-6" />
               <span className="text-sm font-medium">System Settings</span>
             </Button>
@@ -150,8 +207,10 @@ const SystemOverview = () => {
 };
 
 const AlertsOverview = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [severityFilter, setSeverityFilter] = useState<"all" | "low" | "medium" | "high" | "critical">("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [severityFilter, setSeverityFilter] = useState<
+    'all' | 'low' | 'medium' | 'high' | 'critical'
+  >('all');
 
   // Get current user to check permissions
   const currentUser = useQuery(api.users.getCurrentUser, {});
@@ -160,17 +219,24 @@ const AlertsOverview = () => {
   // Get real alerts data from backend - conditionally call based on permissions
   const alertsQuery = useQuery(
     api.alert_management.getAlerts,
-    isAdmin ? {
-      filters: severityFilter !== "all" ? {
-        severity: [severityFilter as "low" | "medium" | "high" | "critical"]
-      } : undefined,
-      pagination: { limit: 100 }
-    } : "skip"
+    isAdmin
+      ? {
+          filters:
+            severityFilter !== 'all'
+              ? {
+                  severity: [
+                    severityFilter as 'low' | 'medium' | 'high' | 'critical',
+                  ],
+                }
+              : undefined,
+          pagination: { limit: 100 },
+        }
+      : 'skip'
   );
 
   const alertSummary = useQuery(
     api.alert_management.getAlertSummary,
-    isAdmin ? { timeframe: "7d" } : "skip"
+    isAdmin ? { timeframe: '7d' } : 'skip'
   );
 
   // Check for access errors
@@ -186,10 +252,10 @@ const AlertsOverview = () => {
       await resolveAlert({
         alertId: alertId as any, // Type assertion for Convex ID
         resolutionNotes: resolution,
-        resolutionType: 'fixed' as const
+        resolutionType: 'fixed' as const,
       });
     } catch (error) {
-      console.error("Failed to resolve alert:", error);
+      console.error('Failed to resolve alert:', error);
     }
   };
 
@@ -199,37 +265,50 @@ const AlertsOverview = () => {
       await updateAlert({
         alertId: alertId as any, // Type assertion for Convex ID
         updates: {
-          metadata: { snoozed: true, snoozeUntil: Date.now() + (duration * 60 * 1000) }
+          metadata: {
+            snoozed: true,
+            snoozeUntil: Date.now() + duration * 60 * 1000,
+          },
         },
-        notes: `Alert snoozed for ${duration} minutes`
+        notes: `Alert snoozed for ${duration} minutes`,
       });
       console.log(`Alert ${alertId} snoozed for ${duration} minutes`);
     } catch (error) {
-      console.error("Failed to snooze alert:", error);
+      console.error('Failed to snooze alert:', error);
     }
   };
 
-  const handleEscalateAlert = async (alertId: string, escalationLevel: string) => {
+  const handleEscalateAlert = async (
+    alertId: string,
+    escalationLevel: string
+  ) => {
     try {
       // Since escalateAlert doesn't exist, we'll update the alert with escalation info
       await updateAlert({
         alertId: alertId as any, // Type assertion for Convex ID
         updates: {
-          metadata: { escalated: true, escalationLevel, escalatedAt: Date.now() }
+          metadata: {
+            escalated: true,
+            escalationLevel,
+            escalatedAt: Date.now(),
+          },
         },
-        notes: `Alert escalated to level: ${escalationLevel}`
+        notes: `Alert escalated to level: ${escalationLevel}`,
       });
       console.log(`Alert ${alertId} escalated to level: ${escalationLevel}`);
     } catch (error) {
-      console.error("Failed to escalate alert:", error);
+      console.error('Failed to escalate alert:', error);
     }
   };
 
   // Filter alerts based on search term
-  const allAlerts = hasAlertsError ? [] : (alertsQuery?.alerts || []);
-  const filteredAlerts = allAlerts.filter(alert =>
-    (alert.projectInfo?.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    alert.message.toLowerCase().includes(searchTerm.toLowerCase())
+  const allAlerts = hasAlertsError ? [] : alertsQuery?.alerts || [];
+  const filteredAlerts = allAlerts.filter(
+    (alert) =>
+      (alert.projectInfo?.title || '')
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      alert.message.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Show access error message if user doesn't have permission
@@ -243,7 +322,8 @@ const AlertsOverview = () => {
               <div>
                 <h3 className="font-medium text-gray-900">Access Restricted</h3>
                 <p className="text-sm text-gray-600">
-                  Admin privileges are required to view alert management. Please contact your administrator for access.
+                  Admin privileges are required to view alert management. Please
+                  contact your administrator for access.
                 </p>
               </div>
             </div>
@@ -261,9 +341,15 @@ const AlertsOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-red-600">{alertSummary?.bySeverity?.critical || 0}</div>
-                <div className="text-sm font-medium text-gray-600">Critical Alerts</div>
-                <div className="text-xs text-red-600 mt-1">Immediate action required</div>
+                <div className="text-3xl font-bold text-red-600">
+                  {alertSummary?.bySeverity?.critical || 0}
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  Critical Alerts
+                </div>
+                <div className="text-xs text-red-600 mt-1">
+                  Immediate action required
+                </div>
               </div>
               <AlertTriangle className="h-10 w-10 text-red-500 opacity-80" />
             </div>
@@ -273,9 +359,15 @@ const AlertsOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-orange-600">{alertSummary?.bySeverity?.high || 0}</div>
-                <div className="text-sm font-medium text-gray-600">High Priority</div>
-                <div className="text-xs text-orange-600 mt-1">Attention needed soon</div>
+                <div className="text-3xl font-bold text-orange-600">
+                  {alertSummary?.bySeverity?.high || 0}
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  High Priority
+                </div>
+                <div className="text-xs text-orange-600 mt-1">
+                  Attention needed soon
+                </div>
               </div>
               <AlertTriangle className="h-10 w-10 text-orange-500 opacity-80" />
             </div>
@@ -285,9 +377,15 @@ const AlertsOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-yellow-600">{alertSummary?.bySeverity?.medium || 0}</div>
-                <div className="text-sm font-medium text-gray-600">Medium Priority</div>
-                <div className="text-xs text-yellow-600 mt-1">Monitor progress</div>
+                <div className="text-3xl font-bold text-yellow-600">
+                  {alertSummary?.bySeverity?.medium || 0}
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  Medium Priority
+                </div>
+                <div className="text-xs text-yellow-600 mt-1">
+                  Monitor progress
+                </div>
               </div>
               <AlertTriangle className="h-10 w-10 text-yellow-500 opacity-80" />
             </div>
@@ -297,9 +395,15 @@ const AlertsOverview = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-3xl font-bold text-blue-600">{alertSummary?.bySeverity?.low || 0}</div>
-                <div className="text-sm font-medium text-gray-600">Low Priority</div>
-                <div className="text-xs text-blue-600 mt-1">Informational only</div>
+                <div className="text-3xl font-bold text-blue-600">
+                  {alertSummary?.bySeverity?.low || 0}
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  Low Priority
+                </div>
+                <div className="text-xs text-blue-600 mt-1">
+                  Informational only
+                </div>
               </div>
               <AlertTriangle className="h-10 w-10 text-blue-500 opacity-80" />
             </div>
@@ -316,10 +420,12 @@ const AlertsOverview = () => {
                 <AlertTriangle className="h-5 w-5" />
                 Alert Management
               </CardTitle>
-              <CardDescription>Monitor and resolve system alerts across all projects</CardDescription>
+              <CardDescription>
+                Monitor and resolve system alerts across all projects
+              </CardDescription>
             </div>
             <Badge variant="destructive" className="text-sm">
-              {hasAlertSummaryError ? 0 : (alertSummary?.unresolved || 0)} Active
+              {hasAlertSummaryError ? 0 : alertSummary?.unresolved || 0} Active
             </Badge>
           </div>
         </CardHeader>
@@ -338,7 +444,11 @@ const AlertsOverview = () => {
             </div>
             <Select
               value={severityFilter}
-              onValueChange={(value: string) => setSeverityFilter(value as "all" | "low" | "medium" | "high" | "critical")}
+              onValueChange={(value: string) =>
+                setSeverityFilter(
+                  value as 'all' | 'low' | 'medium' | 'high' | 'critical'
+                )
+              }
             >
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Filter by severity" />
@@ -416,7 +526,7 @@ const AnalyticsTab = () => {
 
   const analytics = useQuery(
     api.monitoring_admin.getMonitoringAnalytics,
-    isAdmin ? { timeframe: "30d" } : "skip"
+    isAdmin ? { timeframe: '30d' } : 'skip'
   );
 
   const handleExportReport = (type: string, timeframe: string) => {
@@ -428,7 +538,7 @@ const AnalyticsTab = () => {
   };
 
   const handleRefreshData = () => {
-    console.log("Refreshing analytics data");
+    console.log('Refreshing analytics data');
   };
 
   // Check for access error
@@ -448,9 +558,12 @@ const AnalyticsTab = () => {
             <div className="flex items-center justify-center py-8">
               <div className="text-center">
                 <AlertTriangle className="h-12 w-12 text-yellow-600 mx-auto mb-3" />
-                <h3 className="font-medium text-gray-900 mb-2">Access Restricted</h3>
+                <h3 className="font-medium text-gray-900 mb-2">
+                  Access Restricted
+                </h3>
                 <p className="text-gray-600">
-                  Admin privileges are required to view analytics. Please contact your administrator for access.
+                  Admin privileges are required to view analytics. Please
+                  contact your administrator for access.
                 </p>
               </div>
             </div>
@@ -565,7 +678,9 @@ export default function MonitoringSystemPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Monitoring System</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Monitoring System
+          </h1>
           <p className="text-gray-600">
             Comprehensive project monitoring and tracking dashboard
           </p>

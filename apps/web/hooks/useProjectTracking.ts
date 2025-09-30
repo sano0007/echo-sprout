@@ -49,7 +49,12 @@ export function useProjectTracking() {
   // Auto-fetch selected project details
   useEffect(() => {
     if (user?.id && store.selectedProjectId && apiInitialized.current) {
-      if (trackingCache.shouldRefresh(store.lastFetch.selectedProject, 'selectedProject')) {
+      if (
+        trackingCache.shouldRefresh(
+          store.lastFetch.selectedProject,
+          'selectedProject'
+        )
+      ) {
         store.fetchSelectedProject(store.selectedProjectId, user.id);
       }
     }
@@ -83,9 +88,12 @@ export function useProjectTracking() {
     resetFilters: store.resetFilters,
 
     // Manual refresh
-    refreshAllData: () => user?.id ? store.refreshAllData(user.id) : Promise.resolve(),
-    refreshProjects: () => user?.id ? store.fetchProjects(user.id) : Promise.resolve(),
-    refreshPortfolio: () => user?.id ? store.fetchPortfolioSummary(user.id) : Promise.resolve(),
+    refreshAllData: () =>
+      user?.id ? store.refreshAllData(user.id) : Promise.resolve(),
+    refreshProjects: () =>
+      user?.id ? store.fetchProjects(user.id) : Promise.resolve(),
+    refreshPortfolio: () =>
+      user?.id ? store.fetchPortfolioSummary(user.id) : Promise.resolve(),
 
     // Utilities
     getProjectById: store.getProjectById,
@@ -141,25 +149,34 @@ export function usePortfolioMetrics() {
       activeAlerts: store.getActiveAlertsCount(),
       completionRate: store.getCompletionRate(),
       totalCarbonImpact: store.getTotalCarbonImpact(),
-      averageProgress: store.projects.length > 0
-        ? Math.round(
-            store.projects.reduce((sum, p) => sum + p.currentStatus.overallProgress, 0) /
-            store.projects.length
-          )
-        : 0,
+      averageProgress:
+        store.projects.length > 0
+          ? Math.round(
+              store.projects.reduce(
+                (sum, p) => sum + p.currentStatus.overallProgress,
+                0
+              ) / store.projects.length
+            )
+          : 0,
     },
 
     // Portfolio health indicators
     health: {
-      alertsRatio: store.projects.length > 0
-        ? store.getActiveAlertsCount() / store.projects.length
-        : 0,
-      onTrackProjects: store.projects.filter(p =>
-        p.currentStatus.overallProgress >= 80 ||
-        p.alerts.filter(a => !a.isResolved).length === 0
+      alertsRatio:
+        store.projects.length > 0
+          ? store.getActiveAlertsCount() / store.projects.length
+          : 0,
+      onTrackProjects: store.projects.filter(
+        (p) =>
+          p.currentStatus.overallProgress >= 80 ||
+          p.alerts.filter((a) => !a.isResolved).length === 0
       ).length,
-      atRiskProjects: store.projects.filter(p =>
-        p.alerts.some(a => !a.isResolved && (a.severity === 'high' || a.severity === 'critical'))
+      atRiskProjects: store.projects.filter((p) =>
+        p.alerts.some(
+          (a) =>
+            !a.isResolved &&
+            (a.severity === 'high' || a.severity === 'critical')
+        )
       ).length,
     },
   };
@@ -173,8 +190,14 @@ export function useProjectFilters() {
 
   const availableFilters = {
     statuses: ['all', 'active', 'completed', 'issues'] as const,
-    sortOptions: ['recent', 'progress', 'alerts', 'investment', 'carbon_impact'] as const,
-    projectTypes: [...new Set(store.projects.map(p => p.projectType))],
+    sortOptions: [
+      'recent',
+      'progress',
+      'alerts',
+      'investment',
+      'carbon_impact',
+    ] as const,
+    projectTypes: [...new Set(store.projects.map((p) => p.projectType))],
     timeframes: ['all', '30d', '90d', '1y'] as const,
   };
 
@@ -185,10 +208,12 @@ export function useProjectFilters() {
     resetFilters: store.resetFilters,
 
     // Quick filter actions
-    filterByStatus: (status: string) => store.setFilters({ status: status as any }),
+    filterByStatus: (status: string) =>
+      store.setFilters({ status: status as any }),
     sortBy: (sortBy: string) => store.setFilters({ sortBy: sortBy as any }),
     filterByType: (projectType: string) => store.setFilters({ projectType }),
-    filterByTimeframe: (timeframe: string) => store.setFilters({ timeframe: timeframe as any }),
+    filterByTimeframe: (timeframe: string) =>
+      store.setFilters({ timeframe: timeframe as any }),
   };
 }
 
@@ -198,10 +223,10 @@ export function useProjectFilters() {
 export function useProjectAlerts() {
   const store = useTrackingStore();
 
-  const alerts = store.projects.flatMap(project =>
+  const alerts = store.projects.flatMap((project) =>
     project.alerts
-      .filter(alert => !alert.isResolved)
-      .map(alert => ({
+      .filter((alert) => !alert.isResolved)
+      .map((alert) => ({
         ...alert,
         projectId: project.projectId,
         projectTitle: project.projectTitle,
@@ -210,10 +235,10 @@ export function useProjectAlerts() {
   );
 
   const alertsBySecerity = {
-    critical: alerts.filter(a => a.severity === 'critical'),
-    high: alerts.filter(a => a.severity === 'high'),
-    medium: alerts.filter(a => a.severity === 'medium'),
-    low: alerts.filter(a => a.severity === 'low'),
+    critical: alerts.filter((a) => a.severity === 'critical'),
+    high: alerts.filter((a) => a.severity === 'high'),
+    medium: alerts.filter((a) => a.severity === 'medium'),
+    low: alerts.filter((a) => a.severity === 'low'),
   };
 
   return {
@@ -224,7 +249,7 @@ export function useProjectAlerts() {
 
     // Alert utilities
     getAlertsForProject: (projectId: string) =>
-      alerts.filter(alert => alert.projectId === projectId),
+      alerts.filter((alert) => alert.projectId === projectId),
 
     hasAlerts: alerts.length > 0,
     hasCriticalAlerts: alertsBySecerity.critical.length > 0,
@@ -249,7 +274,9 @@ export function useRealTimeTracking() {
     store.stopSubscriptions();
   };
 
-  const isSubscribed = Object.values(store.subscriptions).some(sub => sub !== null);
+  const isSubscribed = Object.values(store.subscriptions).some(
+    (sub) => sub !== null
+  );
 
   return {
     isSubscribed,
@@ -269,7 +296,7 @@ export function useRealTimeTracking() {
 export function useTrackingErrors() {
   const store = useTrackingStore();
 
-  const hasErrors = Object.values(store.errors).some(error => error !== null);
+  const hasErrors = Object.values(store.errors).some((error) => error !== null);
   const errorMessages = Object.entries(store.errors)
     .filter(([_, error]) => error !== null)
     .map(([type, error]) => ({ type, message: error }));

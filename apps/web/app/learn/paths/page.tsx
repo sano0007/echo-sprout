@@ -56,7 +56,7 @@ export default function LearningPathsCreatePage() {
 
   // Note: We intentionally do NOT record views on the paths index page.
 
-const update = (name: keyof FormState, value: string | number | boolean) =>
+  const update = (name: keyof FormState, value: string | number | boolean) =>
     setForm((f) => ({ ...f, [name]: value }));
 
   const isValidUrl = (url: string) => {
@@ -94,17 +94,23 @@ const update = (name: keyof FormState, value: string | number | boolean) =>
     if (!Number.isFinite(f.estimatedDuration)) {
       fieldErrors.estimatedDuration = 'Estimated duration is required.';
       messages.push(fieldErrors.estimatedDuration);
-    } else if (f.estimatedDuration <= 0 || !Number.isInteger(f.estimatedDuration)) {
-      fieldErrors.estimatedDuration = 'Duration must be a positive whole number.';
+    } else if (
+      f.estimatedDuration <= 0 ||
+      !Number.isInteger(f.estimatedDuration)
+    ) {
+      fieldErrors.estimatedDuration =
+        'Duration must be a positive whole number.';
       messages.push(fieldErrors.estimatedDuration);
     } else if (f.estimatedDuration > 24 * 60) {
-      fieldErrors.estimatedDuration = 'Duration seems too large (max 1440 minutes).';
+      fieldErrors.estimatedDuration =
+        'Duration seems too large (max 1440 minutes).';
       messages.push(fieldErrors.estimatedDuration);
     }
 
     if (f.coverImageUrl && f.coverImageUrl.trim()) {
       if (!isValidUrl(f.coverImageUrl.trim())) {
-        fieldErrors.coverImageUrl = 'Cover Image URL must be a valid http(s) URL.';
+        fieldErrors.coverImageUrl =
+          'Cover Image URL must be a valid http(s) URL.';
         messages.push(fieldErrors.coverImageUrl);
       }
     }
@@ -166,17 +172,25 @@ const update = (name: keyof FormState, value: string | number | boolean) =>
     };
   };
 
-    const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSignedIn) {
-      toast({ title: 'Sign-in required', description: 'Please sign in to create a learning path.', variant: 'destructive' as any });
+      toast({
+        title: 'Sign-in required',
+        description: 'Please sign in to create a learning path.',
+        variant: 'destructive' as any,
+      });
       return;
     }
 
     const { fieldErrors, messages, hasErrors } = validateForm(form);
     setErrors(fieldErrors);
     if (hasErrors) {
-      toast({ title: 'Please fix the highlighted errors', description: messages[0], variant: 'destructive' as any });
+      toast({
+        title: 'Please fix the highlighted errors',
+        description: messages[0],
+        variant: 'destructive' as any,
+      });
       return;
     }
 
@@ -212,7 +226,10 @@ const update = (name: keyof FormState, value: string | number | boolean) =>
         publish: form.publish,
         lessons: lessonsPayload,
       });
-      toast({ title: 'Success', description: 'Learning path created successfully.' });
+      toast({
+        title: 'Success',
+        description: 'Learning path created successfully.',
+      });
       setForm({
         title: '',
         description: '',
@@ -227,7 +244,11 @@ const update = (name: keyof FormState, value: string | number | boolean) =>
       });
       setErrors({});
     } catch (err) {
-      toast({ title: 'Error', description: 'Failed to create learning path.', variant: 'destructive' as any });
+      toast({
+        title: 'Error',
+        description: 'Failed to create learning path.',
+        variant: 'destructive' as any,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -317,7 +338,9 @@ const update = (name: keyof FormState, value: string | number | boolean) =>
               }
             />
             {errors.estimatedDuration && (
-              <p className="mt-1 text-sm text-red-600">{errors.estimatedDuration}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {errors.estimatedDuration}
+              </p>
             )}
           </div>
 
@@ -361,7 +384,9 @@ const update = (name: keyof FormState, value: string | number | boolean) =>
               placeholder="https://..."
             />
             {errors.coverImageUrl && (
-              <p className="mt-1 text-sm text-red-600">{errors.coverImageUrl}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {errors.coverImageUrl}
+              </p>
             )}
           </div>
         </div>
@@ -432,7 +457,9 @@ const update = (name: keyof FormState, value: string | number | boolean) =>
                       placeholder="e.g., Introduction to Carbon Credits"
                     />
                     {errors.lessons?.[idx]?.title && (
-                      <p className="mt-1 text-sm text-red-600">{errors.lessons[idx]?.title}</p>
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.lessons[idx]?.title}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -454,7 +481,9 @@ const update = (name: keyof FormState, value: string | number | boolean) =>
                       placeholder="https://..."
                     />
                     {errors.lessons?.[idx]?.videoUrl && (
-                      <p className="mt-1 text-sm text-red-600">{errors.lessons[idx]?.videoUrl}</p>
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.lessons[idx]?.videoUrl}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -498,7 +527,9 @@ const update = (name: keyof FormState, value: string | number | boolean) =>
                     placeholder="https://...intro.pdf, https://...guide.pdf"
                   />
                   {errors.lessons?.[idx]?.pdfs && (
-                    <p className="mt-1 text-sm text-red-600">{errors.lessons[idx]?.pdfs}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.lessons[idx]?.pdfs}
+                    </p>
                   )}
                 </div>
               </div>

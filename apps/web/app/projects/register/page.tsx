@@ -173,7 +173,7 @@ export default function ProjectRegister() {
         creditsAvailable: data.totalCarbonCredits,
         creditsSold: 0,
         submittedDocuments: [],
-        isDocumentationComplete: false
+        isDocumentationComplete: false,
       });
 
       // Now upload the files if any exist

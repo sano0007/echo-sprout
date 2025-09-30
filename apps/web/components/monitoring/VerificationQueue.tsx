@@ -17,7 +17,7 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface VerificationTask {
   id: string;

@@ -129,7 +129,9 @@ export const requireMonitoringPermission = query({
   handler: async (ctx, { permission }) => {
     const user = await UserService.getCurrentUser(ctx);
     const userPermissions = MONITORING_PERMISSIONS[user?.role || ''] || [];
-    const hasPermission = userPermissions.includes(permission as MonitoringPermission);
+    const hasPermission = userPermissions.includes(
+      permission as MonitoringPermission
+    );
 
     if (!hasPermission) {
       const user = await UserService.getCurrentUser(ctx);
@@ -314,13 +316,16 @@ export const getAccessibleProjectsForMonitoring = query({
         .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
         .collect();
 
-      const projectIds = [...new Set(transactions.map((t) => t.projectId))];
-      const projects = [];
+      const projectIds = [
+        ...new Set(transactions.map((t) => t.projectId)),
+      ].filter(Boolean) as any[];
+      const projects = [] as any[];
 
       for (const projectId of projectIds) {
-        const project = await ctx.db.get(projectId);
-        if (project && project.status === 'active') {
-          projects.push(project);
+        const project = await ctx.db.get(projectId as any);
+        const p = project as any;
+        if (p && p.status === 'active') {
+          projects.push(p);
         }
       }
 

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Activity,
@@ -13,7 +13,8 @@ import {
   RefreshCw,
   Settings,
   Shield,
-  User} from 'lucide-react';
+  User,
+} from 'lucide-react';
 import React, { useState } from 'react';
 
 import { cn } from '@/lib/utils';
@@ -33,7 +34,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface ActivityItem {
   id: string;
-  type: 'user' | 'project' | 'transaction' | 'system' | 'security' | 'verification';
+  type:
+    | 'user'
+    | 'project'
+    | 'transaction'
+    | 'system'
+    | 'security'
+    | 'verification';
   action: string;
   description: string;
   user?: {
@@ -66,7 +73,8 @@ const activityIcons = {
 };
 
 const statusColors = {
-  success: 'text-mountain-meadow bg-mountain-meadow/10 border-mountain-meadow/20',
+  success:
+    'text-mountain-meadow bg-mountain-meadow/10 border-mountain-meadow/20',
   warning: 'text-amber-600 bg-amber-50 border-amber-200',
   error: 'text-red-600 bg-red-50 border-red-200',
   info: 'text-blue-600 bg-blue-50 border-blue-200',
@@ -88,12 +96,12 @@ const mockActivities: ActivityItem[] = [
     user: {
       name: 'John Smith',
       avatar: '',
-      role: 'creator'
+      role: 'creator',
     },
     target: 'User Registration',
     timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
     impact: 'low',
-    status: 'success'
+    status: 'success',
   },
   {
     id: '2',
@@ -103,13 +111,13 @@ const mockActivities: ActivityItem[] = [
     user: {
       name: 'Sarah Johnson',
       avatar: '',
-      role: 'buyer'
+      role: 'buyer',
     },
     target: 'Reforestation Project Alpha',
     metadata: { amount: 50000, credits: 500 },
     timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
     impact: 'high',
-    status: 'success'
+    status: 'success',
   },
   {
     id: '3',
@@ -118,7 +126,7 @@ const mockActivities: ActivityItem[] = [
     description: 'Daily system backup completed successfully',
     timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
     impact: 'medium',
-    status: 'success'
+    status: 'success',
   },
   {
     id: '4',
@@ -129,7 +137,7 @@ const mockActivities: ActivityItem[] = [
     metadata: { ip: '192.168.1.100', country: 'Unknown' },
     timestamp: new Date(Date.now() - 45 * 60 * 1000), // 45 minutes ago
     impact: 'high',
-    status: 'warning'
+    status: 'warning',
   },
   {
     id: '5',
@@ -139,12 +147,12 @@ const mockActivities: ActivityItem[] = [
     user: {
       name: 'Dr. Michael Chen',
       avatar: '',
-      role: 'verifier'
+      role: 'verifier',
     },
     target: 'Solar Energy Project Beta',
     timestamp: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
     impact: 'medium',
-    status: 'success'
+    status: 'success',
   },
   {
     id: '6',
@@ -154,12 +162,12 @@ const mockActivities: ActivityItem[] = [
     user: {
       name: 'Emma Williams',
       avatar: '',
-      role: 'creator'
+      role: 'creator',
     },
     target: 'Wind Farm Project Gamma',
     timestamp: new Date(Date.now() - 90 * 60 * 1000), // 1.5 hours ago
     impact: 'medium',
-    status: 'info'
+    status: 'info',
   },
   {
     id: '7',
@@ -169,7 +177,7 @@ const mockActivities: ActivityItem[] = [
     target: 'Weather Data API',
     timestamp: new Date(Date.now() - 120 * 60 * 1000), // 2 hours ago
     impact: 'medium',
-    status: 'error'
+    status: 'error',
   },
   {
     id: '8',
@@ -179,11 +187,13 @@ const mockActivities: ActivityItem[] = [
     target: 'Policy Violation',
     timestamp: new Date(Date.now() - 180 * 60 * 1000), // 3 hours ago
     impact: 'high',
-    status: 'warning'
-  }
+    status: 'warning',
+  },
 ];
 
-const ActivityItemComponent: React.FC<{ activity: ActivityItem }> = ({ activity }) => {
+const ActivityItemComponent: React.FC<{ activity: ActivityItem }> = ({
+  activity,
+}) => {
   const Icon = activityIcons[activity.type];
 
   const formatTimestamp = (timestamp: Date) => {
@@ -205,19 +215,23 @@ const ActivityItemComponent: React.FC<{ activity: ActivityItem }> = ({ activity 
     const entries = Object.entries(metadata);
     if (entries.length === 0) return null;
 
-    return entries.map(([key, value]) => {
-      if (key === 'amount') return `$${value.toLocaleString()}`;
-      if (key === 'credits') return `${value} credits`;
-      return `${key}: ${value}`;
-    }).join(' • ');
+    return entries
+      .map(([key, value]) => {
+        if (key === 'amount') return `$${value.toLocaleString()}`;
+        if (key === 'credits') return `${value} credits`;
+        return `${key}: ${value}`;
+      })
+      .join(' • ');
   };
 
   return (
     <div className="flex items-start gap-3 p-4 hover:bg-muted/30 transition-colors rounded-lg group">
-      <div className={cn(
-        'flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0',
-        statusColors[activity.status]
-      )}>
+      <div
+        className={cn(
+          'flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0',
+          statusColors[activity.status]
+        )}
+      >
         <Icon className="h-4 w-4" />
       </div>
 
@@ -237,9 +251,16 @@ const ActivityItemComponent: React.FC<{ activity: ActivityItem }> = ({ activity 
         {activity.user && (
           <div className="flex items-center gap-2">
             <Avatar className="h-5 w-5">
-              <AvatarImage src={activity.user.avatar} alt={activity.user.name} />
+              <AvatarImage
+                src={activity.user.avatar}
+                alt={activity.user.name}
+              />
               <AvatarFallback className="bg-bangladesh-green text-white text-xs">
-                {activity.user.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {activity.user.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <span className="text-xs text-muted-foreground">
@@ -275,15 +296,16 @@ export const RecentActivityFeed: React.FC<RecentActivityFeedProps> = ({
   loading = false,
   maxItems = 10,
   showFilters = true,
-  className
+  className,
 }) => {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const filteredActivities = activities
-    .filter(activity => {
+    .filter((activity) => {
       const matchesType = typeFilter === 'all' || activity.type === typeFilter;
-      const matchesStatus = statusFilter === 'all' || activity.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'all' || activity.status === statusFilter;
       return matchesType && matchesStatus;
     })
     .slice(0, maxItems);

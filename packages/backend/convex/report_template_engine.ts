@@ -483,10 +483,12 @@ export const getReportTemplate = query({
   handler: async (ctx, args) => {
     const template = await ctx.db
       .query('analyticsReports')
-      .filter((q: any) => q.and(
-        q.eq(q.field('reportType'), 'platform_analytics'),
-        q.eq(q.field('reportData.id'), args.templateId)
-      ))
+      .filter((q: any) =>
+        q.and(
+          q.eq(q.field('reportType'), 'platform_analytics'),
+          q.eq(q.field('reportData.id'), args.templateId)
+        )
+      )
       .first();
 
     if (!template) {
@@ -515,7 +517,9 @@ export const listReportTemplates = query({
     }
 
     if (args.format) {
-      query = query.filter((q: any) => q.eq(q.field('reportData.format'), args.format));
+      query = query.filter((q: any) =>
+        q.eq(q.field('reportData.format'), args.format)
+      );
     }
 
     const templates = await query.collect();
@@ -546,10 +550,12 @@ export const updateReportTemplate = mutation({
 
     const template = await ctx.db
       .query('analyticsReports')
-      .filter((q: any) => q.and(
-        q.eq(q.field('reportType'), 'platform_analytics'),
-        q.eq(q.field('reportData.id'), args.templateId)
-      ))
+      .filter((q: any) =>
+        q.and(
+          q.eq(q.field('reportType'), 'platform_analytics'),
+          q.eq(q.field('reportData.id'), args.templateId)
+        )
+      )
       .first();
 
     if (!template) {
@@ -600,10 +606,12 @@ export const deleteReportTemplate = mutation({
 
     const template = await ctx.db
       .query('analyticsReports')
-      .filter((q: any) => q.and(
-        q.eq(q.field('reportType'), 'platform_analytics'),
-        q.eq(q.field('reportData.id'), args.templateId)
-      ))
+      .filter((q: any) =>
+        q.and(
+          q.eq(q.field('reportType'), 'platform_analytics'),
+          q.eq(q.field('reportData.id'), args.templateId)
+        )
+      )
       .first();
 
     if (!template) {
@@ -629,10 +637,12 @@ export const initializeDefaultTemplates = mutation({
     // Check if default templates already exist
     const existingDefaults = await ctx.db
       .query('analyticsReports')
-      .filter((q: any) => q.and(
-        q.eq(q.field('reportType'), 'platform_analytics'),
-        q.eq(q.field('timeframe.isDefault'), true)
-      ))
+      .filter((q: any) =>
+        q.and(
+          q.eq(q.field('reportType'), 'platform_analytics'),
+          q.eq(q.field('timeframe.isDefault'), true)
+        )
+      )
       .collect();
 
     if (existingDefaults.length > 0) {

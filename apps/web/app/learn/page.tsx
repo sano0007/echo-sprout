@@ -136,7 +136,9 @@ export default function LearnHub() {
     enteredRef.current = true;
     try {
       recordLearnEnter({} as any).catch(() => {});
-    } catch {}
+    } catch (_e) {
+      void _e;
+    }
   }, [recordLearnEnter]);
 
   const openModal = () => {

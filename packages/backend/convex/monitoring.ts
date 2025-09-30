@@ -39,7 +39,6 @@ export const dailyProjectMonitoring = internalAction({
 
       // This would integrate with other monitoring functions
       console.log('Processing alert notifications...');
-
     } catch (error) {
       console.error('❌ Daily monitoring failed:', error);
       throw error;
@@ -434,7 +433,11 @@ export const sendAlertNotification = internalMutation({
 
     // Add project creator
     const project = alert.projectId ? await ctx.db.get(alert.projectId) : null;
-    if (project && project.creatorId && !recipients.includes(project.creatorId)) {
+    if (
+      project &&
+      project.creatorId &&
+      !recipients.includes(project.creatorId)
+    ) {
       recipients.push(project.creatorId);
     }
 
@@ -565,45 +568,55 @@ export const getBuyerProjectTracking = query({
     const trackingData = [];
 
     for (const purchase of purchases) {
-      const project = await ctx.db.get(purchase.projectId);
+      const projectId = purchase.projectId;
+      if (!projectId) continue;
+      const project = await ctx.db.get(projectId);
       if (!project) continue;
 
       // Get recent progress updates for this project
       const recentUpdates = await ctx.db
         .query('progressUpdates')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .order('desc')
         .take(3);
 
       // Get project milestones
       const milestones = await ctx.db
         .query('projectMilestones')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .order('asc')
         .collect();
 
       // Get active alerts for this project
       const alerts = await ctx.db
         .query('systemAlerts')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .filter((q) => q.eq(q.field('isResolved'), false))
         .collect();
 
       // Calculate current progress
-      const completedMilestones = milestones.filter(m => m.status === 'completed').length;
+      const completedMilestones = milestones.filter(
+        (m) => m.status === 'completed'
+      ).length;
       const totalMilestones = milestones.length;
-      const overallProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+      const overallProgress =
+        totalMilestones > 0
+          ? Math.round((completedMilestones / totalMilestones) * 100)
+          : 0;
 
       // Get next milestone
-      const nextMilestone = milestones.find(m => m.status === 'pending' || m.status === 'in_progress');
+      const nextMilestone = milestones.find(
+        (m) => m.status === 'pending' || m.status === 'in_progress'
+      );
 
       // Calculate carbon impact to date
       const latestUpdate = recentUpdates[0];
-      const carbonOffset = latestUpdate?.measurementData?.carbonImpactToDate ||
-                          (purchase.creditAmount * 1.5); // Fallback estimation
+      const carbonOffset =
+        latestUpdate?.measurementData?.carbonImpactToDate ||
+        purchase.creditAmount * 1.5; // Fallback estimation
 
       trackingData.push({
-        projectId: purchase.projectId,
+        projectId: projectId,
         projectTitle: project.title,
         projectType: project.projectType,
         creatorName: 'Project Creator', // Will need to fetch from users table
@@ -620,29 +633,30 @@ export const getBuyerProjectTracking = query({
           overallProgress,
           currentPhase: 'In Progress', // Schema doesn't have currentPhase
           nextMilestone: nextMilestone?.title || 'Project Completion',
-          nextMilestoneDate: nextMilestone?.plannedDate || project.expectedCompletionDate,
+          nextMilestoneDate:
+            nextMilestone?.plannedDate || project.expectedCompletionDate,
         },
-        recentUpdates: recentUpdates.map(update => ({
+        recentUpdates: recentUpdates.map((update) => ({
           id: update._id,
           type: update.updateType,
           title: update.title,
           description: update.description,
           date: update.reportingDate,
-          photos: update.photos?.map(p => p.cloudinary_url) || [],
+          photos: update.photos?.map((p) => p.cloudinary_url) || [],
           metrics: update.measurementData,
         })),
         impact: {
           carbonOffset,
           additionalMetrics: latestUpdate?.measurementData || {},
         },
-        alerts: alerts.map(alert => ({
+        alerts: alerts.map((alert) => ({
           id: alert._id,
           severity: alert.severity,
           message: alert.message,
           date: alert._creationTime,
           isResolved: alert.isResolved,
         })),
-        milestones: milestones.map(milestone => ({
+        milestones: milestones.map((milestone) => ({
           id: milestone._id,
           title: milestone.title,
           plannedDate: milestone.plannedDate,
@@ -684,7 +698,9 @@ export const getDetailedProjectTracking = query({
       .first();
 
     if (!purchase) {
-      throw new Error('Access denied: You have not purchased credits for this project');
+      throw new Error(
+        'Access denied: You have not purchased credits for this project'
+      );
     }
 
     const project = await ctx.db.get(projectId);
@@ -714,16 +730,24 @@ export const getDetailedProjectTracking = query({
       .collect();
 
     // Calculate detailed progress metrics
-    const completedMilestones = milestones.filter(m => m.status === 'completed').length;
+    const completedMilestones = milestones.filter(
+      (m) => m.status === 'completed'
+    ).length;
     const totalMilestones = milestones.length;
-    const overallProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
+    const overallProgress =
+      totalMilestones > 0
+        ? Math.round((completedMilestones / totalMilestones) * 100)
+        : 0;
 
-    const nextMilestone = milestones.find(m => m.status === 'pending' || m.status === 'in_progress');
+    const nextMilestone = milestones.find(
+      (m) => m.status === 'pending' || m.status === 'in_progress'
+    );
 
     // Calculate total carbon impact
     const latestUpdate = progressUpdates[0];
-    const carbonOffset = latestUpdate?.measurementData?.carbonImpactToDate ||
-                        (purchase.creditAmount * 1.5);
+    const carbonOffset =
+      latestUpdate?.measurementData?.carbonImpactToDate ||
+      purchase.creditAmount * 1.5;
 
     return {
       projectId,
@@ -744,22 +768,23 @@ export const getDetailedProjectTracking = query({
         overallProgress,
         currentPhase: 'In Progress', // Schema doesn't have currentPhase
         nextMilestone: nextMilestone?.title || 'Project Completion',
-        nextMilestoneDate: nextMilestone?.plannedDate || project.expectedCompletionDate,
+        nextMilestoneDate:
+          nextMilestone?.plannedDate || project.expectedCompletionDate,
       },
-      recentUpdates: progressUpdates.map(update => ({
+      recentUpdates: progressUpdates.map((update) => ({
         id: update._id,
         type: update.updateType,
         title: update.title,
         description: update.description,
         date: update.reportingDate,
-        photos: update.photos?.map(p => p.cloudinary_url) || [],
+        photos: update.photos?.map((p) => p.cloudinary_url) || [],
         metrics: update.measurementData,
       })),
       impact: {
         carbonOffset,
         additionalMetrics: latestUpdate?.measurementData || {},
       },
-      alerts: alerts.map(alert => ({
+      alerts: alerts.map((alert) => ({
         id: alert._id,
         severity: alert.severity,
         message: alert.message,
@@ -768,7 +793,7 @@ export const getDetailedProjectTracking = query({
         resolvedAt: alert.resolvedAt,
         resolutionNotes: alert.resolutionNotes,
       })),
-      milestones: milestones.map(milestone => ({
+      milestones: milestones.map((milestone) => ({
         id: milestone._id,
         title: milestone.title,
         plannedDate: milestone.plannedDate,
@@ -815,18 +840,21 @@ export const getBuyerPortfolioSummary = query({
       totalCredits += purchase.creditAmount;
       totalInvestment += purchase.totalAmount;
 
-      const project = await ctx.db.get(purchase.projectId);
+      const projectId = purchase.projectId;
+      if (!projectId) continue;
+      const project = await ctx.db.get(projectId);
       if (!project) continue;
 
       // Get latest progress update for carbon impact
       const latestUpdate = await ctx.db
         .query('progressUpdates')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .order('desc')
         .first();
 
-      const carbonOffset = latestUpdate?.measurementData?.carbonImpactToDate ||
-                          (purchase.creditAmount * 1.5);
+      const carbonOffset =
+        latestUpdate?.measurementData?.carbonImpactToDate ||
+        purchase.creditAmount * 1.5;
       totalCarbonOffset += carbonOffset;
 
       // Check project status
@@ -839,7 +867,7 @@ export const getBuyerPortfolioSummary = query({
       // Check for unresolved alerts
       const hasIssues = await ctx.db
         .query('systemAlerts')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .filter((q) => q.eq(q.field('isResolved'), false))
         .first();
 
@@ -856,7 +884,8 @@ export const getBuyerPortfolioSummary = query({
       completedProjects,
       projectsWithIssues,
       totalProjects: purchases.length,
-      averageInvestment: purchases.length > 0 ? totalInvestment / purchases.length : 0,
+      averageInvestment:
+        purchases.length > 0 ? totalInvestment / purchases.length : 0,
     };
   },
 });

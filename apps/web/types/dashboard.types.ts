@@ -15,7 +15,7 @@ import {
   UserRole,
   ChangeType,
   ViewMode,
-  Status
+  Status,
 } from './global.types';
 
 // ===============================
@@ -79,7 +79,11 @@ export interface CreatorProject extends Project {
 
 export interface CreatorTask {
   id: string;
-  type: 'progress_report' | 'document_upload' | 'verification_response' | 'milestone_update';
+  type:
+    | 'progress_report'
+    | 'document_upload'
+    | 'verification_response'
+    | 'milestone_update';
   title: string;
   description: string;
   priority: 'low' | 'medium' | 'high';
@@ -494,7 +498,11 @@ export interface VerificationTask {
 
 export interface VerificationBlocker {
   id: string;
-  type: 'missing_document' | 'unclear_information' | 'technical_issue' | 'external_dependency';
+  type:
+    | 'missing_document'
+    | 'unclear_information'
+    | 'technical_issue'
+    | 'external_dependency';
   description: string;
   severity: 'low' | 'medium' | 'high';
   createdAt: Date;
@@ -618,7 +626,11 @@ export interface DocumentAnnotation {
 
 export interface DocumentIssue {
   id: string;
-  type: 'missing_information' | 'inconsistency' | 'calculation_error' | 'format_issue';
+  type:
+    | 'missing_information'
+    | 'inconsistency'
+    | 'calculation_error'
+    | 'format_issue';
   severity: 'low' | 'medium' | 'high';
   description: string;
   location?: string; // page or section reference
@@ -749,7 +761,11 @@ export interface RevenueMetricsData {
 }
 
 export interface RevenueBySource {
-  source: 'transaction_fees' | 'verification_fees' | 'subscription' | 'premium_features';
+  source:
+    | 'transaction_fees'
+    | 'verification_fees'
+    | 'subscription'
+    | 'premium_features';
   amount: number;
   percentage: number;
   trend: ChangeType;

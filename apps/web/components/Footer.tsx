@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import {usePathname, useRouter} from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function Footer() {
-  const pathname = usePathname()
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
 
-  const isAdminDashboard = pathname === '/admin' || pathname?.startsWith('/admin/');
+  const isAdminDashboard =
+    pathname === '/admin' || pathname?.startsWith('/admin/');
 
   if (isAdminDashboard) {
     return null;

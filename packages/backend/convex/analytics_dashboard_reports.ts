@@ -1068,7 +1068,12 @@ export const generateAnalyticsDashboardReport = mutation({
 
     // Save report record
     const reportId = await ctx.db.insert('analyticsReports', {
-      reportType: args.reportType as 'project_performance' | 'platform_analytics' | 'impact_summary' | 'user_engagement' | 'financial_metrics',
+      reportType: args.reportType as
+        | 'project_performance'
+        | 'platform_analytics'
+        | 'impact_summary'
+        | 'user_engagement'
+        | 'financial_metrics',
       title: report.title,
       description: report.description,
       reportData: report,
@@ -1835,8 +1840,10 @@ function generateProjectTypePerformance(
           projects.length) *
           100 || 0,
       averageImpact:
-        projects.reduce((sum: number, p: any) => sum + (p.estimatedCO2Reduction || 0), 0) /
-        projects.length,
+        projects.reduce(
+          (sum: number, p: any) => sum + (p.estimatedCO2Reduction || 0),
+          0
+        ) / projects.length,
       averageTimeToCompletion: 180, // placeholder
       riskLevel: 'medium' as const,
       returnOnInvestment: 15.5,
@@ -1975,8 +1982,16 @@ async function calculatePerformanceTrends(
     granularity,
     data,
     trend:
-      data.length > 0 && firstValue !== undefined && lastValue !== undefined && lastValue > firstValue ? 'increasing' : 'decreasing',
-    averageGrowth: data.length > 0 ? data.reduce((sum, d) => sum + d.change, 0) / data.length : 0,
+      data.length > 0 &&
+      firstValue !== undefined &&
+      lastValue !== undefined &&
+      lastValue > firstValue
+        ? 'increasing'
+        : 'decreasing',
+    averageGrowth:
+      data.length > 0
+        ? data.reduce((sum, d) => sum + d.change, 0) / data.length
+        : 0,
   };
 }
 
@@ -2579,7 +2594,7 @@ function generateDemandAnalysisHelper(transactions: any[]): DemandAnalysis {
     demandDrivers: [
       'Corporate sustainability commitments',
       'Regulatory requirements',
-      'ESG reporting needs'
+      'ESG reporting needs',
     ],
     buyerSegments: [
       {
@@ -2587,22 +2602,22 @@ function generateDemandAnalysisHelper(transactions: any[]): DemandAnalysis {
         size: 40,
         growth: 18.2,
         preferences: ['High-quality credits', 'Verified impact'],
-        priceWillingness: 35
+        priceWillingness: 35,
       },
       {
         segment: 'SMEs',
         size: 35,
         growth: 22.1,
         preferences: ['Cost-effective', 'Local projects'],
-        priceWillingness: 25
-      }
+        priceWillingness: 25,
+      },
     ],
     seasonality: [
       {
         period: 'Q4',
         demandIndex: 1.4,
-        factors: ['Year-end reporting', 'Budget cycles']
-      }
+        factors: ['Year-end reporting', 'Budget cycles'],
+      },
     ],
     forecast: {
       projected: totalDemand * 1.25,
@@ -2613,15 +2628,18 @@ function generateDemandAnalysisHelper(transactions: any[]): DemandAnalysis {
           scenario: 'Conservative',
           probability: 0.3,
           demand: totalDemand * 1.1,
-          impact: 'Steady growth'
-        }
-      ]
-    }
+          impact: 'Steady growth',
+        },
+      ],
+    },
   };
 }
 
 function generateSupplyAnalysisHelper(projects: any[]): SupplyAnalysis {
-  const totalSupply = projects.reduce((sum, p) => sum + (p.totalCarbonCredits || 0), 0);
+  const totalSupply = projects.reduce(
+    (sum, p) => sum + (p.totalCarbonCredits || 0),
+    0
+  );
 
   return {
     totalSupply,
@@ -2629,34 +2647,36 @@ function generateSupplyAnalysisHelper(projects: any[]): SupplyAnalysis {
     supplyConstraints: [
       'Project development time',
       'Verification delays',
-      'Regulatory approvals'
+      'Regulatory approvals',
     ],
     projectPipeline: {
       totalPipeline: totalSupply * 2.5,
       nearTermSupply: totalSupply * 0.3,
       mediumTermSupply: totalSupply * 0.8,
       longTermSupply: totalSupply * 1.4,
-      riskFactors: ['Environmental delays', 'Funding gaps']
+      riskFactors: ['Environmental delays', 'Funding gaps'],
     },
     qualityDistribution: [
       {
         qualityTier: 'Premium',
         percentage: 25,
         averagePrice: 45,
-        demand: 0.8
+        demand: 0.8,
       },
       {
         qualityTier: 'Standard',
         percentage: 60,
         averagePrice: 25,
-        demand: 1.2
-      }
-    ]
+        demand: 1.2,
+      },
+    ],
   };
 }
 
 function generatePricingTrendsHelper(transactions: any[]): PricingTrend[] {
-  const avgPrice = transactions.reduce((sum, t) => sum + t.unitPrice, 0) / transactions.length || 25;
+  const avgPrice =
+    transactions.reduce((sum, t) => sum + t.unitPrice, 0) /
+      transactions.length || 25;
 
   return [
     {
@@ -2664,8 +2684,8 @@ function generatePricingTrendsHelper(transactions: any[]): PricingTrend[] {
       averagePrice: avgPrice,
       priceRange: { min: avgPrice * 0.7, max: avgPrice * 1.5 },
       volume: transactions.length,
-      priceDrivers: ['Market demand', 'Quality premiums', 'Project type']
-    }
+      priceDrivers: ['Market demand', 'Quality premiums', 'Project type'],
+    },
   ];
 }
 
@@ -2678,21 +2698,21 @@ function generateCompetitiveAnalysisHelper(): CompetitiveAnalysis {
         revenue: 50000000,
         strengths: ['Market presence', 'Technology platform'],
         weaknesses: ['Limited verification'],
-        strategy: 'Volume-focused'
-      }
+        strategy: 'Volume-focused',
+      },
     ],
     competitivePosition: 'Strong Challenger',
     marketShare: 8.5,
     competitiveAdvantages: [
       'Comprehensive verification',
       'Transparent pricing',
-      'Real-time tracking'
+      'Real-time tracking',
     ],
     competitiveThreats: [
       'Market consolidation',
       'Technology disruption',
-      'Regulatory changes'
-    ]
+      'Regulatory changes',
+    ],
   };
 }
 
@@ -2703,42 +2723,42 @@ function generateMarketOutlookHelper(): MarketOutlook {
       expectedGrowth: 15.5,
       marketSize: 150000000,
       keyTrends: ['Increased adoption', 'Price stabilization'],
-      risks: ['Economic uncertainty', 'Regulatory changes']
+      risks: ['Economic uncertainty', 'Regulatory changes'],
     },
     mediumTerm: {
       timeframe: '2 years',
       expectedGrowth: 28.5,
       marketSize: 300000000,
       keyTrends: ['Market maturation', 'Quality standards'],
-      risks: ['Market saturation', 'Competition']
+      risks: ['Market saturation', 'Competition'],
     },
     longTerm: {
       timeframe: '5 years',
       expectedGrowth: 45.2,
       marketSize: 750000000,
       keyTrends: ['Global standardization', 'Technology integration'],
-      risks: ['Disruptive technologies', 'Market fragmentation']
+      risks: ['Disruptive technologies', 'Market fragmentation'],
     },
     keyFactors: [
       'Regulatory environment',
       'Corporate sustainability commitments',
-      'Technology advancement'
+      'Technology advancement',
     ],
     scenarios: [
       {
         scenario: 'Accelerated Growth',
         probability: 0.3,
         impact: 'Rapid market expansion',
-        implications: ['Increased competition', 'Quality differentiation']
-      }
-    ]
+        implications: ['Increased competition', 'Quality differentiation'],
+      },
+    ],
   };
 }
 
 function generateGeographicBreakdown(users: any[]): GeographicBreakdown[] {
   const countryMap = new Map();
 
-  users.forEach(user => {
+  users.forEach((user) => {
     const country = user.country || 'Unknown';
     if (!countryMap.has(country)) {
       countryMap.set(country, { count: 0, activity: 0 });
@@ -2754,7 +2774,7 @@ function generateGeographicBreakdown(users: any[]): GeographicBreakdown[] {
     country,
     users: data.count,
     percentage: (data.count / total) * 100,
-    activity: data.activity / data.count
+    activity: data.activity / data.count,
   }));
 }
 
@@ -2765,27 +2785,29 @@ function generateAgeGroupBreakdown(users: any[]): AgeGroupBreakdown[] {
       ageGroup: '25-34',
       count: Math.floor(users.length * 0.35),
       percentage: 35,
-      engagement: 88
+      engagement: 88,
     },
     {
       ageGroup: '35-44',
       count: Math.floor(users.length * 0.28),
       percentage: 28,
-      engagement: 92
+      engagement: 92,
     },
     {
       ageGroup: '45-54',
       count: Math.floor(users.length * 0.22),
       percentage: 22,
-      engagement: 85
-    }
+      engagement: 85,
+    },
   ];
 }
 
-function generateOrganizationTypeBreakdown(users: any[]): OrganizationTypeBreakdown[] {
+function generateOrganizationTypeBreakdown(
+  users: any[]
+): OrganizationTypeBreakdown[] {
   const typeMap = new Map();
 
-  users.forEach(user => {
+  users.forEach((user) => {
     const type = user.organizationType || 'Individual';
     if (!typeMap.has(type)) {
       typeMap.set(type, { count: 0, totalSpend: 0 });
@@ -2798,7 +2820,7 @@ function generateOrganizationTypeBreakdown(users: any[]): OrganizationTypeBreakd
     type,
     count: data.count,
     percentage: (data.count / total) * 100,
-    averageSpend: 1500 // Placeholder
+    averageSpend: 1500, // Placeholder
   }));
 }
 
@@ -2812,15 +2834,15 @@ function generateUserBehavior(): UserBehavior {
         adoptionRate: 85,
         timeToAdoption: 2.5,
         userSatisfaction: 4.2,
-        businessImpact: 75
-      }
+        businessImpact: 75,
+      },
     ],
     userJourney: {
       averageTimeToFirstPurchase: 14.5,
       averageTimeToProjectCreation: 8.2,
       commonPaths: ['Browse → Research → Purchase'],
       dropoffPoints: ['Registration', 'Payment'],
-      conversionRate: 12.5
+      conversionRate: 12.5,
     },
     conversionFunnels: [
       {
@@ -2828,9 +2850,9 @@ function generateUserBehavior(): UserBehavior {
         users: 10000,
         conversionRate: 100,
         dropoffRate: 0,
-        optimizationOpportunities: ['Improve landing page']
-      }
-    ]
+        optimizationOpportunities: ['Improve landing page'],
+      },
+    ],
   };
 }
 
@@ -2842,19 +2864,23 @@ function generateUserSegmentation(users: any[]): UserSegmentation {
         size: Math.floor(users.length * 0.4),
         characteristics: ['High engagement', 'Regular purchases'],
         behavior: ['Research focused', 'Quality conscious'],
-        value: 2500
-      }
+        value: 2500,
+      },
     ],
-    segmentationCriteria: ['Purchase behavior', 'Engagement level', 'Organization type'],
+    segmentationCriteria: [
+      'Purchase behavior',
+      'Engagement level',
+      'Organization type',
+    ],
     segmentPerformance: [
       {
         segment: 'Eco Enthusiasts',
         revenue: 125000,
         engagement: 92,
         retention: 88,
-        satisfaction: 4.5
-      }
-    ]
+        satisfaction: 4.5,
+      },
+    ],
   };
 }
 
@@ -2867,8 +2893,8 @@ function generateRetentionAnalytics(): RetentionAnalytics {
         period: '6 months',
         retentionRate: 78,
         userCount: 150,
-        revenue: 45000
-      }
+        revenue: 45000,
+      },
     ],
     churnAnalysis: {
       churnRate: 8.5,
@@ -2877,18 +2903,22 @@ function generateRetentionAnalytics(): RetentionAnalytics {
           reason: 'Price sensitivity',
           percentage: 35,
           impact: 'High',
-          mitigation: 'Tiered pricing'
-        }
+          mitigation: 'Tiered pricing',
+        },
       ],
       churnPrediction: {
         highRiskUsers: 25,
         predictors: ['Low engagement', 'No recent purchases'],
         interventions: ['Personalized outreach', 'Special offers'],
-        expectedImpact: 15
+        expectedImpact: 15,
       },
-      winbackOpportunities: ['Re-engagement campaigns', 'Product updates']
+      winbackOpportunities: ['Re-engagement campaigns', 'Product updates'],
     },
-    retentionDrivers: ['Product quality', 'User experience', 'Customer support']
+    retentionDrivers: [
+      'Product quality',
+      'User experience',
+      'Customer support',
+    ],
   };
 }
 
@@ -2900,15 +2930,15 @@ function generateAcquisitionAnalytics(): AcquisitionAnalytics {
         users: 450,
         cost: 5000,
         conversionRate: 12.5,
-        quality: 85
+        quality: 85,
       },
       {
         channel: 'Social Media',
         users: 320,
         cost: 8000,
         conversionRate: 8.5,
-        quality: 75
-      }
+        quality: 75,
+      },
     ],
     customerAcquisitionCost: 150,
     conversionRates: [
@@ -2916,8 +2946,8 @@ function generateAcquisitionAnalytics(): AcquisitionAnalytics {
         stage: 'Visitor to Lead',
         rate: 25,
         benchmark: 22,
-        optimizationPotential: 15
-      }
+        optimizationPotential: 15,
+      },
     ],
     attribution: {
       firstTouch: [
@@ -2925,26 +2955,26 @@ function generateAcquisitionAnalytics(): AcquisitionAnalytics {
           channel: 'Organic Search',
           attribution: 40,
           revenue: 125000,
-          users: 500
-        }
+          users: 500,
+        },
       ],
       lastTouch: [
         {
           channel: 'Direct',
           attribution: 35,
           revenue: 110000,
-          users: 440
-        }
+          users: 440,
+        },
       ],
       multiTouch: [
         {
           channel: 'Combined',
           attribution: 100,
           revenue: 315000,
-          users: 1260
-        }
-      ]
-    }
+          users: 1260,
+        },
+      ],
+    },
   };
 }
 
@@ -2958,8 +2988,8 @@ function generateSatisfactionAnalytics(): SatisfactionAnalytics {
         satisfaction: 4.3,
         usage: 95,
         importance: 90,
-        gap: -5
-      }
+        gap: -5,
+      },
     ],
     feedback: {
       totalFeedback: 245,
@@ -2972,35 +3002,45 @@ function generateSatisfactionAnalytics(): SatisfactionAnalytics {
             period: 'Last Month',
             sentiment: 4.2,
             volume: 85,
-            topics: ['User interface', 'Credit quality']
-          }
-        ]
+            topics: ['User interface', 'Credit quality'],
+          },
+        ],
       },
       categories: [
         {
           category: 'Platform Performance',
           count: 45,
           sentiment: 4.1,
-          priority: 85
-        }
+          priority: 85,
+        },
       ],
-      actionItems: ['Improve mobile experience', 'Enhance search functionality']
+      actionItems: [
+        'Improve mobile experience',
+        'Enhance search functionality',
+      ],
     },
-    improvementAreas: ['Mobile optimization', 'Search experience', 'Onboarding process']
+    improvementAreas: [
+      'Mobile optimization',
+      'Search experience',
+      'Onboarding process',
+    ],
   };
 }
 
-function generateProjectStatusBreakdown(projects: any[]): ProjectStatusBreakdown[] {
+function generateProjectStatusBreakdown(
+  projects: any[]
+): ProjectStatusBreakdown[] {
   const statusMap = new Map();
 
-  projects.forEach(project => {
+  projects.forEach((project) => {
     const status = project.status;
     if (!statusMap.has(status)) {
       statusMap.set(status, { count: 0, totalAge: 0 });
     }
     const data = statusMap.get(status);
     data.count++;
-    data.totalAge += (Date.now() - project._creationTime) / (24 * 60 * 60 * 1000); // days
+    data.totalAge +=
+      (Date.now() - project._creationTime) / (24 * 60 * 60 * 1000); // days
   });
 
   const total = projects.length;
@@ -3009,21 +3049,21 @@ function generateProjectStatusBreakdown(projects: any[]): ProjectStatusBreakdown
     count: data.count,
     percentage: (data.count / total) * 100,
     averageAge: data.totalAge / data.count,
-    trend: 'stable' as const
+    trend: 'stable' as const,
   }));
 }
 
 function generateProjectTypeBreakdown(projects: any[]): ProjectTypeBreakdown[] {
   const typeMap = new Map();
 
-  projects.forEach(project => {
+  projects.forEach((project) => {
     const type = project.projectType;
     if (!typeMap.has(type)) {
       typeMap.set(type, {
         count: 0,
         totalImpact: 0,
         completed: 0,
-        totalFunding: 0
+        totalFunding: 0,
       });
     }
     const data = typeMap.get(type);
@@ -3040,37 +3080,47 @@ function generateProjectTypeBreakdown(projects: any[]): ProjectTypeBreakdown[] {
     percentage: (data.count / total) * 100,
     averageImpact: data.totalImpact / data.count,
     successRate: (data.completed / data.count) * 100,
-    funding: data.totalFunding
+    funding: data.totalFunding,
   }));
 }
 
-function generateProjectPerformance(projects: any[], progressUpdates: any[]): ProjectPerformance {
-  const completedProjects = projects.filter(p => p.status === 'completed');
-  const onTimeProjects = completedProjects.filter(p =>
-    new Date(p.actualCompletionDate || Date.now()) <= new Date(p.expectedCompletionDate)
+function generateProjectPerformance(
+  projects: any[],
+  progressUpdates: any[]
+): ProjectPerformance {
+  const completedProjects = projects.filter((p) => p.status === 'completed');
+  const onTimeProjects = completedProjects.filter(
+    (p) =>
+      new Date(p.actualCompletionDate || Date.now()) <=
+      new Date(p.expectedCompletionDate)
   );
 
   return {
-    onTimeDelivery: (onTimeProjects.length / completedProjects.length) * 100 || 0,
+    onTimeDelivery:
+      (onTimeProjects.length / completedProjects.length) * 100 || 0,
     budgetAdherence: 85.5,
     qualityScores: [
       {
         metric: 'Documentation Quality',
         score: 4.2,
         benchmark: 4.0,
-        trend: 'improving'
-      }
+        trend: 'improving',
+      },
     ],
     milestoneCompletion: 88.5,
-    issueResolution: 92.1
+    issueResolution: 92.1,
   };
 }
 
-function generateProjectQuality(projects: any[], progressUpdates: any[]): ProjectQuality {
-  const verifiedUpdates = progressUpdates.filter(u => u.isVerified);
+function generateProjectQuality(
+  projects: any[],
+  progressUpdates: any[]
+): ProjectQuality {
+  const verifiedUpdates = progressUpdates.filter((u) => u.isVerified);
 
   return {
-    verificationRate: (verifiedUpdates.length / progressUpdates.length) * 100 || 0,
+    verificationRate:
+      (verifiedUpdates.length / progressUpdates.length) * 100 || 0,
     documentationQuality: 4.1,
     reportingCompliance: 92.5,
     stakeholderSatisfaction: 4.3,
@@ -3079,23 +3129,23 @@ function generateProjectQuality(projects: any[], progressUpdates: any[]): Projec
         metric: 'Report Quality',
         trend: 'improving',
         rate: 5.5,
-        factors: ['Better guidelines', 'Training programs']
-      }
-    ]
+        factors: ['Better guidelines', 'Training programs'],
+      },
+    ],
   };
 }
 
 function generateProjectGeography(projects: any[]): ProjectGeography {
   const regionMap = new Map();
 
-  projects.forEach(project => {
+  projects.forEach((project) => {
     if (!project.location) return;
     const region = project.location.name || 'Unknown';
     if (!regionMap.has(region)) {
       regionMap.set(region, {
         count: 0,
         totalImpact: 0,
-        totalBudget: 0
+        totalBudget: 0,
       });
     }
     const data = regionMap.get(region);
@@ -3111,13 +3161,13 @@ function generateProjectGeography(projects: any[]): ProjectGeography {
       projectCount: data.count,
       percentage: (data.count / projects.length) * 100,
       totalImpact: data.totalImpact,
-      averageSize: data.totalBudget / data.count
+      averageSize: data.totalBudget / data.count,
     })),
     concentration: {
       herfindahlIndex: 0.15,
       top3Concentration: 65,
       diversificationScore: 78,
-      riskLevel: 'Medium'
+      riskLevel: 'Medium',
     },
     regionalPerformance: [
       {
@@ -3125,24 +3175,25 @@ function generateProjectGeography(projects: any[]): ProjectGeography {
         successRate: 88,
         averageTimeline: 180,
         costEfficiency: 92,
-        impactPerDollar: 15.5
-      }
-    ]
+        impactPerDollar: 15.5,
+      },
+    ],
   };
 }
 
 function generateProjectTimeline(projects: any[]): ProjectTimeline {
   const durations = projects
-    .filter(p => p.actualCompletionDate && p.startDate)
-    .map(p => {
+    .filter((p) => p.actualCompletionDate && p.startDate)
+    .map((p) => {
       const start = new Date(p.startDate).getTime();
       const end = new Date(p.actualCompletionDate).getTime();
       return (end - start) / (24 * 60 * 60 * 1000); // days
     });
 
-  const avgDuration = durations.length > 0
-    ? durations.reduce((sum, d) => sum + d, 0) / durations.length
-    : 180;
+  const avgDuration =
+    durations.length > 0
+      ? durations.reduce((sum, d) => sum + d, 0) / durations.length
+      : 180;
 
   return {
     averageProjectDuration: avgDuration,
@@ -3151,14 +3202,14 @@ function generateProjectTimeline(projects: any[]): ProjectTimeline {
         phase: 'Planning',
         averageDuration: avgDuration * 0.2,
         percentage: 20,
-        bottlenecks: ['Permit approvals', 'Funding confirmation']
+        bottlenecks: ['Permit approvals', 'Funding confirmation'],
       },
       {
         phase: 'Implementation',
         averageDuration: avgDuration * 0.6,
         percentage: 60,
-        bottlenecks: ['Weather delays', 'Resource availability']
-      }
+        bottlenecks: ['Weather delays', 'Resource availability'],
+      },
     ],
     delayAnalysis: {
       delayRate: 25.5,
@@ -3168,24 +3219,33 @@ function generateProjectTimeline(projects: any[]): ProjectTimeline {
           reason: 'Weather conditions',
           frequency: 40,
           averageImpact: 12.5,
-          mitigation: 'Seasonal planning'
-        }
+          mitigation: 'Seasonal planning',
+        },
       ],
       impactAssessment: [
         {
           impactType: 'Schedule',
           severity: 6.5,
           cost: 5000,
-          recovery: 'Accelerated timeline'
-        }
-      ]
+          recovery: 'Accelerated timeline',
+        },
+      ],
     },
-    accelerationFactors: ['Early stakeholder engagement', 'Streamlined approvals']
+    accelerationFactors: [
+      'Early stakeholder engagement',
+      'Streamlined approvals',
+    ],
   };
 }
 
-function generateProjectImpactAnalytics(projects: any[], progressUpdates: any[]): ProjectImpactAnalytics {
-  const totalImpact = progressUpdates.reduce((sum, u) => sum + (u.carbonImpactToDate || 0), 0);
+function generateProjectImpactAnalytics(
+  projects: any[],
+  progressUpdates: any[]
+): ProjectImpactAnalytics {
+  const totalImpact = progressUpdates.reduce(
+    (sum, u) => sum + (u.carbonImpactToDate || 0),
+    0
+  );
   const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
 
   return {
@@ -3198,8 +3258,8 @@ function generateProjectImpactAnalytics(projects: any[], progressUpdates: any[])
         impact: totalImpact * 0.7,
         percentage: 70,
         growth: 15.5,
-        efficiency: 92.1
-      }
+        efficiency: 92.1,
+      },
     ],
     impactTrends: [
       {
@@ -3207,8 +3267,8 @@ function generateProjectImpactAnalytics(projects: any[], progressUpdates: any[])
         trend: 'increasing',
         rate: 18.5,
         seasonality: 5.2,
-        drivers: ['Project scaling', 'Improved methodologies']
-      }
-    ]
+        drivers: ['Project scaling', 'Improved methodologies'],
+      },
+    ],
   };
 }

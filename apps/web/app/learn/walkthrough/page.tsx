@@ -44,7 +44,7 @@ export default function WalkthroughPage() {
       <div className="relative bg-white rounded-lg shadow-md p-4">
         <div className="flex justify-center">
           <img
-            src={current?.image ?? "https://placehold.co/800x450?text=No+Image"}
+            src={current?.image ?? 'https://placehold.co/800x450?text=No+Image'}
             alt={`Slide ${index + 1}`}
             className="w-full max-h-[60vh] object-contain rounded border"
           />

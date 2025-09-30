@@ -16,7 +16,7 @@ import {
   TreePine,
   Truck,
 } from 'lucide-react';
-import { useEffect, useMemo,useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface CarbonCalculation {
   id: string;

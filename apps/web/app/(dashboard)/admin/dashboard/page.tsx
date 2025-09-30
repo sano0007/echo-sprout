@@ -102,9 +102,7 @@ export default function AdminDashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Dashboard
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 mt-1">
             Platform management and monitoring
           </p>
@@ -161,23 +159,38 @@ export default function AdminDashboardPage() {
         className="space-y-8"
       >
         <TabsList className="grid w-full grid-cols-5 bg-white border border-gray-200 p-1">
-          <TabsTrigger value="overview" className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900">
+          <TabsTrigger
+            value="overview"
+            className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900"
+          >
             <BarChart3 className="h-4 w-4" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900">
+          <TabsTrigger
+            value="analytics"
+            className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900"
+          >
             <BarChart3 className="h-4 w-4" />
             Analytics
           </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900">
+          <TabsTrigger
+            value="users"
+            className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900"
+          >
             <Users className="h-4 w-4" />
             Users
           </TabsTrigger>
-          <TabsTrigger value="system" className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900">
+          <TabsTrigger
+            value="system"
+            className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900"
+          >
             <Activity className="h-4 w-4" />
             System
           </TabsTrigger>
-          <TabsTrigger value="actions" className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900">
+          <TabsTrigger
+            value="actions"
+            className="flex items-center gap-2 text-gray-600 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-900"
+          >
             <Settings className="h-4 w-4" />
             Actions
           </TabsTrigger>
@@ -248,13 +261,25 @@ export default function AdminDashboardPage() {
               <span>Last Backup: 2 hours ago</span>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" className="text-xs h-auto p-1 text-gray-500 hover:text-green-600">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-auto p-1 text-gray-500 hover:text-green-600"
+              >
                 API Docs
               </Button>
-              <Button variant="ghost" size="sm" className="text-xs h-auto p-1 text-gray-500 hover:text-green-600">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-auto p-1 text-gray-500 hover:text-green-600"
+              >
                 Support
               </Button>
-              <Button variant="ghost" size="sm" className="text-xs h-auto p-1 text-gray-500 hover:text-green-600">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-auto p-1 text-gray-500 hover:text-green-600"
+              >
                 System Logs
               </Button>
             </div>

@@ -211,14 +211,14 @@ export const useTrackingStore = create<TrackingStore>()(
 
       // Filter by status
       if (filters.status !== 'all') {
-        filtered = filtered.filter(project => {
+        filtered = filtered.filter((project) => {
           switch (filters.status) {
             case 'active':
               return project.currentStatus.overallProgress < 100;
             case 'completed':
               return project.currentStatus.overallProgress === 100;
             case 'issues':
-              return project.alerts.some(alert => !alert.isResolved);
+              return project.alerts.some((alert) => !alert.isResolved);
             default:
               return true;
           }
@@ -227,8 +227,8 @@ export const useTrackingStore = create<TrackingStore>()(
 
       // Filter by project type
       if (filters.projectType) {
-        filtered = filtered.filter(project =>
-          project.projectType === filters.projectType
+        filtered = filtered.filter(
+          (project) => project.projectType === filters.projectType
         );
       }
 
@@ -241,14 +241,16 @@ export const useTrackingStore = create<TrackingStore>()(
           '1y': 365 * 24 * 60 * 60 * 1000,
         };
 
-        const cutoff = now - timeframes[filters.timeframe as keyof typeof timeframes];
-        filtered = filtered.filter(project => {
+        const cutoff =
+          now - timeframes[filters.timeframe as keyof typeof timeframes];
+        filtered = filtered.filter((project) => {
           const lastUpdate = project.recentUpdates[0];
           if (!lastUpdate) return false;
 
-          const updateTime = typeof lastUpdate.date === 'string'
-            ? new Date(lastUpdate.date).getTime()
-            : lastUpdate.date;
+          const updateTime =
+            typeof lastUpdate.date === 'string'
+              ? new Date(lastUpdate.date).getTime()
+              : lastUpdate.date;
 
           return updateTime >= cutoff;
         });
@@ -263,26 +265,34 @@ export const useTrackingStore = create<TrackingStore>()(
       return [...projects].sort((a, b) => {
         switch (filters.sortBy) {
           case 'progress':
-            return b.currentStatus.overallProgress - a.currentStatus.overallProgress;
+            return (
+              b.currentStatus.overallProgress - a.currentStatus.overallProgress
+            );
           case 'alerts':
-            const aAlerts = a.alerts.filter(alert => !alert.isResolved).length;
-            const bAlerts = b.alerts.filter(alert => !alert.isResolved).length;
+            const aAlerts = a.alerts.filter(
+              (alert) => !alert.isResolved
+            ).length;
+            const bAlerts = b.alerts.filter(
+              (alert) => !alert.isResolved
+            ).length;
             return bAlerts - aAlerts;
           case 'investment':
-            return b.purchaseInfo.totalInvestment - a.purchaseInfo.totalInvestment;
+            return (
+              b.purchaseInfo.totalInvestment - a.purchaseInfo.totalInvestment
+            );
           case 'carbon_impact':
             return b.impact.carbonOffset - a.impact.carbonOffset;
           case 'recent':
           default:
             const aDate = a.recentUpdates[0]
-              ? (typeof a.recentUpdates[0].date === 'string'
+              ? typeof a.recentUpdates[0].date === 'string'
                 ? new Date(a.recentUpdates[0].date).getTime()
-                : a.recentUpdates[0].date)
+                : a.recentUpdates[0].date
               : 0;
             const bDate = b.recentUpdates[0]
-              ? (typeof b.recentUpdates[0].date === 'string'
+              ? typeof b.recentUpdates[0].date === 'string'
                 ? new Date(b.recentUpdates[0].date).getTime()
-                : b.recentUpdates[0].date)
+                : b.recentUpdates[0].date
               : 0;
             return bDate - aDate;
         }
@@ -291,13 +301,17 @@ export const useTrackingStore = create<TrackingStore>()(
 
     getProjectById: (projectId: string) => {
       const { projects } = get();
-      return projects.find(project => project.projectId === projectId) || null;
+      return (
+        projects.find((project) => project.projectId === projectId) || null
+      );
     },
 
     getActiveAlertsCount: () => {
       const { projects } = get();
-      return projects.reduce((count, project) =>
-        count + project.alerts.filter(alert => !alert.isResolved).length, 0
+      return projects.reduce(
+        (count, project) =>
+          count + project.alerts.filter((alert) => !alert.isResolved).length,
+        0
       );
     },
 
@@ -306,7 +320,7 @@ export const useTrackingStore = create<TrackingStore>()(
       if (projects.length === 0) return 0;
 
       const completedProjects = projects.filter(
-        project => project.currentStatus.overallProgress === 100
+        (project) => project.currentStatus.overallProgress === 100
       ).length;
 
       return Math.round((completedProjects / projects.length) * 100);
@@ -314,13 +328,16 @@ export const useTrackingStore = create<TrackingStore>()(
 
     getTotalCarbonImpact: () => {
       const { projects } = get();
-      return projects.reduce((total, project) => total + project.impact.carbonOffset, 0);
+      return projects.reduce(
+        (total, project) => total + project.impact.carbonOffset,
+        0
+      );
     },
 
     // Actions
     setFilters: (newFilters) => {
-      set(state => ({
-        filters: { ...state.filters, ...newFilters }
+      set((state) => ({
+        filters: { ...state.filters, ...newFilters },
       }));
     },
 
@@ -337,7 +354,7 @@ export const useTrackingStore = create<TrackingStore>()(
           projects: null,
           selectedProject: null,
           portfolio: null,
-        }
+        },
       });
     },
 
@@ -364,10 +381,7 @@ export const useTrackingStore = create<TrackingStore>()(
     refreshAllData: async (userId: string) => {
       console.log('refreshAllData called with userId:', userId);
       const { fetchProjects, fetchPortfolioSummary } = get();
-      await Promise.all([
-        fetchProjects(userId),
-        fetchPortfolioSummary(userId)
-      ]);
+      await Promise.all([fetchProjects(userId), fetchPortfolioSummary(userId)]);
     },
 
     // Subscription management
@@ -386,7 +400,7 @@ export const useTrackingStore = create<TrackingStore>()(
       const { subscriptions } = get();
 
       // Cleanup all subscriptions
-      Object.values(subscriptions).forEach(unsubscribe => {
+      Object.values(subscriptions).forEach((unsubscribe) => {
         if (unsubscribe) unsubscribe();
       });
 
@@ -395,7 +409,7 @@ export const useTrackingStore = create<TrackingStore>()(
           projects: null,
           selectedProject: null,
           portfolio: null,
-        }
+        },
       });
     },
   }))
@@ -403,7 +417,7 @@ export const useTrackingStore = create<TrackingStore>()(
 
 // Helper hook for reactive project selection
 export const useSelectedProject = () => {
-  return useTrackingStore(state => ({
+  return useTrackingStore((state) => ({
     selectedProject: state.selectedProject,
     selectedProjectId: state.selectedProjectId,
     loading: state.loading.selectedProject,
@@ -415,7 +429,7 @@ export const useSelectedProject = () => {
 
 // Helper hook for portfolio metrics
 export const usePortfolioMetrics = () => {
-  return useTrackingStore(state => ({
+  return useTrackingStore((state) => ({
     summary: state.portfolioSummary,
     totalProjects: state.projects.length,
     activeAlerts: state.getActiveAlertsCount(),
@@ -428,7 +442,7 @@ export const usePortfolioMetrics = () => {
 
 // Helper hook for filtered projects
 export const useFilteredProjects = () => {
-  return useTrackingStore(state => ({
+  return useTrackingStore((state) => ({
     projects: state.getFilteredProjects(),
     filters: state.filters,
     loading: state.loading.projects,

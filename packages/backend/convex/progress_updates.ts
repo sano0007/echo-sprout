@@ -1,10 +1,13 @@
-import { mutation, query, internalMutation, internalQuery } from './_generated/server';
+import {
+  mutation,
+  query,
+  internalMutation,
+  internalQuery,
+} from './_generated/server';
 import { v } from 'convex/values';
 import { UserService } from '../services/user-service';
 import { CloudinaryService } from '../services/cloudinary-service';
-import type {
-  ProgressValidationResult,
-} from '../types/monitoring-types';
+import type { ProgressValidationResult } from '../types/monitoring-types';
 
 export const submitProgressUpdate = mutation({
   args: {
@@ -774,4 +777,3 @@ export const getUpcomingMilestones = internalQuery({
       .take(3);
   },
 });
-

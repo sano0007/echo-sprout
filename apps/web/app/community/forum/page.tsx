@@ -280,7 +280,7 @@ export default function CommunityForum() {
         // Backend update via Convex
         if (typeof editingPostId === 'string') {
           try {
-                await updateTopicMutation({
+            await updateTopicMutation({
               id: editingPostId,
               title: title.trim(),
               category,

@@ -24,7 +24,7 @@ import {
   XCircle,
   X,
 } from 'lucide-react';
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface ProgressSubmission {
   id: string;

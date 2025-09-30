@@ -27,7 +27,8 @@ export default function LearnAnalytics({ embed = false }: { embed?: boolean }) {
   const [viewsToIso, setViewsToIso] = useState<string>(todayIso);
   const [topicsFromIso, setTopicsFromIso] = useState<string>(defaultFromIso);
   const [topicsToIso, setTopicsToIso] = useState<string>(todayIso);
-  const [viewsEngFromIso, setViewsEngFromIso] = useState<string>(defaultFromIso);
+  const [viewsEngFromIso, setViewsEngFromIso] =
+    useState<string>(defaultFromIso);
   const [viewsEngToIso, setViewsEngToIso] = useState<string>(todayIso);
 
   const viewsRange = useQuery(api.learn.viewsByDateRange, {
@@ -60,7 +61,11 @@ export default function LearnAnalytics({ embed = false }: { embed?: boolean }) {
         style.visibility = 'hidden';
       });
 
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'pt',
+        format: 'a4',
+      });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 24;
@@ -331,10 +336,14 @@ export default function LearnAnalytics({ embed = false }: { embed?: boolean }) {
                     <div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div>
                   </li>
                 </>
-              ) : Array.isArray(topByViews) && (topByViews as any[]).length > 0 ? (
+              ) : Array.isArray(topByViews) &&
+                (topByViews as any[]).length > 0 ? (
                 (topByViews as any[]).slice(0, 5).map((r: any) => (
                   <li key={r.id} className="py-2">
-                    <div className="text-sm font-medium text-gray-900 truncate" data-report-untruncate>
+                    <div
+                      className="text-sm font-medium text-gray-900 truncate"
+                      data-report-untruncate
+                    >
                       {r.title}
                     </div>
                     <div className="text-xs text-gray-500">{r.views} views</div>
@@ -363,10 +372,14 @@ export default function LearnAnalytics({ embed = false }: { embed?: boolean }) {
                     <div className="h-3 bg-gray-100 rounded w-1/3 animate-pulse"></div>
                   </li>
                 </>
-              ) : Array.isArray(topByEngagement) && (topByEngagement as any[]).length > 0 ? (
+              ) : Array.isArray(topByEngagement) &&
+                (topByEngagement as any[]).length > 0 ? (
                 (topByEngagement as any[]).slice(0, 5).map((r: any) => (
                   <li key={r.id} className="py-2">
-                    <div className="text-sm font-medium text-gray-900 truncate" data-report-untruncate>
+                    <div
+                      className="text-sm font-medium text-gray-900 truncate"
+                      data-report-untruncate
+                    >
                       {r.title}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -395,7 +408,10 @@ export default function LearnAnalytics({ embed = false }: { embed?: boolean }) {
                   return filtered.length ? (
                     filtered.slice(0, 5).map((t: any) => (
                       <li key={t.id as any} className="py-2">
-                        <div className="text-sm font-medium text-gray-900 truncate" data-report-untruncate>
+                        <div
+                          className="text-sm font-medium text-gray-900 truncate"
+                          data-report-untruncate
+                        >
                           {t.title}
                         </div>
                         <div className="text-xs text-gray-500">
@@ -430,7 +446,10 @@ export default function LearnAnalytics({ embed = false }: { embed?: boolean }) {
                 (contributors as any[]).length ? (
                   (contributors as any[]).slice(0, 5).map((c: any) => (
                     <li key={c.userId} className="py-2">
-                      <div className="text-sm font-medium text-gray-900 truncate" data-report-untruncate>
+                      <div
+                        className="text-sm font-medium text-gray-900 truncate"
+                        data-report-untruncate
+                      >
                         {c.name}
                       </div>
                       <div className="text-xs text-gray-500">

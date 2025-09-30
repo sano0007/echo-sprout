@@ -160,9 +160,11 @@ export default function AdminProjectManagement() {
   };
 
   const filteredProjects = projects.filter((project) => {
-    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.creator.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+    const matchesSearch =
+      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.creator.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'all' || project.status === statusFilter;
     const matchesType = typeFilter === 'all' || project.type === typeFilter;
 
     return matchesSearch && matchesStatus && matchesType;
@@ -174,7 +176,9 @@ export default function AdminProjectManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-semibold">Project Management</h3>
-          <p className="text-sm text-gray-600">Monitor and manage all platform projects</p>
+          <p className="text-sm text-gray-600">
+            Monitor and manage all platform projects
+          </p>
         </div>
         <div className="flex gap-3">
           <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2">
@@ -287,32 +291,45 @@ export default function AdminProjectManagement() {
                           ID: #{project.id} • {project.location}
                         </div>
                         <div className="text-xs text-gray-500">
-                          Submitted: {new Date(project.submissionDate).toLocaleDateString()}
+                          Submitted:{' '}
+                          {new Date(
+                            project.submissionDate
+                          ).toLocaleDateString()}
                         </div>
                       </div>
                       {project.alerts > 0 && (
                         <div className="flex items-center">
                           <AlertTriangle className="h-4 w-4 text-orange-500" />
-                          <span className="text-xs text-orange-600 ml-1">{project.alerts}</span>
+                          <span className="text-xs text-orange-600 ml-1">
+                            {project.alerts}
+                          </span>
                         </div>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{project.creator}</div>
-                    <div className="text-xs text-gray-500">{project.creatorEmail}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {project.creator}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {project.creatorEmail}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">{project.type}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(project.status)}`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(project.status)}`}
+                    >
                       {project.status}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
-                      <div className="text-sm font-medium text-gray-900">{project.progress}%</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {project.progress}%
+                      </div>
                       <div className="w-16 bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-blue-600 h-2 rounded-full"
@@ -321,13 +338,18 @@ export default function AdminProjectManagement() {
                       </div>
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Last update: {new Date(project.lastUpdate).toLocaleDateString()}
+                      Last update:{' '}
+                      {new Date(project.lastUpdate).toLocaleDateString()}
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">
-                      <div className="font-medium">{project.creditsIssued} issued</div>
-                      <div className="text-xs text-gray-500">{project.creditsRemaining} remaining</div>
+                      <div className="font-medium">
+                        {project.creditsIssued} issued
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {project.creditsRemaining} remaining
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -336,14 +358,26 @@ export default function AdminProjectManagement() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className={`flex items-center space-x-1 ${getVerificationColor(project.verificationStatus)}`}>
-                      {project.verificationStatus === 'Verified' && <CheckCircle className="h-4 w-4" />}
-                      {project.verificationStatus === 'Pending' && <Clock className="h-4 w-4" />}
-                      {project.verificationStatus === 'Failed' && <XCircle className="h-4 w-4" />}
-                      <span className="text-sm">{project.verificationStatus}</span>
+                    <div
+                      className={`flex items-center space-x-1 ${getVerificationColor(project.verificationStatus)}`}
+                    >
+                      {project.verificationStatus === 'Verified' && (
+                        <CheckCircle className="h-4 w-4" />
+                      )}
+                      {project.verificationStatus === 'Pending' && (
+                        <Clock className="h-4 w-4" />
+                      )}
+                      {project.verificationStatus === 'Failed' && (
+                        <XCircle className="h-4 w-4" />
+                      )}
+                      <span className="text-sm">
+                        {project.verificationStatus}
+                      </span>
                     </div>
                     {project.verifier && (
-                      <div className="text-xs text-gray-500">{project.verifier}</div>
+                      <div className="text-xs text-gray-500">
+                        {project.verifier}
+                      </div>
                     )}
                   </td>
                   <td className="px-6 py-4">
@@ -376,7 +410,9 @@ export default function AdminProjectManagement() {
 
         {filteredProjects.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-gray-500">No projects found matching your criteria</div>
+            <div className="text-gray-500">
+              No projects found matching your criteria
+            </div>
           </div>
         )}
       </div>
@@ -384,18 +420,20 @@ export default function AdminProjectManagement() {
       {/* Project Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">{projects.length}</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {projects.length}
+          </div>
           <div className="text-sm text-blue-800">Total Projects</div>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-green-600">
-            {projects.filter(p => p.status === 'Active').length}
+            {projects.filter((p) => p.status === 'Active').length}
           </div>
           <div className="text-sm text-green-800">Active Projects</div>
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg">
           <div className="text-2xl font-bold text-yellow-600">
-            {projects.filter(p => p.status === 'Under Review').length}
+            {projects.filter((p) => p.status === 'Under Review').length}
           </div>
           <div className="text-sm text-yellow-800">Under Review</div>
         </div>

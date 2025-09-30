@@ -19,7 +19,7 @@ import {
   Server,
   Users,
 } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface SystemMetric {
   id: string;

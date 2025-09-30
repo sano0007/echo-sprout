@@ -1,5 +1,6 @@
 # EcoSprout Testing Strategy & Implementation Plan
-*Comprehensive Testing Framework for React/Next.js 15 Carbon Credit Platform*
+
+_Comprehensive Testing Framework for React/Next.js 15 Carbon Credit Platform_
 
 ---
 
@@ -25,24 +26,28 @@
 ### Core Principles
 
 #### 1. **Test Confidence Over Coverage**
+
 - Focus on testing critical user flows and business logic
 - Prioritize integration tests over isolated unit tests
 - Test behavior, not implementation details
 - Aim for 80% meaningful coverage rather than 100% superficial coverage
 
 #### 2. **User-Centric Testing**
+
 - Test from the user's perspective
 - Use accessible queries (roles, labels, text content)
 - Test real user scenarios and edge cases
 - Ensure tests reflect actual usage patterns
 
 #### 3. **Fast Feedback Loop**
+
 - Unit tests should run in < 10 seconds
 - Integration tests should complete in < 2 minutes
 - E2E tests should provide feedback within 10 minutes
 - Failed tests should provide clear, actionable error messages
 
 #### 4. **Maintainable Test Suite**
+
 - Tests should be easy to understand and modify
 - Minimize test coupling and duplication
 - Use descriptive test names and clear assertions
@@ -71,6 +76,7 @@ graph TD
 ### Test Categories by Dashboard
 
 #### 1. **Project Creator Dashboard**
+
 ```typescript
 // High Priority Tests (Must Have)
 - Project creation wizard flow
@@ -92,6 +98,7 @@ graph TD
 ```
 
 #### 2. **Credit Buyer Dashboard**
+
 ```typescript
 // High Priority Tests (Must Have)
 - Credit purchase flow
@@ -113,6 +120,7 @@ graph TD
 ```
 
 #### 3. **Verifier Dashboard**
+
 ```typescript
 // High Priority Tests (Must Have)
 - Document review workflow
@@ -134,6 +142,7 @@ graph TD
 ```
 
 #### 4. **Admin Dashboard**
+
 ```typescript
 // High Priority Tests (Must Have)
 - User management operations
@@ -161,6 +170,7 @@ graph TD
 ### Tool Selection
 
 #### 1. **Testing Framework**
+
 ```json
 {
   "testFramework": "Vitest",
@@ -178,18 +188,17 @@ graph TD
 ```
 
 #### 2. **React Testing Library**
+
 ```json
 {
   "library": "@testing-library/react",
   "rationale": "User-centric testing, good practices enforcement",
-  "extensions": [
-    "@testing-library/jest-dom",
-    "@testing-library/user-event"
-  ]
+  "extensions": ["@testing-library/jest-dom", "@testing-library/user-event"]
 }
 ```
 
 #### 3. **E2E Testing**
+
 ```json
 {
   "tool": "Playwright",
@@ -203,6 +212,7 @@ graph TD
 ```
 
 #### 4. **Visual Testing**
+
 ```json
 {
   "tool": "Chromatic (Storybook)",
@@ -214,6 +224,7 @@ graph TD
 ### Test Environment Setup
 
 #### 1. **Vitest Configuration**
+
 ```typescript
 // vitest.config.ts
 import { defineConfig } from 'vitest/config';
@@ -236,27 +247,28 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.stories.tsx',
         '**/types/',
-        'src/components/ui/' // shadcn components
+        'src/components/ui/', // shadcn components
       ],
       thresholds: {
         global: {
           branches: 70,
           functions: 70,
           lines: 70,
-          statements: 70
-        }
-      }
-    }
+          statements: 70,
+        },
+      },
+    },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 });
 ```
 
 #### 2. **Test Setup File**
+
 ```typescript
 // src/test/setup.ts
 import '@testing-library/jest-dom';
@@ -317,6 +329,7 @@ Object.defineProperty(window, 'matchMedia', {
 ### Component Testing Patterns
 
 #### 1. **Basic Component Testing**
+
 ```typescript
 // components/ui/Button.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -366,6 +379,7 @@ describe('Button Component', () => {
 ```
 
 #### 2. **Complex Component Testing**
+
 ```typescript
 // components/dashboard/MetricCard.test.tsx
 import { render, screen } from '@testing-library/react';
@@ -433,6 +447,7 @@ describe('MetricCard Component', () => {
 ### Custom Hook Testing
 
 #### 1. **Data Fetching Hooks**
+
 ```typescript
 // hooks/api/useProjects.test.ts
 import { renderHook, waitFor } from '@testing-library/react';
@@ -532,6 +547,7 @@ describe('useProjects Hook', () => {
 ```
 
 #### 2. **State Management Hooks**
+
 ```typescript
 // hooks/ui/useLocalStorage.test.ts
 import { renderHook, act } from '@testing-library/react';
@@ -551,12 +567,12 @@ const localStorageMock = (() => {
     }),
     clear: vi.fn(() => {
       store = {};
-    })
+    }),
   };
 })();
 
 Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock
+  value: localStorageMock,
 });
 
 describe('useLocalStorage Hook', () => {
@@ -566,9 +582,7 @@ describe('useLocalStorage Hook', () => {
   });
 
   it('returns initial value when localStorage is empty', () => {
-    const { result } = renderHook(() =>
-      useLocalStorage('test-key', 'initial')
-    );
+    const { result } = renderHook(() => useLocalStorage('test-key', 'initial'));
 
     expect(result.current[0]).toBe('initial');
     expect(localStorageMock.getItem).toHaveBeenCalledWith('test-key');
@@ -577,17 +591,13 @@ describe('useLocalStorage Hook', () => {
   it('returns stored value from localStorage', () => {
     localStorageMock.setItem('test-key', '"stored"');
 
-    const { result } = renderHook(() =>
-      useLocalStorage('test-key', 'initial')
-    );
+    const { result } = renderHook(() => useLocalStorage('test-key', 'initial'));
 
     expect(result.current[0]).toBe('stored');
   });
 
   it('updates localStorage when value changes', () => {
-    const { result } = renderHook(() =>
-      useLocalStorage('test-key', 'initial')
-    );
+    const { result } = renderHook(() => useLocalStorage('test-key', 'initial'));
 
     act(() => {
       result.current[1]('updated');
@@ -603,9 +613,7 @@ describe('useLocalStorage Hook', () => {
   it('handles complex objects', () => {
     const complexObject = { name: 'Test', values: [1, 2, 3] };
 
-    const { result } = renderHook(() =>
-      useLocalStorage('test-key', {})
-    );
+    const { result } = renderHook(() => useLocalStorage('test-key', {}));
 
     act(() => {
       result.current[1](complexObject);
@@ -624,9 +632,7 @@ describe('useLocalStorage Hook', () => {
       throw new Error('Storage quota exceeded');
     });
 
-    const { result } = renderHook(() =>
-      useLocalStorage('test-key', 'initial')
-    );
+    const { result } = renderHook(() => useLocalStorage('test-key', 'initial'));
 
     act(() => {
       result.current[1]('new-value');
@@ -646,6 +652,7 @@ describe('useLocalStorage Hook', () => {
 ### Utility Function Testing
 
 #### 1. **Pure Function Testing**
+
 ```typescript
 // lib/formatters.test.ts
 import {
@@ -653,7 +660,7 @@ import {
   formatNumber,
   formatPercentage,
   formatDate,
-  formatRelativeTime
+  formatRelativeTime,
 } from './formatters';
 
 describe('Formatter Utilities', () => {
@@ -759,6 +766,7 @@ describe('Formatter Utilities', () => {
 ### Component Integration Testing
 
 #### 1. **Form Integration Testing**
+
 ```typescript
 // components/forms/ProjectForm.test.tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -914,6 +922,7 @@ describe('ProjectForm Integration', () => {
 ```
 
 #### 2. **Dashboard Integration Testing**
+
 ```typescript
 // pages/creator/Dashboard.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
@@ -1060,6 +1069,7 @@ describe('Creator Dashboard Integration', () => {
 ### Playwright Configuration
 
 #### 1. **Playwright Setup**
+
 ```typescript
 // playwright.config.ts
 import { defineConfig, devices } from '@playwright/test';
@@ -1070,48 +1080,46 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [
-    ['html'],
-    ['junit', { outputFile: 'test-results/junit.xml' }]
-  ],
+  reporter: [['html'], ['junit', { outputFile: 'test-results/junit.xml' }]],
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure'
+    screenshot: 'only-on-failure',
   },
 
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
+      use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] }
+      use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] }
+      use: { ...devices['Desktop Safari'] },
     },
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] }
+      use: { ...devices['Pixel 5'] },
     },
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] }
-    }
+      use: { ...devices['iPhone 12'] },
+    },
   ],
 
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI
-  }
+    reuseExistingServer: !process.env.CI,
+  },
 });
 ```
 
 #### 2. **E2E Test Utilities**
+
 ```typescript
 // e2e/utils/test-helpers.ts
 import { Page, expect } from '@playwright/test';
@@ -1119,7 +1127,10 @@ import { Page, expect } from '@playwright/test';
 export class TestHelpers {
   constructor(private page: Page) {}
 
-  async login(email: string = 'creator@example.com', password: string = 'password') {
+  async login(
+    email: string = 'creator@example.com',
+    password: string = 'password'
+  ) {
     await this.page.goto('/login');
     await this.page.fill('[data-testid="email"]', email);
     await this.page.fill('[data-testid="password"]', password);
@@ -1140,22 +1151,33 @@ export class TestHelpers {
     price: string;
   }) {
     await this.page.fill('[data-testid="project-name"]', projectData.name);
-    await this.page.fill('[data-testid="project-description"]', projectData.description);
-    await this.page.selectOption('[data-testid="project-type"]', projectData.type);
-    await this.page.fill('[data-testid="estimated-credits"]', projectData.credits);
+    await this.page.fill(
+      '[data-testid="project-description"]',
+      projectData.description
+    );
+    await this.page.selectOption(
+      '[data-testid="project-type"]',
+      projectData.type
+    );
+    await this.page.fill(
+      '[data-testid="estimated-credits"]',
+      projectData.credits
+    );
     await this.page.fill('[data-testid="price-per-credit"]', projectData.price);
   }
 
   async expectToast(message: string) {
-    await expect(this.page.locator('[data-testid="toast"]')).toContainText(message);
+    await expect(this.page.locator('[data-testid="toast"]')).toContainText(
+      message
+    );
   }
 
   async mockApiResponse(endpoint: string, response: any) {
-    await this.page.route(`**/api${endpoint}`, route => {
+    await this.page.route(`**/api${endpoint}`, (route) => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(response)
+        body: JSON.stringify(response),
       });
     });
   }
@@ -1165,6 +1187,7 @@ export class TestHelpers {
 ### Critical User Flow Tests
 
 #### 1. **Project Creation Flow**
+
 ```typescript
 // e2e/project-creation.spec.ts
 import { test, expect } from '@playwright/test';
@@ -1185,10 +1208,11 @@ test.describe('Project Creation Flow', () => {
     // Step 1: Basic Information
     await helpers.fillProjectForm({
       name: 'Test Forest Project',
-      description: 'A comprehensive reforestation project that will plant native trees to offset carbon emissions and restore biodiversity in the region.',
+      description:
+        'A comprehensive reforestation project that will plant native trees to offset carbon emissions and restore biodiversity in the region.',
       type: 'reforestation',
       credits: '1000',
-      price: '25.50'
+      price: '25.50',
     });
 
     await page.click('[data-testid="next-button"]');
@@ -1223,11 +1247,13 @@ test.describe('Project Creation Flow', () => {
     await page.click('[data-testid="next-button"]');
 
     // Step 5: Review & Submit
-    await expect(page.locator('[data-testid="review-project-name"]'))
-      .toContainText('Test Forest Project');
+    await expect(
+      page.locator('[data-testid="review-project-name"]')
+    ).toContainText('Test Forest Project');
 
-    await expect(page.locator('[data-testid="review-credits"]'))
-      .toContainText('1,000');
+    await expect(page.locator('[data-testid="review-credits"]')).toContainText(
+      '1,000'
+    );
 
     await page.click('[data-testid="submit-project-button"]');
 
@@ -1236,8 +1262,9 @@ test.describe('Project Creation Flow', () => {
     await page.waitForURL('**/projects');
 
     // Verify project appears in list
-    await expect(page.locator('[data-testid="project-list"]'))
-      .toContainText('Test Forest Project');
+    await expect(page.locator('[data-testid="project-list"]')).toContainText(
+      'Test Forest Project'
+    );
   });
 
   test('validates required fields', async ({ page }) => {
@@ -1250,11 +1277,13 @@ test.describe('Project Creation Flow', () => {
     await page.click('[data-testid="next-button"]');
 
     // Check for validation errors
-    await expect(page.locator('[data-testid="error-project-name"]'))
-      .toContainText('Project name is required');
+    await expect(
+      page.locator('[data-testid="error-project-name"]')
+    ).toContainText('Project name is required');
 
-    await expect(page.locator('[data-testid="error-description"]'))
-      .toContainText('Description must be at least 50 characters');
+    await expect(
+      page.locator('[data-testid="error-description"]')
+    ).toContainText('Description must be at least 50 characters');
   });
 
   test('saves draft automatically', async ({ page }) => {
@@ -1273,16 +1302,17 @@ test.describe('Project Creation Flow', () => {
     await page.goto('/creator/projects/new');
 
     // Verify draft is restored
-    await expect(page.locator('[data-testid="project-name"]'))
-      .toHaveValue('Draft Project');
+    await expect(page.locator('[data-testid="project-name"]')).toHaveValue(
+      'Draft Project'
+    );
 
-    await expect(page.locator('[data-testid="draft-indicator"]'))
-      .toBeVisible();
+    await expect(page.locator('[data-testid="draft-indicator"]')).toBeVisible();
   });
 });
 ```
 
 #### 2. **Credit Purchase Flow**
+
 ```typescript
 // e2e/credit-purchase.spec.ts
 import { test, expect } from '@playwright/test';
@@ -1296,7 +1326,7 @@ test.describe('Credit Purchase Flow', () => {
     await helpers.mockApiResponse('/payments/process', {
       success: true,
       transactionId: 'txn_123',
-      certificateUrl: '/certificates/cert_123.pdf'
+      certificateUrl: '/certificates/cert_123.pdf',
     });
 
     // Login as credit buyer
@@ -1309,7 +1339,9 @@ test.describe('Credit Purchase Flow', () => {
 
     // Verify project details
     await expect(page.locator('[data-testid="project-title"]')).toBeVisible();
-    await expect(page.locator('[data-testid="credits-available"]')).toBeVisible();
+    await expect(
+      page.locator('[data-testid="credits-available"]')
+    ).toBeVisible();
 
     // Click purchase button
     await page.click('[data-testid="purchase-button"]');
@@ -1321,8 +1353,9 @@ test.describe('Credit Purchase Flow', () => {
     await page.fill('[data-testid="credit-quantity"]', '100');
 
     // Verify total calculation
-    await expect(page.locator('[data-testid="total-cost"]'))
-      .toContainText('$2,550.00'); // 100 * $25.50
+    await expect(page.locator('[data-testid="total-cost"]')).toContainText(
+      '$2,550.00'
+    ); // 100 * $25.50
 
     // Enter payment information
     await page.fill('[data-testid="card-number"]', '4242424242424242');
@@ -1346,8 +1379,9 @@ test.describe('Credit Purchase Flow', () => {
     await page.waitForURL('**/buyer/portfolio');
 
     // Verify purchase appears in portfolio
-    await expect(page.locator('[data-testid="recent-purchase"]'))
-      .toContainText('100 credits');
+    await expect(page.locator('[data-testid="recent-purchase"]')).toContainText(
+      '100 credits'
+    );
   });
 
   test('validates payment form', async ({ page }) => {
@@ -1365,11 +1399,13 @@ test.describe('Credit Purchase Flow', () => {
     await page.click('[data-testid="complete-purchase-button"]');
 
     // Check for validation errors
-    await expect(page.locator('[data-testid="error-card-number"]'))
-      .toContainText('Card number is required');
+    await expect(
+      page.locator('[data-testid="error-card-number"]')
+    ).toContainText('Card number is required');
 
-    await expect(page.locator('[data-testid="error-card-expiry"]'))
-      .toContainText('Expiry date is required');
+    await expect(
+      page.locator('[data-testid="error-card-expiry"]')
+    ).toContainText('Expiry date is required');
   });
 
   test('handles payment failures', async ({ page }) => {
@@ -1378,7 +1414,7 @@ test.describe('Credit Purchase Flow', () => {
     // Mock payment failure
     await helpers.mockApiResponse('/payments/process', {
       success: false,
-      error: 'Payment declined by issuer'
+      error: 'Payment declined by issuer',
     });
 
     await helpers.login('buyer@example.com');
@@ -1396,8 +1432,9 @@ test.describe('Credit Purchase Flow', () => {
     await page.click('[data-testid="complete-purchase-button"]');
 
     // Verify error handling
-    await expect(page.locator('[data-testid="payment-error"]'))
-      .toContainText('Payment declined by issuer');
+    await expect(page.locator('[data-testid="payment-error"]')).toContainText(
+      'Payment declined by issuer'
+    );
 
     // Verify modal stays open for retry
     await expect(page.locator('[data-testid="purchase-modal"]')).toBeVisible();
@@ -1412,6 +1449,7 @@ test.describe('Credit Purchase Flow', () => {
 ### Core Web Vitals Testing
 
 #### 1. **Lighthouse CI Configuration**
+
 ```javascript
 // lighthouserc.js
 module.exports = {
@@ -1421,9 +1459,9 @@ module.exports = {
         'http://localhost:3000/',
         'http://localhost:3000/creator/dashboard',
         'http://localhost:3000/buyer/marketplace',
-        'http://localhost:3000/verifier/queue'
+        'http://localhost:3000/verifier/queue',
       ],
-      numberOfRuns: 3
+      numberOfRuns: 3,
     },
     assert: {
       assertions: {
@@ -1434,18 +1472,19 @@ module.exports = {
         'first-contentful-paint': ['warn', { maxNumericValue: 2000 }],
         'largest-contentful-paint': ['warn', { maxNumericValue: 3000 }],
         'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
-        'interactive': ['warn', { maxNumericValue: 4000 }]
-      }
+        interactive: ['warn', { maxNumericValue: 4000 }],
+      },
     },
     upload: {
       target: 'filesystem',
-      outputDir: './lighthouse-results'
-    }
-  }
+      outputDir: './lighthouse-results',
+    },
+  },
 };
 ```
 
 #### 2. **Performance Monitoring Tests**
+
 ```typescript
 // e2e/performance.spec.ts
 import { test, expect } from '@playwright/test';
@@ -1487,24 +1526,24 @@ test.describe('Performance Tests', () => {
     // Assert performance thresholds
     expect(metrics.fcp).toBeLessThan(2000); // First Contentful Paint < 2s
     expect(metrics.lcp).toBeLessThan(3000); // Largest Contentful Paint < 3s
-    expect(metrics.cls).toBeLessThan(0.1);  // Cumulative Layout Shift < 0.1
+    expect(metrics.cls).toBeLessThan(0.1); // Cumulative Layout Shift < 0.1
   });
 
   test('large project list renders efficiently', async ({ page }) => {
     // Mock large dataset
-    await page.route('**/api/projects', route => {
+    await page.route('**/api/projects', (route) => {
       const projects = Array.from({ length: 1000 }, (_, i) => ({
         id: `project-${i}`,
         name: `Project ${i}`,
         status: 'active',
         credits: 1000,
-        price: 25.50
+        price: 25.5,
       }));
 
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(projects)
+        body: JSON.stringify(projects),
       });
     });
 
@@ -1518,18 +1557,20 @@ test.describe('Performance Tests', () => {
     expect(loadTime).toBeLessThan(3000); // Should load within 3 seconds
 
     // Verify only visible items are rendered (virtual scrolling)
-    const renderedItems = await page.locator('[data-testid="project-card"]').count();
+    const renderedItems = await page
+      .locator('[data-testid="project-card"]')
+      .count();
     expect(renderedItems).toBeLessThan(50); // Only visible items rendered
   });
 
   test('bundle size is within limits', async ({ page }) => {
     // Collect network requests
     const requests: any[] = [];
-    page.on('request', request => {
+    page.on('request', (request) => {
       if (request.url().includes('.js') || request.url().includes('.css')) {
         requests.push({
           url: request.url(),
-          resourceType: request.resourceType()
+          resourceType: request.resourceType(),
         });
       }
     });
@@ -1539,7 +1580,7 @@ test.describe('Performance Tests', () => {
 
     // Calculate total bundle size
     const responses = await Promise.all(
-      requests.map(req => page.request.get(req.url))
+      requests.map((req) => page.request.get(req.url))
     );
 
     let totalSize = 0;
@@ -1574,6 +1615,7 @@ test.describe('Performance Tests', () => {
 ### 8-Week Testing Implementation Plan
 
 #### **Week 1-2: Foundation Setup**
+
 - [ ] Configure testing tools (Vitest, RTL, Playwright)
 - [ ] Set up test environment and utilities
 - [ ] Create testing guidelines and standards
@@ -1581,6 +1623,7 @@ test.describe('Performance Tests', () => {
 - [ ] Set up MSW for API mocking
 
 #### **Week 3-4: Unit Testing**
+
 - [ ] Complete all utility function tests
 - [ ] Implement custom hook tests
 - [ ] Create component unit tests for dashboard components
@@ -1588,6 +1631,7 @@ test.describe('Performance Tests', () => {
 - [ ] Achieve 70% unit test coverage
 
 #### **Week 5-6: Integration Testing**
+
 - [ ] Implement form integration tests
 - [ ] Create API integration tests
 - [ ] Set up component integration tests
@@ -1595,6 +1639,7 @@ test.describe('Performance Tests', () => {
 - [ ] Test error boundary and error handling
 
 #### **Week 7: E2E Testing**
+
 - [ ] Set up Playwright configuration
 - [ ] Implement critical user flow tests
 - [ ] Create authentication flow tests
@@ -1602,6 +1647,7 @@ test.describe('Performance Tests', () => {
 - [ ] Set up visual regression testing
 
 #### **Week 8: Performance & Optimization**
+
 - [ ] Implement performance tests
 - [ ] Set up Lighthouse CI
 - [ ] Create accessibility tests
@@ -1611,12 +1657,14 @@ test.describe('Performance Tests', () => {
 ### Success Metrics
 
 #### **Coverage Targets**
+
 - Unit Tests: 70% line coverage
 - Integration Tests: 90% critical path coverage
 - E2E Tests: 100% critical user flow coverage
 - Performance Tests: All Core Web Vitals within budget
 
 #### **Quality Metrics**
+
 - Test execution time: < 10 minutes for full suite
 - Flaky test rate: < 2%
 - Test maintainability score: > 8/10
