@@ -183,8 +183,8 @@ export const uploadProjectDocument = mutation({
       fileSize: fileSize,
       fileSizeFormatted: fileSizeFormatted,
       media: {
-        cloudinary_public_id: args.storageId, // Using storageId as public_id
-        cloudinary_url: fileUrl,
+        storageId: args.storageId,
+        fileUrl: fileUrl,
       },
       documentType: 'other', // Default type, can be updated later
       uploadedBy: user._id,

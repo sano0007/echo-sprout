@@ -270,8 +270,8 @@ exports.default = (0, server_1.defineSchema)({
         fileSize: values_1.v.number(),
         fileSizeFormatted: values_1.v.string(), // e.g. "2.5 MB"
         media: values_1.v.object({
-            cloudinary_public_id: values_1.v.string(),
-            cloudinary_url: values_1.v.string(),
+            storageId: values_1.v.string(),
+            fileUrl: values_1.v.string(),
         }),
         thumbnailUrl: values_1.v.optional(values_1.v.string()),
         documentType: values_1.v.union(values_1.v.literal('project_plan'), values_1.v.literal('environmental_assessment'), values_1.v.literal('permits'), values_1.v.literal('photos'), values_1.v.literal('verification_report'), values_1.v.literal('identity_doc'), values_1.v.literal('technical_specs'), values_1.v.literal('budget_breakdown'), values_1.v.literal('timeline'), values_1.v.literal('other')),
@@ -301,8 +301,8 @@ exports.default = (0, server_1.defineSchema)({
             name: values_1.v.string(),
         })),
         photos: values_1.v.array(values_1.v.object({
-            cloudinary_public_id: values_1.v.string(),
-            cloudinary_url: values_1.v.string(),
+            storageId: values_1.v.string(),
+            fileUrl: values_1.v.string(),
         })),
         reportingDate: values_1.v.float64(),
         // Impact tracking
@@ -654,8 +654,7 @@ exports.default = (0, server_1.defineSchema)({
             weekly: values_1.v.boolean(),
         }),
         lastUpdated: values_1.v.number(),
-    })
-        .index('by_user', ['userId']),
+    }).index('by_user', ['userId']),
     // ============= ANALYTICS & REPORTING =============
     analytics: (0, server_1.defineTable)({
         metric: values_1.v.string(), // "daily_transactions", "project_completions", etc. todo: enum of metrics

@@ -369,8 +369,8 @@ export default defineSchema({
     fileSize: v.number(),
     fileSizeFormatted: v.string(), // e.g. "2.5 MB"
     media: v.object({
-      cloudinary_public_id: v.string(),
-      cloudinary_url: v.string(),
+      storageId: v.string(),
+      fileUrl: v.string(),
     }),
     thumbnailUrl: v.optional(v.string()),
     documentType: v.union(
@@ -421,8 +421,8 @@ export default defineSchema({
     ),
     photos: v.array(
       v.object({
-        cloudinary_public_id: v.string(),
-        cloudinary_url: v.string(),
+        storageId: v.string(),
+        fileUrl: v.string(),
       })
     ),
     reportingDate: v.float64(),
@@ -863,8 +863,7 @@ export default defineSchema({
       weekly: v.boolean(),
     }),
     lastUpdated: v.number(),
-  })
-    .index('by_user', ['userId']),
+  }).index('by_user', ['userId']),
 
   // ============= ANALYTICS & REPORTING =============
   analytics: defineTable({

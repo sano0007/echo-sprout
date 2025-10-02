@@ -63,8 +63,8 @@ export interface ProgressUpdateData {
 
   // Photo evidence
   photos: {
-    cloudinary_public_id: string;
-    cloudinary_url: string;
+    storageId: string;
+    fileUrl: string;
   }[];
 
   // Impact metrics (project-specific)
