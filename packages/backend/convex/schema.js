@@ -90,6 +90,16 @@ exports.default = (0, server_1.defineSchema)({
         // Progress tracking
         progressPercentage: values_1.v.optional(values_1.v.number()), // 0-100
         lastProgressUpdate: values_1.v.optional(values_1.v.number()), // timestamp
+        // Legacy fields for backward compatibility
+        projectImages: values_1.v.optional(values_1.v.array(values_1.v.any())), // Legacy field for old projects
+        featuredImages: values_1.v.optional(values_1.v.array(values_1.v.object({
+            storageId: values_1.v.string(),
+            fileUrl: values_1.v.string(),
+        }))),
+        siteImages: values_1.v.optional(values_1.v.array(values_1.v.object({
+            storageId: values_1.v.string(),
+            fileUrl: values_1.v.string(),
+        }))),
     })
         .index('by_creator', ['creatorId'])
         .index('by_status', ['status'])
@@ -262,7 +272,7 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_unread', ['recipientId', 'isRead']),
     // ============= DOCUMENT MANAGEMENT =============
     documents: (0, server_1.defineTable)({
-        entityId: values_1.v.string(), // ID of the associated entity (project, user profile, etc.)
+        entityId: values_1.v.optional(values_1.v.string()), // ID of the associated entity (project, user profile, etc.) - optional for legacy compatibility
         entityType: values_1.v.union(values_1.v.literal('project'), values_1.v.literal('verification'), values_1.v.literal('user_profile'), values_1.v.literal('educational_content')),
         fileName: values_1.v.string(),
         originalName: values_1.v.string(),
@@ -270,11 +280,18 @@ exports.default = (0, server_1.defineSchema)({
         fileSize: values_1.v.number(),
         fileSizeFormatted: values_1.v.string(), // e.g. "2.5 MB"
         media: values_1.v.object({
-            storageId: values_1.v.string(),
-            fileUrl: values_1.v.string(),
+            storageId: values_1.v.optional(values_1.v.string()),
+            fileUrl: values_1.v.optional(values_1.v.string()),
+            cloudinary_public_id: values_1.v.optional(values_1.v.string()), // Legacy field
+            cloudinary_url: values_1.v.optional(values_1.v.string()), // Legacy field
         }),
         thumbnailUrl: values_1.v.optional(values_1.v.string()),
-        documentType: values_1.v.union(values_1.v.literal('project_plan'), values_1.v.literal('environmental_assessment'), values_1.v.literal('permits'), values_1.v.literal('photos'), values_1.v.literal('verification_report'), values_1.v.literal('identity_doc'), values_1.v.literal('technical_specs'), values_1.v.literal('budget_breakdown'), values_1.v.literal('timeline'), values_1.v.literal('other')),
+        description: values_1.v.optional(values_1.v.string()), // Add description field
+        documentType: values_1.v.union(values_1.v.literal('project_proposal'), values_1.v.literal('environmental_impact'), values_1.v.literal('site_photographs'), values_1.v.literal('legal_permits'), values_1.v.literal('featured_images'), values_1.v.literal('site_images'), values_1.v.literal('project_plan'), // Legacy
+        values_1.v.literal('environmental_assessment'), // Legacy
+        values_1.v.literal('permits'), // Legacy
+        values_1.v.literal('photos'), // Legacy
+        values_1.v.literal('verification_report'), values_1.v.literal('identity_doc'), values_1.v.literal('technical_specs'), values_1.v.literal('budget_breakdown'), values_1.v.literal('timeline'), values_1.v.literal('other')),
         uploadedBy: values_1.v.id('users'),
         isRequired: values_1.v.boolean(), // Is this document required for verification?
         isVerified: values_1.v.boolean(), // Has this document been verified?

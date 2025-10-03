@@ -123,6 +123,24 @@ export default defineSchema({
     // Progress tracking
     progressPercentage: v.optional(v.number()), // 0-100
     lastProgressUpdate: v.optional(v.number()), // timestamp
+    // Legacy fields for backward compatibility
+    projectImages: v.optional(v.array(v.any())), // Legacy field for old projects
+    featuredImages: v.optional(
+      v.array(
+        v.object({
+          storageId: v.string(),
+          fileUrl: v.string(),
+        })
+      )
+    ),
+    siteImages: v.optional(
+      v.array(
+        v.object({
+          storageId: v.string(),
+          fileUrl: v.string(),
+        })
+      )
+    ),
   })
     .index('by_creator', ['creatorId'])
     .index('by_status', ['status'])
@@ -356,7 +374,7 @@ export default defineSchema({
 
   // ============= DOCUMENT MANAGEMENT =============
   documents: defineTable({
-    entityId: v.string(), // ID of the associated entity (project, user profile, etc.)
+    entityId: v.optional(v.string()), // ID of the associated entity (project, user profile, etc.) - optional for legacy compatibility
     entityType: v.union(
       v.literal('project'),
       v.literal('verification'),
@@ -369,15 +387,24 @@ export default defineSchema({
     fileSize: v.number(),
     fileSizeFormatted: v.string(), // e.g. "2.5 MB"
     media: v.object({
-      storageId: v.string(),
-      fileUrl: v.string(),
+      storageId: v.optional(v.string()),
+      fileUrl: v.optional(v.string()),
+      cloudinary_public_id: v.optional(v.string()), // Legacy field
+      cloudinary_url: v.optional(v.string()), // Legacy field
     }),
     thumbnailUrl: v.optional(v.string()),
+    description: v.optional(v.string()), // Add description field
     documentType: v.union(
-      v.literal('project_plan'),
-      v.literal('environmental_assessment'),
-      v.literal('permits'),
-      v.literal('photos'),
+      v.literal('project_proposal'),
+      v.literal('environmental_impact'),
+      v.literal('site_photographs'),
+      v.literal('legal_permits'),
+      v.literal('featured_images'),
+      v.literal('site_images'),
+      v.literal('project_plan'), // Legacy
+      v.literal('environmental_assessment'), // Legacy
+      v.literal('permits'), // Legacy
+      v.literal('photos'), // Legacy
       v.literal('verification_report'),
       v.literal('identity_doc'),
       v.literal('technical_specs'),

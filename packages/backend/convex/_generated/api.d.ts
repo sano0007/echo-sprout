@@ -20,6 +20,7 @@ import type * as analytics_dashboard_reports from "../analytics_dashboard_report
 import type * as analytics_engine from "../analytics_engine.js";
 import type * as automated_monitoring from "../automated_monitoring.js";
 import type * as buyer_impact_reports from "../buyer_impact_reports.js";
+import type * as convex_storage_migration from "../convex_storage_migration.js";
 import type * as credit_batch_management from "../credit_batch_management.js";
 import type * as credit_calculation from "../credit_calculation.js";
 import type * as crons from "../crons.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   analytics_engine: typeof analytics_engine;
   automated_monitoring: typeof automated_monitoring;
   buyer_impact_reports: typeof buyer_impact_reports;
+  convex_storage_migration: typeof convex_storage_migration;
   credit_batch_management: typeof credit_batch_management;
   credit_calculation: typeof credit_calculation;
   crons: typeof crons;

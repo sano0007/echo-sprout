@@ -135,6 +135,15 @@ declare const _default: import("convex/server").SchemaDefinition<{
         qualityScore?: number | undefined;
         progressPercentage?: number | undefined;
         lastProgressUpdate?: number | undefined;
+        projectImages?: any[] | undefined;
+        featuredImages?: {
+            storageId: string;
+            fileUrl: string;
+        }[] | undefined;
+        siteImages?: {
+            storageId: string;
+            fileUrl: string;
+        }[] | undefined;
         creatorId: import("convex/values").GenericId<"users">;
         title: string;
         description: string;
@@ -193,7 +202,28 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isDocumentationComplete: import("convex/values").VBoolean<boolean, "required">;
         progressPercentage: import("convex/values").VFloat64<number | undefined, "optional">;
         lastProgressUpdate: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "creatorId" | "title" | "description" | "projectType" | "location" | "areaSize" | "estimatedCO2Reduction" | "budget" | "startDate" | "expectedCompletionDate" | "actualCompletionDate" | "status" | "verificationStatus" | "totalCarbonCredits" | "pricePerCredit" | "creditsAvailable" | "creditsSold" | "assignedVerifierId" | "verificationStartedAt" | "verificationCompletedAt" | "qualityScore" | "requiredDocuments" | "submittedDocuments" | "isDocumentationComplete" | "progressPercentage" | "lastProgressUpdate" | "location.name" | "location.lat" | "location.long">, {
+        projectImages: import("convex/values").VArray<any[] | undefined, import("convex/values").VAny<any, "required", string>, "optional">;
+        featuredImages: import("convex/values").VArray<{
+            storageId: string;
+            fileUrl: string;
+        }[] | undefined, import("convex/values").VObject<{
+            storageId: string;
+            fileUrl: string;
+        }, {
+            storageId: import("convex/values").VString<string, "required">;
+            fileUrl: import("convex/values").VString<string, "required">;
+        }, "required", "storageId" | "fileUrl">, "optional">;
+        siteImages: import("convex/values").VArray<{
+            storageId: string;
+            fileUrl: string;
+        }[] | undefined, import("convex/values").VObject<{
+            storageId: string;
+            fileUrl: string;
+        }, {
+            storageId: import("convex/values").VString<string, "required">;
+            fileUrl: import("convex/values").VString<string, "required">;
+        }, "required", "storageId" | "fileUrl">, "optional">;
+    }, "required", "creatorId" | "title" | "description" | "projectType" | "location" | "areaSize" | "estimatedCO2Reduction" | "budget" | "startDate" | "expectedCompletionDate" | "actualCompletionDate" | "status" | "verificationStatus" | "totalCarbonCredits" | "pricePerCredit" | "creditsAvailable" | "creditsSold" | "assignedVerifierId" | "verificationStartedAt" | "verificationCompletedAt" | "qualityScore" | "requiredDocuments" | "submittedDocuments" | "isDocumentationComplete" | "progressPercentage" | "lastProgressUpdate" | "projectImages" | "featuredImages" | "siteImages" | "location.name" | "location.lat" | "location.long">, {
         by_creator: ["creatorId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_type: ["projectType", "_creationTime"];
@@ -561,11 +591,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_unread: ["recipientId", "isRead", "_creationTime"];
     }, {}, {}>;
     documents: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        description?: string | undefined;
+        entityId?: string | undefined;
         thumbnailUrl?: string | undefined;
         verifiedBy?: import("convex/values").GenericId<"users"> | undefined;
         verifiedAt?: number | undefined;
         isVerified: boolean;
-        entityId: string;
         entityType: "project" | "verification" | "user_profile" | "educational_content";
         fileName: string;
         originalName: string;
@@ -573,14 +604,16 @@ declare const _default: import("convex/server").SchemaDefinition<{
         fileSize: number;
         fileSizeFormatted: string;
         media: {
-            storageId: string;
-            fileUrl: string;
+            storageId?: string | undefined;
+            fileUrl?: string | undefined;
+            cloudinary_public_id?: string | undefined;
+            cloudinary_url?: string | undefined;
         };
-        documentType: "project_plan" | "environmental_assessment" | "permits" | "photos" | "verification_report" | "identity_doc" | "technical_specs" | "budget_breakdown" | "timeline" | "other";
+        documentType: "project_proposal" | "environmental_impact" | "site_photographs" | "legal_permits" | "featured_images" | "site_images" | "project_plan" | "environmental_assessment" | "permits" | "photos" | "verification_report" | "identity_doc" | "technical_specs" | "budget_breakdown" | "timeline" | "other";
         uploadedBy: import("convex/values").GenericId<"users">;
         isRequired: boolean;
     }, {
-        entityId: import("convex/values").VString<string, "required">;
+        entityId: import("convex/values").VString<string | undefined, "optional">;
         entityType: import("convex/values").VUnion<"project" | "verification" | "user_profile" | "educational_content", [import("convex/values").VLiteral<"project", "required">, import("convex/values").VLiteral<"verification", "required">, import("convex/values").VLiteral<"user_profile", "required">, import("convex/values").VLiteral<"educational_content", "required">], "required", never>;
         fileName: import("convex/values").VString<string, "required">;
         originalName: import("convex/values").VString<string, "required">;
@@ -588,20 +621,25 @@ declare const _default: import("convex/server").SchemaDefinition<{
         fileSize: import("convex/values").VFloat64<number, "required">;
         fileSizeFormatted: import("convex/values").VString<string, "required">;
         media: import("convex/values").VObject<{
-            storageId: string;
-            fileUrl: string;
+            storageId?: string | undefined;
+            fileUrl?: string | undefined;
+            cloudinary_public_id?: string | undefined;
+            cloudinary_url?: string | undefined;
         }, {
-            storageId: import("convex/values").VString<string, "required">;
-            fileUrl: import("convex/values").VString<string, "required">;
-        }, "required", "storageId" | "fileUrl">;
+            storageId: import("convex/values").VString<string | undefined, "optional">;
+            fileUrl: import("convex/values").VString<string | undefined, "optional">;
+            cloudinary_public_id: import("convex/values").VString<string | undefined, "optional">;
+            cloudinary_url: import("convex/values").VString<string | undefined, "optional">;
+        }, "required", "storageId" | "fileUrl" | "cloudinary_public_id" | "cloudinary_url">;
         thumbnailUrl: import("convex/values").VString<string | undefined, "optional">;
-        documentType: import("convex/values").VUnion<"project_plan" | "environmental_assessment" | "permits" | "photos" | "verification_report" | "identity_doc" | "technical_specs" | "budget_breakdown" | "timeline" | "other", [import("convex/values").VLiteral<"project_plan", "required">, import("convex/values").VLiteral<"environmental_assessment", "required">, import("convex/values").VLiteral<"permits", "required">, import("convex/values").VLiteral<"photos", "required">, import("convex/values").VLiteral<"verification_report", "required">, import("convex/values").VLiteral<"identity_doc", "required">, import("convex/values").VLiteral<"technical_specs", "required">, import("convex/values").VLiteral<"budget_breakdown", "required">, import("convex/values").VLiteral<"timeline", "required">, import("convex/values").VLiteral<"other", "required">], "required", never>;
+        description: import("convex/values").VString<string | undefined, "optional">;
+        documentType: import("convex/values").VUnion<"project_proposal" | "environmental_impact" | "site_photographs" | "legal_permits" | "featured_images" | "site_images" | "project_plan" | "environmental_assessment" | "permits" | "photos" | "verification_report" | "identity_doc" | "technical_specs" | "budget_breakdown" | "timeline" | "other", [import("convex/values").VLiteral<"project_proposal", "required">, import("convex/values").VLiteral<"environmental_impact", "required">, import("convex/values").VLiteral<"site_photographs", "required">, import("convex/values").VLiteral<"legal_permits", "required">, import("convex/values").VLiteral<"featured_images", "required">, import("convex/values").VLiteral<"site_images", "required">, import("convex/values").VLiteral<"project_plan", "required">, import("convex/values").VLiteral<"environmental_assessment", "required">, import("convex/values").VLiteral<"permits", "required">, import("convex/values").VLiteral<"photos", "required">, import("convex/values").VLiteral<"verification_report", "required">, import("convex/values").VLiteral<"identity_doc", "required">, import("convex/values").VLiteral<"technical_specs", "required">, import("convex/values").VLiteral<"budget_breakdown", "required">, import("convex/values").VLiteral<"timeline", "required">, import("convex/values").VLiteral<"other", "required">], "required", never>;
         uploadedBy: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
         isRequired: import("convex/values").VBoolean<boolean, "required">;
         isVerified: import("convex/values").VBoolean<boolean, "required">;
         verifiedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
         verifiedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "isVerified" | "entityId" | "entityType" | "fileName" | "originalName" | "fileType" | "fileSize" | "fileSizeFormatted" | "media" | "thumbnailUrl" | "documentType" | "uploadedBy" | "isRequired" | "verifiedBy" | "verifiedAt" | "media.storageId" | "media.fileUrl">, {
+    }, "required", "isVerified" | "description" | "entityId" | "entityType" | "fileName" | "originalName" | "fileType" | "fileSize" | "fileSizeFormatted" | "media" | "thumbnailUrl" | "documentType" | "uploadedBy" | "isRequired" | "verifiedBy" | "verifiedAt" | "media.storageId" | "media.fileUrl" | "media.cloudinary_public_id" | "media.cloudinary_url">, {
         by_entity: ["entityId", "entityType", "_creationTime"];
         by_uploader: ["uploadedBy", "_creationTime"];
         by_type: ["documentType", "_creationTime"];
