@@ -207,7 +207,8 @@ export default function ManageProjects() {
       // The page will automatically re-render with updated data
     } catch (error) {
       console.error('Error updating project:', error);
-      alert(`Failed to update project: ${error.message || 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to update project: ${errorMessage}`);
     }
   };
 

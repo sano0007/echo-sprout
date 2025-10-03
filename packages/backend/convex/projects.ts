@@ -738,8 +738,8 @@ export const updateProject = mutation({
       milestone2: args.milestone2,
     });
 
-    // Build the update object with only provided fields (properly typed)
-    const updateData: Partial<ProjectUpdateData> = {};
+    // Build the update object with only provided fields
+    const updateData: any = {};
     if (validatedData.title !== undefined)
       updateData.title = validatedData.title;
     if (validatedData.description !== undefined)
