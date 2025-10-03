@@ -81,14 +81,6 @@ exports.default = (0, server_1.defineSchema)({
             name: values_1.v.string(),
             date: values_1.v.string(),
         })),
-        milestone1: values_1.v.optional(values_1.v.object({
-            name: values_1.v.string(),
-            date: values_1.v.string(),
-        })),
-        milestone2: values_1.v.optional(values_1.v.object({
-            name: values_1.v.string(),
-            date: values_1.v.string(),
-        })),
         status: values_1.v.union(values_1.v.literal('draft'), values_1.v.literal('submitted'), values_1.v.literal('under_review'), values_1.v.literal('approved'), values_1.v.literal('rejected'), values_1.v.literal('active'), values_1.v.literal('completed'), values_1.v.literal('suspended')),
         verificationStatus: values_1.v.union(values_1.v.literal('pending'), values_1.v.literal('in_progress'), values_1.v.literal('verified'), values_1.v.literal('rejected'), values_1.v.literal('revision_required')),
         // Project creator sets credit details

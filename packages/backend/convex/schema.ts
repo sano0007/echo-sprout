@@ -99,14 +99,6 @@ export default defineSchema({
       name: v.string(),
       date: v.string(),
     })),
-    milestone1: v.optional(v.object({
-      name: v.string(),
-      date: v.string(),
-    })),
-    milestone2: v.optional(v.object({
-      name: v.string(),
-      date: v.string(),
-    })),
     status: v.union(
       v.literal('draft'),
       v.literal('submitted'),

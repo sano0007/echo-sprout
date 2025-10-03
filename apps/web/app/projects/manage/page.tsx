@@ -877,7 +877,30 @@ export default function ManageProjects() {
                         
                         return (
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-3">Project Proposal</h4>
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-medium text-gray-900">Project Proposal</h4>
+                              <input
+                                type="file"
+                                id="add-file-input-project_proposal"
+                                className="hidden"
+                                accept="*/*"
+                                onChange={(e) => handleFileUpload(e, 'project_proposal')}
+                              />
+                              <button
+                                onClick={() => {
+                                  setDocumentToReplace(null);
+                                  const input = document.getElementById('add-file-input-project_proposal') as HTMLInputElement;
+                                  input?.click();
+                                }}
+                                disabled={isUploading}
+                                className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 disabled:opacity-50 flex items-center gap-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Document
+                              </button>
+                            </div>
                             {projectProposal.length > 0 ? (
                               <div className="grid grid-cols-1 gap-3">
                                 {projectProposal.map((doc: any) => (
@@ -957,7 +980,30 @@ export default function ManageProjects() {
                         
                         return (
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-3">Environmental Impact Assessment</h4>
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-medium text-gray-900">Environmental Impact Assessment</h4>
+                              <input
+                                type="file"
+                                id="add-file-input-environmental_impact"
+                                className="hidden"
+                                accept="*/*"
+                                onChange={(e) => handleFileUpload(e, 'environmental_impact')}
+                              />
+                              <button
+                                onClick={() => {
+                                  setDocumentToReplace(null);
+                                  const input = document.getElementById('add-file-input-environmental_impact') as HTMLInputElement;
+                                  input?.click();
+                                }}
+                                disabled={isUploading}
+                                className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 disabled:opacity-50 flex items-center gap-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Document
+                              </button>
+                            </div>
                             {envImpact.length > 0 ? (
                               <div className="grid grid-cols-1 gap-3">
                                 {envImpact.map((doc: any) => (
@@ -1037,7 +1083,30 @@ export default function ManageProjects() {
                         
                         return (
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-3">Legal Permits</h4>
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-medium text-gray-900">Legal Permits</h4>
+                              <input
+                                type="file"
+                                id="add-file-input-legal_permits"
+                                className="hidden"
+                                accept="*/*"
+                                onChange={(e) => handleFileUpload(e, 'legal_permits')}
+                              />
+                              <button
+                                onClick={() => {
+                                  setDocumentToReplace(null);
+                                  const input = document.getElementById('add-file-input-legal_permits') as HTMLInputElement;
+                                  input?.click();
+                                }}
+                                disabled={isUploading}
+                                className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 disabled:opacity-50 flex items-center gap-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Document
+                              </button>
+                            </div>
                             {legalPermits.length > 0 ? (
                               <div className="grid grid-cols-1 gap-3">
                                 {legalPermits.map((doc: any) => (
@@ -1131,7 +1200,30 @@ export default function ManageProjects() {
                         
                         return (
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-3">Featured Images</h4>
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-medium text-gray-900">Featured Images</h4>
+                              <input
+                                type="file"
+                                id="add-file-input-featured_images"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, 'featured_images')}
+                              />
+                              <button
+                                onClick={() => {
+                                  setDocumentToReplace(null);
+                                  const input = document.getElementById('add-file-input-featured_images') as HTMLInputElement;
+                                  input?.click();
+                                }}
+                                disabled={isUploading}
+                                className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 disabled:opacity-50 flex items-center gap-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Images
+                              </button>
+                            </div>
                             {featuredImages.length > 0 ? (
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 {featuredImages.map((image: any) => (
@@ -1218,7 +1310,30 @@ export default function ManageProjects() {
                         
                         return (
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-3">Site Photographs</h4>
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-medium text-gray-900">Site Photographs</h4>
+                              <input
+                                type="file"
+                                id="add-file-input-site_photographs"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => handleFileUpload(e, 'site_photographs')}
+                              />
+                              <button
+                                onClick={() => {
+                                  setDocumentToReplace(null);
+                                  const input = document.getElementById('add-file-input-site_photographs') as HTMLInputElement;
+                                  input?.click();
+                                }}
+                                disabled={isUploading}
+                                className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 disabled:opacity-50 flex items-center gap-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add Images
+                              </button>
+                            </div>
                             {sitePhotos.length > 0 ? (
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 {sitePhotos.map((image: any) => (
