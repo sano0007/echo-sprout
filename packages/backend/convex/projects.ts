@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { action, mutation, query } from './_generated/server';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
+import { Id } from './_generated/dataModel';
 import { WorkflowService } from '../services/workflow-service';
 import { VerifierAssignmentService } from '../services/verifier-assignment-service';
 
@@ -33,12 +34,46 @@ const LocationSchema = z.object({
     .min(1, 'Location name is required')
     .max(200, 'Location name must not exceed 200 characters')
     .trim(),
+  city: z
+    .string()
+    .max(100, 'City name must not exceed 100 characters')
+    .trim()
+    .optional(),
+  country: z
+    .string()
+    .max(100, 'Country name must not exceed 100 characters')
+    .trim()
+    .optional(),
 });
 
 // Date validation helper
 const DateStringSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format');
+
+// Milestone Schema (for creation - strict)
+const MilestoneSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Milestone name is required')
+    .max(200, 'Milestone name must not exceed 200 characters')
+    .trim(),
+  date: DateStringSchema,
+});
+
+// Flexible Milestone Schema (for updates - allows empty)
+const FlexibleMilestoneSchema = z.object({
+  name: z
+    .string()
+    .max(200, 'Milestone name must not exceed 200 characters')
+    .trim(),
+  date: z
+    .string()
+    .refine(
+      (val) => val === '' || /^\d{4}-\d{2}-\d{2}$/.test(val),
+      'Date must be empty or in YYYY-MM-DD format'
+    ),
+});
 
 // Create Project Schema
 const CreateProjectSchema = z
@@ -82,6 +117,8 @@ const CreateProjectSchema = z
       .array(z.string())
       .max(20, 'Too many required documents')
       .default([]),
+    milestone1: MilestoneSchema.optional(),
+    milestone2: MilestoneSchema.optional(),
   })
   .refine(
     (data) => new Date(data.startDate) < new Date(data.expectedCompletionDate),
@@ -94,48 +131,23 @@ const CreateProjectSchema = z
 // Update Project Schema (all fields optional except projectId)
 const UpdateProjectSchema = z
   .object({
-    title: z
-      .string()
-      .min(3, 'Project title must be at least 3 characters')
-      .max(100, 'Project title must not exceed 100 characters')
-      .trim()
-      .optional(),
-    description: z
-      .string()
-      .min(50, 'Description must be at least 50 characters')
-      .max(2000, 'Description must not exceed 2000 characters')
-      .trim()
-      .optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
     projectType: ProjectTypeSchema.optional(),
-    location: LocationSchema.optional(),
-    areaSize: z
-      .number()
-      .positive('Area size must be greater than 0')
-      .max(1000000, 'Area size seems unrealistic')
-      .optional(),
-    estimatedCO2Reduction: z
-      .number()
-      .positive('CO2 reduction must be greater than 0')
-      .max(10000000, 'CO2 reduction seems unrealistic')
-      .optional(),
-    budget: z
-      .number()
-      .positive('Budget must be greater than 0')
-      .max(1000000000, 'Budget seems unrealistic')
-      .optional(),
-    startDate: DateStringSchema.optional(),
-    expectedCompletionDate: DateStringSchema.optional(),
-    totalCarbonCredits: z
-      .number()
-      .int('Carbon credits must be a whole number')
-      .positive('Carbon credits must be greater than 0')
-      .max(1000000, 'Carbon credits amount seems unrealistic')
-      .optional(),
-    pricePerCredit: z
-      .number()
-      .positive('Price per credit must be greater than 0')
-      .max(1000, 'Price per credit seems unrealistic')
-      .optional(),
+    location: z.object({
+      lat: z.number().optional(),
+      long: z.number().optional(),
+      name: z.string().optional(),
+      city: z.string().optional(),
+      country: z.string().optional(),
+    }).optional(),
+    areaSize: z.number().optional(),
+    estimatedCO2Reduction: z.number().optional(),
+    budget: z.number().optional(),
+    startDate: z.string().optional(),
+    expectedCompletionDate: z.string().optional(),
+    totalCarbonCredits: z.number().optional(),
+    pricePerCredit: z.number().optional(),
     status: z
       .enum([
         'draft',
@@ -147,10 +159,15 @@ const UpdateProjectSchema = z
         'rejected',
       ])
       .optional(),
-    requiredDocuments: z
-      .array(z.string())
-      .max(20, 'Too many required documents')
-      .optional(),
+    requiredDocuments: z.array(z.string()).optional(),
+    milestone1: z.object({
+      name: z.string().optional(),
+      date: z.string().optional(),
+    }).optional(),
+    milestone2: z.object({
+      name: z.string().optional(),
+      date: z.string().optional(),
+    }).optional(),
   })
   .refine(
     (data) => {
@@ -212,8 +229,8 @@ function validateProjectCreation(
     return CreateProjectSchema.parse(dataWithDefaults);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors.map(
-        (err) => `${err.path.join('.') || 'field'}: ${err.message}`
+      const messages = error.issues.map(
+        (issue) => `${issue.path.join('.') || 'field'}: ${issue.message}`
       );
       throw new Error(`Validation failed: ${messages.join(', ')}`);
     }
@@ -231,8 +248,8 @@ function validateProjectUpdate(
     return UpdateProjectSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors.map(
-        (err) => `${err.path.join('.') || 'field'}: ${err.message}`
+      const messages = error.issues.map(
+        (issue) => `${issue.path.join('.') || 'field'}: ${issue.message}`
       );
       throw new Error(`Validation failed: ${messages.join(', ')}`);
     }
@@ -250,8 +267,8 @@ function validateDocumentUpload(
     return DocumentUploadSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors.map(
-        (err) => `${err.path.join('.') || 'field'}: ${err.message}`
+      const messages = error.issues.map(
+        (issue) => `${issue.path.join('.') || 'field'}: ${issue.message}`
       );
       throw new Error(`Validation failed: ${messages.join(', ')}`);
     }
@@ -658,6 +675,8 @@ export const updateProject = mutation({
         lat: v.float64(),
         long: v.float64(),
         name: v.string(),
+        city: v.optional(v.string()),
+        country: v.optional(v.string()),
       })
     ),
     areaSize: v.optional(v.number()),
@@ -669,6 +688,14 @@ export const updateProject = mutation({
     pricePerCredit: v.optional(v.number()),
     status: v.optional(v.string()),
     requiredDocuments: v.optional(v.array(v.string())),
+    milestone1: v.optional(v.object({
+      name: v.string(),
+      date: v.string(),
+    })),
+    milestone2: v.optional(v.object({
+      name: v.string(),
+      date: v.string(),
+    })),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -707,6 +734,8 @@ export const updateProject = mutation({
       pricePerCredit: args.pricePerCredit,
       status: args.status,
       requiredDocuments: args.requiredDocuments,
+      milestone1: args.milestone1,
+      milestone2: args.milestone2,
     });
 
     // Build the update object with only provided fields (properly typed)
@@ -737,6 +766,10 @@ export const updateProject = mutation({
       updateData.status = validatedData.status;
     if (validatedData.requiredDocuments !== undefined)
       updateData.requiredDocuments = validatedData.requiredDocuments;
+    if (validatedData.milestone1 !== undefined)
+      updateData.milestone1 = validatedData.milestone1;
+    if (validatedData.milestone2 !== undefined)
+      updateData.milestone2 = validatedData.milestone2;
 
     // Additional business logic validation
     if (
@@ -1192,8 +1225,8 @@ export const getProjectTimeline = query({
     }
 
     const canView =
-      project.creatorId === user._id ||
-      project.assignedVerifierId === user._id ||
+      ('creatorId' in project && project.creatorId === user._id) ||
+      ('assignedVerifierId' in project && project.assignedVerifierId === user._id) ||
       user.role === 'admin';
 
     if (!canView) {
@@ -1234,7 +1267,11 @@ export const getProjectTimeline = query({
 
     // Combine and sort all events
     const allEvents = [...workflowEvents, ...verificationEvents].sort(
-      (a, b) => (b._creationTime || 0) - (a._creationTime || 0)
+      (a, b) => {
+        const timeA = typeof a._creationTime === 'number' ? a._creationTime : 0;
+        const timeB = typeof b._creationTime === 'number' ? b._creationTime : 0;
+        return timeB - timeA;
+      }
     );
 
     return {

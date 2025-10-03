@@ -82,6 +82,8 @@ export default defineSchema({
       lat: v.float64(),
       long: v.float64(),
       name: v.string(),
+      city: v.optional(v.string()),
+      country: v.optional(v.string()),
     }),
     areaSize: v.number(),
     estimatedCO2Reduction: v.number(),
@@ -89,6 +91,22 @@ export default defineSchema({
     startDate: v.string(),
     expectedCompletionDate: v.string(),
     actualCompletionDate: v.optional(v.string()),
+    milestone1: v.optional(v.object({
+      name: v.string(),
+      date: v.string(),
+    })),
+    milestone2: v.optional(v.object({
+      name: v.string(),
+      date: v.string(),
+    })),
+    milestone1: v.optional(v.object({
+      name: v.string(),
+      date: v.string(),
+    })),
+    milestone2: v.optional(v.object({
+      name: v.string(),
+      date: v.string(),
+    })),
     status: v.union(
       v.literal('draft'),
       v.literal('submitted'),
