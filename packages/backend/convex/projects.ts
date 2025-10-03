@@ -80,7 +80,8 @@ const CreateProjectSchema = z
       .max(1000, 'Price per credit seems unrealistic'),
     requiredDocuments: z
       .array(z.string())
-      .max(20, 'Too many required documents'),
+      .max(20, 'Too many required documents')
+      .default([]),
   })
   .refine(
     (data) => new Date(data.startDate) < new Date(data.expectedCompletionDate),
@@ -202,12 +203,18 @@ function validateProjectCreation(
   data: unknown
 ): z.infer<typeof CreateProjectSchema> {
   try {
-    return CreateProjectSchema.parse(data);
+    // Ensure requiredDocuments defaults to empty array if missing
+    const dataWithDefaults = {
+      ...(typeof data === 'object' && data !== null ? data : {}),
+      requiredDocuments: (data as any)?.requiredDocuments || [],
+    };
+
+    return CreateProjectSchema.parse(dataWithDefaults);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors?.map(
-        (err) => `${err.path?.join('.') || 'field'}: ${err.message}`
-      ) || ['Unknown validation error'];
+      const messages = error.errors.map(
+        (err) => `${err.path.join('.') || 'field'}: ${err.message}`
+      );
       throw new Error(`Validation failed: ${messages.join(', ')}`);
     }
     throw error;
@@ -224,9 +231,9 @@ function validateProjectUpdate(
     return UpdateProjectSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors?.map(
-        (err) => `${err.path?.join('.') || 'field'}: ${err.message}`
-      ) || ['Unknown validation error'];
+      const messages = error.errors.map(
+        (err) => `${err.path.join('.') || 'field'}: ${err.message}`
+      );
       throw new Error(`Validation failed: ${messages.join(', ')}`);
     }
     throw error;
@@ -243,9 +250,9 @@ function validateDocumentUpload(
     return DocumentUploadSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors?.map(
-        (err) => `${err.path?.join('.') || 'field'}: ${err.message}`
-      ) || ['Unknown validation error'];
+      const messages = error.errors.map(
+        (err) => `${err.path.join('.') || 'field'}: ${err.message}`
+      );
       throw new Error(`Validation failed: ${messages.join(', ')}`);
     }
     throw error;

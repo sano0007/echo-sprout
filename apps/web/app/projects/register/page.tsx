@@ -6,6 +6,23 @@ import { useState } from 'react';
 
 import DocumentUpload from '../../../components/DocumentUpload';
 
+// Document type union that matches backend expectations
+type DocumentType =
+  | 'project_proposal'
+  | 'environmental_impact'
+  | 'site_photographs'
+  | 'legal_permits'
+  | 'featured_images'
+  | 'site_images';
+
+// Interface for files with status from DocumentUpload component
+interface FileWithStatus {
+  file: File;
+  status: 'pending' | 'uploading' | 'completed' | 'error';
+  progress?: number;
+  description?: string;
+}
+
 interface ProjectFormData {
   title: string;
   description: string;
@@ -47,6 +64,7 @@ interface DocumentFiles {
   site_photographs: File[];
   legal_permits: File[];
   featured_images: File[];
+  site_images: File[];
 }
 
 export default function ProjectRegister() {
@@ -57,6 +75,7 @@ export default function ProjectRegister() {
     site_photographs: [],
     legal_permits: [],
     featured_images: [],
+    site_images: [],
   });
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
@@ -75,10 +94,10 @@ export default function ProjectRegister() {
     totalCarbonCredits: 0,
     pricePerCredit: 0,
     requiredDocuments: [
-      'project_plan',
-      'environmental_assessment',
-      'permits',
-      'photos',
+      'project_proposal',
+      'environmental_impact',
+      'legal_permits',
+      'site_photographs',
     ],
   });
 
@@ -191,7 +210,10 @@ export default function ProjectRegister() {
       // Now upload the documents if any exist
       const allFiles = Object.entries(documentFiles).flatMap(
         ([docType, files]) =>
-          files.map((file) => ({ file, documentType: docType }))
+          files.map((file: File) => ({
+            file,
+            documentType: docType as DocumentType,
+          }))
       );
 
       if (allFiles.length > 0) {
@@ -199,41 +221,49 @@ export default function ProjectRegister() {
           `Project created successfully! Uploading ${allFiles.length} document${allFiles.length !== 1 ? 's' : ''}...`
         );
 
-        const uploadPromises = allFiles.map(async ({ file, documentType }) => {
-          try {
-            // Step 1: Get upload URL
-            const uploadUrl = await generateUploadUrl();
-            console.log('Generated upload URL for', file.name);
+        const uploadPromises = allFiles.map(
+          async ({
+            file,
+            documentType,
+          }: {
+            file: File;
+            documentType: DocumentType;
+          }) => {
+            try {
+              // Step 1: Get upload URL
+              const uploadUrl = await generateUploadUrl();
+              console.log('Generated upload URL for', file.name);
 
-            // Step 2: Upload file to the URL
-            const response = await fetch(uploadUrl, {
-              method: 'POST',
-              body: file,
-              headers: {
-                'Content-Type': file.type,
-              },
-            });
+              // Step 2: Upload file to the URL
+              const response = await fetch(uploadUrl, {
+                method: 'POST',
+                body: file,
+                headers: {
+                  'Content-Type': file.type,
+                },
+              });
 
-            if (!response.ok) {
-              throw new Error(`Upload failed: ${response.statusText}`);
+              if (!response.ok) {
+                throw new Error(`Upload failed: ${response.statusText}`);
+              }
+
+              const { storageId } = await response.json();
+              console.log('File uploaded successfully, storage ID:', storageId);
+
+              // Step 3: Store document metadata in database with document type
+              await uploadProjectDocuments({
+                projectId: projectId,
+                fileName: file.name,
+                fileType: file.type,
+                storageId: storageId,
+                documentType: documentType,
+              });
+            } catch (error) {
+              console.error(`Failed to upload ${file.name}:`, error);
+              throw error;
             }
-
-            const { storageId } = await response.json();
-            console.log('File uploaded successfully, storage ID:', storageId);
-
-            // Step 3: Store document metadata in database with document type
-            await uploadProjectDocuments({
-              projectId: projectId,
-              fileName: file.name,
-              fileType: file.type,
-              storageId: storageId,
-              documentType: documentType,
-            });
-          } catch (error) {
-            console.error(`Failed to upload ${file.name}:`, error);
-            throw error;
           }
-        });
+        );
 
         await Promise.all(uploadPromises);
         alert(
@@ -250,6 +280,7 @@ export default function ProjectRegister() {
         site_photographs: [],
         legal_permits: [],
         featured_images: [],
+        site_images: [],
       });
 
       // Redirect to project management after successful creation
@@ -554,10 +585,10 @@ export default function ProjectRegister() {
                 documentType="project_proposal"
                 projectId=""
                 uploadMode="deferred"
-                onFilesReady={(files) => {
+                onFilesReady={(files: FileWithStatus[]) => {
                   setDocumentFiles((prev) => ({
                     ...prev,
-                    project_proposal: files.map((f) => f.file),
+                    project_proposal: files.map((f: FileWithStatus) => f.file),
                   }));
                 }}
               />
@@ -566,10 +597,12 @@ export default function ProjectRegister() {
                 documentType="environmental_impact"
                 projectId=""
                 uploadMode="deferred"
-                onFilesReady={(files) => {
+                onFilesReady={(files: FileWithStatus[]) => {
                   setDocumentFiles((prev) => ({
                     ...prev,
-                    environmental_impact: files.map((f) => f.file),
+                    environmental_impact: files.map(
+                      (f: FileWithStatus) => f.file
+                    ),
                   }));
                 }}
               />
@@ -578,10 +611,10 @@ export default function ProjectRegister() {
                 documentType="legal_permits"
                 projectId=""
                 uploadMode="deferred"
-                onFilesReady={(files) => {
+                onFilesReady={(files: FileWithStatus[]) => {
                   setDocumentFiles((prev) => ({
                     ...prev,
-                    legal_permits: files.map((f) => f.file),
+                    legal_permits: files.map((f: FileWithStatus) => f.file),
                   }));
                 }}
               />
@@ -597,10 +630,10 @@ export default function ProjectRegister() {
                 documentType="featured_images"
                 projectId=""
                 uploadMode="deferred"
-                onFilesReady={(files) => {
+                onFilesReady={(files: FileWithStatus[]) => {
                   setDocumentFiles((prev) => ({
                     ...prev,
-                    featured_images: files.map((f) => f.file),
+                    featured_images: files.map((f: FileWithStatus) => f.file),
                   }));
                 }}
               />
@@ -609,10 +642,10 @@ export default function ProjectRegister() {
                 documentType="site_photographs"
                 projectId=""
                 uploadMode="deferred"
-                onFilesReady={(files) => {
+                onFilesReady={(files: FileWithStatus[]) => {
                   setDocumentFiles((prev) => ({
                     ...prev,
-                    site_photographs: files.map((f) => f.file),
+                    site_photographs: files.map((f: FileWithStatus) => f.file),
                   }));
                 }}
               />
