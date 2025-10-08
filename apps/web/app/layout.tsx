@@ -1,11 +1,16 @@
+import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import './globals.css';
-import { ClerkProvider } from '@clerk/nextjs';
-import ConvexClientProvider from '../providers/ConvexProviderWithClerk';
 import React from 'react';
-import Navigation from '../components/Navigation';
+import { ToastContainer } from 'react-toastify';
+
+import './globals.css';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Footer from '../components/Footer';
+import Navigation from '../components/Navigation';
+import { Toaster } from '../components/ui/toaster';
+import ConvexClientProvider from '../providers/ConvexProviderWithClerk';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -36,6 +41,19 @@ export default function RootLayout({
               <Navigation />
               <main className="flex-1">{children}</main>
               <Footer />
+              <Toaster />
+              <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
             </div>
           </ConvexClientProvider>
         </ClerkProvider>

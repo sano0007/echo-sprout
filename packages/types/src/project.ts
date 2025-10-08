@@ -1,3 +1,4 @@
+import { Id } from "../../backend/convex/_generated/dataModel";
 import { VerificationStatus } from "./marketplace";
 
 export interface ProjectLocation {
@@ -6,9 +7,18 @@ export interface ProjectLocation {
   name: string;
 }
 
+export interface ProjectCreator {
+  firstName: string;
+  lastName: string;
+  email: string;
+  role?: string;
+}
+
 export interface Project {
-  _id: string;
+  _id: Id<"projects">;
+  _creationTime: number;
   creatorId: string;
+  creator: ProjectCreator;
   title: string;
   description: string;
   projectType: ProjectType;
