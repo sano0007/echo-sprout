@@ -98,6 +98,7 @@ export default function LearnHub() {
   const blogPosts = useQuery(api.learn.listBlog);
   const guidesData = useQuery(api.learn.listGuides);
   const learningPaths = useQuery(api.learn.listLearningPaths);
+  const currentUser = useQuery(api.users.getCurrentUser, {});
   const createBlog = useMutation(api.learn.createBlog);
   const recordLearnEnter = useMutation(api.learn.recordLearnPageEnter);
   const { isSignedIn } = useUser();
@@ -114,6 +115,8 @@ export default function LearnHub() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  const isAdminUser = currentUser?.role === 'admin';
 
   const previewText = (s: string) => {
     if (!s) return '';
@@ -151,6 +154,14 @@ export default function LearnHub() {
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleWriteArticleClick = () => {
+    if (!isSignedIn) {
+      alert('Please sign in to write an article.');
+      return;
+    }
+    openModal();
   };
 
   const handleChange = (
@@ -234,19 +245,12 @@ export default function LearnHub() {
               impact
             </p>
           </div>
-          {isSignedIn ? (
+          {isAdminUser && (
             <Link
               href="/learn/analytics"
               className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
             >
               Analytics
-            </Link>
-          ) : (
-            <Link
-              href="/sign-in?redirect_url=%2Flearn%2Fanalytics"
-              className="inline-flex items-center bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-            >
-              Sign in to Generate Report
             </Link>
           )}
         </div>
@@ -292,14 +296,16 @@ export default function LearnHub() {
               </div>
 
               {/* Create Learning Path CTA (no analytics counting here) */}
-              <div className="flex justify-end">
-                <Link
-                  href="/learn/paths"
-                  className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Create Learning Path
-                </Link>
-              </div>
+              {isAdminUser && (
+                <div className="flex justify-end">
+                  <Link
+                    href="/learn/paths"
+                    className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Create Learning Path
+                  </Link>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                 {modulesList.map((module) => (
@@ -439,14 +445,16 @@ export default function LearnHub() {
               </div>
 
               {/* Create Guide CTA */}
-              <div className="flex justify-end">
-                <Link
-                  href="/learn/guides/create"
-                  className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Create Guide
-                </Link>
-              </div>
+              {isAdminUser && (
+                <div className="flex justify-end">
+                  <Link
+                    href="/learn/guides/create"
+                    className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Create Guide
+                  </Link>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {(guidesData && guidesData.length ? guidesData : guides).map(
@@ -530,7 +538,7 @@ export default function LearnHub() {
                 </div>
                 <button
                   className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                  onClick={openModal}
+                  onClick={handleWriteArticleClick}
                 >
                   Write Article
                 </button>
