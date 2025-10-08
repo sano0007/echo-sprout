@@ -135,7 +135,7 @@ exports.default = (0, server_1.defineSchema)({
             refundReason: values_1.v.string(),
             refundAmount: values_1.v.number(),
             adminNotes: values_1.v.string(),
-            processedAt: values_1.v.number()
+            processedAt: values_1.v.number(),
         })),
     })
         .index('by_buyer', ['buyerId'])
@@ -654,8 +654,7 @@ exports.default = (0, server_1.defineSchema)({
             weekly: values_1.v.boolean(),
         }),
         lastUpdated: values_1.v.number(),
-    })
-        .index('by_user', ['userId']),
+    }).index('by_user', ['userId']),
     // ============= ANALYTICS & REPORTING =============
     analytics: (0, server_1.defineTable)({
         metric: values_1.v.string(), // "daily_transactions", "project_completions", etc. todo: enum of metrics
@@ -900,5 +899,5 @@ exports.default = (0, server_1.defineSchema)({
         uploadedAt: values_1.v.number(),
     })
         .index('by_filename', ['filename'])
-        .index('by_upload_date', ['uploadedAt'])
+        .index('by_upload_date', ['uploadedAt']),
 });

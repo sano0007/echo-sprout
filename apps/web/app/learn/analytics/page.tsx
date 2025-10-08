@@ -143,10 +143,17 @@ export default function LearnAnalyticsPage() {
       } else {
         // Capture each block individually and stack them without breaking inside a block
         let y = margin;
-        for (const node of Array.from(blocks)) {
-          const el = node as HTMLElement;
-          const containsSvg = !!el.querySelector('svg');
+        for (let i = 0; i < blocks.length; i++) {
+          const el = blocks[i] as HTMLElement;
           const isHeaderBlock = !!el.querySelector('h1');
+          const requiresBreakBefore = el.hasAttribute(
+            'data-report-break-before'
+          );
+
+          if (requiresBreakBefore && y !== margin) {
+            pdf.addPage();
+            y = margin;
+          }
 
           // Add tiny padding to header to avoid top/bottom clipping during capture
           let prevPaddingTop: string | undefined;
@@ -204,6 +211,12 @@ export default function LearnAnalyticsPage() {
             'FAST'
           );
           y += finalHeight + spacing;
+
+          const requiresBreakAfter = el.hasAttribute('data-report-break-after');
+          if (requiresBreakAfter && i !== blocks.length - 1) {
+            pdf.addPage();
+            y = margin;
+          }
         }
       }
 
@@ -314,7 +327,7 @@ export default function LearnAnalyticsPage() {
         </div>
       </Section>
 
-      <Section title="Top Content">
+      <Section title="Top Content" breakBefore>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="font-medium mb-2">Top by Views</div>
@@ -492,12 +505,21 @@ function Kpi({ title, value }: { title: string; value: string | number }) {
 function Section({
   title,
   children,
+  breakBefore = false,
+  breakAfter = false,
 }: {
   title: string;
   children: React.ReactNode;
+  breakBefore?: boolean;
+  breakAfter?: boolean;
 }) {
   return (
-    <section className="space-y-3" data-report-block>
+    <section
+      className="space-y-3"
+      data-report-block
+      data-report-break-before={breakBefore ? '' : undefined}
+      data-report-break-after={breakAfter ? '' : undefined}
+    >
       <h2 className="text-xl font-semibold">{title}</h2>
       {children}
     </section>
