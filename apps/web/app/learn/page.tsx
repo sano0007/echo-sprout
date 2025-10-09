@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useUser } from '@clerk/nextjs';
 import { api } from '@packages/backend';
@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { previewLearnText } from './lib';
 
 export default function LearnHub() {
   const router = useRouter();
@@ -117,13 +118,6 @@ export default function LearnHub() {
   };
 
   const isAdminUser = currentUser?.role === 'admin';
-
-  const previewText = (s: string) => {
-    if (!s) return '';
-    const text = s.replace(/\s+/g, ' ').trim();
-    const max = 50;
-    return text.length > max ? text.slice(0, max).trimEnd() + '.....' : text;
-  };
 
   const today = useMemo(() => {
     const d = new Date();
@@ -573,7 +567,7 @@ export default function LearnHub() {
                     </div>
 
                     <p className="text-gray-600 mb-4 break-words">
-                      {previewText(post.content)}
+                      {previewLearnText(post.content)}
                     </p>
 
                     <div className="flex justify-between items-center">
