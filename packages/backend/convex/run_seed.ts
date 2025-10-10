@@ -9,7 +9,7 @@ import { internal } from './_generated/api';
  * It can be called from the Convex dashboard or via the CLI.
  */
 
-export const runMonitoringSeed = mutation({
+export const runMonitoringSeed: any = mutation({
   args: {
     clearExisting: v.optional(v.boolean())
   },
@@ -36,7 +36,7 @@ export const runMonitoringSeed = mutation({
       return {
         success: false,
         message: 'Seeding failed',
-        error: error.message
+        error: (error as Error).message
       };
     }
   }
@@ -88,7 +88,7 @@ export const checkSeedingStatus = mutation({
       console.error('❌ Status check failed:', error);
       return {
         success: false,
-        error: error.message
+        error: (error as Error).message
       };
     }
   }
@@ -109,7 +109,7 @@ export const clearAllSeedData = mutation({
       let totalDeleted = 0;
 
       for (const table of tables) {
-        const docs = await ctx.db.query(table).collect();
+        const docs = await (ctx.db.query as any)(table).collect();
         for (const doc of docs) {
           await ctx.db.delete(doc._id);
           totalDeleted++;
@@ -129,7 +129,7 @@ export const clearAllSeedData = mutation({
       console.error('❌ Clearing failed:', error);
       return {
         success: false,
-        error: error.message
+        error: (error as Error).message
       };
     }
   }

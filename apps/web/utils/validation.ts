@@ -187,10 +187,6 @@ export const pdfReportSchema: FieldValidation = {
   ],
   endDate: [
     { required: true, message: 'End date is required' },
-    {
-      custom: (value, data) => new Date(value) >= new Date(data.startDate),
-      message: 'End date must be after start date'
-    },
   ],
 };
 

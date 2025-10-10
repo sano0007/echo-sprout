@@ -37,17 +37,14 @@ export const createProgressUpdate = mutation({
       energyGenerated: v.optional(v.number()),
       wasteProcessed: v.optional(v.number()),
     })),
-    photos: v.optional(v.array(v.object({
-      storageId: v.id('_storage'),
-      filename: v.string(),
-      url: v.string(),
-    }))),
+    photoStorageIds: v.optional(v.array(v.id('_storage'))),
+    photoUrls: v.optional(v.array(v.string())),
     nextSteps: v.optional(v.string()),
     challenges: v.optional(v.string()),
     location: v.optional(v.object({
-      latitude: v.number(),
-      longitude: v.number(),
-      address: v.optional(v.string()),
+      lat: v.number(),
+      long: v.number(),
+      name: v.string(),
     })),
   },
   handler: async (ctx, args) => {
@@ -78,19 +75,19 @@ export const createProgressUpdate = mutation({
     // Create the progress update
     const progressUpdateId = await ctx.db.insert('progressUpdates', {
       projectId: args.projectId,
-      creatorId: user._id,
+      submittedBy: user._id,
       title: args.title,
       description: args.description,
       updateType: args.updateType,
       progressPercentage: args.progressPercentage,
       measurementData: args.measurementData || {},
-      photos: args.photos || [],
+      photoStorageIds: args.photoStorageIds,
+      photoUrls: args.photoUrls,
       nextSteps: args.nextSteps,
       challenges: args.challenges,
       location: args.location,
       reportingDate: Date.now(),
-      status: 'submitted',
-      verificationStatus: 'pending',
+      isVerified: false,
     });
 
     // Update project's last progress update time
@@ -215,7 +212,7 @@ export const updateProgressUpdate = mutation({
     // Check permissions
     const canUpdate =
       user.role === 'admin' ||
-      (user.role === 'project_creator' && update.creatorId === user._id);
+      (user.role === 'project_creator' && (update.submittedBy === user._id || update.reportedBy === user._id));
 
     if (!canUpdate) {
       throw new Error('Access denied: Cannot update this progress update');
@@ -266,7 +263,7 @@ export const deleteProgressUpdate = mutation({
     // Check permissions
     const canDelete =
       user.role === 'admin' ||
-      (user.role === 'project_creator' && update.creatorId === user._id);
+      (user.role === 'project_creator' && (update.submittedBy === user._id || update.reportedBy === user._id));
 
     if (!canDelete) {
       throw new Error('Access denied: Cannot delete this progress update');
@@ -287,19 +284,18 @@ export const createMilestone = mutation({
     projectId: v.id('projects'),
     title: v.string(),
     description: v.string(),
-    category: v.union(
+    milestoneType: v.union(
       v.literal('setup'),
-      v.literal('progress'),
-      v.literal('impact'),
-      v.literal('verification')
+      v.literal('progress_25'),
+      v.literal('progress_50'),
+      v.literal('progress_75'),
+      v.literal('impact_first'),
+      v.literal('verification'),
+      v.literal('completion')
     ),
     plannedDate: v.number(),
-    targetMetrics: v.optional(v.object({
-      carbonImpact: v.optional(v.number()),
-      treesPlanted: v.optional(v.number()),
-      energyGenerated: v.optional(v.number()),
-      wasteProcessed: v.optional(v.number()),
-    })),
+    order: v.number(),
+    isRequired: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await UserService.getCurrentUser(ctx);
@@ -325,11 +321,11 @@ export const createMilestone = mutation({
       projectId: args.projectId,
       title: args.title,
       description: args.description,
-      category: args.category,
+      milestoneType: args.milestoneType,
       plannedDate: args.plannedDate,
-      targetMetrics: args.targetMetrics || {},
+      order: args.order,
+      isRequired: args.isRequired ?? true,
       status: 'pending',
-      createdBy: user._id,
     });
 
     return milestoneId;
@@ -346,13 +342,17 @@ export const getMilestones = query({
       v.literal('pending'),
       v.literal('in_progress'),
       v.literal('completed'),
-      v.literal('delayed')
+      v.literal('delayed'),
+      v.literal('skipped')
     )),
-    category: v.optional(v.union(
+    milestoneType: v.optional(v.union(
       v.literal('setup'),
-      v.literal('progress'),
-      v.literal('impact'),
-      v.literal('verification')
+      v.literal('progress_25'),
+      v.literal('progress_50'),
+      v.literal('progress_75'),
+      v.literal('impact_first'),
+      v.literal('verification'),
+      v.literal('completion')
     )),
   },
   handler: async (ctx, args) => {
@@ -375,8 +375,8 @@ export const getMilestones = query({
       milestones = milestones.filter(m => m.status === args.status);
     }
 
-    if (args.category) {
-      milestones = milestones.filter(m => m.category === args.category);
+    if (args.milestoneType) {
+      milestones = milestones.filter(m => m.milestoneType === args.milestoneType);
     }
 
     return milestones;
@@ -393,17 +393,12 @@ export const updateMilestone = mutation({
       v.literal('pending'),
       v.literal('in_progress'),
       v.literal('completed'),
-      v.literal('delayed')
+      v.literal('delayed'),
+      v.literal('skipped')
     )),
     actualDate: v.optional(v.number()),
-    actualMetrics: v.optional(v.object({
-      carbonImpact: v.optional(v.number()),
-      treesPlanted: v.optional(v.number()),
-      energyGenerated: v.optional(v.number()),
-      wasteProcessed: v.optional(v.number()),
-    })),
     delayReason: v.optional(v.string()),
-    completionNotes: v.optional(v.string()),
+    impactOnTimeline: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await UserService.getCurrentUser(ctx);
@@ -431,9 +426,8 @@ export const updateMilestone = mutation({
 
     if (args.status !== undefined) updateData.status = args.status;
     if (args.actualDate !== undefined) updateData.actualDate = args.actualDate;
-    if (args.actualMetrics !== undefined) updateData.actualMetrics = args.actualMetrics;
     if (args.delayReason !== undefined) updateData.delayReason = args.delayReason;
-    if (args.completionNotes !== undefined) updateData.completionNotes = args.completionNotes;
+    if (args.impactOnTimeline !== undefined) updateData.impactOnTimeline = args.impactOnTimeline;
 
     await ctx.db.patch(args.milestoneId, updateData);
 
@@ -579,7 +573,7 @@ export const getAlerts = query({
       const searchLower = args.searchTerm.toLowerCase();
       alerts = alerts.filter(a =>
         a.message.toLowerCase().includes(searchLower) ||
-        a.description.toLowerCase().includes(searchLower)
+        (a.description?.toLowerCase().includes(searchLower) ?? false)
       );
     }
 
@@ -804,7 +798,7 @@ export const searchMonitoringData = query({
       const filteredAlerts = alerts
         .filter(a =>
           a.message.toLowerCase().includes(searchLower) ||
-          a.description.toLowerCase().includes(searchLower)
+          (a.description?.toLowerCase().includes(searchLower) ?? false)
         )
         .slice(0, Math.floor(limit / entityTypes.length))
         .map(a => ({ ...a, entityType: 'alert' }));

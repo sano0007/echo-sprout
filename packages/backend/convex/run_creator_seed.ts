@@ -1,5 +1,6 @@
 import { mutation } from './_generated/server';
 import { v } from 'convex/values';
+import type { MutationCtx } from './_generated/server';
 import { internal } from './_generated/api';
 
 /**
@@ -9,7 +10,7 @@ import { internal } from './_generated/api';
  * Designed for userId: j575k7hvdfr79ep5qjz6a3z3xh7rfwkr (project_creator)
  */
 
-export const runCreatorSeed = mutation({
+export const runCreatorSeed: any = mutation({
   args: {
     creatorUserId: v.optional(v.string()),
     clearExisting: v.optional(v.boolean())
@@ -44,7 +45,7 @@ export const runCreatorSeed = mutation({
       return {
         success: false,
         message: 'Creator seeding failed',
-        error: error.message
+        error: (error as Error).message
       };
     }
   }
@@ -59,7 +60,7 @@ export const checkCreatorData = mutation({
 
     try {
       // Get creator info
-      const creator = await ctx.db.get(creatorUserId as any);
+      const creator = await ctx.db.get(creatorUserId as any) as any;
       if (!creator) {
         return {
           success: false,
@@ -118,7 +119,7 @@ export const checkCreatorData = mutation({
       console.error('❌ Status check failed:', error);
       return {
         success: false,
-        error: error.message
+        error: (error as Error).message
       };
     }
   }
@@ -151,7 +152,7 @@ export const clearCreatorData = mutation({
 
       // Clear data by creator ID
       for (const { table, index, field, value } of tables) {
-        const docs = await ctx.db.query(table).withIndex(index, (q: any) => q.eq(field, value)).collect();
+        const docs = await (ctx.db.query as any)(table).withIndex(index, (q: any) => q.eq(field, value)).collect();
         for (const doc of docs) {
           await ctx.db.delete(doc._id);
           totalDeleted++;
@@ -162,7 +163,7 @@ export const clearCreatorData = mutation({
       const projectTables = ['systemAlerts', 'projectMilestones', 'transactions'];
       for (const table of projectTables) {
         for (const projectId of projectIds) {
-          const docs = await ctx.db.query(table).withIndex('by_project', (q: any) => q.eq('projectId', projectId)).collect();
+          const docs = await (ctx.db.query as any)(table).withIndex('by_project', (q: any) => q.eq('projectId', projectId)).collect();
           for (const doc of docs) {
             await ctx.db.delete(doc._id);
             totalDeleted++;
@@ -188,7 +189,7 @@ export const clearCreatorData = mutation({
       console.error('❌ Clearing failed:', error);
       return {
         success: false,
-        error: error.message
+        error: (error as Error).message
       };
     }
   }

@@ -288,7 +288,9 @@ export const getProjectProgress = query({
     // Get reporter information for each update
     const updatesWithReporter = await Promise.all(
       updates.map(async (update) => {
-        const reporter = await ctx.db.get(update.reportedBy);
+        // Support both old (reportedBy) and new (submittedBy) formats
+        const reporterId = update.submittedBy || update.reportedBy;
+        const reporter = reporterId ? await ctx.db.get(reporterId) : null;
         return {
           ...update,
           reporter: reporter

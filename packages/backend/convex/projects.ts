@@ -164,7 +164,6 @@ export const createProjectForSeeding = internalMutation({
       requiredDocuments: args.requiredDocuments,
       submittedDocuments: args.submittedDocuments,
       isDocumentationComplete: args.isDocumentationComplete,
-      images: args.images,
     });
 
     return projectId;
