@@ -157,8 +157,8 @@ export default defineSchema({
     .index('by_reserved_by', ['reservedBy']),
 
   transactions: defineTable({
-    buyerId: v.id('users'),
-    projectId: v.id('projects'),
+    buyerId: v.string(), // Clerk ID for consistency with Stripe integration
+    projectId: v.optional(v.id('projects')),
     creditAmount: v.number(),
     unitPrice: v.number(),
     totalAmount: v.number(),
@@ -183,6 +183,12 @@ export default defineSchema({
     certificateUrl: v.optional(v.string()),
     impactDescription: v.string(),
     transactionReference: v.string(), // Unique transaction reference
+    refundDetails: v.optional(v.object({
+      refundReason: v.string(),
+      refundAmount: v.number(),
+      adminNotes: v.string(),
+      processedAt: v.number(),
+    })),
   })
     .index('by_buyer', ['buyerId'])
     .index('by_project', ['projectId'])
@@ -583,7 +589,7 @@ export default defineSchema({
   // ============= CERTIFICATES & REWARDS =============
   certificates: defineTable({
     transactionId: v.id('transactions'),
-    buyerId: v.id('users'),
+    buyerId: v.string(), // Clerk ID for consistency with transactions
     projectId: v.id('projects'),
     certificateNumber: v.string(), // Unique certificate number
     creditsAmount: v.number(),

@@ -163,7 +163,7 @@ const WorkingPDFGenerator: React.FC = () => {
   const handleDelete = async (reportId: string) => {
     if (window.confirm('Are you sure you want to delete this report?')) {
       try {
-        await deleteReport({ reportId });
+        await deleteReport({ reportId: reportId as any }); // Cast string to Id<"pdf_reports">
       } catch (error) {
         console.error('Failed to delete report:', error);
       }

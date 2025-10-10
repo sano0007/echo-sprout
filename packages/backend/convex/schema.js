@@ -118,8 +118,8 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_availability', ['status', 'projectId'])
         .index('by_reserved_by', ['reservedBy']),
     transactions: (0, server_1.defineTable)({
-        buyerId: values_1.v.id('users'),
-        projectId: values_1.v.id('projects'),
+        buyerId: values_1.v.string(), // Clerk ID for consistency with Stripe integration
+        projectId: values_1.v.optional(values_1.v.id('projects')),
         creditAmount: values_1.v.number(),
         unitPrice: values_1.v.number(),
         totalAmount: values_1.v.number(),
@@ -137,6 +137,12 @@ exports.default = (0, server_1.defineSchema)({
         certificateUrl: values_1.v.optional(values_1.v.string()),
         impactDescription: values_1.v.string(),
         transactionReference: values_1.v.string(), // Unique transaction reference
+        refundDetails: values_1.v.optional(values_1.v.object({
+            refundReason: values_1.v.string(),
+            refundAmount: values_1.v.number(),
+            adminNotes: values_1.v.string(),
+            processedAt: values_1.v.number(),
+        })),
     })
         .index('by_buyer', ['buyerId'])
         .index('by_project', ['projectId'])
@@ -432,7 +438,7 @@ exports.default = (0, server_1.defineSchema)({
     // ============= CERTIFICATES & REWARDS =============
     certificates: (0, server_1.defineTable)({
         transactionId: values_1.v.id('transactions'),
-        buyerId: values_1.v.id('users'),
+        buyerId: values_1.v.string(), // Clerk ID for consistency with transactions
         projectId: values_1.v.id('projects'),
         certificateNumber: values_1.v.string(), // Unique certificate number
         creditsAmount: values_1.v.number(),

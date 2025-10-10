@@ -68,16 +68,35 @@ export const createTransactionFromStripe = internalMutation({
     // Generate transaction reference
     const transactionReference = `TXN-${Date.now()}-${sessionId.slice(-8)}`;
 
+    // Calculate platform fee (5% of total amount)
+    const platformFee = originalAmount * 0.05;
+    const netAmount = originalAmount - platformFee;
+
+    // Get project for impact description
+    let impactDescription = `Purchase of ${credits} carbon credits`;
+    if (projectId) {
+      const project = await ctx.db
+        .query('projects')
+        .filter((q) => q.eq(q.field('_id'), projectId))
+        .first();
+      if (project) {
+        impactDescription = `${credits} carbon credits from ${project.title} (${project.projectType})`;
+      }
+    }
+
     const transactionId = await ctx.db.insert('transactions', {
       buyerId: buyer.clerkId, // Use Clerk ID instead of internal user ID
       projectId: projectId || undefined,
       creditAmount: credits,
       unitPrice,
       totalAmount: originalAmount,
+      platformFee,
+      netAmount,
       paymentStatus: mapStripeStatusToConvex(args.paymentStatus),
       stripePaymentIntentId: paymentIntentId,
       stripeSessionId: sessionId,
       certificateUrl: undefined,
+      impactDescription,
       transactionReference,
     });
 

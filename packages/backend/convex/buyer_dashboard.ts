@@ -23,14 +23,17 @@ export const getBuyerPurchaseHistory = query({
     // Get all transactions for this buyer
     const transactions = await ctx.db
       .query('transactions')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', user._id))
+      .withIndex('by_buyer', (q) => q.eq('buyerId', user.clerkId))
       .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
       .collect();
 
     // Get project details for each transaction
     const purchases = await Promise.all(
       transactions.map(async (transaction) => {
-        const project = await ctx.db.get(transaction.projectId);
+        let project = null;
+        if (transaction.projectId) {
+          project = await ctx.db.get(transaction.projectId);
+        }
 
         return {
           id: transaction._id,
@@ -83,7 +86,7 @@ export const getBuyerCertificates = query({
     // Get all certificates for this buyer
     const certificates = await ctx.db
       .query('certificates')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', user._id))
+      .withIndex('by_buyer', (q) => q.eq('buyerId', user.clerkId))
       .collect();
 
     // Get additional details for each certificate
@@ -126,14 +129,14 @@ export const getBuyerDashboardSummary = query({
     // Get completed transactions count and totals
     const transactions = await ctx.db
       .query('transactions')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', user._id))
+      .withIndex('by_buyer', (q) => q.eq('buyerId', user.clerkId))
       .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
       .collect();
 
     // Get certificates count
     const certificates = await ctx.db
       .query('certificates')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', user._id))
+      .withIndex('by_buyer', (q) => q.eq('buyerId', user.clerkId))
       .filter((q) => q.eq(q.field('isValid'), true))
       .collect();
 
@@ -167,13 +170,14 @@ export const getBuyerProjectTracking = query({
     // Get all completed transactions for this buyer
     const transactions = await ctx.db
       .query('transactions')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', user._id))
+      .withIndex('by_buyer', (q) => q.eq('buyerId', user.clerkId))
       .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
       .collect();
 
     // Get detailed project tracking data for each project
     const projectTrackingData = await Promise.all(
       transactions.map(async (transaction) => {
+        if (!transaction.projectId) return null;
         const project = await ctx.db.get(transaction.projectId);
         if (!project) return null;
 

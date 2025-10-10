@@ -134,103 +134,13 @@ export default function ProjectDetail() {
         {/* Main Content */}
         <div className="lg:col-span-2">
           <div className="mb-6">
-            {project.images && project.images.length > 0 ? (
-              <>
-                {/* Main Image with Navigation */}
-                <div className="relative w-full h-96 bg-gray-200 rounded-lg mb-4 overflow-hidden">
-                  <Image
-                    src={
-                      project.images[currentImageIndex] ??
-                      'https://placehold.co/1200x600'
-                    }
-                    alt={`${project.title} - Image ${currentImageIndex + 1}`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover"
-                    onError={(e) => {
-                      // Fallback handled via container style; Next/Image doesn't allow setting src directly on error
-                      console.warn('Image failed to load', e);
-                    }}
-                  />
-
-                  {/* Navigation Arrows */}
-                  {project.images.length > 1 && (
-                    <>
-                      <button
-                        onClick={() =>
-                          setCurrentImageIndex(
-                            currentImageIndex === 0
-                              ? project.images!.length - 1
-                              : currentImageIndex - 1
-                          )
-                        }
-                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity"
-                      >
-                        ←
-                      </button>
-                      <button
-                        onClick={() =>
-                          setCurrentImageIndex(
-                            currentImageIndex === project.images!.length - 1
-                              ? 0
-                              : currentImageIndex + 1
-                          )
-                        }
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-opacity"
-                      >
-                        →
-                      </button>
-                    </>
-                  )}
-
-                  {/* Image Counter */}
-                  {project.images.length > 1 && (
-                    <div className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-                      {currentImageIndex + 1} / {project.images.length}
-                    </div>
-                  )}
-                </div>
-
-                {/* Thumbnail Navigation */}
-                {project.images.length > 1 && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {project.images.slice(0, 3).map((image: any, index: number) => (
-                      <div
-                        key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`h-24 rounded cursor-pointer overflow-hidden border-2 transition-all ${
-                          currentImageIndex === index
-                            ? 'border-blue-500 opacity-100'
-                            : 'border-gray-200 opacity-75 hover:opacity-100'
-                        }`}
-                      >
-                        <div className="relative w-full h-full">
-                          <Image
-                            src={image ?? 'https://placehold.co/300x200'}
-                            alt={`${project.title} - Thumbnail ${index + 1}`}
-                            fill
-                            sizes="33vw"
-                            className="object-cover"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                    {project.images.length > 3 && (
-                      <div
-                        onClick={() => setCurrentImageIndex(3)}
-                        className="h-24 bg-gray-800 bg-opacity-75 rounded cursor-pointer flex items-center justify-center text-white font-semibold hover:bg-opacity-60 transition-all"
-                      >
-                        +{project.images.length - 3}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="w-full h-96 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-                <p className="text-gray-500">No images available</p>
+            {/* Placeholder for project images - images field not yet implemented in schema */}
+            <div className="w-full h-96 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg mb-4 flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-2xl font-semibold text-gray-700 mb-2">{project.title}</p>
+                <p className="text-gray-600">{project.projectType}</p>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Project Info */}

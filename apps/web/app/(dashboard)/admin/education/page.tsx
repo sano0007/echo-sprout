@@ -37,11 +37,11 @@ interface LearningPath {
   level: 'beginner' | 'intermediate' | 'advanced';
   estimatedDuration: number;
   moduleCount: number;
-  status: 'published' | 'draft';
+  status: 'published' | 'draft' | 'archived';
   isPublished: boolean;
   createdByName: string;
   enrollmentCount?: number;
-  publishedAt?: string | null;
+  publishedAt?: number;
   lastUpdatedAt: number;
 }
 

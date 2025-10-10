@@ -15,17 +15,9 @@ export const saveFile = mutation({
     contentType: v.string(),
   },
   handler: async (ctx, args) => {
-    const { storageId, filename, contentType } = args;
+    const { storageId } = args;
 
-    // Save file metadata to database
-    const fileId = await ctx.db.insert('files', {
-      storageId,
-      filename,
-      contentType,
-      uploadedAt: Date.now(),
-    });
-
-    // Get the file URL
+    // Get the file URL from Convex storage
     const fileUrl = await ctx.storage.getUrl(storageId);
 
     if (!fileUrl) {

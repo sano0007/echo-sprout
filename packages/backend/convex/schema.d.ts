@@ -230,12 +230,18 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_reserved_by: ["reservedBy", "_creationTime"];
     }, {}, {}>;
     transactions: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        projectId?: import("convex/values").GenericId<"projects"> | undefined;
         stripePaymentIntentId?: string | undefined;
         stripeSessionId?: string | undefined;
         certificateUrl?: string | undefined;
-        projectId: import("convex/values").GenericId<"projects">;
+        refundDetails?: {
+            refundReason: string;
+            refundAmount: number;
+            adminNotes: string;
+            processedAt: number;
+        } | undefined;
         creditAmount: number;
-        buyerId: import("convex/values").GenericId<"users">;
+        buyerId: string;
         unitPrice: number;
         totalAmount: number;
         platformFee: number;
@@ -244,8 +250,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         impactDescription: string;
         transactionReference: string;
     }, {
-        buyerId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
+        buyerId: import("convex/values").VString<string, "required">;
+        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects"> | undefined, "optional">;
         creditAmount: import("convex/values").VFloat64<number, "required">;
         unitPrice: import("convex/values").VFloat64<number, "required">;
         totalAmount: import("convex/values").VFloat64<number, "required">;
@@ -257,7 +263,18 @@ declare const _default: import("convex/server").SchemaDefinition<{
         certificateUrl: import("convex/values").VString<string | undefined, "optional">;
         impactDescription: import("convex/values").VString<string, "required">;
         transactionReference: import("convex/values").VString<string, "required">;
-    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "platformFee" | "netAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "impactDescription" | "transactionReference">, {
+        refundDetails: import("convex/values").VObject<{
+            refundReason: string;
+            refundAmount: number;
+            adminNotes: string;
+            processedAt: number;
+        } | undefined, {
+            refundReason: import("convex/values").VString<string, "required">;
+            refundAmount: import("convex/values").VFloat64<number, "required">;
+            adminNotes: import("convex/values").VString<string, "required">;
+            processedAt: import("convex/values").VFloat64<number, "required">;
+        }, "optional", "refundReason" | "refundAmount" | "adminNotes" | "processedAt">;
+    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "platformFee" | "netAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "impactDescription" | "transactionReference" | "refundDetails" | "refundDetails.refundReason" | "refundDetails.refundAmount" | "refundDetails.adminNotes" | "refundDetails.processedAt">, {
         by_buyer: ["buyerId", "_creationTime"];
         by_project: ["projectId", "_creationTime"];
         by_payment_status: ["paymentStatus", "_creationTime"];
@@ -814,7 +831,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     certificates: import("convex/server").TableDefinition<import("convex/values").VObject<{
         projectId: import("convex/values").GenericId<"projects">;
-        buyerId: import("convex/values").GenericId<"users">;
+        buyerId: string;
         certificateUrl: string;
         impactDescription: string;
         transactionId: import("convex/values").GenericId<"transactions">;
@@ -825,7 +842,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isValid: boolean;
     }, {
         transactionId: import("convex/values").VId<import("convex/values").GenericId<"transactions">, "required">;
-        buyerId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
+        buyerId: import("convex/values").VString<string, "required">;
         projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
         certificateNumber: import("convex/values").VString<string, "required">;
         creditsAmount: import("convex/values").VFloat64<number, "required">;

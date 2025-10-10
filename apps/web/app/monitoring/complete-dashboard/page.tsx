@@ -149,6 +149,7 @@ export default function CompleteMonitoringDashboard() {
     try {
       await createProgressUpdate({
         ...data,
+        projectId: data.projectId as any, // Cast string to Id<"projects">
         measurementData: data.measurementData || {},
       });
       progressForm.reset();
@@ -161,7 +162,11 @@ export default function CompleteMonitoringDashboard() {
 
   const handleCreateAlert = async (data: AlertForm) => {
     try {
-      await createAlert(data);
+      await createAlert({
+        ...data,
+        projectId: data.projectId ? (data.projectId as any) : undefined, // Cast string to Id<"projects">
+        assignedTo: data.assignedTo ? (data.assignedTo as any) : undefined, // Cast string to Id<"users">
+      });
       alertForm.reset();
       setShowModal('');
       setEditingItem(null);
@@ -172,10 +177,22 @@ export default function CompleteMonitoringDashboard() {
 
   const handleCreateMilestone = async (data: MilestoneForm) => {
     try {
+      // Map form category to milestoneType enum values
+      const milestoneTypeMap: Record<string, any> = {
+        'setup': 'setup',
+        'progress': 'progress_25', // Default to progress_25 for generic progress
+        'impact': 'impact_first',
+        'verification': 'verification',
+      };
+
       await createMilestone({
-        ...data,
+        projectId: data.projectId as any, // Cast string to Id<"projects">
+        title: data.title,
+        description: data.description,
+        milestoneType: milestoneTypeMap[data.category] || 'progress_25',
         plannedDate: data.plannedDate.getTime(),
-        targetMetrics: data.targetMetrics || {},
+        order: 0, // Default order
+        isRequired: true, // Default to required
       });
       milestoneForm.reset();
       setShowModal('');
