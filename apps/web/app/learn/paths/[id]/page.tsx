@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { capitalizeLabel, extractFileName, resolveYouTubeEmbed } from './lib';
 
 export default function LearningPathDetailsPage() {
   const params = useParams();
@@ -117,44 +118,9 @@ export default function LearningPathDetailsPage() {
     );
   }
 
-  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-  const getYouTubeEmbed = (url: string): string | null => {
-    if (!url) return null;
-    try {
-      const u = new URL(url);
-      // youtu.be/<id>
-      if (u.hostname === 'youtu.be') {
-        const id = u.pathname.replace('/', '').trim();
-        return id ? `https://www.youtube.com/embed/${id}` : null;
-      }
-      // www.youtube.com or youtube.com
-      if (u.hostname.includes('youtube.com')) {
-        // /watch?v=<id>
-        const v = u.searchParams.get('v');
-        if (v) return `https://www.youtube.com/embed/${v}`;
-        // /embed/<id>
-        if (u.pathname.startsWith('/embed/')) return url;
-        // /shorts/<id>
-        if (u.pathname.startsWith('/shorts/')) {
-          const id = u.pathname.split('/')[2];
-          return id ? `https://www.youtube.com/embed/${id}` : null;
-        }
-      }
-    } catch (_) {
-      // ignore parse errors
-    }
-    return null;
-  };
-
-  const getFileName = (url: string): string => {
-    try {
-      const u = new URL(url);
-      const last = u.pathname.split('/').filter(Boolean).pop();
-      return last || url;
-    } catch {
-      return url;
-    }
-  };
+  const cap = capitalizeLabel;
+  const getYouTubeEmbed = resolveYouTubeEmbed;
+  const getFileName = extractFileName;
 
   // No progress functionality in this state
 
