@@ -13,304 +13,77 @@ import {
   TrendingDown,
   TrendingUp,
   Users,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { useState } from 'react';
-
-interface AnalyticsMetric {
-  id: string;
-  name: string;
-  value: number;
-  previousValue: number;
-  change: number;
-  changeType: 'increase' | 'decrease' | 'stable';
-  unit: string;
-  format: 'number' | 'currency' | 'percentage';
-  category: 'platform' | 'environmental' | 'financial' | 'user';
-  description: string;
-}
-
-interface ChartDataPoint {
-  label: string;
-  value: number;
-  timestamp: string;
-  metadata?: any;
-}
-
-interface AnalyticsChart {
-  id: string;
-  title: string;
-  type: 'line' | 'bar' | 'pie' | 'area';
-  data: ChartDataPoint[];
-  metrics: string[];
-  timeframe: string;
-  category: string;
-}
+import {
+  useAnalyticsDashboard,
+  formatMetricValue,
+  getChangeIconClass,
+  getCategoryColor,
+  type AnalyticsMetric,
+  type AnalyticsChart,
+  type ChartDataPoint,
+} from '@/hooks/useAnalyticsDashboard';
+import { useAnalyticsPDFReports } from '@/hooks/usePDFReports';
+import { PDFReportGenerator } from '@/components/pdf-reports/PDFReportGenerator';
 
 interface AnalyticsDashboardProps {
   timeframe?: '7d' | '30d' | '90d' | '1y';
+  category?: 'all' | 'platform' | 'environmental' | 'financial' | 'user';
   onExportReport?: (type: string, timeframe: string) => void;
   onDrillDown?: (metric: string, filters: any) => void;
   onRefreshData?: () => void;
+  showPDFGenerator?: boolean;
 }
 
 export default function AnalyticsDashboard({
   timeframe = '30d',
+  category = 'all',
   onExportReport,
   onDrillDown,
   onRefreshData,
+  showPDFGenerator = true,
 }: AnalyticsDashboardProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState<
     '7d' | '30d' | '90d' | '1y'
   >(timeframe);
   const [selectedCategory, setSelectedCategory] = useState<
     'all' | 'platform' | 'environmental' | 'financial' | 'user'
-  >('all');
+  >(category);
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [showPDFReports, setShowPDFReports] = useState(false);
 
-  // Mock analytics data - in real implementation, this would come from props or API calls
-  const [analyticsMetrics] = useState<AnalyticsMetric[]>([
-    {
-      id: 'total_projects',
-      name: 'Total Projects',
-      value: 1247,
-      previousValue: 1180,
-      change: 5.7,
-      changeType: 'increase',
-      unit: 'projects',
-      format: 'number',
-      category: 'platform',
-      description: 'Total number of projects on the platform',
-    },
-    {
-      id: 'active_projects',
-      name: 'Active Projects',
-      value: 856,
-      previousValue: 923,
-      change: -7.3,
-      changeType: 'decrease',
-      unit: 'projects',
-      format: 'number',
-      category: 'platform',
-      description: 'Currently active projects',
-    },
-    {
-      id: 'total_users',
-      name: 'Total Users',
-      value: 15420,
-      previousValue: 14250,
-      change: 8.2,
-      changeType: 'increase',
-      unit: 'users',
-      format: 'number',
-      category: 'user',
-      description: 'Total registered users',
-    },
-    {
-      id: 'active_users',
-      name: 'Active Users',
-      value: 8940,
-      previousValue: 8320,
-      change: 7.5,
-      changeType: 'increase',
-      unit: 'users',
-      format: 'number',
-      category: 'user',
-      description: 'Monthly active users',
-    },
-    {
-      id: 'co2_offset',
-      name: 'CO₂ Offset',
-      value: 125400,
-      previousValue: 118900,
-      change: 5.5,
-      changeType: 'increase',
-      unit: 'tons',
-      format: 'number',
-      category: 'environmental',
-      description: 'Total CO₂ offset achieved',
-    },
-    {
-      id: 'trees_planted',
-      name: 'Trees Planted',
-      value: 2840000,
-      previousValue: 2650000,
-      change: 7.2,
-      changeType: 'increase',
-      unit: 'trees',
-      format: 'number',
-      category: 'environmental',
-      description: 'Total trees planted across all projects',
-    },
-    {
-      id: 'total_revenue',
-      name: 'Total Revenue',
-      value: 18750000,
-      previousValue: 16200000,
-      change: 15.7,
-      changeType: 'increase',
-      unit: 'USD',
-      format: 'currency',
-      category: 'financial',
-      description: 'Total platform revenue',
-    },
-    {
-      id: 'credits_traded',
-      name: 'Credits Traded',
-      value: 750000,
-      previousValue: 648000,
-      change: 15.7,
-      changeType: 'increase',
-      unit: 'credits',
-      format: 'number',
-      category: 'financial',
-      description: 'Total carbon credits traded',
-    },
-    {
-      id: 'avg_project_success',
-      name: 'Project Success Rate',
-      value: 89.5,
-      previousValue: 87.2,
-      change: 2.6,
-      changeType: 'increase',
-      unit: '%',
-      format: 'percentage',
-      category: 'platform',
-      description: 'Percentage of projects completed successfully',
-    },
-    {
-      id: 'buyer_satisfaction',
-      name: 'Buyer Satisfaction',
-      value: 4.7,
-      previousValue: 4.5,
-      change: 4.4,
-      changeType: 'increase',
-      unit: '/5',
-      format: 'number',
-      category: 'user',
-      description: 'Average buyer satisfaction rating',
-    },
-    {
-      id: 'verification_rate',
-      name: 'Verification Rate',
-      value: 96.3,
-      previousValue: 94.8,
-      change: 1.6,
-      changeType: 'increase',
-      unit: '%',
-      format: 'percentage',
-      category: 'platform',
-      description: 'Percentage of projects successfully verified',
-    },
-    {
-      id: 'avg_credit_price',
-      name: 'Avg Credit Price',
-      value: 28.45,
-      previousValue: 26.8,
-      change: 6.2,
-      changeType: 'increase',
-      unit: 'USD',
-      format: 'currency',
-      category: 'financial',
-      description: 'Average price per carbon credit',
-    },
-  ]);
+  // Fetch real analytics data
+  const {
+    data: analyticsData,
+    isLoading,
+    error,
+    refresh,
+  } = useAnalyticsDashboard({
+    timeframe: selectedTimeframe,
+    category: selectedCategory,
+  });
 
-  const [charts] = useState<AnalyticsChart[]>([
-    {
-      id: 'projects_over_time',
-      title: 'Projects Created Over Time',
-      type: 'line',
-      category: 'platform',
-      timeframe: selectedTimeframe,
-      metrics: ['projects_created'],
-      data: [
-        { label: 'Week 1', value: 45, timestamp: '2024-10-01' },
-        { label: 'Week 2', value: 52, timestamp: '2024-10-08' },
-        { label: 'Week 3', value: 48, timestamp: '2024-10-15' },
-        { label: 'Week 4', value: 61, timestamp: '2024-10-22' },
-        { label: 'Week 5', value: 67, timestamp: '2024-10-29' },
-      ],
-    },
-    {
-      id: 'revenue_trends',
-      title: 'Revenue Trends',
-      type: 'area',
-      category: 'financial',
-      timeframe: selectedTimeframe,
-      metrics: ['revenue'],
-      data: [
-        { label: 'Jan', value: 1200000, timestamp: '2024-01-01' },
-        { label: 'Feb', value: 1350000, timestamp: '2024-02-01' },
-        { label: 'Mar', value: 1180000, timestamp: '2024-03-01' },
-        { label: 'Apr', value: 1420000, timestamp: '2024-04-01' },
-        { label: 'May', value: 1650000, timestamp: '2024-05-01' },
-        { label: 'Jun', value: 1480000, timestamp: '2024-06-01' },
-      ],
-    },
-    {
-      id: 'project_types',
-      title: 'Project Distribution by Type',
-      type: 'pie',
-      category: 'platform',
-      timeframe: selectedTimeframe,
-      metrics: ['project_types'],
-      data: [
-        { label: 'Reforestation', value: 35, timestamp: '2024-11-01' },
-        { label: 'Renewable Energy', value: 28, timestamp: '2024-11-01' },
-        { label: 'Waste Management', value: 18, timestamp: '2024-11-01' },
-        { label: 'Water Conservation', value: 12, timestamp: '2024-11-01' },
-        { label: 'Biodiversity', value: 7, timestamp: '2024-11-01' },
-      ],
-    },
-    {
-      id: 'user_engagement',
-      title: 'User Engagement Metrics',
-      type: 'bar',
-      category: 'user',
-      timeframe: selectedTimeframe,
-      metrics: ['active_users', 'new_users'],
-      data: [
-        { label: 'Week 1', value: 8200, timestamp: '2024-10-01' },
-        { label: 'Week 2', value: 8450, timestamp: '2024-10-08' },
-        { label: 'Week 3', value: 8680, timestamp: '2024-10-15' },
-        { label: 'Week 4', value: 8820, timestamp: '2024-10-22' },
-        { label: 'Week 5', value: 8940, timestamp: '2024-10-29' },
-      ],
-    },
-  ]);
+  const { generateAnalyticsReport, reports, hasProcessingReports } = useAnalyticsPDFReports();
 
-  const filteredMetrics =
-    selectedCategory === 'all'
-      ? analyticsMetrics
-      : analyticsMetrics.filter(
-          (metric) => metric.category === selectedCategory
-        );
+  // Get real data from the hook
+  const analyticsMetrics = analyticsData?.metrics || [];
+  const analyticsCharts = analyticsData?.charts || [];
 
-  const filteredCharts =
-    selectedCategory === 'all'
-      ? charts
-      : charts.filter((chart) => chart.category === selectedCategory);
 
-  const formatValue = (value: number, format: string, unit: string) => {
-    switch (format) {
-      case 'currency':
-        return new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        }).format(value);
-      case 'percentage':
-        return `${value.toFixed(1)}%`;
-      default:
-        if (value >= 1000000) {
-          return `${(value / 1000000).toFixed(1)}M ${unit}`;
-        } else if (value >= 1000) {
-          return `${(value / 1000).toFixed(1)}K ${unit}`;
-        }
-        return `${value.toLocaleString()} ${unit}`;
+  // Data is already filtered by the backend based on selectedCategory
+  const filteredMetrics = analyticsMetrics;
+  const filteredCharts = analyticsCharts;
+
+  // Handle refresh from parent or our own refresh function
+  const handleRefresh = () => {
+    if (onRefreshData) {
+      onRefreshData();
     }
+    refresh();
   };
 
   const getChangeIcon = (changeType: string) => {
@@ -350,18 +123,48 @@ export default function AnalyticsDashboard({
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'platform':
-        return 'text-blue-600 bg-blue-100';
-      case 'environmental':
-        return 'text-green-600 bg-green-100';
-      case 'financial':
-        return 'text-yellow-600 bg-yellow-100';
-      case 'user':
-        return 'text-purple-600 bg-purple-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
+  // Using imported getCategoryColor utility function
+
+  // Handle PDF generation
+  const handleGeneratePDF = async (reportType: 'comprehensive' | 'platform' | 'environmental' | 'financial') => {
+    try {
+      const startDate = new Date();
+      const endDate = new Date();
+
+      // Calculate date range based on selected timeframe
+      switch (selectedTimeframe) {
+        case '7d':
+          startDate.setDate(endDate.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(endDate.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(endDate.getDate() - 90);
+          break;
+        case '1y':
+          startDate.setFullYear(endDate.getFullYear() - 1);
+          break;
+      }
+
+      const filters = {
+        category: selectedCategory !== 'all' ? selectedCategory : undefined,
+        timeframe: selectedTimeframe,
+        metrics: selectedMetrics.length > 0 ? selectedMetrics : undefined,
+      };
+
+      await generateAnalyticsReport(
+        reportType,
+        `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Analytics Report`,
+        {
+          start: startDate,
+          end: endDate,
+          period: `Last ${selectedTimeframe}`,
+        },
+        filters
+      );
+    } catch (error) {
+      console.error('Failed to generate PDF report:', error);
     }
   };
 
@@ -491,6 +294,36 @@ export default function AnalyticsDashboard({
     );
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] space-y-6">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+          <p className="text-gray-600">Loading analytics data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] space-y-6">
+        <div className="flex flex-col items-center space-y-4">
+          <AlertCircle className="h-8 w-8 text-red-600" />
+          <p className="text-gray-600">Failed to load analytics data</p>
+          <button
+            onClick={handleRefresh}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -507,20 +340,82 @@ export default function AnalyticsDashboard({
           </div>
           <div className="flex items-center space-x-3">
             <button
-              onClick={onRefreshData}
+              onClick={handleRefresh}
               className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <RotateCcw className="h-4 w-4" />
               <span>Refresh</span>
             </button>
+
+            {showPDFGenerator && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowPDFReports(!showPDFReports)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Generate PDF</span>
+                  {hasProcessingReports() && (
+                    <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                  )}
+                </button>
+
+                {showPDFReports && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="p-3">
+                      <h4 className="text-sm font-semibold text-gray-800 mb-2">PDF Report Types</h4>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            handleGeneratePDF('comprehensive');
+                            setShowPDFReports(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        >
+                          Comprehensive Report
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleGeneratePDF('platform');
+                            setShowPDFReports(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        >
+                          Platform Performance
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleGeneratePDF('environmental');
+                            setShowPDFReports(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        >
+                          Environmental Impact
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleGeneratePDF('financial');
+                            setShowPDFReports(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        >
+                          Financial Performance
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               onClick={() =>
                 onExportReport?.('comprehensive', selectedTimeframe)
               }
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <Download className="h-4 w-4" />
-              <span>Export Report</span>
+              <span>Export Data</span>
             </button>
           </div>
         </div>
@@ -649,7 +544,7 @@ export default function AnalyticsDashboard({
 
             <div className="mb-4">
               <div className="text-3xl font-bold text-gray-800">
-                {formatValue(metric.value, metric.format, metric.unit)}
+                {formatMetricValue(metric.value, metric.format, metric.unit)}
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 {getChangeIcon(metric.changeType)}
@@ -672,7 +567,7 @@ export default function AnalyticsDashboard({
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>
                 Previous:{' '}
-                {formatValue(metric.previousValue, metric.format, metric.unit)}
+                {formatMetricValue(metric.previousValue, metric.format, metric.unit)}
               </span>
               <button className="flex items-center space-x-1 hover:text-blue-600">
                 <Eye className="h-3 w-3" />
@@ -766,6 +661,65 @@ export default function AnalyticsDashboard({
           </div>
         </div>
       </div>
+
+      {/* Recent PDF Reports */}
+      {showPDFGenerator && reports.length > 0 && (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Recent PDF Reports
+          </h3>
+          <div className="grid gap-3">
+            {reports.slice(0, 3).map((report: any) => (
+              <div
+                key={report._id}
+                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+              >
+                <div className="flex items-center space-x-3">
+                  <FileText className="h-5 w-5 text-gray-600" />
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-800">
+                      {report.title}
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      {new Date(report.requestedAt).toLocaleDateString()} • {report.reportType}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      report.status === 'completed'
+                        ? 'bg-green-100 text-green-800'
+                        : report.status === 'processing'
+                        ? 'bg-blue-100 text-blue-800'
+                        : report.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {report.status}
+                  </span>
+                  {report.status === 'completed' && report.fileUrl && (
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = report.fileUrl!;
+                        link.download = `${report.title.replace(/\s+/g, '_')}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      className="p-1 text-gray-400 hover:text-blue-600"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

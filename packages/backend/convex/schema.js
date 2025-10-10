@@ -82,11 +82,11 @@ exports.default = (0, server_1.defineSchema)({
         assignedVerifierId: values_1.v.optional(values_1.v.id('users')),
         verificationStartedAt: values_1.v.optional(values_1.v.float64()),
         verificationCompletedAt: values_1.v.optional(values_1.v.float64()),
-        qualityScore: values_1.v.optional(values_1.v.number()),
+        qualityScore: values_1.v.optional(values_1.v.number()), // 1-10 scale
+        // Document requirements tracking
         requiredDocuments: values_1.v.array(values_1.v.string()), // todo: enum of document types
         submittedDocuments: values_1.v.array(values_1.v.string()), // todo: enum of document types
         isDocumentationComplete: values_1.v.boolean(),
-        images: values_1.v.optional(values_1.v.array(values_1.v.string())), // Array of image URLs
         // Progress tracking
         progressPercentage: values_1.v.optional(values_1.v.number()), // 0-100
         lastProgressUpdate: values_1.v.optional(values_1.v.number()), // timestamp
@@ -118,25 +118,25 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_availability', ['status', 'projectId'])
         .index('by_reserved_by', ['reservedBy']),
     transactions: (0, server_1.defineTable)({
-        // todo: replace when auth is set up
-        // buyerId: v.id('users'),
-        buyerId: values_1.v.string(), // Clerk user ID of the buyer
-        projectId: values_1.v.optional(values_1.v.id('projects')), // Link to specific project for project-specific purchases
+        buyerId: values_1.v.id('users'),
+        projectId: values_1.v.id('projects'),
         creditAmount: values_1.v.number(),
         unitPrice: values_1.v.number(),
         totalAmount: values_1.v.number(),
-        // platformFee: v.number(), // consider having a platform fee in the future
+        platformFee: values_1.v.number(), // platform fee
+        netAmount: values_1.v.number(), // Amount after platform fee
+        // paymentMethod: v.union(
+        //     v.literal("stripe"),
+        //     v.literal("paypal"),
+        //     v.literal("bank_transfer"),
+        //     v.literal("crypto"),
+        // ),
         paymentStatus: values_1.v.union(values_1.v.literal('pending'), values_1.v.literal('processing'), values_1.v.literal('completed'), values_1.v.literal('failed'), values_1.v.literal('refunded'), values_1.v.literal('expired')),
         stripePaymentIntentId: values_1.v.optional(values_1.v.string()),
         stripeSessionId: values_1.v.optional(values_1.v.string()),
         certificateUrl: values_1.v.optional(values_1.v.string()),
+        impactDescription: values_1.v.string(),
         transactionReference: values_1.v.string(), // Unique transaction reference
-        refundDetails: values_1.v.optional(values_1.v.object({
-            refundReason: values_1.v.string(),
-            refundAmount: values_1.v.number(),
-            adminNotes: values_1.v.string(),
-            processedAt: values_1.v.number(),
-        })),
     })
         .index('by_buyer', ['buyerId'])
         .index('by_project', ['projectId'])
@@ -286,46 +286,6 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_type', ['documentType'])
         .index('by_verification_status', ['isVerified'])
         .index('by_required', ['entityType', 'isRequired']),
-    // ============= PROGRESS TRACKING =============
-    progressUpdates: (0, server_1.defineTable)({
-        projectId: values_1.v.id('projects'),
-        reportedBy: values_1.v.id('users'),
-        updateType: values_1.v.union(values_1.v.literal('milestone'), values_1.v.literal('measurement'), values_1.v.literal('photo'), values_1.v.literal('issue'), values_1.v.literal('completion')),
-        title: values_1.v.string(),
-        description: values_1.v.string(),
-        progressPercentage: values_1.v.number(), // 0-100
-        measurementData: values_1.v.optional(values_1.v.any()), // JSON data for specific measurements
-        location: values_1.v.optional(values_1.v.object({
-            lat: values_1.v.float64(),
-            long: values_1.v.float64(),
-            name: values_1.v.string(),
-        })),
-        photos: values_1.v.array(values_1.v.object({
-            cloudinary_public_id: values_1.v.string(),
-            cloudinary_url: values_1.v.string(),
-        })),
-        reportingDate: values_1.v.float64(),
-        // Impact tracking
-        carbonImpactToDate: values_1.v.optional(values_1.v.number()), // CO2 reduction achieved so far
-        treesPlanted: values_1.v.optional(values_1.v.number()),
-        energyGenerated: values_1.v.optional(values_1.v.number()),
-        wasteProcessed: values_1.v.optional(values_1.v.number()),
-        // Verification
-        isVerified: values_1.v.boolean(),
-        verifiedBy: values_1.v.optional(values_1.v.id('users')),
-        verifiedAt: values_1.v.optional(values_1.v.float64()),
-        verificationNotes: values_1.v.optional(values_1.v.string()),
-    })
-        .index('by_project', ['projectId'])
-        .index('by_reporter', ['reportedBy'])
-        .index('by_date', ['reportingDate'])
-        .index('by_type', ['updateType'])
-        .index('by_verification', ['isVerified'])
-        // Enhanced indexes for monitoring
-        .index('by_project_date', ['projectId', 'reportingDate'])
-        .index('by_project_type', ['projectId', 'updateType'])
-        .index('by_project_verified', ['projectId', 'isVerified'])
-        .index('by_date_type', ['reportingDate', 'updateType']),
     // ============= EDUCATIONAL CONTENT =============
     educationalContent: (0, server_1.defineTable)({
         title: values_1.v.string(),
@@ -528,7 +488,7 @@ exports.default = (0, server_1.defineSchema)({
         totalPurchased: values_1.v.number(),
         totalAllocated: values_1.v.number(),
         totalSpent: values_1.v.number(),
-        lifetimeImpact: values_1.v.number(), // Total CO2 offset by user's purchases
+        lifetimeImpact: values_1.v.number(),
         lastTransactionAt: values_1.v.optional(values_1.v.float64()),
     }).index('by_user', ['userId']),
     // ============= AUDIT TRAIL & SYSTEM LOGS =============
@@ -654,7 +614,8 @@ exports.default = (0, server_1.defineSchema)({
             weekly: values_1.v.boolean(),
         }),
         lastUpdated: values_1.v.number(),
-    }).index('by_user', ['userId']),
+    })
+        .index('by_user', ['userId']),
     // ============= ANALYTICS & REPORTING =============
     analytics: (0, server_1.defineTable)({
         metric: values_1.v.string(), // "daily_transactions", "project_completions", etc. todo: enum of metrics
@@ -891,13 +852,96 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_user', ['generatedBy'])
         .index('by_date', ['generatedAt'])
         .index('by_public', ['isPublic']),
-    // ============= FILE STORAGE =============
-    files: (0, server_1.defineTable)({
-        storageId: values_1.v.id('_storage'),
-        filename: values_1.v.string(),
-        contentType: values_1.v.string(),
-        uploadedAt: values_1.v.number(),
+    // ============= PDF REPORT GENERATION =============
+    pdf_reports: (0, server_1.defineTable)({
+        templateType: values_1.v.union(values_1.v.literal('analytics'), values_1.v.literal('monitoring')),
+        reportType: values_1.v.string(), // 'comprehensive', 'platform', 'environmental', 'financial', 'system', 'project', 'alerts', 'performance'
+        title: values_1.v.string(),
+        status: values_1.v.union(values_1.v.literal('pending'), values_1.v.literal('processing'), values_1.v.literal('completed'), values_1.v.literal('failed')),
+        progress: values_1.v.number(), // 0-100
+        requestedBy: values_1.v.string(), // Clerk user ID
+        requestedAt: values_1.v.number(),
+        completedAt: values_1.v.optional(values_1.v.number()),
+        errorMessage: values_1.v.optional(values_1.v.string()),
+        fileUrl: values_1.v.optional(values_1.v.string()),
+        fileSize: values_1.v.optional(values_1.v.number()),
+        expiresAt: values_1.v.number(), // Auto-cleanup after expiration
+        timeframe: values_1.v.object({
+            start: values_1.v.number(),
+            end: values_1.v.number(),
+            period: values_1.v.string(),
+        }),
+        filters: values_1.v.optional(values_1.v.any()),
+        userInfo: values_1.v.object({
+            userId: values_1.v.string(),
+            name: values_1.v.string(),
+            email: values_1.v.string(),
+            role: values_1.v.string(),
+        }),
     })
-        .index('by_filename', ['filename'])
-        .index('by_upload_date', ['uploadedAt']),
+        .index('by_user', ['requestedBy'])
+        .index('by_status', ['status'])
+        .index('by_template_type', ['templateType'])
+        .index('by_report_type', ['reportType'])
+        .index('by_requested_at', ['requestedAt'])
+        .index('by_expires_at', ['expiresAt'])
+        .index('by_user_status', ['requestedBy', 'status']),
+    // ============= PROGRESS UPDATES =============
+    progressUpdates: (0, server_1.defineTable)({
+        projectId: values_1.v.id('projects'),
+        // New format (Convex storage)
+        submittedBy: values_1.v.optional(values_1.v.id('users')),
+        // Old format (Cloudinary) - for backward compatibility
+        reportedBy: values_1.v.optional(values_1.v.id('users')),
+        updateType: values_1.v.union(values_1.v.literal('milestone'), values_1.v.literal('measurement'), values_1.v.literal('photo'), values_1.v.literal('issue'), values_1.v.literal('completion')),
+        title: values_1.v.string(),
+        description: values_1.v.string(),
+        progressPercentage: values_1.v.float64(),
+        // New format (Convex storage)
+        photoStorageIds: values_1.v.optional(values_1.v.array(values_1.v.id('_storage'))),
+        photoUrls: values_1.v.optional(values_1.v.array(values_1.v.string())), // Cached URLs for quick access
+        // Old format (Cloudinary) - for backward compatibility
+        photos: values_1.v.optional(values_1.v.array(values_1.v.object({
+            cloudinary_public_id: values_1.v.string(),
+            cloudinary_url: values_1.v.string(),
+        }))),
+        location: values_1.v.optional(values_1.v.object({
+            lat: values_1.v.float64(),
+            long: values_1.v.float64(),
+            name: values_1.v.string(),
+        })),
+        measurementData: values_1.v.optional(values_1.v.object({
+            treesPlanted: values_1.v.optional(values_1.v.number()),
+            survivalRate: values_1.v.optional(values_1.v.number()),
+            energyGenerated: values_1.v.optional(values_1.v.number()),
+            systemUptime: values_1.v.optional(values_1.v.number()),
+            gasProduced: values_1.v.optional(values_1.v.number()),
+            wasteProcessed: values_1.v.optional(values_1.v.number()),
+            recyclingRate: values_1.v.optional(values_1.v.number()),
+            areaRestored: values_1.v.optional(values_1.v.number()),
+            mangrovesPlanted: values_1.v.optional(values_1.v.number()),
+            carbonImpactToDate: values_1.v.optional(values_1.v.number()),
+        })),
+        nextSteps: values_1.v.optional(values_1.v.string()),
+        challenges: values_1.v.optional(values_1.v.string()),
+        submittedAt: values_1.v.optional(values_1.v.float64()),
+        reportingDate: values_1.v.float64(),
+        status: values_1.v.optional(values_1.v.union(values_1.v.literal('pending_review'), values_1.v.literal('approved'), values_1.v.literal('rejected'), values_1.v.literal('needs_revision'))),
+        isVerified: values_1.v.boolean(),
+        verifiedBy: values_1.v.optional(values_1.v.id('users')),
+        verifiedAt: values_1.v.optional(values_1.v.float64()),
+        verificationNotes: values_1.v.optional(values_1.v.string()),
+        // Legacy fields for backward compatibility
+        carbonImpactToDate: values_1.v.optional(values_1.v.float64()),
+        treesPlanted: values_1.v.optional(values_1.v.float64()),
+        energyGenerated: values_1.v.optional(values_1.v.float64()),
+        wasteProcessed: values_1.v.optional(values_1.v.float64()),
+    })
+        .index('by_project', ['projectId'])
+        .index('by_submitter', ['submittedBy'])
+        .index('by_reporter', ['reportedBy']) // Legacy index
+        .index('by_status', ['status'])
+        .index('by_project_status', ['projectId', 'status'])
+        .index('by_submitted_at', ['submittedAt'])
+        .index('by_reporting_date', ['reportingDate']),
 });

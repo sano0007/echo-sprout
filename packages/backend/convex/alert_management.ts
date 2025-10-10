@@ -682,6 +682,107 @@ export const bulkResolveAlerts = mutation({
 /**
  * Bulk assign multiple alerts
  */
+/**
+ * Delete an alert (Admin only)
+ */
+export const deleteAlert = mutation({
+  args: {
+    alertId: v.id('systemAlerts'),
+  },
+  handler: async (ctx, { alertId }) => {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+
+    // Only admins can delete alerts
+    if (user.role !== 'admin') {
+      throw new Error('Access denied: Only admins can delete alerts');
+    }
+
+    const alert = await ctx.db.get(alertId);
+    if (!alert) {
+      throw new Error('Alert not found');
+    }
+
+    // Log the deletion
+    await ctx.db.insert('auditLogs', {
+      userId: user._id,
+      action: 'alert_deleted',
+      entityType: 'system_alert',
+      entityId: alertId,
+      metadata: {
+        alertType: alert.alertType,
+        severity: alert.severity,
+        deletedAt: Date.now(),
+      },
+    });
+
+    // Delete the alert
+    await ctx.db.delete(alertId);
+
+    return { success: true, message: 'Alert deleted successfully' };
+  },
+});
+
+/**
+ * Bulk delete resolved alerts (Admin only)
+ */
+export const bulkDeleteResolvedAlerts = mutation({
+  args: {
+    olderThanDays: v.optional(v.number()), // Delete alerts older than X days
+  },
+  handler: async (ctx, { olderThanDays = 30 }) => {
+    const user = await UserService.getCurrentUser(ctx);
+    if (!user) {
+      throw new Error('Authentication required');
+    }
+
+    // Only admins can bulk delete
+    if (user.role !== 'admin') {
+      throw new Error('Access denied: Only admins can bulk delete alerts');
+    }
+
+    const cutoffDate = Date.now() - (olderThanDays * 24 * 60 * 60 * 1000);
+
+    // Find resolved alerts older than cutoff
+    const alerts = await ctx.db
+      .query('systemAlerts')
+      .filter(q =>
+        q.and(
+          q.eq(q.field('isResolved'), true),
+          q.lt(q.field('resolvedAt'), cutoffDate)
+        )
+      )
+      .collect();
+
+    let deletedCount = 0;
+    for (const alert of alerts) {
+      await ctx.db.delete(alert._id);
+      deletedCount++;
+    }
+
+    // Log the bulk deletion
+    await ctx.db.insert('auditLogs', {
+      userId: user._id,
+      action: 'alert_bulk_deleted',
+      entityType: 'system_alert',
+      entityId: 'bulk_operation',
+      metadata: {
+        deletedCount,
+        olderThanDays,
+        deletedAt: Date.now(),
+      },
+    });
+
+    return {
+      success: true,
+      deletedCount,
+      message: `Successfully deleted ${deletedCount} resolved alerts`
+    };
+  },
+});
+
 export const bulkAssignAlerts = mutation({
   args: {
     alertIds: v.array(v.id('systemAlerts')),
