@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { action, mutation, query, internalMutation } from './_generated/server';
 import { z, ZodError } from 'zod';
-import { Id } from './_generated/dataModel';
+import { Doc, Id } from './_generated/dataModel';
 import { WorkflowService } from '../services/workflow-service';
 import { VerifierAssignmentService } from '../services/verifier-assignment-service';
 
@@ -293,9 +293,8 @@ interface ProjectCreator {
 }
 
 // Interface for project with creator
-interface ProjectWithCreator {
+interface ProjectWithCreator extends Doc<'projects'> {
   creator: ProjectCreator;
-  // Other project fields are included via spread operator
 }
 
 // ===============================
@@ -450,7 +449,6 @@ export const createProject = mutation({
       requiredDocuments: args.requiredDocuments,
       submittedDocuments: args.submittedDocuments,
       isDocumentationComplete: args.isDocumentationComplete,
-        actualCompletionDate: undefined,
     });
 
     return projectId;

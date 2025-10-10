@@ -629,7 +629,7 @@ export default function ProjectReview() {
                         {/* PDF Viewer */}
                         <div className="flex-1">
                           <PDFViewerWrapper
-                            url={selectedDoc.media.fileUrl}
+                            url={selectedDoc.media.fileUrl || ''}
                             fileName={selectedDoc.originalName}
                             annotations={
                               documentAnnotations[selectedDoc._id] || []

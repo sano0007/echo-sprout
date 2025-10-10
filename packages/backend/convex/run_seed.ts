@@ -17,18 +17,18 @@ export const runMonitoringSeed: any = mutation({
     try {
       console.log('🚀 Starting monitoring data seeding process...');
 
-      // Call the seeding function
-      const result = await ctx.runMutation(internal.seed_monitoring_data.seedMonitoringData, {
-        clearExisting: args.clearExisting || false
-      });
+      // TODO: seed_monitoring_data file doesn't exist yet
+      // Call the seeding function when available
+      // const result = await ctx.runMutation(internal.seed_monitoring_data.seedMonitoringData, {
+      //   clearExisting: args.clearExisting || false
+      // });
 
-      console.log('✅ Seeding completed successfully!');
-      console.log('📊 Statistics:', result.stats);
+      console.log('⚠️ Seeding function not available yet');
 
       return {
-        success: true,
-        message: 'Monitoring data seeded successfully',
-        stats: result.stats
+        success: false,
+        message: 'Seeding function not implemented',
+        stats: {}
       };
 
     } catch (error) {
