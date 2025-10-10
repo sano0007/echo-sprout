@@ -59,7 +59,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Separator } from '@/components/ui/separator';
 
 // Color palette for charts
@@ -362,7 +361,7 @@ export default function AdminAnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={({ status, percentage }) => `${status}: ${percentage.toFixed(1)}%`}
+                    label={(props: any) => `${props.status}: ${props.percentage.toFixed(1)}%`}
                   >
                     {projectData.projectsByStatus.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]} />
@@ -520,7 +519,7 @@ export default function AdminAnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={({ role, percentage }) => `${role}: ${percentage.toFixed(1)}%`}
+                    label={(props: any) => `${props.role}: ${props.percentage.toFixed(1)}%`}
                   >
                     {userData.usersByRole.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]} />
@@ -707,7 +706,7 @@ export default function AdminAnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={({ source, percentage }) => `${source}: ${percentage.toFixed(1)}%`}
+                    label={(props: any) => `${props.source}: ${props.percentage.toFixed(1)}%`}
                   >
                     {transactionData.revenueMetrics.revenueBySource.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]} />
@@ -1094,15 +1093,17 @@ export default function AdminAnalyticsPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {trend.direction === 'improving' || trend.direction === 'increasing' ? (
+                    {trend.direction === 'increasing' ? (
                       <TrendingUp className="h-4 w-4 text-green-500" />
-                    ) : (
+                    ) : trend.direction === 'decreasing' ? (
                       <TrendingDown className="h-4 w-4 text-red-500" />
-                    )}
+                    ) : null}
                     <span className={`font-medium ${
-                      trend.direction === 'improving' || trend.direction === 'increasing' 
-                        ? 'text-green-600' 
-                        : 'text-red-600'
+                      trend.direction === 'increasing'
+                        ? 'text-green-600'
+                        : trend.direction === 'decreasing'
+                        ? 'text-red-600'
+                        : 'text-gray-600'
                     }`}>
                       {Math.abs(trend.magnitude).toFixed(1)}%
                     </span>
