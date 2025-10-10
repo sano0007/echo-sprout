@@ -1,194 +1,353 @@
-import { mutation } from './_generated/server';
+import { internalMutation } from './_generated/server';
+import { internal } from './_generated/api';
 
-/**
- * Convenience mutation that inserts 15 forum topics with randomized
- * categories, views, replies, and dates within 2025-08-28 to 2025-09-27.
- * Call as `seed.seedForumDemo` from the Convex dashboard.
- */
-export const seedForumDemo = mutation({
-  args: {},
-  async handler(ctx) {
-    async function resolveUserId() {
-      const activeUsers = await ctx.db
-        .query('users')
-        .withIndex('by_active', (q) => q.eq('isActive', true))
-        .collect();
-      const firstActive = activeUsers[0];
-      if (firstActive) return firstActive._id as any;
-      const anyUsers = await ctx.db.query('users').collect();
-      const firstAny = anyUsers[0];
-      if (firstAny) return firstAny._id as any;
-      throw new Error(
-        'No users found to assign as topic author. Please create a user first.'
-      );
-    }
+// Seed data for users
+const seedUsers = [
+  {
+    email: 'green.earth@example.com',
+    firstName: 'Green',
+    lastName: 'Earth',
+    organizationName: 'Green Earth Foundation',
+    organizationType: 'Non-Profit',
+    role: 'project_creator' as const,
+    phoneNumber: '+1-555-0101',
+    address: '123 Eco Street',
+    city: 'San Francisco',
+    country: 'USA',
+    isVerified: true,
+    clerkId: `clerk_green_earth_${Date.now()}`,
+    isActive: true,
+  },
+  {
+    email: 'solar.power@example.com',
+    firstName: 'Solar',
+    lastName: 'Industries',
+    organizationName: 'Solar Power Co',
+    organizationType: 'Corporation',
+    role: 'project_creator' as const,
+    phoneNumber: '+91-98765-43210',
+    address: '456 Solar Avenue',
+    city: 'Mumbai',
+    country: 'India',
+    isVerified: true,
+    clerkId: `clerk_solar_power_${Date.now()}`,
+    isActive: true,
+  },
+  {
+    email: 'wind.energy@example.com',
+    firstName: 'Wind',
+    lastName: 'Energy',
+    organizationName: 'Nordic Wind Solutions',
+    organizationType: 'Corporation',
+    role: 'project_creator' as const,
+    phoneNumber: '+45-12345678',
+    address: '789 Wind Lane',
+    city: 'Copenhagen',
+    country: 'Denmark',
+    isVerified: true,
+    clerkId: `clerk_wind_energy_${Date.now()}`,
+    isActive: true,
+  },
+];
 
-    const authorId = await resolveUserId();
+// Seed data for projects
+const seedProjects = [
+  {
+    title: 'Amazon Rainforest Conservation',
+    description:
+      'A comprehensive reforestation project aimed at restoring 1000 hectares of degraded rainforest land in the Amazon Basin. This project focuses on native species replanting and community engagement.',
+    projectType: 'reforestation' as const,
+    location: {
+      lat: -3.4653,
+      long: -62.2159,
+      name: 'Amazon Basin, Brazil',
+    },
+    areaSize: 1000,
+    estimatedCO2Reduction: 75000,
+    budget: 500000,
+    startDate: '2024-01-15',
+    expectedCompletionDate: '2027-01-15',
+    status: 'active' as const,
+    verificationStatus: 'verified' as const,
+    totalCarbonCredits: 2000,
+    pricePerCredit: 15,
+    creditsAvailable: 1500,
+    creditsSold: 500,
+    requiredDocuments: ['project_plan', 'environmental_assessment', 'permits'],
+    submittedDocuments: ['project_plan', 'environmental_assessment', 'permits'],
+    isDocumentationComplete: true,
+    images: [
+      'https://www.arbioperu.org/wp-content/uploads/2021/10/Bosque-de-ARBIO-1024x683.jpg',
+      'https://static.wixstatic.com/media/d591f0_8a621b09e6a74db5bf4d1bb1f5630fd2~mv2.jpg/v1/fill/w_640,h_514,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/d591f0_8a621b09e6a74db5bf4d1bb1f5630fd2~mv2.jpg',
+      'https://news.vt.edu/content/dam/news_vt_edu/articles/2015/07/images/070815-cnre-kirstensilvius.jpeg',
+    ],
+  },
+  {
+    title: 'Solar Farm Initiative - Rajasthan',
+    description:
+      'Large-scale solar energy project in the Thar Desert, providing clean energy to over 50,000 households while creating local employment opportunities.',
+    projectType: 'solar' as const,
+    location: {
+      lat: 27.0238,
+      long: 74.2179,
+      name: 'Rajasthan, India',
+    },
+    areaSize: 200,
+    estimatedCO2Reduction: 45000,
+    budget: 2000000,
+    startDate: '2024-03-01',
+    expectedCompletionDate: '2025-12-31',
+    status: 'active' as const,
+    verificationStatus: 'verified' as const,
+    totalCarbonCredits: 1500,
+    pricePerCredit: 22,
+    creditsAvailable: 1200,
+    creditsSold: 300,
+    requiredDocuments: ['project_plan', 'technical_specs', 'permits'],
+    submittedDocuments: ['project_plan', 'technical_specs', 'permits'],
+    isDocumentationComplete: true,
+    images: [
+      'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=800&h=600&fit=crop',
+    ],
+  },
+  {
+    title: 'Offshore Wind Energy Project',
+    description:
+      'Modern offshore wind farm generating renewable energy equivalent to powering 100,000 homes annually, reducing dependency on fossil fuels.',
+    projectType: 'wind' as const,
+    location: {
+      lat: 55.7558,
+      long: 12.5659,
+      name: 'North Sea, Denmark',
+    },
+    areaSize: 50,
+    estimatedCO2Reduction: 120000,
+    budget: 5000000,
+    startDate: '2024-06-01',
+    expectedCompletionDate: '2026-08-31',
+    status: 'under_review' as const,
+    verificationStatus: 'pending' as const,
+    totalCarbonCredits: 3000,
+    pricePerCredit: 18,
+    creditsAvailable: 3000,
+    creditsSold: 0,
+    requiredDocuments: [
+      'project_plan',
+      'environmental_assessment',
+      'technical_specs',
+    ],
+    submittedDocuments: ['project_plan', 'environmental_assessment'],
+    isDocumentationComplete: false,
+    images: [
+      'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=800&h=600&fit=crop',
+    ],
+  },
+  {
+    title: 'Community Biogas Development',
+    description:
+      'Rural biogas project converting agricultural waste into clean energy, serving 500 farming families while managing organic waste sustainably.',
+    projectType: 'biogas' as const,
+    location: {
+      lat: 52.52,
+      long: 13.405,
+      name: 'Brandenburg, Germany',
+    },
+    areaSize: 25,
+    estimatedCO2Reduction: 15000,
+    budget: 300000,
+    startDate: '2024-02-01',
+    expectedCompletionDate: '2024-11-30',
+    status: 'active' as const,
+    verificationStatus: 'in_progress' as const,
+    totalCarbonCredits: 800,
+    pricePerCredit: 12,
+    creditsAvailable: 650,
+    creditsSold: 150,
+    requiredDocuments: ['project_plan', 'permits', 'technical_specs'],
+    submittedDocuments: ['project_plan', 'permits', 'technical_specs'],
+    isDocumentationComplete: true,
+    images: [
+      'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1579952363873-27d3bfad9c0d?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1566273043309-6c7aea60a1f0?w=800&h=600&fit=crop',
+    ],
+  },
+  {
+    title: 'Urban Waste-to-Energy Facility',
+    description:
+      'Advanced waste management facility processing 500 tons of municipal waste daily, generating clean electricity while reducing landfill impact.',
+    projectType: 'waste_management' as const,
+    location: {
+      lat: 40.7128,
+      long: -74.006,
+      name: 'New York, USA',
+    },
+    areaSize: 15,
+    estimatedCO2Reduction: 85000,
+    budget: 8000000,
+    startDate: '2024-04-01',
+    expectedCompletionDate: '2026-03-31',
+    status: 'approved' as const,
+    verificationStatus: 'verified' as const,
+    totalCarbonCredits: 2500,
+    pricePerCredit: 25,
+    creditsAvailable: 2500,
+    creditsSold: 0,
+    requiredDocuments: [
+      'project_plan',
+      'environmental_assessment',
+      'permits',
+      'technical_specs',
+    ],
+    submittedDocuments: [
+      'project_plan',
+      'environmental_assessment',
+      'permits',
+      'technical_specs',
+    ],
+    isDocumentationComplete: true,
+    images: [
+      'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1569163364945-7ee69e10e0e1?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1560707303-4e980ce876ad?w=800&h=600&fit=crop',
+    ],
+  },
+  {
+    title: 'Mangrove Ecosystem Restoration',
+    description:
+      'Coastal mangrove restoration protecting 800 hectares of coastline while supporting marine biodiversity and local fishing communities.',
+    projectType: 'mangrove_restoration' as const,
+    location: {
+      lat: 13.0827,
+      long: 80.2707,
+      name: 'Tamil Nadu, India',
+    },
+    areaSize: 800,
+    estimatedCO2Reduction: 35000,
+    budget: 400000,
+    startDate: '2024-01-01',
+    expectedCompletionDate: '2025-12-31',
+    status: 'active' as const,
+    verificationStatus: 'verified' as const,
+    totalCarbonCredits: 1200,
+    pricePerCredit: 16,
+    creditsAvailable: 900,
+    creditsSold: 300,
+    requiredDocuments: ['project_plan', 'environmental_assessment', 'permits'],
+    submittedDocuments: ['project_plan', 'environmental_assessment', 'permits'],
+    isDocumentationComplete: true,
+    images: [
+      'https://images.unsplash.com/photo-1582578598774-a377d4f33bb7?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?w=800&h=600&fit=crop',
+    ],
+  },
+];
 
-    // Align with UI category ids in apps/web/app/community/forum/page.tsx
-    const categories = [
-      'general',
-      'project-dev',
-      'verification',
-      'marketplace',
-      'tech-support',
-      'announcements',
-    ];
+export const seedDatabase = internalMutation({
+  handler: async (ctx) => {
+    console.log('🌱 Starting database seeding...');
 
-    // Date range: 2025-08-28 to 2025-09-27 inclusive
-    const start = Date.UTC(2025, 7, 28); // months 0-based
-    const end = Date.UTC(2025, 8, 27, 23, 59, 59, 999);
-    function randomTimestamp() {
-      const r = Math.random();
-      return Math.floor(start + r * (end - start));
-    }
+    try {
+      // Clear existing data
+      console.log('🧹 Clearing existing data...');
 
-    const topics: { title: string; content: string }[] = [
-      {
-        title: 'How do I verify additionality for small solar projects?',
-        content:
-          'Looking for guidance on additionality tests applicable to <10MW distributed solar.',
-      },
-      {
-        title: 'Best way to track registry retirements?',
-        content:
-          'What tools are you using to track retirements across multiple registries?',
-      },
-      {
-        title: 'MRV data quality checks — what’s essential?',
-        content:
-          'Share your checklists for metering, calibration, and data integrity.',
-      },
-      {
-        title: 'Choosing a methodology for mangrove restoration',
-        content: 'Pros/cons of leading methodologies for blue carbon projects.',
-      },
-      {
-        title: 'Carbon price outlook Q4 2025',
-        content: 'Where do you see prices heading given recent rating changes?',
-      },
-      {
-        title: 'Community benefits documentation templates',
-        content: 'Any templates for documenting co-benefits and SDG alignment?',
-      },
-      {
-        title: 'Wind project baselines',
-        content:
-          'How are you establishing baselines for sites with historical data gaps?',
-      },
-      {
-        title: 'Handling leakage in reforestation',
-        content:
-          'Approaches to minimize and account for leakage in forest projects.',
-      },
-      {
-        title: 'New verifier onboarding tips',
-        content: 'Advice for teams onboarding new third-party verifiers.',
-      },
-      {
-        title: 'Public dashboards for transparency',
-        content:
-          'Examples of good project transparency dashboards and datasets.',
-      },
-      {
-        title: 'Sampling strategies for field plots',
-        content: 'Statistical approaches you trust for plot sampling.',
-      },
-      {
-        title: 'What’s your document control setup?',
-        content: 'Systems for versioning methodologies, reports, and evidence.',
-      },
-      {
-        title: 'Addressing permanence risks',
-        content: 'Risk registers and mitigation strategies for reversals.',
-      },
-      {
-        title: 'Data pipelines for MRV',
-        content: 'ETL tools and architectures used for automated MRV.',
-      },
-      {
-        title: 'Registry APIs — any gotchas?',
-        content: 'Gotchas when integrating with different registry APIs.',
-      },
-    ];
-
-    // Helper to derive simple tags from title
-    function deriveTags(title: string): string[] {
-      const base = title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .split(/\s+/)
-        .filter((w) => w.length > 2 && w.length < 18);
-      const uniq = Array.from(new Set(base));
-      return uniq.slice(0, 4);
-    }
-
-    // Map forum category to an allowed topicType (avoid 'discussion')
-    function mapTopicType(cat: string): 'question' | 'announcement' | 'poll' {
-      const c = cat.toLowerCase();
-      if (c.includes('announcement')) return 'announcement';
-      if (c.includes('market')) return 'poll';
-      // general, project-dev, verification, tech-support -> question
-      return 'question';
-    }
-
-    let inserted = 0;
-    for (const t of topics) {
-      const idx = Math.floor(Math.random() * categories.length);
-      const category = categories[idx] ?? 'general';
-      const views = Math.floor(Math.random() * 500) + 10; // 10..509
-      const replies = Math.floor(Math.random() * 20); // 0..19
-      const lastReplyAt = randomTimestamp();
-
-      const topicType = mapTopicType(category);
-      const tags = deriveTags(t.title);
-
-      const topicId = await ctx.db.insert('forumTopics', {
-        title: t.title,
-        content: t.content,
-        category,
-        authorId,
-        isSticky: false,
-        viewCount: views,
-        replyCount: 0, // will update after inserting replies
-        lastReplyAt,
-        lastReplyBy: authorId,
-        topicType,
-        tags,
-        upvotes: 0,
-        downvotes: 0,
-      } as any);
-
-      // Create actual replies to match replyCount
-      let lastBy = authorId;
-      let actualReplies = 0;
-      for (let r = 0; r < replies; r++) {
-        const replyTime = Math.min(lastReplyAt, Date.now());
-        // Insert reply
-        await ctx.db.insert('forumReplies', {
-          topicId: topicId as any,
-          authorId: authorId as any,
-          content: `Reply ${r + 1}: Thanks for the insights on "${t.title}"!`,
-          isDeleted: false,
-          upvotes: 0,
-          downvotes: 0,
-          acceptedBy: undefined,
-          acceptedAt: undefined,
-        } as any);
-        lastBy = authorId;
-        actualReplies++;
+      // Delete existing projects
+      const existingProjects = await ctx.db.query('projects').collect();
+      for (const project of existingProjects) {
+        await ctx.db.delete(project._id);
       }
 
-      // Update topic with real reply count and last reply metadata
-      await ctx.db.patch(topicId as any, {
-        replyCount: actualReplies,
-        lastReplyAt,
-        lastReplyBy: lastBy,
-      });
+      // Get existing users for project creation
+      console.log('👥 Finding existing users...');
+      const existingUsers = await ctx.db.query('users').collect();
 
-      inserted += 1;
+      if (existingUsers.length === 0) {
+        throw new Error(
+          'No users found in database. Please create users first before seeding projects.'
+        );
+      }
+
+      console.log(
+        `Found ${existingUsers.length} existing users for project creation`
+      );
+
+      // Create projects
+      console.log('🏗️ Creating projects...');
+      const createdProjects = [];
+
+      for (let i = 0; i < seedProjects.length; i++) {
+        const projectData = seedProjects[i];
+        const creatorId = existingUsers[i % existingUsers.length]._id;
+
+        const projectId = await ctx.runMutation(
+          internal.projects.createProjectForSeeding,
+          {
+            creatorId,
+            ...projectData,
+          }
+        );
+
+        createdProjects.push(projectId);
+        console.log(`✅ Created project: ${projectData.title}`);
+      }
+
+      const result = {
+        message: '🎉 Database seeding completed successfully!',
+        summary: {
+          usersFound: existingUsers.length,
+          projectsCreated: createdProjects.length,
+        },
+        projectIds: createdProjects,
+      };
+
+      console.log(result.message);
+      console.log(
+        `📊 Found ${result.summary.usersFound} existing users and created ${result.summary.projectsCreated} projects`
+      );
+
+      return result;
+    } catch (error) {
+      console.error('💥 Database seeding failed:', error);
+      throw error;
+    }
+  },
+});
+
+// Helper function to clear all data (use with caution!)
+export const clearAllData = internalMutation({
+  handler: async (ctx) => {
+    console.log('🧹 Clearing all data...');
+
+    // Delete all projects
+    const projects = await ctx.db.query('projects').collect();
+    for (const project of projects) {
+      await ctx.db.delete(project._id);
     }
 
-    return { inserted };
+    // Delete all users
+    const users = await ctx.db.query('users').collect();
+    for (const user of users) {
+      await ctx.db.delete(user._id);
+    }
+
+    // Delete all transactions
+    const transactions = await ctx.db.query('transactions').collect();
+    for (const transaction of transactions) {
+      await ctx.db.delete(transaction._id);
+    }
+
+    return {
+      message: 'All data cleared successfully',
+      deletedCounts: {
+        projects: projects.length,
+        users: users.length,
+        transactions: transactions.length,
+      },
+    };
   },
 });

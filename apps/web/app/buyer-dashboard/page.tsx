@@ -16,6 +16,7 @@ import ProjectTypeChart, {
 
 export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
   const { user, isSignedIn, isLoaded } = useUser();
   const {
     downloadCertificateDirectly,
@@ -121,6 +122,7 @@ export default function BuyerDashboard() {
       projectType: transaction.project?.projectType,
     },
     transactionReference: transaction.transactionReference,
+    stripePaymentIntentId: transaction.stripePaymentIntentId,
   }));
 
   const certificateList = (certificates || []).map((cert) => ({
@@ -171,6 +173,32 @@ export default function BuyerDashboard() {
     } catch (error) {
       console.error('Error viewing certificate:', error);
       alert('Failed to view certificate. Please try again.');
+    }
+  };
+
+  // Handle invoice download
+  const handleDownloadInvoice = async (transactionReference: string, stripePaymentIntentId?: string) => {
+    if (!stripePaymentIntentId) {
+      alert('Invoice not available for this transaction');
+      return;
+    }
+
+    setDownloadingInvoice(transactionReference);
+    try {
+      const response = await fetch(`/api/stripe/receipt?paymentIntentId=${stripePaymentIntentId}`);
+      const data = await response.json();
+
+      if (data.success && data.receiptUrl) {
+        // Open the Stripe receipt in a new window
+        window.open(data.receiptUrl, '_blank');
+      } else {
+        throw new Error(data.error || 'Failed to get receipt URL');
+      }
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      alert('Failed to download invoice. Please try again.');
+    } finally {
+      setDownloadingInvoice(null);
     }
   };
 
@@ -346,13 +374,6 @@ export default function BuyerDashboard() {
           {/* Purchase History Tab */}
           {activeTab === 'purchases' && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Purchase History</h3>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded">
-                  Export History
-                </button>
-              </div>
-
               {purchaseHistory.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">No purchases yet</p>
@@ -424,14 +445,12 @@ export default function BuyerDashboard() {
                       </div>
 
                       <div className="mt-4 flex gap-3">
-                        <button className="bg-blue-600 text-white px-4 py-2 rounded text-sm">
-                          View Certificate
-                        </button>
-                        <button className="bg-green-600 text-white px-4 py-2 rounded text-sm">
-                          Track Project
-                        </button>
-                        <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm">
-                          Download PDF
+                        <button
+                          onClick={() => handleDownloadInvoice(purchase.transactionReference, purchase.stripePaymentIntentId)}
+                          disabled={downloadingInvoice === purchase.transactionReference}
+                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {downloadingInvoice === purchase.transactionReference ? 'Loading...' : 'View Invoice'}
                         </button>
                       </div>
                     </div>
@@ -503,7 +522,7 @@ export default function BuyerDashboard() {
                           }
                           disabled={isViewing}
                         >
-                          {isViewing ? 'Opening...' : 'View Full'}
+                          {isViewing ? 'Opening...' : 'View'}
                         </button>
                         <button
                           className="flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

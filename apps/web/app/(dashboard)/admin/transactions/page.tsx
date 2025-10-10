@@ -344,6 +344,7 @@ const TransactionTable = ({
   onDownloadCertificate,
   onViewCertificate,
   onRefreshTransactions,
+  onDeleteTransaction,
   isDownloading,
   isViewing,
 }: {
@@ -357,14 +358,14 @@ const TransactionTable = ({
   ) => void;
   onViewCertificate: (transactionId: string, certificateUrl?: string) => void;
   onRefreshTransactions: () => void;
+  onDeleteTransaction: (transactionId: string) => void;
   isDownloading: boolean;
   isViewing: boolean;
 }) => {
-  const [editingTransaction, setEditingTransaction] =
-    useState<Transaction | null>(null);
-  const [refundingTransaction, setRefundingTransaction] =
-    useState<Transaction | null>(null);
-  const [certificateUrl, setCertificateUrl] = useState('');
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [refundingTransaction, setRefundingTransaction] = useState<Transaction | null>(null);
+  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
+  const [certificateUrl, setCertificateUrl] = useState("");
 
   const handleAddCertificate = () => {
     if (editingTransaction && certificateUrl.trim()) {
@@ -536,6 +537,13 @@ const TransactionTable = ({
                         View in Stripe
                       </DropdownMenuItem>
                     )}
+                    <DropdownMenuItem
+                      onClick={() => setDeletingTransaction(transaction)}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="w-3 h-3 mr-1" />
+                      Delete Transaction
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -592,6 +600,55 @@ const TransactionTable = ({
           }}
         />
       )}
+
+      <Dialog open={!!deletingTransaction} onOpenChange={() => setDeletingTransaction(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Transaction</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete transaction {deletingTransaction?.transactionReference}?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="flex">
+                <AlertTriangle className="h-5 w-5 text-red-400" />
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Warning: This will permanently delete the transaction
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Transaction reference: {deletingTransaction?.transactionReference}</li>
+                      <li>Amount: ${deletingTransaction?.totalAmount.toLocaleString()}</li>
+                      <li>Credits: {deletingTransaction?.creditAmount.toLocaleString()}</li>
+                      <li>Status: {deletingTransaction?.paymentStatus}</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingTransaction(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deletingTransaction) {
+                  onDeleteTransaction(deletingTransaction._id);
+                  setDeletingTransaction(null);
+                }
+              }}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Transaction
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
@@ -614,6 +671,7 @@ export default function TransactionsPage() {
     api.transactions.updateTransactionStatus
   );
   const addCertificateUrl = useMutation(api.transactions.addCertificateUrl);
+  const deleteTransaction = useMutation(api.transactions.deleteTransaction);
 
   // Certificate download and view functionality
   const {
@@ -647,6 +705,18 @@ export default function TransactionsPage() {
       });
     } catch (error) {
       console.error('Failed to add certificate URL:', error);
+    }
+  };
+
+  const handleDeleteTransaction = async (transactionId: string) => {
+    try {
+      await deleteTransaction({
+        transactionId: transactionId as any
+      });
+      handleRefreshTransactions();
+    } catch (error) {
+      console.error("Failed to delete transaction:", error);
+      alert('Failed to delete transaction. Please try again.');
     }
   };
 
@@ -734,6 +804,7 @@ export default function TransactionsPage() {
                 onDownloadCertificate={handleDownloadCertificate}
                 onViewCertificate={handleViewCertificate}
                 onRefreshTransactions={handleRefreshTransactions}
+                onDeleteTransaction={handleDeleteTransaction}
                 isDownloading={isDownloading}
                 isViewing={isViewing}
               />
@@ -757,6 +828,7 @@ export default function TransactionsPage() {
                 onDownloadCertificate={handleDownloadCertificate}
                 onViewCertificate={handleViewCertificate}
                 onRefreshTransactions={handleRefreshTransactions}
+                onDeleteTransaction={handleDeleteTransaction}
                 isDownloading={isDownloading}
                 isViewing={isViewing}
               />
@@ -780,6 +852,7 @@ export default function TransactionsPage() {
                 onDownloadCertificate={handleDownloadCertificate}
                 onViewCertificate={handleViewCertificate}
                 onRefreshTransactions={handleRefreshTransactions}
+                onDeleteTransaction={handleDeleteTransaction}
                 isDownloading={isDownloading}
                 isViewing={isViewing}
               />
@@ -803,6 +876,7 @@ export default function TransactionsPage() {
                 onDownloadCertificate={handleDownloadCertificate}
                 onViewCertificate={handleViewCertificate}
                 onRefreshTransactions={handleRefreshTransactions}
+                onDeleteTransaction={handleDeleteTransaction}
                 isDownloading={isDownloading}
                 isViewing={isViewing}
               />
@@ -826,6 +900,7 @@ export default function TransactionsPage() {
                 onDownloadCertificate={handleDownloadCertificate}
                 onViewCertificate={handleViewCertificate}
                 onRefreshTransactions={handleRefreshTransactions}
+                onDeleteTransaction={handleDeleteTransaction}
                 isDownloading={isDownloading}
                 isViewing={isViewing}
               />
