@@ -6,7 +6,6 @@ import {
 } from './_generated/server';
 import { v } from 'convex/values';
 import { UserService } from '../services/user-service';
-import { CloudinaryService } from '../services/cloudinary-service';
 import type { ProgressValidationResult } from '../types/monitoring-types';
 
 export const submitProgressUpdate = mutation({
@@ -24,8 +23,8 @@ export const submitProgressUpdate = mutation({
     progressPercentage: v.number(),
     photos: v.array(
       v.object({
-        cloudinary_public_id: v.string(),
-        cloudinary_url: v.string(),
+        storageId: v.string(),
+        fileUrl: v.string(),
       })
     ),
     location: v.optional(
@@ -90,15 +89,23 @@ export const submitProgressUpdate = mutation({
       throw new Error('Progress percentage must be between 0 and 100');
     }
 
-    const photoPreparation = CloudinaryService.preparePhotosForStorage(
-      args.photos,
-      project.projectType
-    );
-
-    if (!photoPreparation.validation.isValid) {
-      throw new Error(
-        `Photo validation failed: ${photoPreparation.validation.errors.join(', ')}`
-      );
+    // Basic validation for Convex-stored photos
+    const photoErrors: string[] = [];
+    if (!Array.isArray(args.photos)) {
+      throw new Error('Photos must be an array');
+    }
+    for (let i = 0; i < args.photos.length; i++) {
+      const p = args.photos[i] as any;
+      if (
+        !p ||
+        typeof p.storageId !== 'string' ||
+        typeof p.fileUrl !== 'string'
+      ) {
+        photoErrors.push(`Photo ${i + 1} is missing storageId or fileUrl`);
+      }
+    }
+    if (photoErrors.length > 0) {
+      throw new Error(`Photo validation failed: ${photoErrors.join(', ')}`);
     }
 
     const updateId = await ctx.db.insert('progressUpdates', {
@@ -108,7 +115,7 @@ export const submitProgressUpdate = mutation({
       title: args.title,
       description: args.description,
       progressPercentage: args.progressPercentage,
-      photos: photoPreparation.photos,
+      photos: args.photos,
       location: args.location,
       measurementData: args.measurementData,
       reportingDate: args.reportingDate || Date.now(),
@@ -211,8 +218,8 @@ export const submitProgressUpdate = mutation({
       },
       photoProcessing: {
         uploadedCount: args.photos.length,
-        thumbnailsGenerated: photoPreparation.thumbnails.length,
-        warnings: photoPreparation.validation.warnings,
+        thumbnailsGenerated: args.photos.length, // Assuming 1:1 thumbnail generation
+        warnings: [], // No warnings for now
       },
       milestones: await ctx.db
         .query('projectMilestones')
@@ -521,7 +528,16 @@ export const getUploadConfig = query({
       throw new Error('Access denied');
     }
 
-    return CloudinaryService.getUploadConfig(project.projectType, updateType);
+    // Provide a simple client-side hint config for Convex storage uploads
+    return {
+      folder: `progress-updates/${project.projectType}/${updateType}`,
+      maxFiles: 20,
+      maxFileSize: 10, // MB
+      allowedFormats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf'],
+      requirements: { minimumCount: 0 },
+      tags: [project.projectType, updateType, 'progress-update'],
+      transformations: {},
+    };
   },
 });
 
@@ -567,13 +583,27 @@ export const validateProgressUpdateData = internalQuery({
       warnings.push('Progress appears to have decreased significantly');
     }
 
-    const photoValidation = CloudinaryService.validatePhotoUpload(
-      updateData.photos || [],
-      project.projectType
-    );
-
-    errors.push(...photoValidation.errors);
-    warnings.push(...photoValidation.warnings);
+    // Simple photo validation for Convex storage
+    const photos = (updateData.photos || []) as Array<{
+      storageId?: string;
+      fileUrl?: string;
+    }>;
+    const photoErrors: string[] = [];
+    const photoWarnings: string[] = [];
+    photos.forEach((p, idx) => {
+      if (!p || !p.storageId || !p.fileUrl) {
+        photoErrors.push(`Photo ${idx + 1} missing storageId or fileUrl`);
+      }
+      if (
+        p.fileUrl &&
+        typeof p.fileUrl === 'string' &&
+        !p.fileUrl.startsWith('http')
+      ) {
+        photoWarnings.push(`Photo ${idx + 1} fileUrl does not look like a URL`);
+      }
+    });
+    errors.push(...photoErrors);
+    warnings.push(...photoWarnings);
 
     if (updateData.measurementData) {
       for (const [key, value] of Object.entries(updateData.measurementData)) {

@@ -64,6 +64,8 @@ exports.default = (0, server_1.defineSchema)({
             lat: values_1.v.float64(),
             long: values_1.v.float64(),
             name: values_1.v.string(),
+            city: values_1.v.optional(values_1.v.string()),
+            country: values_1.v.optional(values_1.v.string()),
         }),
         areaSize: values_1.v.number(),
         estimatedCO2Reduction: values_1.v.number(),
@@ -71,6 +73,14 @@ exports.default = (0, server_1.defineSchema)({
         startDate: values_1.v.string(),
         expectedCompletionDate: values_1.v.string(),
         actualCompletionDate: values_1.v.optional(values_1.v.string()),
+        milestone1: values_1.v.optional(values_1.v.object({
+            name: values_1.v.string(),
+            date: values_1.v.string(),
+        })),
+        milestone2: values_1.v.optional(values_1.v.object({
+            name: values_1.v.string(),
+            date: values_1.v.string(),
+        })),
         status: values_1.v.union(values_1.v.literal('draft'), values_1.v.literal('submitted'), values_1.v.literal('under_review'), values_1.v.literal('approved'), values_1.v.literal('rejected'), values_1.v.literal('active'), values_1.v.literal('completed'), values_1.v.literal('suspended')),
         verificationStatus: values_1.v.union(values_1.v.literal('pending'), values_1.v.literal('in_progress'), values_1.v.literal('verified'), values_1.v.literal('rejected'), values_1.v.literal('revision_required')),
         // Project creator sets credit details
@@ -90,6 +100,16 @@ exports.default = (0, server_1.defineSchema)({
         // Progress tracking
         progressPercentage: values_1.v.optional(values_1.v.number()), // 0-100
         lastProgressUpdate: values_1.v.optional(values_1.v.number()), // timestamp
+        // Legacy fields for backward compatibility
+        projectImages: values_1.v.optional(values_1.v.array(values_1.v.any())), // Legacy field for old projects
+        featuredImages: values_1.v.optional(values_1.v.array(values_1.v.object({
+            storageId: values_1.v.string(),
+            fileUrl: values_1.v.string(),
+        }))),
+        siteImages: values_1.v.optional(values_1.v.array(values_1.v.object({
+            storageId: values_1.v.string(),
+            fileUrl: values_1.v.string(),
+        }))),
     })
         .index('by_creator', ['creatorId'])
         .index('by_status', ['status'])
@@ -268,7 +288,7 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_unread', ['recipientId', 'isRead']),
     // ============= DOCUMENT MANAGEMENT =============
     documents: (0, server_1.defineTable)({
-        entityId: values_1.v.string(), // ID of the associated entity (project, user profile, etc.)
+        entityId: values_1.v.optional(values_1.v.string()), // ID of the associated entity (project, user profile, etc.) - optional for legacy compatibility
         entityType: values_1.v.union(values_1.v.literal('project'), values_1.v.literal('verification'), values_1.v.literal('user_profile'), values_1.v.literal('educational_content')),
         fileName: values_1.v.string(),
         originalName: values_1.v.string(),
@@ -276,11 +296,18 @@ exports.default = (0, server_1.defineSchema)({
         fileSize: values_1.v.number(),
         fileSizeFormatted: values_1.v.string(), // e.g. "2.5 MB"
         media: values_1.v.object({
-            cloudinary_public_id: values_1.v.string(),
-            cloudinary_url: values_1.v.string(),
+            storageId: values_1.v.optional(values_1.v.string()),
+            fileUrl: values_1.v.optional(values_1.v.string()),
+            cloudinary_public_id: values_1.v.optional(values_1.v.string()), // Legacy field
+            cloudinary_url: values_1.v.optional(values_1.v.string()), // Legacy field
         }),
         thumbnailUrl: values_1.v.optional(values_1.v.string()),
-        documentType: values_1.v.union(values_1.v.literal('project_plan'), values_1.v.literal('environmental_assessment'), values_1.v.literal('permits'), values_1.v.literal('photos'), values_1.v.literal('verification_report'), values_1.v.literal('identity_doc'), values_1.v.literal('technical_specs'), values_1.v.literal('budget_breakdown'), values_1.v.literal('timeline'), values_1.v.literal('other')),
+        description: values_1.v.optional(values_1.v.string()), // Add description field
+        documentType: values_1.v.union(values_1.v.literal('project_proposal'), values_1.v.literal('environmental_impact'), values_1.v.literal('site_photographs'), values_1.v.literal('legal_permits'), values_1.v.literal('featured_images'), values_1.v.literal('site_images'), values_1.v.literal('project_plan'), // Legacy
+        values_1.v.literal('environmental_assessment'), // Legacy
+        values_1.v.literal('permits'), // Legacy
+        values_1.v.literal('photos'), // Legacy
+        values_1.v.literal('verification_report'), values_1.v.literal('identity_doc'), values_1.v.literal('technical_specs'), values_1.v.literal('budget_breakdown'), values_1.v.literal('timeline'), values_1.v.literal('other')),
         uploadedBy: values_1.v.id('users'),
         isRequired: values_1.v.boolean(), // Is this document required for verification?
         isVerified: values_1.v.boolean(), // Has this document been verified?
@@ -292,6 +319,46 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_type', ['documentType'])
         .index('by_verification_status', ['isVerified'])
         .index('by_required', ['entityType', 'isRequired']),
+    // ============= PROGRESS TRACKING =============
+    progressUpdates: (0, server_1.defineTable)({
+        projectId: values_1.v.id('projects'),
+        reportedBy: values_1.v.id('users'),
+        updateType: values_1.v.union(values_1.v.literal('milestone'), values_1.v.literal('measurement'), values_1.v.literal('photo'), values_1.v.literal('issue'), values_1.v.literal('completion')),
+        title: values_1.v.string(),
+        description: values_1.v.string(),
+        progressPercentage: values_1.v.number(), // 0-100
+        measurementData: values_1.v.optional(values_1.v.any()), // JSON data for specific measurements
+        location: values_1.v.optional(values_1.v.object({
+            lat: values_1.v.float64(),
+            long: values_1.v.float64(),
+            name: values_1.v.string(),
+        })),
+        photos: values_1.v.array(values_1.v.object({
+            storageId: values_1.v.string(),
+            fileUrl: values_1.v.string(),
+        })),
+        reportingDate: values_1.v.float64(),
+        // Impact tracking
+        carbonImpactToDate: values_1.v.optional(values_1.v.number()), // CO2 reduction achieved so far
+        treesPlanted: values_1.v.optional(values_1.v.number()),
+        energyGenerated: values_1.v.optional(values_1.v.number()),
+        wasteProcessed: values_1.v.optional(values_1.v.number()),
+        // Verification
+        isVerified: values_1.v.boolean(),
+        verifiedBy: values_1.v.optional(values_1.v.id('users')),
+        verifiedAt: values_1.v.optional(values_1.v.float64()),
+        verificationNotes: values_1.v.optional(values_1.v.string()),
+    })
+        .index('by_project', ['projectId'])
+        .index('by_reporter', ['reportedBy'])
+        .index('by_date', ['reportingDate'])
+        .index('by_type', ['updateType'])
+        .index('by_verification', ['isVerified'])
+        // Enhanced indexes for monitoring
+        .index('by_project_date', ['projectId', 'reportingDate'])
+        .index('by_project_type', ['projectId', 'updateType'])
+        .index('by_project_verified', ['projectId', 'isVerified'])
+        .index('by_date_type', ['reportingDate', 'updateType']),
     // ============= EDUCATIONAL CONTENT =============
     educationalContent: (0, server_1.defineTable)({
         title: values_1.v.string(),
@@ -620,8 +687,7 @@ exports.default = (0, server_1.defineSchema)({
             weekly: values_1.v.boolean(),
         }),
         lastUpdated: values_1.v.number(),
-    })
-        .index('by_user', ['userId']),
+    }).index('by_user', ['userId']),
     // ============= ANALYTICS & REPORTING =============
     analytics: (0, server_1.defineTable)({
         metric: values_1.v.string(), // "daily_transactions", "project_completions", etc. todo: enum of metrics

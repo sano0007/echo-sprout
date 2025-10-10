@@ -233,7 +233,7 @@ export default function SystemMonitoring({
       responseTime: 145,
       lastCheck: '2024-11-25T10:30:00Z',
       endpoint: '/health',
-      dependencies: ['Database', 'Cloudinary'],
+      dependencies: ['Database', 'Convex Storage'],
     },
     {
       id: 'api_server',
@@ -267,12 +267,12 @@ export default function SystemMonitoring({
     },
     {
       id: 'file_storage',
-      name: 'File Storage (Cloudinary)',
+      name: 'File Storage (Convex Storage)',
       status: 'degraded',
       uptime: 98.5,
       responseTime: 456,
       lastCheck: '2024-11-25T10:30:00Z',
-      endpoint: 'cloudinary.health',
+      endpoint: 'convex.storage',
       dependencies: [],
     },
     {

@@ -4,7 +4,24 @@ import { api } from '@packages/backend';
 import { useAction, useMutation } from 'convex/react';
 import { useState } from 'react';
 
-import FileUpload from '../../components/FileUpload';
+import DocumentUpload from '../../../components/DocumentUpload';
+
+// Document type union that matches backend expectations
+type DocumentType =
+  | 'project_proposal'
+  | 'environmental_impact'
+  | 'site_photographs'
+  | 'legal_permits'
+  | 'featured_images'
+  | 'site_images';
+
+// Interface for files with status from DocumentUpload component
+interface FileWithStatus {
+  file: File;
+  status: 'pending' | 'uploading' | 'completed' | 'error';
+  progress?: number;
+  description?: string;
+}
 
 interface ProjectFormData {
   title: string;
@@ -35,13 +52,31 @@ const steps = [
   'Basic Information',
   'Project Timeline',
   'Location & Details',
-  'Document Upload',
+  'Required Documents',
+  'Project Images',
   'Review & Submit',
 ];
 
+// Document files interface
+interface DocumentFiles {
+  project_proposal: File[];
+  environmental_impact: File[];
+  site_photographs: File[];
+  legal_permits: File[];
+  featured_images: File[];
+  site_images: File[];
+}
+
 export default function ProjectRegister() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [tempUploadedFiles, setTempUploadedFiles] = useState<File[]>([]);
+  const [documentFiles, setDocumentFiles] = useState<DocumentFiles>({
+    project_proposal: [],
+    environmental_impact: [],
+    site_photographs: [],
+    legal_permits: [],
+    featured_images: [],
+    site_images: [],
+  });
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     description: '',
@@ -59,10 +94,10 @@ export default function ProjectRegister() {
     totalCarbonCredits: 0,
     pricePerCredit: 0,
     requiredDocuments: [
-      'project_plan',
-      'environmental_assessment',
-      'permits',
-      'photos',
+      'project_proposal',
+      'environmental_impact',
+      'legal_permits',
+      'site_photographs',
     ],
   });
 
@@ -176,57 +211,81 @@ export default function ProjectRegister() {
         isDocumentationComplete: false,
       });
 
-      // Now upload the files if any exist
-      if (tempUploadedFiles.length > 0) {
+      // Now upload the documents if any exist
+      const allFiles = Object.entries(documentFiles).flatMap(
+        ([docType, files]) =>
+          files.map((file: File) => ({
+            file,
+            documentType: docType as DocumentType,
+          }))
+      );
+
+      if (allFiles.length > 0) {
         alert(
-          `Project created successfully! Uploading ${tempUploadedFiles.length} document${tempUploadedFiles.length !== 1 ? 's' : ''}...`
+          `Project created successfully! Uploading ${allFiles.length} document${allFiles.length !== 1 ? 's' : ''}...`
         );
 
-        const uploadPromises = tempUploadedFiles.map(async (file) => {
-          try {
-            // Step 1: Get upload URL
-            const uploadUrl = await generateUploadUrl();
-            console.log('Generated upload URL for', file.name);
+        const uploadPromises = allFiles.map(
+          async ({
+            file,
+            documentType,
+          }: {
+            file: File;
+            documentType: DocumentType;
+          }) => {
+            try {
+              // Step 1: Get upload URL
+              const uploadUrl = await generateUploadUrl();
+              console.log('Generated upload URL for', file.name);
 
-            // Step 2: Upload file to the URL
-            const response = await fetch(uploadUrl, {
-              method: 'POST',
-              body: file,
-              headers: {
-                'Content-Type': file.type,
-              },
-            });
+              // Step 2: Upload file to the URL
+              const response = await fetch(uploadUrl, {
+                method: 'POST',
+                body: file,
+                headers: {
+                  'Content-Type': file.type,
+                },
+              });
 
-            if (!response.ok) {
-              throw new Error(`Upload failed: ${response.statusText}`);
+              if (!response.ok) {
+                throw new Error(`Upload failed: ${response.statusText}`);
+              }
+
+              const { storageId } = await response.json();
+              console.log('File uploaded successfully, storage ID:', storageId);
+
+              // Step 3: Store document metadata in database with document type
+              await uploadProjectDocuments({
+                projectId: projectId,
+                fileName: file.name,
+                fileType: file.type,
+                storageId: storageId,
+                documentType: documentType,
+              });
+            } catch (error) {
+              console.error(`Failed to upload ${file.name}:`, error);
+              throw error;
             }
-
-            const { storageId } = await response.json();
-            console.log('File uploaded successfully, storage ID:', storageId);
-
-            // Step 3: Store document metadata in database
-            await uploadProjectDocuments({
-              projectId: projectId,
-              fileName: file.name,
-              fileType: file.type,
-              storageId: storageId,
-            });
-          } catch (error) {
-            console.error(`Failed to upload ${file.name}:`, error);
-            throw error;
           }
-        });
+        );
 
         await Promise.all(uploadPromises);
         alert(
-          `Successfully uploaded ${tempUploadedFiles.length} document${tempUploadedFiles.length !== 1 ? 's' : ''}!`
+          `Successfully uploaded ${allFiles.length} document${allFiles.length !== 1 ? 's' : ''}!`
         );
       } else {
         alert('Project created successfully!');
       }
 
       // Reset form state
-      setTempUploadedFiles([]);
+      setDocumentFiles({
+        project_proposal: [],
+        environmental_impact: [],
+        site_photographs: [],
+        legal_permits: [],
+        featured_images: [],
+        site_images: [],
+      });
 
       // Redirect to project management after successful creation
       window.location.href = '/projects/manage';
@@ -524,66 +583,249 @@ export default function ProjectRegister() {
 
         {currentStep === 3 && (
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Document Upload</h2>
-            <div className="space-y-4">
-              <FileUpload
-                projectId="" // Empty for deferred uploads
+            <h2 className="text-2xl font-semibold mb-6">Required Documents</h2>
+            <div className="space-y-8">
+              <DocumentUpload
+                documentType="project_proposal"
+                projectId=""
                 uploadMode="deferred"
-                onFilesReady={(
-                  files: Array<{ file: File; id: string; status: string }>
-                ) => {
-                  setTempUploadedFiles(
-                    files.map((f: { file: File }) => f.file)
-                  );
-                  console.log(
-                    'Files ready for upload after project creation:',
-                    files
-                  );
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    project_proposal: files.map((f: FileWithStatus) => f.file),
+                  }));
                 }}
-                maxFiles={10}
-                maxSizeMB={50}
-                acceptedTypes={[
-                  'application/pdf',
-                  'image/jpeg',
-                  'image/png',
-                  'application/msword',
-                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                ]}
               />
-              {tempUploadedFiles.length > 0 && (
-                <div className="text-sm text-green-600">
-                  ✓ {tempUploadedFiles.length} file
-                  {tempUploadedFiles.length !== 1 ? 's' : ''} ready to upload
-                </div>
-              )}
-              <div className="text-sm text-gray-600">
-                <p>Required documents:</p>
-                <ul className="list-disc ml-4">
-                  <li>Project proposal document</li>
-                  <li>Environmental impact assessment</li>
-                  <li>Site photographs</li>
-                  <li>Legal permits and certifications</li>
-                </ul>
-              </div>
+
+              <DocumentUpload
+                documentType="environmental_impact"
+                projectId=""
+                uploadMode="deferred"
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    environmental_impact: files.map(
+                      (f: FileWithStatus) => f.file
+                    ),
+                  }));
+                }}
+              />
+
+              <DocumentUpload
+                documentType="legal_permits"
+                projectId=""
+                uploadMode="deferred"
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    legal_permits: files.map((f: FileWithStatus) => f.file),
+                  }));
+                }}
+              />
             </div>
           </div>
         )}
 
         {currentStep === 4 && (
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Review & Submit</h2>
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded">
-                <h3 className="font-semibold">Project Summary</h3>
-                <p>Project Name: Sample Reforestation Project</p>
-                <p>Type: Reforestation</p>
-                <p>Location: Sample City, Sample Country</p>
-                <p>Expected Credits: 1000</p>
+            <h2 className="text-2xl font-semibold mb-6">Project Images</h2>
+            <div className="space-y-8">
+              <DocumentUpload
+                documentType="featured_images"
+                projectId=""
+                uploadMode="deferred"
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    featured_images: files.map((f: FileWithStatus) => f.file),
+                  }));
+                }}
+              />
+
+              <DocumentUpload
+                documentType="site_photographs"
+                projectId=""
+                uploadMode="deferred"
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    site_photographs: files.map((f: FileWithStatus) => f.file),
+                  }));
+                }}
+              />
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-2">
+                Image Guidelines
+              </h3>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>
+                  • Featured images will be displayed prominently on your
+                  project listing
+                </li>
+                <li>
+                  • Site photographs help verifiers assess project authenticity
+                </li>
+                <li>• Use high-quality images (JPEG, PNG, or WebP format)</li>
+                <li>
+                  • Include diverse angles and perspectives of your project site
+                </li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 5 && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-6">Review & Submit</h2>
+            <div className="space-y-6">
+              {/* Project Summary */}
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">Project Summary</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Project Name</p>
+                    <p className="font-medium">
+                      {formData.title || 'Not specified'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Project Type</p>
+                    <p className="font-medium capitalize">
+                      {formData.projectType?.replace('_', ' ') ||
+                        'Not specified'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="font-medium">
+                      {formData.location?.name || 'Not specified'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Expected Credits</p>
+                    <p className="font-medium">
+                      {formData.totalCarbonCredits?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Budget</p>
+                    <p className="font-medium">
+                      Rs. {formData.budget?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Price per Credit</p>
+                    <p className="font-medium">
+                      Rs. {formData.pricePerCredit || 0}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <label>I agree to the terms and conditions</label>
+
+              {/* Document Summary */}
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">
+                  Documents Summary
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex justify-between items-center">
+                    <span>Project Proposal</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.project_proposal.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {documentFiles.project_proposal.length > 0
+                        ? `${documentFiles.project_proposal.length} file(s)`
+                        : 'Required'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Environmental Impact</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.environmental_impact.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {documentFiles.environmental_impact.length > 0
+                        ? `${documentFiles.environmental_impact.length} file(s)`
+                        : 'Required'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Legal Permits</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.legal_permits.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {documentFiles.legal_permits.length > 0
+                        ? `${documentFiles.legal_permits.length} file(s)`
+                        : 'Required'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Featured Images</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.featured_images.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {documentFiles.featured_images.length > 0
+                        ? `${documentFiles.featured_images.length} image(s)`
+                        : 'Optional'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Site Photographs</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.site_photographs.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {documentFiles.site_photographs.length > 0
+                        ? `${documentFiles.site_photographs.length} image(s)`
+                        : 'Optional'}
+                    </span>
+                  </div>
+                </div>
               </div>
+
+              {/* Terms Agreement */}
+              <div className="flex items-center space-x-2">
+                <input type="checkbox" id="terms" className="rounded" />
+                <label htmlFor="terms" className="text-sm">
+                  I agree to the{' '}
+                  <a href="/terms" className="text-blue-600 underline">
+                    terms and conditions
+                  </a>{' '}
+                  and confirm that all information provided is accurate
+                </label>
+              </div>
+
+              {/* Validation Messages */}
+              {(documentFiles.project_proposal.length === 0 ||
+                documentFiles.environmental_impact.length === 0 ||
+                documentFiles.legal_permits.length === 0) && (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    ⚠️ Some required documents are missing. Please go back and
+                    upload all required documents before submitting.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

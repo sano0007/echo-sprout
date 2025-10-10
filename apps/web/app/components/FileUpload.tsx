@@ -23,6 +23,13 @@ interface FileUploadProps {
   acceptedTypes?: string[];
   uploadMode?: 'immediate' | 'deferred';
   onFilesReady?: (files: UploadedFile[]) => void; // For deferred uploads
+  documentType?:
+    | 'project_proposal'
+    | 'environmental_impact'
+    | 'site_photographs'
+    | 'legal_permits'
+    | 'featured_images'
+    | 'site_images';
 }
 
 export default function FileUpload({
@@ -39,6 +46,7 @@ export default function FileUpload({
   ],
   uploadMode = 'immediate',
   onFilesReady,
+  documentType = 'project_proposal',
 }: FileUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -222,6 +230,7 @@ export default function FileUpload({
           fileName: uploadedFile.file.name,
           fileType: uploadedFile.file.type,
           storageId: storageId,
+          documentType: documentType,
         });
 
         console.log('Document metadata stored:', result);

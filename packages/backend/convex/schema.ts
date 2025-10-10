@@ -82,6 +82,8 @@ export default defineSchema({
       lat: v.float64(),
       long: v.float64(),
       name: v.string(),
+      city: v.optional(v.string()),
+      country: v.optional(v.string()),
     }),
     areaSize: v.number(),
     estimatedCO2Reduction: v.number(),
@@ -89,6 +91,14 @@ export default defineSchema({
     startDate: v.string(),
     expectedCompletionDate: v.string(),
     actualCompletionDate: v.optional(v.string()),
+    milestone1: v.optional(v.object({
+      name: v.string(),
+      date: v.string(),
+    })),
+    milestone2: v.optional(v.object({
+      name: v.string(),
+      date: v.string(),
+    })),
     status: v.union(
       v.literal('draft'),
       v.literal('submitted'),
@@ -123,6 +133,24 @@ export default defineSchema({
     // Progress tracking
     progressPercentage: v.optional(v.number()), // 0-100
     lastProgressUpdate: v.optional(v.number()), // timestamp
+    // Legacy fields for backward compatibility
+    projectImages: v.optional(v.array(v.any())), // Legacy field for old projects
+    featuredImages: v.optional(
+      v.array(
+        v.object({
+          storageId: v.string(),
+          fileUrl: v.string(),
+        })
+      )
+    ),
+    siteImages: v.optional(
+      v.array(
+        v.object({
+          storageId: v.string(),
+          fileUrl: v.string(),
+        })
+      )
+    ),
   })
     .index('by_creator', ['creatorId'])
     .index('by_status', ['status'])
@@ -362,7 +390,7 @@ export default defineSchema({
 
   // ============= DOCUMENT MANAGEMENT =============
   documents: defineTable({
-    entityId: v.string(), // ID of the associated entity (project, user profile, etc.)
+    entityId: v.optional(v.string()), // ID of the associated entity (project, user profile, etc.) - optional for legacy compatibility
     entityType: v.union(
       v.literal('project'),
       v.literal('verification'),
@@ -375,15 +403,24 @@ export default defineSchema({
     fileSize: v.number(),
     fileSizeFormatted: v.string(), // e.g. "2.5 MB"
     media: v.object({
-      cloudinary_public_id: v.string(),
-      cloudinary_url: v.string(),
+      storageId: v.optional(v.string()),
+      fileUrl: v.optional(v.string()),
+      cloudinary_public_id: v.optional(v.string()), // Legacy field
+      cloudinary_url: v.optional(v.string()), // Legacy field
     }),
     thumbnailUrl: v.optional(v.string()),
+    description: v.optional(v.string()), // Add description field
     documentType: v.union(
-      v.literal('project_plan'),
-      v.literal('environmental_assessment'),
-      v.literal('permits'),
-      v.literal('photos'),
+      v.literal('project_proposal'),
+      v.literal('environmental_impact'),
+      v.literal('site_photographs'),
+      v.literal('legal_permits'),
+      v.literal('featured_images'),
+      v.literal('site_images'),
+      v.literal('project_plan'), // Legacy
+      v.literal('environmental_assessment'), // Legacy
+      v.literal('permits'), // Legacy
+      v.literal('photos'), // Legacy
       v.literal('verification_report'),
       v.literal('identity_doc'),
       v.literal('technical_specs'),
@@ -403,6 +440,56 @@ export default defineSchema({
     .index('by_verification_status', ['isVerified'])
     .index('by_required', ['entityType', 'isRequired']),
 
+  // ============= PROGRESS TRACKING =============
+  progressUpdates: defineTable({
+    projectId: v.id('projects'),
+    reportedBy: v.id('users'),
+    updateType: v.union(
+      v.literal('milestone'),
+      v.literal('measurement'),
+      v.literal('photo'),
+      v.literal('issue'),
+      v.literal('completion')
+    ),
+    title: v.string(),
+    description: v.string(),
+    progressPercentage: v.number(), // 0-100
+    measurementData: v.optional(v.any()), // JSON data for specific measurements
+    location: v.optional(
+      v.object({
+        lat: v.float64(),
+        long: v.float64(),
+        name: v.string(),
+      })
+    ),
+    photos: v.array(
+      v.object({
+        storageId: v.string(),
+        fileUrl: v.string(),
+      })
+    ),
+    reportingDate: v.float64(),
+    // Impact tracking
+    carbonImpactToDate: v.optional(v.number()), // CO2 reduction achieved so far
+    treesPlanted: v.optional(v.number()),
+    energyGenerated: v.optional(v.number()),
+    wasteProcessed: v.optional(v.number()),
+    // Verification
+    isVerified: v.boolean(),
+    verifiedBy: v.optional(v.id('users')),
+    verifiedAt: v.optional(v.float64()),
+    verificationNotes: v.optional(v.string()),
+  })
+    .index('by_project', ['projectId'])
+    .index('by_reporter', ['reportedBy'])
+    .index('by_date', ['reportingDate'])
+    .index('by_type', ['updateType'])
+    .index('by_verification', ['isVerified'])
+    // Enhanced indexes for monitoring
+    .index('by_project_date', ['projectId', 'reportingDate'])
+    .index('by_project_type', ['projectId', 'updateType'])
+    .index('by_project_verified', ['projectId', 'isVerified'])
+    .index('by_date_type', ['reportingDate', 'updateType']),
 
   // ============= EDUCATIONAL CONTENT =============
   educationalContent: defineTable({
@@ -819,8 +906,7 @@ export default defineSchema({
       weekly: v.boolean(),
     }),
     lastUpdated: v.number(),
-  })
-    .index('by_user', ['userId']),
+  }).index('by_user', ['userId']),
 
   // ============= ANALYTICS & REPORTING =============
   analytics: defineTable({

@@ -20,8 +20,8 @@ export const uploadDocument = mutation({
     fileSize: v.number(),
     fileSizeFormatted: v.string(),
     media: v.object({
-      cloudinary_public_id: v.string(),
-      cloudinary_url: v.string(),
+      storageId: v.string(),
+      fileUrl: v.string(),
     }),
     thumbnailUrl: v.optional(v.string()),
     documentType: v.union(
