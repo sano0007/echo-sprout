@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from 'convex/react';
-import { api, Id } from '@packages/backend/convex/_generated/api';
+import { api } from '@packages/backend/convex/_generated/api';
+import { Id } from '@packages/backend/convex/_generated/dataModel';
 
 export interface PDFReportRequest {
   templateType: 'analytics' | 'monitoring';
@@ -130,28 +131,28 @@ export function usePDFReports() {
 
   // Get reports by status
   const getReportsByStatus = (status: PDFReport['status']) => {
-    return reports?.filter(report => report.status === status) || [];
+    return reports?.filter((report: any) => report.status === status) || [];
   };
 
   // Get reports by template type
   const getReportsByType = (templateType: 'analytics' | 'monitoring') => {
-    return reports?.filter(report => report.templateType === templateType) || [];
+    return reports?.filter((report: any) => report.templateType === templateType) || [];
   };
 
   // Get report by ID
   const getReport = (reportId: Id<'pdf_reports'>) => {
-    return reports?.find(report => report._id === reportId);
+    return reports?.find((report: any) => report._id === reportId);
   };
 
   // Check if any reports are currently processing
   const hasProcessingReports = () => {
-    return reports?.some(report => ['pending', 'processing'].includes(report.status)) || false;
+    return reports?.some((report: any) => ['pending', 'processing'].includes(report.status)) || false;
   };
 
   // Get the most recent reports
   const getRecentReports = (limit: number = 10) => {
     return reports
-      ?.sort((a, b) => b.requestedAt - a.requestedAt)
+      ?.sort((a: any, b: any) => b.requestedAt - a.requestedAt)
       ?.slice(0, limit) || [];
   };
 
@@ -196,7 +197,7 @@ export function usePDFReports() {
   // Effect to stop polling when reports are completed
   useEffect(() => {
     if (reports) {
-      reports.forEach(report => {
+      reports.forEach((report: any) => {
         if (activePolling.has(report._id) && ['completed', 'failed'].includes(report.status)) {
           stopPolling(report._id);
         }

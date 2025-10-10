@@ -67,10 +67,10 @@ export default function VerificationDashboard() {
   // Process verifications data
   const allVerifications = myVerifications.page || [];
   const projects = {
-    pendingAcceptance: allVerifications.filter((v) => v.status === 'assigned'),
-    accepted: allVerifications.filter((v) => v.status === 'accepted'),
-    inProgress: allVerifications.filter((v) => v.status === 'in_progress'),
-    completed: allVerifications.filter((v) =>
+    pendingAcceptance: allVerifications.filter((v: any) => v.status === 'assigned'),
+    accepted: allVerifications.filter((v: any) => v.status === 'accepted'),
+    inProgress: allVerifications.filter((v: any) => v.status === 'in_progress'),
+    completed: allVerifications.filter((v: any) =>
       ['completed', 'approved', 'rejected', 'revision_required'].includes(
         v.status
       )
@@ -187,7 +187,7 @@ export default function VerificationDashboard() {
                   <p>No verifications pending your acceptance.</p>
                 </div>
               ) : (
-                projects.pendingAcceptance.map((verification) => (
+                projects.pendingAcceptance.map((verification: any) => (
                   <VerificationCard
                     key={verification._id}
                     verification={verification}
@@ -206,7 +206,7 @@ export default function VerificationDashboard() {
                   <p>No accepted verifications yet.</p>
                 </div>
               ) : (
-                projects.accepted.map((verification) => (
+                projects.accepted.map((verification: any) => (
                   <VerificationCard
                     key={verification._id}
                     verification={verification}
@@ -225,7 +225,7 @@ export default function VerificationDashboard() {
                   <p>No verifications currently in progress.</p>
                 </div>
               ) : (
-                projects.inProgress.map((verification) => (
+                projects.inProgress.map((verification: any) => (
                   <VerificationCard
                     key={verification._id}
                     verification={verification}
@@ -244,7 +244,7 @@ export default function VerificationDashboard() {
                   <p>No completed verifications yet.</p>
                 </div>
               ) : (
-                projects.completed.map((verification) => (
+                projects.completed.map((verification: any) => (
                   <VerificationCard
                     key={verification._id}
                     verification={verification}

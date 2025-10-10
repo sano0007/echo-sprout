@@ -194,7 +194,7 @@ export default function ProjectDetail() {
                 {/* Thumbnail Navigation */}
                 {project.images.length > 1 && (
                   <div className="grid grid-cols-3 gap-2">
-                    {project.images.slice(0, 3).map((image, index) => (
+                    {project.images.slice(0, 3).map((image: any, index: number) => (
                       <div
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}

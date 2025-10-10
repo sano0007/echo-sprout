@@ -54,7 +54,7 @@ import {
   Factory,
 } from 'lucide-react';
 import { api } from '@packages/backend/convex/_generated/api';
-import type { ActiveAlert, StatusBreakdown, TypeBreakdown, RoleBreakdown, SourceBreakdown } from '@packages/backend/convex/analytics_engine';
+import type { ActiveAlert, StatusBreakdown, TypeBreakdown, RoleBreakdown, SourceBreakdown, RegionBreakdown, ImpactByRegion, TimeSeriesPoint, TrendData } from '@packages/backend/convex/analytics_engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -457,13 +457,13 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {projectData?.projectsByRegion?.slice(0, 4).map((region) => (
+              {projectData?.projectsByRegion?.slice(0, 4).map((region: RegionBreakdown) => (
                 <div key={`${region.country}-${region.region}`} className="flex justify-between items-center">
                   <span className="text-sm">{region.country}</span>
                   <div className="flex items-center gap-2">
                     <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-600 h-2 rounded-full" 
+                      <div
+                        className="bg-green-600 h-2 rounded-full"
                         style={{ width: `${region.percentage}%` }}
                       />
                     </div>
@@ -839,7 +839,7 @@ export default function AdminAnalyticsPage() {
           <CardContent className="h-80">
             {impactData?.timeSeriesData && (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={impactData.timeSeriesData.filter(d => d.metric === 'carbon_impact')}>
+                <AreaChart data={impactData.timeSeriesData.filter((d: TimeSeriesPoint) => d.metric === 'carbon_impact')}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="timestamp" 
@@ -919,7 +919,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {impactData?.impactByRegion?.slice(0, 6).map((region) => (
+              {impactData?.impactByRegion?.slice(0, 6).map((region: ImpactByRegion) => (
                 <div key={`${region.country}-${region.region}`} className="flex justify-between items-center">
                   <div>
                     <span className="font-medium">{region.country}</span>
@@ -956,7 +956,7 @@ export default function AdminAnalyticsPage() {
             <Separator />
             <div className="pt-2">
               <div className="text-sm text-muted-foreground mb-2">Impact Growth</div>
-              {impactData?.impactTrends?.map((trend, index) => (
+              {impactData?.impactTrends?.map((trend: TrendData, index: number) => (
                 <div key={index} className="flex justify-between items-center">
                   <span className="text-sm">{trend.metric}</span>
                   <div className="flex items-center gap-1">
@@ -1085,7 +1085,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {platformPerformance.performanceTrends.map((trend, index) => (
+              {platformPerformance.performanceTrends.map((trend: TrendData, index: number) => (
                 <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <div>
                     <span className="font-medium">{trend.metric}</span>

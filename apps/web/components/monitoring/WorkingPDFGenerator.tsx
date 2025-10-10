@@ -118,7 +118,7 @@ const WorkingPDFGenerator: React.FC = () => {
   };
 
   // Filter reports based on selected filters
-  const filteredReports = reports.filter(report => {
+  const filteredReports = reports.filter((report: any) => {
     if (filterStatus !== 'all' && report.status !== filterStatus) return false;
     if (filterType !== 'all' && report.templateType !== filterType) return false;
     return true;
@@ -309,7 +309,7 @@ const WorkingPDFGenerator: React.FC = () => {
               <p className="text-sm">Generate your first report to get started</p>
             </div>
           ) : (
-            filteredReports.map((report) => {
+            filteredReports.map((report: any) => {
               const statusInfo = getStatusInfo(report.status);
               const StatusIcon = statusInfo.icon;
 

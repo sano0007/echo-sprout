@@ -363,7 +363,7 @@ export default function EnhancedPDFReportGenerator() {
             </div>
           ) : (
             <div className="space-y-3">
-              {getRecentReports(10).map((report) => (
+              {getRecentReports(10).map((report: any) => (
                 <div
                   key={report._id}
                   className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"

@@ -267,7 +267,7 @@ export default function CompleteMonitoringDashboard() {
       </div>
 
       <div className="grid gap-4">
-        {progressUpdates?.map((update) => (
+        {progressUpdates?.map((update: any) => (
           <div key={update._id} className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
@@ -304,7 +304,7 @@ export default function CompleteMonitoringDashboard() {
                   <div className="bg-gray-50 rounded-lg p-4 mb-3">
                     <h5 className="text-sm font-medium text-gray-700 mb-2">Measurement Data</h5>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {Object.entries(update.measurementData).map(([key, value]) => (
+                      {Object.entries(update.measurementData).map(([key, value]: [string, any]) => (
                         <div key={key} className="text-center">
                           <p className="text-xs text-gray-600 capitalize mb-1">
                             {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
@@ -397,7 +397,7 @@ export default function CompleteMonitoringDashboard() {
       </div>
 
       <div className="grid gap-4">
-        {alerts?.map((alert) => (
+        {alerts?.map((alert: any) => (
           <div key={alert._id} className={`border-l-4 p-6 rounded-lg bg-white hover:shadow-md transition-shadow ${
             alert.severity === 'critical' ? 'border-red-500 bg-red-50' :
             alert.severity === 'high' ? 'border-orange-500 bg-orange-50' :
@@ -484,7 +484,7 @@ export default function CompleteMonitoringDashboard() {
       </div>
 
       <div className="grid gap-4">
-        {milestones?.map((milestone) => (
+        {milestones?.map((milestone: any) => (
           <div key={milestone._id} className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
@@ -521,7 +521,7 @@ export default function CompleteMonitoringDashboard() {
                   <div className="bg-gray-50 rounded-lg p-4 mb-3">
                     <h5 className="text-sm font-medium text-gray-700 mb-2">Target Metrics</h5>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {Object.entries(milestone.targetMetrics).map(([key, value]) => (
+                      {Object.entries(milestone.targetMetrics).map(([key, value]: [string, any]) => (
                         <div key={key} className="text-center">
                           <p className="text-xs text-gray-600 capitalize mb-1">
                             {key.replace(/([A-Z])/g, ' $1').toLowerCase()}

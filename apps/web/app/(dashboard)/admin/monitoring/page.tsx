@@ -70,7 +70,7 @@ const SystemOverview = () => {
   // Calculate metrics from real data with fallbacks
   const totalProjects = userProjects?.length || 0;
   const activeProjects =
-    userProjects?.filter((p) => p.status === 'active').length || 0;
+    userProjects?.filter((p: any) => p.status === 'active').length || 0;
   // Calculate pending reports from unresolved alerts related to reports
   const pendingReports = hasAlertSummaryError
     ? 0
@@ -305,7 +305,7 @@ const AlertsOverview = () => {
   // Filter alerts based on search term
   const allAlerts = hasAlertsError ? [] : alertsQuery?.alerts || [];
   const filteredAlerts = allAlerts.filter(
-    (alert) =>
+    (alert: any) =>
       (alert.projectInfo?.title || '')
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||

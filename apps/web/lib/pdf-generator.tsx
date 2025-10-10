@@ -347,7 +347,12 @@ export class PDFGenerationService {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
-        resolve(result.split(',')[1]); // Remove data:application/pdf;base64, prefix
+        const base64 = result.split(',')[1]; // Remove data:application/pdf;base64, prefix
+        if (base64) {
+          resolve(base64);
+        } else {
+          reject(new Error('Failed to extract base64 data from PDF'));
+        }
       };
       reader.onerror = reject;
       reader.readAsDataURL(blob);

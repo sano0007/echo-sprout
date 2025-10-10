@@ -144,7 +144,7 @@ const LearningPathsTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {learningPaths.map((path) => (
+            {learningPaths.map((path: LearningPath) => (
               <TableRow key={path.id}>
                 <TableCell>
                   <div>

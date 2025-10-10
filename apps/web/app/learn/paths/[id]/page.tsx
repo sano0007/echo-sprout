@@ -420,7 +420,7 @@ export default function LearningPathDetailsPage() {
         <div className="bg-white border rounded p-5 mb-6">
           <h2 className="text-xl font-semibold mb-2">Objectives</h2>
           <ul className="list-disc pl-5 text-gray-700">
-            {data.objectives.map((o, i) => (
+            {data.objectives.map((o: any, i: number) => (
               <li key={i}>{o}</li>
             ))}
           </ul>
@@ -429,7 +429,7 @@ export default function LearningPathDetailsPage() {
 
       {Array.isArray(data.tags) && data.tags.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
-          {data.tags.map((t) => (
+          {data.tags.map((t: any) => (
             <span
               key={t}
               className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm"
@@ -449,7 +449,7 @@ export default function LearningPathDetailsPage() {
           </p>
         ) : (
           <ol className="space-y-4 list-decimal pl-6">
-            {lessons.map((L) => (
+            {lessons.map((L: any) => (
               <li key={String(L.id)}>
                 <div className="flex items-start justify-between">
                   <div className="w-full">
@@ -580,7 +580,7 @@ export default function LearningPathDetailsPage() {
                       </div>
                       {L.pdfUrls && L.pdfUrls.length > 0 ? (
                         <div className="space-y-6">
-                          {L.pdfUrls.map((u, i) => {
+                          {L.pdfUrls.map((u: any, i: number) => {
                             const name = getFileName(u) || `PDF ${i + 1}`;
                             const isPdf = u.toLowerCase().includes('.pdf');
                             const key = `p:${String(L.id)}:${i}`;

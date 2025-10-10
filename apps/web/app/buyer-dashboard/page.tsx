@@ -106,7 +106,7 @@ export default function BuyerDashboard() {
     activeProjects: 0,
   };
 
-  const purchaseHistory = (transactions || []).map((transaction) => ({
+  const purchaseHistory = (transactions || []).map((transaction: any) => ({
     id: transaction._id,
     project: transaction.project?.title || 'General Carbon Credits',
     credits: transaction.creditAmount,
@@ -125,7 +125,7 @@ export default function BuyerDashboard() {
     stripePaymentIntentId: transaction.stripePaymentIntentId,
   }));
 
-  const certificateList = (certificates || []).map((cert) => ({
+  const certificateList = (certificates || []).map((cert: any) => ({
     id: cert.id,
     project: cert.project,
     credits: cert.credits,
@@ -354,7 +354,7 @@ export default function BuyerDashboard() {
                       <span className="text-gray-600">Total Projects:</span>
                       <span className="font-medium">
                         {Object.values(metrics.projectTypes).reduce(
-                          (sum, count) => sum + count,
+                          (sum: number, count: any) => sum + (count as number),
                           0
                         )}
                       </span>
@@ -383,7 +383,7 @@ export default function BuyerDashboard() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {purchaseHistory.map((purchase) => (
+                  {purchaseHistory.map((purchase: any) => (
                     <div key={purchase.id} className="border rounded-lg p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
@@ -476,7 +476,7 @@ export default function BuyerDashboard() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {certificateList.map((certificate) => (
+                  {certificateList.map((certificate: any) => (
                     <div
                       key={certificate.id}
                       className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-lg border"
@@ -554,8 +554,8 @@ export default function BuyerDashboard() {
 
               <div className="space-y-6">
                 {purchaseHistory
-                  .filter((p) => p.status === 'Active')
-                  .map((purchase) => (
+                  .filter((p: any) => p.status === 'Active')
+                  .map((purchase: any) => (
                     <div key={purchase.id} className="border rounded-lg p-6">
                       <h4 className="text-lg font-semibold mb-4">
                         {purchase.project}

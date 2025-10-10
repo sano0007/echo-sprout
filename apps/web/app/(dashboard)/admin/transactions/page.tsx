@@ -13,6 +13,7 @@ import {
   Info,
   MoreHorizontal,
   RefreshCw,
+  Trash2,
   XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -761,7 +762,7 @@ export default function TransactionsPage() {
 
   const getFilteredTransactions = (status: string) => {
     if (status === 'all') return allTransactions;
-    return allTransactions.filter((t) => t.paymentStatus === status);
+    return allTransactions.filter((t: Transaction) => t.paymentStatus === status);
   };
 
   return (

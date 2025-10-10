@@ -209,7 +209,7 @@ export default function LearnHub() {
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   const modulesList = (learningPaths ?? []).length
-    ? (learningPaths ?? []).map((p) => ({
+    ? (learningPaths ?? []).map((p: any) => ({
         id: String(p.id),
         title: p.title,
         description: p.description,
@@ -222,7 +222,7 @@ export default function LearnHub() {
 
   // Batch fetch persisted progress for all real Convex paths
   const realPathIds = Array.isArray(learningPaths)
-    ? (learningPaths as any[]).map((p) => String(p.id))
+    ? (learningPaths as any[]).map((p: any) => String(p.id))
     : [];
   const progressMap = useQuery(api.learn.progressForPaths, {
     pathIds: realPathIds,
@@ -302,7 +302,7 @@ export default function LearnHub() {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                {modulesList.map((module) => (
+                {modulesList.map((module: any) => (
                   <div
                     key={module.id}
                     className="border rounded-lg p-6 hover:shadow-lg transition-shadow h-full flex flex-col"
@@ -539,7 +539,7 @@ export default function LearnHub() {
               </div>
 
               <div className="space-y-6">
-                {(blogPosts ?? []).map((post) => (
+                {(blogPosts ?? []).map((post: any) => (
                   <article
                     key={String(post.id)}
                     className="border rounded-lg p-6 hover:shadow-lg transition-shadow"

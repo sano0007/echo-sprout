@@ -65,23 +65,23 @@ export default function CreatorDashboard() {
   const creatorStats = {
     totalProjects: userProjects?.length || 0,
     activeProjects:
-      userProjects?.filter((p) => p.status === 'active')?.length || 0,
+      userProjects?.filter((p: any) => p.status === 'active')?.length || 0,
     completedProjects:
-      userProjects?.filter((p) => p.status === 'completed')?.length || 0,
+      userProjects?.filter((p: any) => p.status === 'completed')?.length || 0,
     totalCreditsGenerated:
-      userProjects?.reduce((sum, p) => sum + (p.totalCarbonCredits || 0), 0) ||
+      userProjects?.reduce((sum: number, p: any) => sum + (p.totalCarbonCredits || 0), 0) ||
       0,
     totalRevenue:
-      userProjects?.reduce((sum, p) => sum + (p.budget || 0), 0) || 0,
+      userProjects?.reduce((sum: number, p: any) => sum + (p.budget || 0), 0) || 0,
     pendingReports:
-      userProjects?.filter((p) => p.status === 'active')?.length || 0,
+      userProjects?.filter((p: any) => p.status === 'active')?.length || 0,
     upcomingMilestones:
-      (userProjects?.filter((p) => p.status === 'active')?.length || 0) * 2,
+      (userProjects?.filter((p: any) => p.status === 'active')?.length || 0) * 2,
   };
 
   // Use real projects data from backend
   const projects =
-    userProjects?.map((project) => ({
+    userProjects?.map((project: any) => ({
       ...project,
       id: project._id,
       type: project.projectType,
@@ -110,8 +110,8 @@ export default function CreatorDashboard() {
   // Generate pending tasks based on active projects
   const pendingTasks =
     userProjects
-      ?.filter((p) => p.status === 'active')
-      ?.map((project, index) => ({
+      ?.filter((p: any) => p.status === 'active')
+      ?.map((project: any, index: number) => ({
         id: `task-${index}`,
         task: 'Submit Monthly Progress Report',
         project: project.title,
@@ -124,7 +124,7 @@ export default function CreatorDashboard() {
 
   // Generate recent activity based on projects
   const recentActivity =
-    userProjects?.slice(0, 4)?.map((project, index) => ({
+    userProjects?.slice(0, 4)?.map((project: any, index: number) => ({
       id: `activity-${index}`,
       action:
         index % 2 === 0 ? 'Progress report submitted' : 'Verification approved',
@@ -382,8 +382,8 @@ export default function CreatorDashboard() {
               <CardContent>
                 <div className="space-y-6">
                   {projects
-                    .filter((p) => p.status === 'active')
-                    .map((project) => (
+                    .filter((p: any) => p.status === 'active')
+                    .map((project: any) => (
                       <div key={project.id} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -563,7 +563,7 @@ export default function CreatorDashboard() {
                     </div>
                   </div>
                 ) : (
-                  projects.map((project) => (
+                  projects.map((project: any) => (
                     <Card key={project.id} className="border">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -677,7 +677,7 @@ export default function CreatorDashboard() {
                       <div className="text-center py-4">
                         <div className="text-gray-600">Loading projects...</div>
                       </div>
-                    ) : projects.filter((p) => p.status === 'active').length ===
+                    ) : projects.filter((p: any) => p.status === 'active').length ===
                       0 ? (
                       <div className="text-center py-4">
                         <div className="text-gray-600">
@@ -686,8 +686,8 @@ export default function CreatorDashboard() {
                       </div>
                     ) : (
                       projects
-                        .filter((p) => p.status === 'active')
-                        .map((project) => (
+                        .filter((p: any) => p.status === 'active')
+                        .map((project: any) => (
                           <div
                             key={project.id}
                             className="border rounded-lg p-4"
@@ -1042,7 +1042,7 @@ export default function CreatorDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {projects.map((project) => (
+                  {projects.map((project: any) => (
                     <div
                       key={project.id}
                       className="flex items-center justify-between"
