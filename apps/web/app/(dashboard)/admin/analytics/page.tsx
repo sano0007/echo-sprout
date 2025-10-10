@@ -54,6 +54,7 @@ import {
   Factory,
 } from 'lucide-react';
 import { api } from '@packages/backend/convex/_generated/api';
+import type { ActiveAlert, StatusBreakdown, TypeBreakdown, RoleBreakdown, SourceBreakdown } from '@packages/backend/convex/analytics_engine';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -327,7 +328,7 @@ export default function AdminAnalyticsPage() {
               <AlertCircle className="h-4 w-4 text-orange-500" />
               Active Alerts
             </h4>
-            {systemHealth.alerts.slice(0, 3).map((alert) => (
+            {systemHealth.alerts.slice(0, 3).map((alert: ActiveAlert) => (
               <div key={alert.id} className="flex items-center justify-between p-2 bg-orange-50 rounded-md">
                 <span className="text-sm">{alert.message}</span>
                 <Badge variant="outline" className="text-xs">
@@ -363,7 +364,7 @@ export default function AdminAnalyticsPage() {
                     outerRadius={80}
                     label={(props: any) => `${props.status}: ${props.percentage.toFixed(1)}%`}
                   >
-                    {projectData.projectsByStatus.map((entry, index) => (
+                    {projectData.projectsByStatus.map((entry: StatusBreakdown, index: number) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]} />
                     ))}
                   </Pie>
@@ -521,7 +522,7 @@ export default function AdminAnalyticsPage() {
                     outerRadius={80}
                     label={(props: any) => `${props.role}: ${props.percentage.toFixed(1)}%`}
                   >
-                    {userData.usersByRole.map((entry, index) => (
+                    {userData.usersByRole.map((entry: RoleBreakdown, index: number) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]} />
                     ))}
                   </Pie>
@@ -708,7 +709,7 @@ export default function AdminAnalyticsPage() {
                     outerRadius={80}
                     label={(props: any) => `${props.source}: ${props.percentage.toFixed(1)}%`}
                   >
-                    {transactionData.revenueMetrics.revenueBySource.map((entry, index) => (
+                    {transactionData.revenueMetrics.revenueBySource.map((entry: SourceBreakdown, index: number) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]} />
                     ))}
                   </Pie>
