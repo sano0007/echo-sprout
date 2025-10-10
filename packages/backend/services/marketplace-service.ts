@@ -39,10 +39,8 @@ export class MarketplaceService {
           location: project.location.name,
           price: project.pricePerCredit,
           credits: project.creditsAvailable,
-          image:
-            project.images?.[0] ||
-            'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg',
-          images: project.images || [],
+          image: 'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg',
+          images: [],
           creator:
             creator?.organizationName ||
             `${creator?.firstName} ${creator?.lastName}` ||
