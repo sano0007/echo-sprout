@@ -1539,7 +1539,7 @@ export default function ProjectReview() {
                         {/* PDF Viewer */}
                         <div className="flex-1">
                           <PDFViewerWrapper
-                            url={selectedDoc.media.cloudinary_url}
+                            url={selectedDoc.media.cloudinary_url || ''}
                             fileName={selectedDoc.originalName}
                             annotations={
                               documentAnnotations[selectedDoc._id] || []
