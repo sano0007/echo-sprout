@@ -2,6 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
+/* React PDF TextLayer styles - Required to prevent TextLayer warnings */
+.react-pdf__Page__textContent {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    overflow: hidden !important;
+    opacity: 0.2 !important;
+    line-height: 1 !important;
+    user-select: text !important;
+    pointer-events: auto !important;
+    z-index: 1 !important;
+}
+
+.react-pdf__Page__textContent span {
+    color: transparent !important;
+    position: absolute !important;
+    white-space: pre !important;
+    cursor: text !important;
+    transform-origin: 0% 0% !important;
+}
+
+.react-pdf__Page__textContent::selection {
+    background: rgba(59, 130, 246, 0.3) !important;
+}
+
+.react-pdf__Page__textContent span::selection {
+    background: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* React PDF AnnotationLayer styles */
+.react-pdf__Page__annotations {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+.react-pdf__Page__annotations .annotationLayer {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.react-pdf__Page {
+    position: relative !important;
+}
+
+/* Custom PDF viewer enhancements */
+.pdf-document {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.pdf-page {
+    margin-bottom: 20px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+/* Ensure annotation layers are visible */
+.react-pdf__Page {
+    position: relative !important;
+}
+
+.react-pdf__Page > div[class*="annotation"] {
+    z-index: 10 !important;
+}
+
+/* Custom annotation layer styling */
+.annotation-layer {
+    z-index: 10 !important;
+    pointer-events: auto !important;
+}
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -46,6 +128,65 @@ body {
     color: #ffffff !important;
 }
 
+/* PDF Viewer Styles - Fix text layer display issues */
+.react-pdf__Page {
+    position: relative !important;
+}
+
+.react-pdf__Page__textContent {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    overflow: hidden !important;
+    opacity: 0.2 !important; /* Make text layer semi-transparent for selection but not visible */
+    line-height: 1 !important;
+    pointer-events: auto !important; /* Allow text selection */
+    user-select: text !important; /* Enable text selection */
+}
+
+.react-pdf__Page__textContent span {
+    color: transparent !important; /* Hide the actual text rendering */
+    position: absolute !important;
+    white-space: pre !important;
+    cursor: text !important;
+    transform-origin: 0% 0% !important;
+}
+
+/* Ensure text layer doesn't interfere with annotations */
+.react-pdf__Page__textContent span:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important; /* Light blue highlight on hover */
+}
+
+/* Fix for annotation layer positioning */
+.react-pdf__Page__annotations {
+    display: none !important; /* Hide default PDF annotations */
+}
+
+/* Enhanced PDF container styles */
+.pdf-document {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+.pdf-page {
+    margin-bottom: 20px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+/* Prevent text selection artifacts */
+.react-pdf__Page__textContent::selection {
+    background: rgba(59, 130, 246, 0.3) !important;
+}
+
+.react-pdf__Page__textContent span::selection {
+    background: rgba(59, 130, 246, 0.3) !important;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -72,4 +213,333 @@ a {
   .imgDark {
     display: unset;
   }
+}
+
+::-webkit-calendar-picker-indicator {
+    filter: invert(1)
+    brightness(50%)
+    sepia(100%)
+    saturate(10000%)
+    hue-rotate(180deg)
+}
+
+
+@layer base {
+  :root {
+    /* Enhanced Light theme with EcoSprout colors */
+    --background: #FAFBFC; /* snow-white */
+    --foreground: #0B0B0B; /* rich-black */
+    --card: #FFFFFF; /* pure-white */
+    --card-foreground: #0B0B0B;
+    --popover: #FFFFFF;
+    --popover-foreground: #0B0B0B;
+    --primary: #006A4E; /* bangladesh-green */
+    --primary-foreground: #FFFFFF;
+    --secondary: #F9FAFB; /* whisper-gray */
+    --secondary-foreground: #2C2C2C; /* slate-gray */
+    --muted: #F9FAFB;
+    --muted-foreground: #6B7280; /* light-gray */
+    --accent: #10B981; /* sage-green */
+    --accent-foreground: #FFFFFF;
+    --destructive: #EF4444; /* error-primary */
+    --destructive-foreground: #FFFFFF;
+    --border: #E5E7EB; /* cloud-gray */
+    --input: #E5E7EB;
+    --ring: #00F5B8; /* caribbean-green */
+    --radius: 0.5rem;
+
+    /* Enhanced Chart colors */
+    --chart-1: #006A4E; /* bangladesh-green */
+    --chart-2: #2ECC71; /* mountain-meadow */
+    --chart-3: #00F5B8; /* caribbean-green */
+    --chart-4: #3B82F6; /* info-primary */
+    --chart-5: #8B5CF6; /* chart-quinary */
+
+    /* Enhanced Sidebar colors */
+    --sidebar-background: #FFFFFF; /* pure-white */
+    --sidebar-foreground: #2C2C2C; /* slate-gray */
+    --sidebar-primary: #006A4E; /* bangladesh-green */
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F9FAFB; /* whisper-gray */
+    --sidebar-accent-foreground: #2C2C2C;
+    --sidebar-border: #E5E7EB; /* cloud-gray */
+    --sidebar-ring: #00F5B8; /* caribbean-green */
+  }
+
+  .dark {
+    /* Enhanced Dark theme with EcoSprout colors */
+    --background: #0B0B0B; /* rich-black */
+    --foreground: #F1F2F6; /* anti-flash-white */
+    --card: #1A1A1A; /* charcoal */
+    --card-foreground: #F1F2F6;
+    --popover: #1A1A1A;
+    --popover-foreground: #F1F2F6;
+    --primary: #2ECC71; /* mountain-meadow */
+    --primary-foreground: #0B0B0B;
+    --secondary: #2C2C2C; /* slate-gray */
+    --secondary-foreground: #F1F2F6;
+    --muted: #2C2C2C;
+    --muted-foreground: #6B7280; /* light-gray */
+    --accent: #00F5B8; /* caribbean-green */
+    --accent-foreground: #0B0B0B;
+    --destructive: #EF4444;
+    --destructive-foreground: #F1F2F6;
+    --border: #2C2C2C;
+    --input: #2C2C2C;
+    --ring: #00F5B8; /* caribbean-green */
+
+    /* Enhanced Dark theme chart colors */
+    --chart-1: #2ECC71;
+    --chart-2: #00F5B8;
+    --chart-3: #006A4E;
+    --chart-4: #9CA3AF;
+    --chart-5: #F1F2F6;
+
+    /* Enhanced Dark Sidebar colors */
+    --sidebar-background: #1A1A1A; /* charcoal */
+    --sidebar-foreground: #F1F2F6;
+    --sidebar-primary: #2ECC71; /* mountain-meadow */
+    --sidebar-primary-foreground: #0B0B0B;
+    --sidebar-accent: #2C2C2C;
+    --sidebar-accent-foreground: #F1F2F6;
+    --sidebar-border: #2C2C2C;
+    --sidebar-ring: #00F5B8;
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Enhanced utility classes for EcoSprout */
+@layer components {
+  .gradient-eco {
+    @apply bg-gradient-to-r from-bangladesh-green to-mountain-meadow;
+  }
+
+  .gradient-eco-light {
+    @apply bg-gradient-to-r from-mountain-meadow to-caribbean-green;
+  }
+
+  .card-hover {
+    @apply hover:shadow-medium transition-all duration-300 hover:-translate-y-0.5;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-bangladesh-green to-mountain-meadow bg-clip-text text-transparent;
+  }
+
+  .btn-eco {
+    @apply gradient-eco text-white hover:opacity-90 transition-all duration-200 shadow-soft hover:shadow-medium;
+  }
+
+  .status-verified {
+      @apply bg-success text-white border border-success-border;
+  }
+
+  .status-pending {
+      @apply bg-warning text-white border border-warning-border;
+  }
+
+  .status-rejected {
+      @apply bg-error text-white border border-error-border;
+  }
+
+  .status-info {
+      @apply bg-gray-500 text-white border border-gray-300;
+  }
+
+  .metric-card {
+    @apply bg-pure-white dark:bg-card border border-cloud-gray rounded-lg p-6 shadow-soft hover:shadow-medium transition-all duration-300 group cursor-pointer;
+  }
+
+  .dashboard-grid {
+    @apply grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .loading-shimmer {
+    background: linear-gradient(90deg, #f1f2f6 25%, #e5e7eb 50%, #f1f2f6 75%);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+
+  .interactive-element {
+    @apply transition-all duration-200;
+  }
+
+  .focus-visible {
+    @apply outline-none ring-2 ring-caribbean-green ring-offset-2 ring-offset-pure-white;
+  }
+
+  .enhanced-table {
+    @apply bg-pure-white border-cloud-gray shadow-soft overflow-hidden;
+  }
+
+  .enhanced-table-header {
+    @apply bg-whisper-gray border-b border-cloud-gray;
+  }
+
+  .enhanced-table-row {
+    @apply border-cloud-gray hover:bg-whisper-gray transition-colors duration-150;
+  }
+
+    input{
+        background-color: white !important;
+    }
+
+    textarea{
+            background-color: white !important;
+    }
+
+    select{
+            background-color: white !important;
+    }
+}
+
+/* Force solid white backgrounds for all Radix UI components */
+@layer components {
+  /* Dialog/Modal components */
+  [data-radix-dialog-content],
+  [role="dialog"],
+  .dialog-content,
+  [data-state="open"][role="dialog"] {
+    @apply bg-white !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Popover components */
+  [data-radix-popover-content],
+  [role="dialog"][data-radix-popover-content],
+  .popover-content,
+  [data-state="open"][data-radix-popover-content] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Dropdown Menu components */
+  [data-radix-dropdown-menu-content],
+  [role="menu"],
+  .dropdown-content,
+  [data-state="open"][role="menu"] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Select components */
+  [data-radix-select-content],
+  [role="listbox"],
+  .select-content,
+  [data-state="open"][role="listbox"] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Tooltip components */
+  [data-radix-tooltip-content],
+  [role="tooltip"],
+  .tooltip-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Context Menu components */
+  [data-radix-context-menu-content],
+  [role="menu"][data-radix-context-menu-content],
+  .context-menu-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Menubar components */
+  [data-radix-menubar-content],
+  .menubar-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Navigation Menu components */
+  [data-radix-navigation-menu-content],
+  .navigation-menu-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Hover Card components */
+  [data-radix-hover-card-content],
+  .hover-card-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Sheet/Drawer components */
+  [data-radix-dialog-content][data-sheet],
+  .sheet-content {
+    @apply bg-white !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Command components */
+  [cmdk-root],
+  .command-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Calendar components */
+  [data-radix-calendar-content],
+  .calendar-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Toast components */
+  [data-radix-toast-root],
+  .toast-content,
+  [data-state="open"][data-radix-toast-root] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Alert Dialog components */
+  [data-radix-alert-dialog-content],
+  [role="alertdialog"],
+  .alert-dialog-content {
+    @apply bg-white !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+}
+
+
+
+input{
+    background-color: white !important;
+}
+
+select {
+    background-color: white !important;
+}
+
+textarea {
+    background-color: white !important;
 }

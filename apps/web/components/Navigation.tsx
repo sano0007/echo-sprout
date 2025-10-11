@@ -1,12 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { getDashboardRoute, useCurrentUser } from '@/hooks';
 
 export default function Navigation() {
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const currentUser = useCurrentUser();
+  const dashboardRoute = getDashboardRoute(currentUser);
+
+  const isAdminDashboard =
+    pathname === '/admin' || pathname?.startsWith('/admin/');
+
+  const isHeroSection = pathname === '/';
+
+  if (isAdminDashboard || isHeroSection) {
+    return null;
+  }
 
   const navigationItems = [
     {
@@ -33,12 +47,12 @@ export default function Navigation() {
       label: 'Marketplace',
       dropdown: [
         {
-          label: 'Browse Credits',
+          label: 'Browse Projects',
           href: '/marketplace',
-          description: 'Find and purchase credits',
+          description: 'Find and contribute to projects',
         },
         {
-          label: 'My Purchases',
+          label: 'Buyer Dashboard',
           href: '/buyer-dashboard',
           description: 'Track your carbon offset impact',
         },
@@ -52,11 +66,11 @@ export default function Navigation() {
           href: '/verification/dashboard',
           description: 'Review and verify projects',
         },
-        {
-          label: 'Review Projects',
-          href: '/verification/review/1',
-          description: 'Conduct project reviews',
-        },
+        // {
+        //   label: 'Review Projects',
+        //   href: '/verification/review/1',
+        //   description: 'Conduct project reviews',
+        // },
       ],
     },
     {
@@ -142,6 +156,12 @@ export default function Navigation() {
           <div className="flex items-center space-x-4">
             <SignedIn>
               <Link
+                href={dashboardRoute}
+                className="hidden md:inline-flex text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
                 href="/profile"
                 className="hidden md:inline-flex text-gray-700 hover:text-blue-600 transition-colors"
               >
@@ -158,14 +178,8 @@ export default function Navigation() {
             </SignedIn>
 
             <SignedOut>
-              <Link
-                href="/auth/register"
-                className="hidden md:inline-flex bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Sign Up
-              </Link>
               <SignInButton mode="modal">
-                <button className="text-gray-700 hover:text-blue-600 transition-colors">
+                <button className="hidden md:inline-flex bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
                   Sign In
                 </button>
               </SignInButton>
@@ -259,6 +273,13 @@ export default function Navigation() {
             {/* Mobile Auth Section */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <SignedIn>
+                <Link
+                  href="/profile"
+                  className="block px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
                 <Link
                   href="/profile"
                   className="block px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors"

@@ -27,6 +27,14 @@ out/
 build
 dist
 
+# Convex generated files
+convex/_generated/
+
+# Package manager files
+package-lock.json
+yarn.lock
+bun.lockb
+.pnpm-debug.log*
 
 # Debug
 npm-debug.log*

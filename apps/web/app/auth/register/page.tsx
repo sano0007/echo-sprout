@@ -1,17 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { api } from '@packages/backend';
+import { useMutation, useQuery } from 'convex/react';
+import { useEffect, useState } from 'react';
+
+import {
+  UserRegistrationData,
+  validateRegistrationStep1,
+  validateRegistrationStep2,
+  validateRegistrationStep3,
+} from '@/lib/validation/user-schema';
 
 export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [userType, setUserType] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [formData, setFormData] = useState({
-    // Basic user info from schema
+  const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const { user: clerkUser, isLoaded } = useUser();
+  const upgradeToProjectCreator = useMutation(
+    api.users.upgradeToProjectCreator
+  );
+  const submitRoleUpgradeRequest = useMutation(
+    api.users.submitRoleUpgradeRequest
+  );
+
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const upgradeRequest = useQuery(api.users.getMyUpgradeRequest);
+  
+  const [formData, setFormData] = useState<UserRegistrationData>({
     email: '',
     firstName: '',
     lastName: '',
-    role: '',
+    role: 'credit_buyer',
     organizationName: '',
     organizationType: '',
     phoneNumber: '',
@@ -20,88 +41,74 @@ export default function RegisterPage() {
     country: '',
     profileImage: '',
 
-    // Authentication
-    password: '',
-    confirmPassword: '',
-
-    // Role-specific fields
-    verifierSpecialty: [] as string[], // For verifiers
-
-    // Additional fields
     website: '',
     description: '',
-    location: '', // For backward compatibility
+    location: '',
   });
+  
+  const [upgradeFormData, setUpgradeFormData] = useState({
+    reasonForUpgrade: '',
+    experienceDescription: '',
+  });
+
+  useEffect(() => {
+    if (isLoaded && clerkUser) {
+      const userData = {
+        email: clerkUser.emailAddresses[0]?.emailAddress || '',
+        firstName: clerkUser.firstName || '',
+        lastName: clerkUser.lastName || '',
+        role: 'credit_buyer' as const,
+        organizationName: '',
+        organizationType: '',
+        phoneNumber: clerkUser.phoneNumbers[0]?.phoneNumber || '',
+        address: '',
+        city: '',
+        country: '',
+        profileImage: clerkUser.imageUrl || '',
+        website: '',
+        description: '',
+        location: '',
+      };
+
+      if (currentUser) {
+        userData.firstName = currentUser.firstName || userData.firstName;
+        userData.lastName = currentUser.lastName || userData.lastName;
+        userData.email = currentUser.email || userData.email;
+        userData.phoneNumber = currentUser.phoneNumber || userData.phoneNumber;
+        userData.address = currentUser.address || userData.address;
+        userData.city = currentUser.city || userData.city;
+        userData.country = currentUser.country || userData.country;
+        userData.organizationName =
+          currentUser.organizationName || userData.organizationName;
+        userData.organizationType =
+          currentUser.organizationType || userData.organizationType;
+        userData.profileImage =
+          currentUser.profileImage || userData.profileImage;
+        userData.role = (currentUser.role as any) || userData.role;
+        userData.organizationType =
+          (currentUser.organizationType as any) || userData.organizationType;
+      }
+
+      setFormData(userData);
+    }
+  }, [isLoaded, clerkUser, currentUser]);
 
   const steps = [
     {
       number: 1,
-      title: 'Choose Account Type',
-      description: 'Select your role in the carbon credit ecosystem',
+      title: 'Basic Information',
+      description: 'Tell us about yourself',
     },
     {
       number: 2,
-      title: 'Basic Information',
-      description: 'Tell us about your organization',
-    },
-    {
-      number: 3,
       title: 'Verification Documents',
       description: 'Upload required documents for verification',
     },
     {
-      number: 4,
+      number: 3,
       title: 'Review & Complete',
       description: 'Review your information and complete registration',
     },
-  ];
-
-  const userTypes = [
-    {
-      id: 'project_creator',
-      title: 'Project Creator',
-      description: 'Develop and manage carbon credit projects',
-      features: [
-        'Register and manage carbon projects',
-        'Submit progress reports and updates',
-        'Set carbon credit pricing',
-        'Monitor project verification',
-      ],
-      icon: '🌱',
-    },
-    {
-      id: 'credit_buyer',
-      title: 'Credit Buyer',
-      description: 'Purchase carbon credits for offsetting',
-      features: [
-        'Browse and purchase carbon credits',
-        'Track environmental impact',
-        'Download certificates',
-        'Monitor project progress',
-      ],
-      icon: '🏢',
-    },
-    {
-      id: 'verifier',
-      title: 'Project Verifier',
-      description: 'Verify and validate carbon projects',
-      features: [
-        'Review project documentation',
-        'Conduct verification assessments',
-        'Access advanced verification tools',
-        'Manage verification workflows',
-      ],
-      icon: '✅',
-    },
-  ];
-
-  const verifierSpecialties = [
-    'solar',
-    'reforestation',
-    'wind',
-    'biogas',
-    'waste_management',
-    'mangrove_restoration',
   ];
 
   const organizationTypes = [
@@ -114,49 +121,23 @@ export default function RegisterPage() {
     'Other',
   ];
 
-  // Validation function
   const validateStep = (step: number): boolean => {
+    let validationResult;
     const newErrors: { [key: string]: string } = {};
 
     if (step === 1) {
-      if (!userType) {
-        newErrors.userType = 'Please select an account type';
-      }
+      validationResult = validateRegistrationStep1(formData);
+    } else if (step === 2) {
+      validationResult = validateRegistrationStep2({ documentsUploaded: true });
+    } else if (step === 3) {
+      // Check if terms are accepted (this would need a separate state)
+      validationResult = validateRegistrationStep3({ termsAccepted: true });
     }
 
-    if (step === 2) {
-      if (!formData.firstName.trim())
-        newErrors.firstName = 'First name is required';
-      if (!formData.lastName.trim())
-        newErrors.lastName = 'Last name is required';
-      if (!formData.email.trim()) {
-        newErrors.email = 'Email is required';
-      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = 'Please enter a valid email';
-      }
-      if (!formData.phoneNumber.trim())
-        newErrors.phoneNumber = 'Phone number is required';
-      if (!formData.password) {
-        newErrors.password = 'Password is required';
-      } else if (formData.password.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters';
-      }
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
-      }
-      if (!formData.address.trim()) newErrors.address = 'Address is required';
-      if (!formData.city.trim()) newErrors.city = 'City is required';
-      if (!formData.country.trim()) newErrors.country = 'Country is required';
-
-      // Role-specific validation
-      if (userType !== 'credit_buyer' && !formData.organizationName.trim()) {
-        newErrors.organizationName =
-          'Organization name is required for this account type';
-      }
-      if (userType === 'verifier' && formData.verifierSpecialty.length === 0) {
-        newErrors.verifierSpecialty =
-          'Please select at least one specialty area';
-      }
+    if (validationResult && !validationResult.success) {
+      validationResult.error.issues.forEach((error: any) => {
+        newErrors[error.path[0] as string] = error.message;
+      });
     }
 
     setErrors(newErrors);
@@ -166,27 +147,51 @@ export default function RegisterPage() {
   const nextStep = () => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length));
-      setErrors({}); // Clear errors when moving to next step
+      setErrors({});
     }
   };
 
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
-    setErrors({}); // Clear errors when moving to previous step
+    setErrors({});
   };
 
   const handleSubmit = async () => {
     if (!validateStep(currentStep)) return;
 
     try {
-      // Here you would integrate with Clerk and Convex
-      // For now, just show success
+      await handleUpgradeToCreator();
       alert(
         'Registration completed! Please check your email for verification.'
       );
     } catch (error) {
       console.error('Registration error:', error);
       alert('Registration failed. Please try again.');
+    }
+  };
+
+  const handleUpgradeToCreator = async () => {
+    // Validate upgrade form data
+    if (!upgradeFormData.reasonForUpgrade.trim()) {
+      alert('Please provide a reason for becoming a Project Creator');
+      return;
+    }
+
+    try {
+      setUpgradeLoading(true);
+      const result = await submitRoleUpgradeRequest({
+        reasonForUpgrade: upgradeFormData.reasonForUpgrade,
+        experienceDescription: upgradeFormData.experienceDescription || undefined,
+      });
+      setShowUpgradeSuccess(true);
+      setTimeout(() => setShowUpgradeSuccess(false), 5000);
+      console.log('Upgrade request submitted:', result.message);
+      alert('Upgrade request submitted successfully! A verifier will review your application.');
+    } catch (error: any) {
+      console.error('Upgrade error:', error);
+      alert(error.message || 'Upgrade request failed. Please try again.');
+    } finally {
+      setUpgradeLoading(false);
     }
   };
 
@@ -201,6 +206,20 @@ export default function RegisterPage() {
           <p className="text-lg text-gray-600">
             Create your account and start making environmental impact
           </p>
+          {/*<div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">*/}
+          {/*  <div className="flex items-center justify-center">*/}
+          {/*    <span className="text-4xl mr-3">🏢</span>*/}
+          {/*    <div className="text-left">*/}
+          {/*      <h3 className="text-lg font-semibold text-blue-900">*/}
+          {/*        Credit Buyer Account*/}
+          {/*      </h3>*/}
+          {/*      <p className="text-sm text-blue-700">*/}
+          {/*        You'll start as a Credit Buyer with access to purchase carbon*/}
+          {/*        credits and track your environmental impact.*/}
+          {/*      </p>*/}
+          {/*    </div>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
         </div>
 
         {/* Progress Steps */}
@@ -238,54 +257,8 @@ export default function RegisterPage() {
 
         {/* Step Content */}
         <div className="bg-white rounded-lg shadow-md p-8">
-          {/* Step 1: Choose Account Type */}
+          {/* Step 1: Basic Information */}
           {currentStep === 1 && (
-            <div>
-              <h2 className="text-2xl font-semibold mb-6">
-                Choose Your Account Type
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {userTypes.map((type) => (
-                  <div
-                    key={type.id}
-                    onClick={() => {
-                      setUserType(type.id);
-                      setFormData({ ...formData, role: type.id });
-                      if (errors.userType)
-                        setErrors({ ...errors, userType: '' });
-                    }}
-                    className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                      userType === type.id
-                        ? 'border-blue-600 bg-blue-50'
-                        : errors.userType
-                          ? 'border-red-300'
-                          : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="text-center mb-4">
-                      <div className="text-4xl mb-2">{type.icon}</div>
-                      <h3 className="text-xl font-semibold">{type.title}</h3>
-                      <p className="text-gray-600">{type.description}</p>
-                    </div>
-                    <ul className="space-y-2">
-                      {type.features.map((feature, index) => (
-                        <li key={index} className="flex items-center text-sm">
-                          <span className="text-green-500 mr-2">✓</span>
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-              {errors.userType && (
-                <p className="text-red-600 text-sm mt-2">{errors.userType}</p>
-              )}
-            </div>
-          )}
-
-          {/* Step 2: Basic Information */}
-          {currentStep === 2 && (
             <div>
               <h2 className="text-2xl font-semibold mb-6">Basic Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -305,13 +278,18 @@ export default function RegisterPage() {
                             firstName: e.target.value,
                           })
                         }
-                        className="w-full p-3 border rounded"
+                        className={`w-full p-3 border rounded ${errors.firstName ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="John"
                         required
                       />
+                      {errors.firstName && (
+                        <p className="text-red-600 text-sm mt-1">
+                          {errors.firstName}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2 ">
                         Last Name *
                       </label>
                       <input
@@ -320,10 +298,15 @@ export default function RegisterPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, lastName: e.target.value })
                         }
-                        className="w-full p-3 border rounded"
+                        className={`w-full p-3 border rounded ${errors.lastName ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="Doe"
                         required
                       />
+                      {errors.lastName && (
+                        <p className="text-red-600 text-sm mt-1">
+                          {errors.lastName}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -334,13 +317,20 @@ export default function RegisterPage() {
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      className="w-full p-3 border rounded"
+                      readOnly
+                      className={`w-full p-3 border rounded bg-gray-100 cursor-not-allowed ${errors.email ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                       placeholder="your@email.com"
-                      required
+                      title="Email cannot be modified"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Email is pre-filled from your account and cannot be
+                      modified
+                    </p>
+                    {errors.email && (
+                      <p className="text-red-600 text-sm mt-1">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -356,45 +346,15 @@ export default function RegisterPage() {
                           phoneNumber: e.target.value,
                         })
                       }
-                      className="w-full p-3 border rounded"
+                      className={`w-full p-3 border rounded ${errors.phoneNumber ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900 `}
                       placeholder="+1 (555) 123-4567"
                       required
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Password *
-                    </label>
-                    <input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) =>
-                        setFormData({ ...formData, password: e.target.value })
-                      }
-                      className="w-full p-3 border rounded"
-                      placeholder="Create a strong password"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Confirm Password *
-                    </label>
-                    <input
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          confirmPassword: e.target.value,
-                        })
-                      }
-                      className="w-full p-3 border rounded"
-                      placeholder="Confirm your password"
-                      required
-                    />
+                    {errors.phoneNumber && (
+                      <p className="text-red-600 text-sm mt-1">
+                        {errors.phoneNumber}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -402,7 +362,7 @@ export default function RegisterPage() {
                   {/* Organization Information */}
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Organization Name {userType !== 'credit_buyer' ? '*' : ''}
+                      Organization Name
                     </label>
                     <input
                       type="text"
@@ -413,25 +373,24 @@ export default function RegisterPage() {
                           organizationName: e.target.value,
                         })
                       }
-                      className="w-full p-3 border rounded"
-                      placeholder="Your organization name"
-                      required={userType !== 'credit_buyer'}
+                      className="w-full p-3 border border-gray-300 rounded  bg-white text-gray-900"
+                      placeholder="Your organization name (optional)"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
+                    <label className="block text-sm font-medium mb-2  bg-white text-gray-900">
                       Organization Type
                     </label>
                     <select
-                      value={formData.organizationType}
+                      value={formData.organizationType || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          organizationType: e.target.value,
+                          organizationType: e.target.value as any,
                         })
                       }
-                      className="w-full p-3 border rounded"
+                      className="w-full p-3 border border-gray-300 rounded  bg-white text-gray-900"
                     >
                       <option value="">Select organization type</option>
                       {organizationTypes.map((type) => (
@@ -453,10 +412,15 @@ export default function RegisterPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, address: e.target.value })
                       }
-                      className="w-full p-3 border rounded"
+                      className={`w-full p-3 border rounded ${errors.address ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                       placeholder="Street address"
                       required
                     />
+                    {errors.address && (
+                      <p className="text-red-600 text-sm mt-1">
+                        {errors.address}
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -470,10 +434,15 @@ export default function RegisterPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, city: e.target.value })
                         }
-                        className="w-full p-3 border rounded"
+                        className={`w-full p-3 border rounded ${errors.city ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="City"
                         required
                       />
+                      {errors.city && (
+                        <p className="text-red-600 text-sm mt-1">
+                          {errors.city}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2">
@@ -485,10 +454,15 @@ export default function RegisterPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, country: e.target.value })
                         }
-                        className="w-full p-3 border rounded"
+                        className={`w-full p-3 border rounded ${errors.country ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="Country"
                         required
                       />
+                      {errors.country && (
+                        <p className="text-red-600 text-sm mt-1">
+                          {errors.country}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -502,66 +476,16 @@ export default function RegisterPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, website: e.target.value })
                       }
-                      className="w-full p-3 border rounded"
+                      className="w-full p-3 border border-gray-300 rounded  bg-white text-gray-900"
                       placeholder="https://yourwebsite.com"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Role-specific fields */}
-              {userType === 'verifier' && (
-                <div className="mt-6 pt-6 border-t">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Verifier Specialties
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {verifierSpecialties.map((specialty) => (
-                      <label
-                        key={specialty}
-                        className="flex items-center space-x-2"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.verifierSpecialty.includes(
-                            specialty
-                          )}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData({
-                                ...formData,
-                                verifierSpecialty: [
-                                  ...formData.verifierSpecialty,
-                                  specialty,
-                                ],
-                              });
-                            } else {
-                              setFormData({
-                                ...formData,
-                                verifierSpecialty:
-                                  formData.verifierSpecialty.filter(
-                                    (s) => s !== specialty
-                                  ),
-                              });
-                            }
-                          }}
-                          className="rounded"
-                        />
-                        <span className="text-sm capitalize">
-                          {specialty.replace('_', ' ')}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Select the project types you have expertise in verifying
-                  </p>
-                </div>
-              )}
-
               <div className="mt-6 pt-6 border-t">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-2 ">
                     Description
                   </label>
                   <textarea
@@ -569,22 +493,16 @@ export default function RegisterPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="w-full h-32 p-3 border rounded"
-                    placeholder={
-                      userType === 'project_creator'
-                        ? 'Describe your organization and your experience with environmental projects...'
-                        : userType === 'verifier'
-                          ? 'Describe your qualifications and experience in environmental verification...'
-                          : 'Tell us about your organization and sustainability goals...'
-                    }
-                  ></textarea>
+                    className="w-full h-32 p-3 border border-gray-300 rounded  bg-white text-gray-900"
+                    placeholder="Tell us about yourself or your organization..."
+                  />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 3: Verification Documents */}
-          {currentStep === 3 && (
+          {/* Step 2: Verification Documents */}
+          {currentStep === 2 && (
             <div>
               <h2 className="text-2xl font-semibold mb-6">
                 Verification Documents
@@ -600,9 +518,6 @@ export default function RegisterPage() {
                     </li>
                     <li>• Government-issued ID of authorized representative</li>
                     <li>• Proof of address (utility bill or bank statement)</li>
-                    {userType === 'verifier' && (
-                      <li>• Professional certifications and qualifications</li>
-                    )}
                   </ul>
                 </div>
 
@@ -661,8 +576,8 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 4: Review & Complete */}
-          {currentStep === 4 && (
+          {/* Step 3: Review & Complete */}
+          {currentStep === 3 && (
             <div>
               <h2 className="text-2xl font-semibold mb-6">
                 Review & Complete Registration
@@ -673,12 +588,11 @@ export default function RegisterPage() {
                     <h3 className="font-semibold mb-3">Account Information</h3>
                     <div className="space-y-2 text-sm">
                       <p>
-                        <span className="font-medium">Type:</span>{' '}
-                        {userTypes.find((t) => t.id === userType)?.title}
+                        <span className="font-medium">Type:</span> Credit Buyer
                       </p>
                       <p>
                         <span className="font-medium">Organization:</span>{' '}
-                        {formData.organizationName}
+                        {formData.organizationName || 'Individual'}
                       </p>
                       <p>
                         <span className="font-medium">Email:</span>{' '}
@@ -707,26 +621,151 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <div className="border-t pt-6">
-                  <label className="flex items-start">
-                    <input type="checkbox" className="mt-1 mr-3" required />
-                    <span className="text-sm text-gray-600">
-                      I agree to the{' '}
-                      <a href="#" className="text-blue-600 hover:underline">
-                        Terms of Service
-                      </a>{' '}
-                      and
-                      <a
-                        href="#"
-                        className="text-blue-600 hover:underline ml-1"
-                      >
-                        Privacy Policy
-                      </a>
-                      . I understand that my account will be subject to
-                      verification and may take 2-3 business days to activate.
-                    </span>
-                  </label>
-                </div>
+                {/* Upgrade to Project Creator Section */}
+                {currentUser?.role === 'credit_buyer' && (
+                  <div className="border-t pt-6">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                      {upgradeRequest?.status === 'pending' || upgradeRequest?.status === 'under_review' ? (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                          <p className="text-yellow-800 font-medium">
+                            Your upgrade request is {upgradeRequest.status === 'pending' ? 'pending assignment' : 'under review'}
+                          </p>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            Submitted on {new Date(upgradeRequest.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ) : upgradeRequest?.status === 'rejected' ? (
+                        <div>
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                            <p className="text-red-800 font-medium">Previous request rejected</p>
+                            <p className="text-sm text-red-700 mt-1">
+                              Reason: {upgradeRequest.rejectionReason}
+                            </p>
+                          </div>
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-green-900">
+                              Apply Again for Project Creator Role
+                            </h3>
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Why do you want to become a Project Creator? *
+                              </label>
+                              <textarea
+                                value={upgradeFormData.reasonForUpgrade}
+                                onChange={(e) => setUpgradeFormData({
+                                  ...upgradeFormData,
+                                  reasonForUpgrade: e.target.value
+                                })}
+                                className="w-full p-3 border rounded-lg"
+                                rows={4}
+                                placeholder="Explain your motivation and goals..."
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Relevant Experience (Optional)
+                              </label>
+                              <textarea
+                                value={upgradeFormData.experienceDescription}
+                                onChange={(e) => setUpgradeFormData({
+                                  ...upgradeFormData,
+                                  experienceDescription: e.target.value
+                                })}
+                                className="w-full p-3 border rounded-lg"
+                                rows={3}
+                                placeholder="Describe your experience with environmental projects..."
+                              />
+                            </div>
+                            <button
+                              onClick={handleUpgradeToCreator}
+                              disabled={upgradeLoading}
+                              className="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                            >
+                              {upgradeLoading ? 'Submitting...' : 'Submit New Request'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start">
+                          <span className="text-3xl mr-4">🌱</span>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-green-900 mb-2">
+                              Want to Create Carbon Credit Projects?
+                            </h3>
+                            <p className="text-green-700 mb-4">
+                              Apply to upgrade to a Project Creator account. Your application will be reviewed by a verifier.
+                            </p>
+                            <div className="space-y-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium text-green-900 mb-2">
+                                  Why do you want to become a Project Creator? *
+                                </label>
+                                <textarea
+                                  value={upgradeFormData.reasonForUpgrade}
+                                  onChange={(e) => setUpgradeFormData({
+                                    ...upgradeFormData,
+                                    reasonForUpgrade: e.target.value
+                                  })}
+                                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                                  rows={4}
+                                  placeholder="Explain your motivation, goals, and why you want to create carbon credit projects..."
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-green-900 mb-2">
+                                  Relevant Experience (Optional)
+                                </label>
+                                <textarea
+                                  value={upgradeFormData.experienceDescription}
+                                  onChange={(e) => setUpgradeFormData({
+                                    ...upgradeFormData,
+                                    experienceDescription: e.target.value
+                                  })}
+                                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                                  rows={3}
+                                  placeholder="Describe any relevant experience with environmental projects, carbon credits, or sustainability initiatives..."
+                                />
+                              </div>
+                            </div>
+                            <button
+                              onClick={handleUpgradeToCreator}
+                              disabled={upgradeLoading}
+                              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {upgradeLoading ? 'Submitting...' : 'Apply for Project Creator Role'}
+                            </button>
+                            {showUpgradeSuccess && (
+                              <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded text-green-800 text-sm">
+                                ✅ Upgrade request submitted! A verifier will review your application.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/*<div className="border-t pt-6">*/}
+                {/*  <label className="flex items-start">*/}
+                {/*    <input type="checkbox" className="mt-1 mr-3" required />*/}
+                {/*    <span className="text-sm text-gray-600">*/}
+                {/*      I agree to the{' '}*/}
+                {/*      <a href="#" className="text-blue-600 hover:underline">*/}
+                {/*        Terms of Service*/}
+                {/*      </a>{' '}*/}
+                {/*      and*/}
+                {/*      <a*/}
+                {/*        href="#"*/}
+                {/*        className="text-blue-600 hover:underline ml-1"*/}
+                {/*      >*/}
+                {/*        Privacy Policy*/}
+                {/*      </a>*/}
+                {/*      . I understand that my account will be subject to*/}
+                {/*      verification and may take 2-3 business days to activate.*/}
+                {/*    </span>*/}
+                {/*  </label>*/}
+                {/*</div>*/}
               </div>
             </div>
           )}
@@ -742,8 +781,7 @@ export default function RegisterPage() {
             </button>
             <button
               onClick={currentStep === steps.length ? handleSubmit : nextStep}
-              disabled={currentStep === 1 && !userType}
-              className="px-6 py-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               {currentStep === steps.length ? 'Complete Registration' : 'Next'}
             </button>
