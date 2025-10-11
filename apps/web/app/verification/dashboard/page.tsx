@@ -5,9 +5,12 @@ import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
+import RequestProgressReportModal from '@/components/monitoring/RequestProgressReportModal';
 
 export default function VerificationDashboard() {
   const [activeTab, setActiveTab] = useState<'pendingAcceptance' | 'accepted' | 'inProgress' | 'completed' | 'upgradeRequests' | 'progressReviews'>('pendingAcceptance');
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
 
   const permissions = useQuery(api.permissions.getCurrentUserPermissions);
 
@@ -249,6 +252,10 @@ export default function VerificationDashboard() {
                     key={verification._id}
                     verification={verification}
                     type="accepted"
+                    onRequestReport={(project) => {
+                      setSelectedProject(project);
+                      setRequestModalOpen(true);
+                    }}
                   />
                 ))
               )}
@@ -268,6 +275,10 @@ export default function VerificationDashboard() {
                     key={verification._id}
                     verification={verification}
                     type="inProgress"
+                    onRequestReport={(project) => {
+                      setSelectedProject(project);
+                      setRequestModalOpen(true);
+                    }}
                   />
                 ))
               )}
@@ -287,6 +298,10 @@ export default function VerificationDashboard() {
                     key={verification._id}
                     verification={verification}
                     type="completed"
+                    onRequestReport={(project) => {
+                      setSelectedProject(project);
+                      setRequestModalOpen(true);
+                    }}
                   />
                 ))
               )}
@@ -358,6 +373,18 @@ export default function VerificationDashboard() {
           )}
         </div>
       </div>
+
+      {/* Request Progress Report Modal */}
+      {selectedProject && (
+        <RequestProgressReportModal
+          isOpen={requestModalOpen}
+          onClose={() => {
+            setRequestModalOpen(false);
+            setSelectedProject(null);
+          }}
+          project={selectedProject}
+        />
+      )}
     </div>
   );
 }
@@ -365,9 +392,11 @@ export default function VerificationDashboard() {
 function VerificationCard({
   verification,
   type,
+  onRequestReport,
 }: {
   verification: any;
   type: 'pendingAcceptance' | 'accepted' | 'inProgress' | 'completed';
+  onRequestReport?: (project: any) => void;
 }) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -501,6 +530,18 @@ function VerificationCard({
               >
                 View Details
               </Link>
+              {onRequestReport && (
+                <button
+                  onClick={() => onRequestReport({
+                    _id: verification.projectId,
+                    title: verification.projectTitle || `Project #${verification.projectId.slice(-6)}`,
+                    projectType: verification.projectType,
+                  })}
+                  className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                >
+                  Request Report
+                </button>
+              )}
             </>
           )}
 
@@ -518,16 +559,42 @@ function VerificationCard({
               >
                 View Progress
               </Link>
+              {onRequestReport && (
+                <button
+                  onClick={() => onRequestReport({
+                    _id: verification.projectId,
+                    title: verification.projectTitle || `Project #${verification.projectId.slice(-6)}`,
+                    projectType: verification.projectType,
+                  })}
+                  className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                >
+                  Request Report
+                </button>
+              )}
             </>
           )}
 
           {type === 'completed' && (
-            <Link
-              href={`/verification/review/${verification.projectId}`}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-400"
-            >
-              View Report
-            </Link>
+            <>
+              <Link
+                href={`/verification/review/${verification.projectId}`}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-400"
+              >
+                View Report
+              </Link>
+              {onRequestReport && (
+                <button
+                  onClick={() => onRequestReport({
+                    _id: verification.projectId,
+                    title: verification.projectTitle || `Project #${verification.projectId.slice(-6)}`,
+                    projectType: verification.projectType,
+                  })}
+                  className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
+                >
+                  Request Progress Report
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

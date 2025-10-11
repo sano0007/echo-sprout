@@ -1946,5 +1946,33 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_submitted_at: ["submittedAt", "_creationTime"];
         by_reporting_date: ["reportingDate", "_creationTime"];
     }, {}, {}>;
+    progressReportRequests: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        requestNotes?: string | undefined;
+        submittedUpdateId?: import("convex/values").GenericId<"progressUpdates"> | undefined;
+        creatorId: import("convex/values").GenericId<"users">;
+        status: "submitted" | "pending" | "overdue" | "cancelled";
+        projectId: import("convex/values").GenericId<"projects">;
+        dueDate: number;
+        createdAt: number;
+        requestedBy: import("convex/values").GenericId<"users">;
+        requestType: "manual" | "scheduled_monthly" | "milestone_based";
+    }, {
+        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
+        requestedBy: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
+        creatorId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
+        requestType: import("convex/values").VUnion<"manual" | "scheduled_monthly" | "milestone_based", [import("convex/values").VLiteral<"manual", "required">, import("convex/values").VLiteral<"scheduled_monthly", "required">, import("convex/values").VLiteral<"milestone_based", "required">], "required", never>;
+        status: import("convex/values").VUnion<"submitted" | "pending" | "overdue" | "cancelled", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"overdue", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
+        dueDate: import("convex/values").VFloat64<number, "required">;
+        requestNotes: import("convex/values").VString<string | undefined, "optional">;
+        submittedUpdateId: import("convex/values").VId<import("convex/values").GenericId<"progressUpdates"> | undefined, "optional">;
+        createdAt: import("convex/values").VFloat64<number, "required">;
+    }, "required", "creatorId" | "status" | "projectId" | "dueDate" | "createdAt" | "requestedBy" | "requestType" | "requestNotes" | "submittedUpdateId">, {
+        by_creator: ["creatorId", "_creationTime"];
+        by_project: ["projectId", "_creationTime"];
+        by_status: ["status", "_creationTime"];
+        by_creator_status: ["creatorId", "status", "_creationTime"];
+        by_project_status: ["projectId", "status", "_creationTime"];
+        by_due_date: ["dueDate", "_creationTime"];
+    }, {}, {}>;
 }, true>;
 export default _default;

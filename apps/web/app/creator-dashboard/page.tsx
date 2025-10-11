@@ -16,6 +16,7 @@ import {
 } from 'chart.js';
 import { useMutation, useQuery } from 'convex/react';
 import {
+  AlertCircle,
   BarChart3,
   Calendar,
   CheckCircle,
@@ -90,10 +91,12 @@ export default function CreatorDashboard() {
       ? { projectId: userProjects[0]._id }
       : 'skip'
   );
-  const pendingProgressSubmissions = useQuery(
-    api.progress_updates.getMyPendingProgressSubmissions,
+  const pendingProgressItems = useQuery(
+    api.progress_updates.getMyPendingProgressItems,
     {}
   );
+  const pendingProgressSubmissions = pendingProgressItems?.submissions || [];
+  const pendingProgressRequests = pendingProgressItems?.requests || [];
   const approvedProgressUpdates = useQuery(
     api.progress_updates.getMyApprovedProgressUpdates,
     {}
@@ -115,7 +118,7 @@ export default function CreatorDashboard() {
       0
     ) || 0;
     const totalRevenue = userProjects?.reduce((sum: number, p: any) => sum + (p.budget || 0), 0) || 0;
-    const pendingReports = pendingProgressSubmissions?.length || 0;
+    const pendingReports = (pendingProgressSubmissions?.length || 0) + (pendingProgressRequests?.length || 0);
     
     // Count real upcoming milestones from projects
     const upcomingMilestones = userProjects?.reduce((count: number, project: any) => {
@@ -140,7 +143,7 @@ export default function CreatorDashboard() {
       pendingReports,
       upcomingMilestones,
     };
-  }, [userProjects, pendingProgressSubmissions]);
+  }, [userProjects, pendingProgressSubmissions, pendingProgressRequests]);
 
   // Calculate buyer counts from transactions
   const projectBuyerCounts = useMemo(() => {
@@ -672,6 +675,27 @@ export default function CreatorDashboard() {
         </TabsList>
 
         <TabsContent value="overview">
+          {/* Overdue Progress Reports Alert */}
+          {pendingProgressRequests.filter((r: any) => r.status === 'overdue').length > 0 && (
+            <div className="mb-6 bg-red-50 border-2 border-red-200 p-4 rounded-lg flex gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-red-900 mb-1">Overdue Progress Reports</h3>
+                <p className="text-sm text-red-800">
+                  You have {pendingProgressRequests.filter((r: any) => r.status === 'overdue').length} overdue progress reports. 
+                  Please submit them as soon as possible to keep your projects on track.
+                </p>
+                <Button
+                  size="sm"
+                  className="mt-3 bg-red-600 hover:bg-red-700"
+                  onClick={() => setActiveTab('tasks')}
+                >
+                  View Overdue Reports
+                </Button>
+              </div>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Project Status Overview */}
             <Card className="lg:col-span-2">
@@ -1415,25 +1439,82 @@ export default function CreatorDashboard() {
 
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Pending Progress Submissions</CardTitle>
+                <CardTitle>Pending Progress Items</CardTitle>
                 <CardDescription>
-                  Track the status of your submitted progress updates
+                  Report requests and submitted updates awaiting review
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {!pendingProgressSubmissions ? (
+                  {!pendingProgressItems ? (
                     <div className="text-center py-8">
                       <div className="text-gray-600">Loading...</div>
                     </div>
-                  ) : pendingProgressSubmissions.length === 0 ? (
+                  ) : pendingProgressRequests.length === 0 && pendingProgressSubmissions.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="text-gray-600">
-                        No pending progress submissions. All updates have been reviewed!
+                        No pending items. All reports are up to date!
                       </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {/* REPORT REQUESTS (need to submit) */}
+                      {pendingProgressRequests.map((request: any) => {
+                        const isOverdue = request.status === 'overdue';
+                        
+                        return (
+                          <div
+                            key={request._id}
+                            className={`border-2 rounded-lg p-4 hover:shadow-md transition-shadow ${
+                              isOverdue ? 'border-red-300 bg-red-50' : 'border-yellow-300 bg-yellow-50'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <AlertCircle className={`w-4 h-4 ${isOverdue ? 'text-red-600' : 'text-yellow-600'}`} />
+                                <h3 className="font-medium text-sm">Progress Report Requested</h3>
+                              </div>
+                              <Badge className={isOverdue ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
+                                {isOverdue ? 'Overdue' : 'Pending'}
+                              </Badge>
+                            </div>
+                            
+                            <p className="text-xs text-gray-700 font-medium mb-1">
+                              Project: {request.project?.title}
+                            </p>
+                            <p className="text-xs text-gray-600 mb-2">
+                              Due: {new Date(request.dueDate).toLocaleDateString()}
+                            </p>
+                            
+                            {request.requestNotes && (
+                              <div className="mb-3 p-2 bg-white border border-gray-200 rounded text-xs">
+                                <p className="font-medium text-gray-900 mb-1">
+                                  Request Notes:
+                                </p>
+                                <p className="text-gray-700">{request.requestNotes}</p>
+                              </div>
+                            )}
+                            
+                            <Button
+                              size="sm"
+                              className={isOverdue ? 'bg-red-600 hover:bg-red-700' : 'bg-yellow-600 hover:bg-yellow-700'}
+                              onClick={() => {
+                                const project = userProjects?.find(
+                                  (p) => p._id === request.projectId
+                                );
+                                if (project) {
+                                  openProgressModal(project);
+                                }
+                              }}
+                            >
+                              <FileText className="w-3 h-3 mr-1" />
+                              Submit Report
+                            </Button>
+                          </div>
+                        );
+                      })}
+
+                      {/* SUBMITTED REPORTS (awaiting review) */}
                       {pendingProgressSubmissions.map((submission: any) => {
                         const getStatusConfig = (status: string) => {
                           switch (status) {
@@ -1470,12 +1551,15 @@ export default function CreatorDashboard() {
                         return (
                           <div
                             key={submission._id}
-                            className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                            className="border-2 border-blue-300 bg-blue-50 rounded-lg p-4 hover:shadow-md transition-shadow"
                           >
                             <div className="flex items-start justify-between mb-2">
-                              <h3 className="font-medium text-sm flex-1 pr-2">
-                                {submission.title}
-                              </h3>
+                              <div className="flex items-center gap-2 flex-1 pr-2">
+                                <Clock className="w-4 h-4 text-blue-600" />
+                                <h3 className="font-medium text-sm">
+                                  {submission.title}
+                                </h3>
+                              </div>
                               <Badge className={statusConfig.color}>
                                 {statusConfig.label}
                               </Badge>

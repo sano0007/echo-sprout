@@ -171,6 +171,38 @@ export const submitProgressUpdate = mutation({
     // Auto-assign to a verifier
     await VerifierAssignmentService.autoAssignProgressUpdate(ctx, updateId);
 
+    // Check if there's a pending request for this project and link it
+    const pendingRequests = await ctx.db
+      .query('progressReportRequests')
+      .withIndex('by_project_status', (q) =>
+        q.eq('projectId', args.projectId).eq('status', 'pending')
+      )
+      .collect();
+
+    const overdueRequests = await ctx.db
+      .query('progressReportRequests')
+      .withIndex('by_project_status', (q) =>
+        q.eq('projectId', args.projectId).eq('status', 'overdue')
+      )
+      .collect();
+
+    const allPendingRequests = [...pendingRequests, ...overdueRequests];
+
+    // Link the submission to the most recent request
+    if (allPendingRequests.length > 0) {
+      // Sort by creation date to get the most recent
+      const mostRecentRequest = allPendingRequests.sort(
+        (a, b) => b.createdAt - a.createdAt
+      )[0];
+
+      if (mostRecentRequest) {
+        await ctx.db.patch(mostRecentRequest._id, {
+          status: 'submitted',
+          submittedUpdateId: updateId,
+        });
+      }
+    }
+
     if (args.progressPercentage > (project.progressPercentage || 0)) {
       await ctx.db.patch(args.projectId, {
         progressPercentage: args.progressPercentage,
@@ -1233,5 +1265,198 @@ export const getMyApprovedProgressUpdates = query({
     );
 
     return enrichedUpdates;
+  },
+});
+
+/**
+ * Request a progress report from a project creator
+ * Only verifiers can request reports
+ */
+export const requestProgressReport = mutation({
+  args: {
+    projectId: v.id('projects'),
+    dueDate: v.float64(),
+    requestNotes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+
+    // Verify user is a verifier
+    if (currentUser.role !== 'verifier' && currentUser.role !== 'admin') {
+      throw new Error('Only verifiers can request progress reports');
+    }
+
+    // Get the project
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
+
+    // Create the request record
+    const requestId = await ctx.db.insert('progressReportRequests', {
+      projectId: args.projectId,
+      requestedBy: currentUser._id,
+      creatorId: project.creatorId,
+      requestType: 'manual',
+      status: 'pending',
+      dueDate: args.dueDate,
+      requestNotes: args.requestNotes,
+      createdAt: Date.now(),
+    });
+
+    // Notify the creator
+    await NotificationService.notifyProgressReportRequested(
+      ctx,
+      project.creatorId,
+      project.title,
+      args.dueDate,
+      args.requestNotes,
+      currentUser.firstName + ' ' + currentUser.lastName
+    );
+
+    return requestId;
+  },
+});
+
+/**
+ * Get all pending progress items for the current creator
+ * Returns both:
+ * 1. Progress report REQUESTS (need to submit)
+ * 2. Progress SUBMISSIONS (awaiting review or needs revision)
+ */
+export const getMyPendingProgressItems = query({
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      return { requests: [], submissions: [] };
+    }
+
+    // Get pending report requests
+    const requests = await ctx.db
+      .query('progressReportRequests')
+      .withIndex('by_creator_status', (q) =>
+        q.eq('creatorId', currentUser._id).eq('status', 'pending')
+      )
+      .collect();
+
+    // Also get overdue requests
+    const overdueRequests = await ctx.db
+      .query('progressReportRequests')
+      .withIndex('by_creator_status', (q) =>
+        q.eq('creatorId', currentUser._id).eq('status', 'overdue')
+      )
+      .collect();
+
+    const allRequests = [...requests, ...overdueRequests];
+
+    // Enrich requests with project data
+    const enrichedRequests = await Promise.all(
+      allRequests.map(async (request) => {
+        const project = await ctx.db.get(request.projectId);
+        const requester = await ctx.db.get(request.requestedBy);
+
+        return {
+          ...request,
+          project: project
+            ? {
+                _id: project._id,
+                title: project.title,
+                projectType: project.projectType,
+              }
+            : null,
+          requester: requester
+            ? {
+                _id: requester._id,
+                name: requester.firstName + ' ' + requester.lastName,
+              }
+            : null,
+        };
+      })
+    );
+
+    // Get pending/needs_revision submissions
+    const submissions = await ctx.db
+      .query('progressUpdates')
+      .withIndex('by_submitter', (q) => q.eq('submittedBy', currentUser._id))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field('status'), 'pending_review'),
+          q.eq(q.field('status'), 'needs_revision')
+        )
+      )
+      .collect();
+
+    // Enrich submissions with project data
+    const enrichedSubmissions = await Promise.all(
+      submissions.map(async (submission) => {
+        const project = await ctx.db.get(submission.projectId);
+
+        return {
+          ...submission,
+          project: project
+            ? {
+                _id: project._id,
+                title: project.title,
+                projectType: project.projectType,
+              }
+            : null,
+        };
+      })
+    );
+
+    return {
+      requests: enrichedRequests,
+      submissions: enrichedSubmissions,
+    };
+  },
+});
+
+/**
+ * Get project progress status for verifiers
+ * Shows recent progress updates and pending requests
+ */
+export const getProjectProgressStatus = query({
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+
+    // Verify user is a verifier or admin
+    if (currentUser.role !== 'verifier' && currentUser.role !== 'admin') {
+      throw new Error('Only verifiers can view project progress status');
+    }
+
+    // Get recent progress updates (last 5)
+    const recentUpdates = await ctx.db
+      .query('progressUpdates')
+      .withIndex('by_project', (q) => q.eq('projectId', args.projectId))
+      .order('desc')
+      .take(5);
+
+    // Get pending requests for this project
+    const pendingRequests = await ctx.db
+      .query('progressReportRequests')
+      .withIndex('by_project_status', (q) =>
+        q.eq('projectId', args.projectId).eq('status', 'pending')
+      )
+      .collect();
+
+    const overdueRequests = await ctx.db
+      .query('progressReportRequests')
+      .withIndex('by_project_status', (q) =>
+        q.eq('projectId', args.projectId).eq('status', 'overdue')
+      )
+      .collect();
+
+    return {
+      recentUpdates,
+      pendingRequests: [...pendingRequests, ...overdueRequests],
+    };
   },
 });

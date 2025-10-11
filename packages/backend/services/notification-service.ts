@@ -20,7 +20,9 @@ export type NotificationType =
   | 'progress_review_assigned'
   | 'progress_approved'
   | 'progress_rejected'
-  | 'progress_needs_revision';
+  | 'progress_needs_revision'
+  | 'progress_report_requested'
+  | 'progress_report_overdue';
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -507,6 +509,42 @@ export class NotificationService {
       message: `Your progress update "${update.title}" needs revision. Notes: ${revisionNotes}`,
       priority: 'normal',
       relatedEntityId: updateId,
+    });
+  }
+
+  public static async notifyProgressReportRequested(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    projectTitle: string,
+    dueDate: number,
+    requestNotes: string | undefined,
+    requestedBy: string
+  ) {
+    const dueDateStr = new Date(dueDate).toLocaleDateString();
+    const notesText = requestNotes ? ` Notes: ${requestNotes}` : '';
+    
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_report_requested',
+      title: 'Progress Report Requested',
+      message: `${requestedBy} has requested a progress report for "${projectTitle}". Due by ${dueDateStr}.${notesText}`,
+      priority: 'high',
+    });
+  }
+
+  public static async notifyProgressReportOverdue(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    projectTitle: string,
+    requestId: Id<'progressReportRequests'>
+  ) {
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_report_overdue',
+      title: 'Progress Report Overdue',
+      message: `Your progress report for "${projectTitle}" is overdue. Please submit it as soon as possible.`,
+      priority: 'urgent',
+      relatedEntityId: requestId,
     });
   }
 }
