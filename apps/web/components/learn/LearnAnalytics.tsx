@@ -96,17 +96,10 @@ export default function LearnAnalytics({ embed = false }: { embed?: boolean }) {
 
       if (blocks.length === 0) {
         const canvas = await html2canvas(root, {
-          scale: 3,
           useCORS: true,
           logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: root.scrollWidth,
-          windowHeight: root.scrollHeight,
           width: root.scrollWidth,
           height: root.scrollHeight,
-          foreignObjectRendering: true,
-          scrollX: 0,
-          scrollY: -window.scrollY,
         });
 
         const imgData = canvas.toDataURL('image/png');
@@ -162,17 +155,10 @@ export default function LearnAnalytics({ embed = false }: { embed?: boolean }) {
           const h = el.scrollHeight || el.clientHeight;
 
           const canvas = await html2canvas(el, {
-            scale: 3,
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff',
-            windowWidth: w,
-            windowHeight: h,
             width: w,
             height: h,
-            foreignObjectRendering: isHeaderBlock ? true : false,
-            scrollX: 0,
-            scrollY: 0,
           });
 
           if (isHeaderBlock) {
