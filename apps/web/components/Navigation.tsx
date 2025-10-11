@@ -64,11 +64,11 @@ export default function Navigation() {
           href: '/verification/dashboard',
           description: 'Review and verify projects',
         },
-        {
-          label: 'Review Projects',
-          href: '/verification/review/1',
-          description: 'Conduct project reviews',
-        },
+        // {
+        //   label: 'Review Projects',
+        //   href: '/verification/review/1',
+        //   description: 'Conduct project reviews',
+        // },
       ],
     },
     {

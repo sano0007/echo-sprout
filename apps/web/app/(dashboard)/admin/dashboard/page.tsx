@@ -22,6 +22,7 @@ import LearnAnalytics from '@/components/learn/LearnAnalytics';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ClientTime } from '@/components/ui/client-time';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { SystemOverviewMetrics } from '@/types/dashboard.types';
@@ -113,7 +114,7 @@ export default function AdminDashboardPage() {
             className="text-xs text-gray-500 bg-gray-50 border-gray-200"
           >
             <Clock className="h-3 w-3 mr-1" />
-            Last updated: {new Date().toLocaleTimeString()}
+            <ClientTime prefix="Last updated: " format="time" />
           </Badge>
           <Button
             variant="outline"

@@ -22,10 +22,8 @@ export default function RegisterPage() {
     api.users.upgradeToProjectCreator
   );
 
-  // Get existing user data
   const currentUser = useQuery(api.users.getCurrentUser);
   const [formData, setFormData] = useState<UserRegistrationData>({
-    // Basic user info from schema
     email: '',
     firstName: '',
     lastName: '',
@@ -38,13 +36,11 @@ export default function RegisterPage() {
     country: '',
     profileImage: '',
 
-    // Additional fields
     website: '',
     description: '',
-    location: '', // For backward compatibility
+    location: '',
   });
 
-  // Pre-populate form data with existing user information
   useEffect(() => {
     if (isLoaded && clerkUser) {
       const userData = {
@@ -64,7 +60,6 @@ export default function RegisterPage() {
         location: '',
       };
 
-      // If we have existing user data from the database, use that instead
       if (currentUser) {
         userData.firstName = currentUser.firstName || userData.firstName;
         userData.lastName = currentUser.lastName || userData.lastName;
@@ -116,7 +111,6 @@ export default function RegisterPage() {
     'Other',
   ];
 
-  // Zod validation function
   const validateStep = (step: number): boolean => {
     let validationResult;
     const newErrors: { [key: string]: string } = {};
@@ -143,13 +137,13 @@ export default function RegisterPage() {
   const nextStep = () => {
     if (validateStep(currentStep)) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length));
-      setErrors({}); // Clear errors when moving to next step
+      setErrors({});
     }
   };
 
   const prevStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
-    setErrors({}); // Clear errors when moving to previous step
+    setErrors({});
   };
 
   const handleSubmit = async () => {
@@ -192,20 +186,20 @@ export default function RegisterPage() {
           <p className="text-lg text-gray-600">
             Create your account and start making environmental impact
           </p>
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center justify-center">
-              <span className="text-4xl mr-3">🏢</span>
-              <div className="text-left">
-                <h3 className="text-lg font-semibold text-blue-900">
-                  Credit Buyer Account
-                </h3>
-                <p className="text-sm text-blue-700">
-                  You'll start as a Credit Buyer with access to purchase carbon
-                  credits and track your environmental impact.
-                </p>
-              </div>
-            </div>
-          </div>
+          {/*<div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">*/}
+          {/*  <div className="flex items-center justify-center">*/}
+          {/*    <span className="text-4xl mr-3">🏢</span>*/}
+          {/*    <div className="text-left">*/}
+          {/*      <h3 className="text-lg font-semibold text-blue-900">*/}
+          {/*        Credit Buyer Account*/}
+          {/*      </h3>*/}
+          {/*      <p className="text-sm text-blue-700">*/}
+          {/*        You'll start as a Credit Buyer with access to purchase carbon*/}
+          {/*        credits and track your environmental impact.*/}
+          {/*      </p>*/}
+          {/*    </div>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
         </div>
 
         {/* Progress Steps */}
@@ -264,7 +258,7 @@ export default function RegisterPage() {
                             firstName: e.target.value,
                           })
                         }
-                        className={`w-full p-3 border rounded ${errors.firstName ? 'border-red-300' : 'border-gray-300'}`}
+                        className={`w-full p-3 border rounded ${errors.firstName ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="John"
                         required
                       />
@@ -275,7 +269,7 @@ export default function RegisterPage() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2 ">
                         Last Name *
                       </label>
                       <input
@@ -284,7 +278,7 @@ export default function RegisterPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, lastName: e.target.value })
                         }
-                        className={`w-full p-3 border rounded ${errors.lastName ? 'border-red-300' : 'border-gray-300'}`}
+                        className={`w-full p-3 border rounded ${errors.lastName ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="Doe"
                         required
                       />
@@ -304,7 +298,7 @@ export default function RegisterPage() {
                       type="email"
                       value={formData.email}
                       readOnly
-                      className={`w-full p-3 border rounded bg-gray-100 cursor-not-allowed ${errors.email ? 'border-red-300' : 'border-gray-300'}`}
+                      className={`w-full p-3 border rounded bg-gray-100 cursor-not-allowed ${errors.email ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                       placeholder="your@email.com"
                       title="Email cannot be modified"
                     />
@@ -332,7 +326,7 @@ export default function RegisterPage() {
                           phoneNumber: e.target.value,
                         })
                       }
-                      className={`w-full p-3 border rounded ${errors.phoneNumber ? 'border-red-300' : 'border-gray-300'}`}
+                      className={`w-full p-3 border rounded ${errors.phoneNumber ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900 `}
                       placeholder="+1 (555) 123-4567"
                       required
                     />
@@ -359,13 +353,13 @@ export default function RegisterPage() {
                           organizationName: e.target.value,
                         })
                       }
-                      className="w-full p-3 border border-gray-300 rounded"
+                      className="w-full p-3 border border-gray-300 rounded  bg-white text-gray-900"
                       placeholder="Your organization name (optional)"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
+                    <label className="block text-sm font-medium mb-2  bg-white text-gray-900">
                       Organization Type
                     </label>
                     <select
@@ -376,7 +370,7 @@ export default function RegisterPage() {
                           organizationType: e.target.value as any,
                         })
                       }
-                      className="w-full p-3 border border-gray-300 rounded"
+                      className="w-full p-3 border border-gray-300 rounded  bg-white text-gray-900"
                     >
                       <option value="">Select organization type</option>
                       {organizationTypes.map((type) => (
@@ -398,7 +392,7 @@ export default function RegisterPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, address: e.target.value })
                       }
-                      className={`w-full p-3 border rounded ${errors.address ? 'border-red-300' : 'border-gray-300'}`}
+                      className={`w-full p-3 border rounded ${errors.address ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                       placeholder="Street address"
                       required
                     />
@@ -420,7 +414,7 @@ export default function RegisterPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, city: e.target.value })
                         }
-                        className={`w-full p-3 border rounded ${errors.city ? 'border-red-300' : 'border-gray-300'}`}
+                        className={`w-full p-3 border rounded ${errors.city ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="City"
                         required
                       />
@@ -440,7 +434,7 @@ export default function RegisterPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, country: e.target.value })
                         }
-                        className={`w-full p-3 border rounded ${errors.country ? 'border-red-300' : 'border-gray-300'}`}
+                        className={`w-full p-3 border rounded ${errors.country ? 'border-red-300' : 'border-gray-300'}  bg-white text-gray-900`}
                         placeholder="Country"
                         required
                       />
@@ -462,7 +456,7 @@ export default function RegisterPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, website: e.target.value })
                       }
-                      className="w-full p-3 border border-gray-300 rounded"
+                      className="w-full p-3 border border-gray-300 rounded  bg-white text-gray-900"
                       placeholder="https://yourwebsite.com"
                     />
                   </div>
@@ -471,7 +465,7 @@ export default function RegisterPage() {
 
               <div className="mt-6 pt-6 border-t">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-2 ">
                     Description
                   </label>
                   <textarea
@@ -479,7 +473,7 @@ export default function RegisterPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="w-full h-32 p-3 border border-gray-300 rounded"
+                    className="w-full h-32 p-3 border border-gray-300 rounded  bg-white text-gray-900"
                     placeholder="Tell us about yourself or your organization..."
                   />
                 </div>
@@ -641,26 +635,26 @@ export default function RegisterPage() {
                 {/*  </div>*/}
                 {/*</div>*/}
 
-                <div className="border-t pt-6">
-                  <label className="flex items-start">
-                    <input type="checkbox" className="mt-1 mr-3" required />
-                    <span className="text-sm text-gray-600">
-                      I agree to the{' '}
-                      <a href="#" className="text-blue-600 hover:underline">
-                        Terms of Service
-                      </a>{' '}
-                      and
-                      <a
-                        href="#"
-                        className="text-blue-600 hover:underline ml-1"
-                      >
-                        Privacy Policy
-                      </a>
-                      . I understand that my account will be subject to
-                      verification and may take 2-3 business days to activate.
-                    </span>
-                  </label>
-                </div>
+                {/*<div className="border-t pt-6">*/}
+                {/*  <label className="flex items-start">*/}
+                {/*    <input type="checkbox" className="mt-1 mr-3" required />*/}
+                {/*    <span className="text-sm text-gray-600">*/}
+                {/*      I agree to the{' '}*/}
+                {/*      <a href="#" className="text-blue-600 hover:underline">*/}
+                {/*        Terms of Service*/}
+                {/*      </a>{' '}*/}
+                {/*      and*/}
+                {/*      <a*/}
+                {/*        href="#"*/}
+                {/*        className="text-blue-600 hover:underline ml-1"*/}
+                {/*      >*/}
+                {/*        Privacy Policy*/}
+                {/*      </a>*/}
+                {/*      . I understand that my account will be subject to*/}
+                {/*      verification and may take 2-3 business days to activate.*/}
+                {/*    </span>*/}
+                {/*  </label>*/}
+                {/*</div>*/}
               </div>
             </div>
           )}

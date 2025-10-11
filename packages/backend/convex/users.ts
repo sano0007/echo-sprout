@@ -336,3 +336,136 @@ export const upgradeToProjectCreator = mutation({
     };
   },
 });
+
+// ============= ADMIN QUERIES =============
+
+export const getAllUsersForAdmin = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    searchTerm: v.optional(v.string()),
+    roleFilter: v.optional(
+      v.union(
+        v.literal('project_creator'),
+        v.literal('credit_buyer'),
+        v.literal('verifier'),
+        v.literal('admin')
+      )
+    ),
+    statusFilter: v.optional(
+      v.union(v.literal('active'), v.literal('inactive'))
+    ),
+  },
+  handler: async (
+    ctx,
+    { paginationOpts, searchTerm, roleFilter, statusFilter }
+  ) => {
+    // const currentUser = await UserService.getCurrentUser(ctx);
+    // if (!currentUser || currentUser.role !== 'admin') {
+    //   throw new Error('Unauthorized: Admin access required');
+    // }
+
+    let allUsers = await ctx.db.query('users').collect();
+
+    // Apply filters
+    let filteredUsers = allUsers;
+
+    // Role filter
+    if (roleFilter) {
+      filteredUsers = filteredUsers.filter((user) => user.role === roleFilter);
+    }
+
+    // Status filter
+    if (statusFilter) {
+      const isActive = statusFilter === 'active';
+      filteredUsers = filteredUsers.filter(
+        (user) => user.isActive === isActive
+      );
+    }
+
+    // Search filter
+    if (searchTerm && searchTerm.trim() !== '') {
+      const searchTermLower = searchTerm.toLowerCase();
+      filteredUsers = filteredUsers.filter(
+        (user) =>
+          user.firstName.toLowerCase().includes(searchTermLower) ||
+          user.lastName.toLowerCase().includes(searchTermLower) ||
+          user.email.toLowerCase().includes(searchTermLower) ||
+          (user.organizationName &&
+            user.organizationName.toLowerCase().includes(searchTermLower))
+      );
+    }
+
+    // Manual pagination
+    const startIndex =
+      paginationOpts.numItems *
+      (paginationOpts.cursor ? parseInt(paginationOpts.cursor) : 0);
+    const endIndex = startIndex + paginationOpts.numItems;
+    const paginatedResults = filteredUsers.slice(startIndex, endIndex);
+
+    // Add computed fields for admin view
+    const enrichedUsers = paginatedResults.map((user) => ({
+      ...user,
+      name: `${user.firstName} ${user.lastName}`,
+      status: user.isActive ? 'active' : 'inactive',
+      registrationDate: user._creationTime,
+      lastActive: user.lastLoginAt
+        ? new Date(user.lastLoginAt).getTime()
+        : user._creationTime,
+    }));
+
+    return {
+      page: enrichedUsers,
+      isDone: endIndex >= filteredUsers.length,
+      continueCursor:
+        endIndex < filteredUsers.length ? endIndex.toString() : undefined,
+    };
+  },
+});
+
+export const getUserStatsForAdmin = query({
+  args: {},
+  handler: async (ctx) => {
+    // const currentUser = await UserService.getCurrentUser(ctx);
+    // if (!currentUser || currentUser.role !== 'admin') {
+    //   throw new Error('Unauthorized: Admin access required');
+    // }
+
+    const allUsers = await ctx.db.query('users').collect();
+
+    const stats = {
+      totalUsers: allUsers.length,
+      activeUsers: allUsers.filter((user) => user.isActive !== false).length,
+      pendingVerification: allUsers.filter((user) => !user.isVerified).length,
+      verifiers: allUsers.filter(
+        (user) => user.role === 'verifier' && user.isActive !== false
+      ).length,
+      projectCreators: allUsers.filter(
+        (user) => user.role === 'project_creator' && user.isActive !== false
+      ).length,
+      creditBuyers: allUsers.filter(
+        (user) => user.role === 'credit_buyer' && user.isActive !== false
+      ).length,
+      inactiveUsers: allUsers.filter((user) => user.isActive === false).length,
+    };
+
+    return stats;
+  },
+});
+
+export const toggleUserStatus = mutation({
+  args: {
+    userId: v.id('users'),
+    isActive: v.boolean(),
+  },
+  handler: async (ctx, { userId, isActive }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'admin') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    await ctx.db.patch(userId, {
+      isActive,
+      lastLoginAt: new Date().toISOString(),
+    });
+  },
+});

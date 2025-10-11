@@ -559,6 +559,23 @@ export const deleteAllProjects = internalMutation({
   },
 });
 
+export const getProject = query({
+    args: { projectId: v.id('projects') },
+    handler: async (ctx, { projectId }) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            throw new Error('Not authenticated');
+        }
+
+        const project = await ctx.db.get(projectId);
+        if (!project) {
+            throw new Error('Project not found');
+        }
+
+        return project;
+    },
+});
+
 export const getUserProjects = query({
   args: {},
   handler: async (ctx): Promise<ProjectWithCreator[]> => {

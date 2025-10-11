@@ -28,7 +28,6 @@ export class VerificationMessagesService {
       attachments: data.attachments,
       isRead: false,
       threadId: data.threadId || `thread_${data.verificationId}_${currentTime}`,
-      _creationTime: currentTime,
     };
 
     return await ctx.db.insert('verificationMessages', messageData);
