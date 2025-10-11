@@ -13,7 +13,10 @@ export type NotificationType =
   | 'deadline_overdue'
   | 'document_uploaded'
   | 'document_verified'
-  | 'quality_score_updated';
+  | 'quality_score_updated'
+  | 'upgrade_request_assigned'
+  | 'role_upgrade_approved'
+  | 'role_upgrade_rejected';
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -59,8 +62,6 @@ export class NotificationService {
       expiresAt: undefined,
       metadata: undefined,
       isRead: false,
-      isEmailSent: false,
-      isPushSent: false,
       isArchived: false,
       tags: undefined,
       batchId: undefined,
@@ -375,6 +376,55 @@ export class NotificationService {
       priority: 'normal',
       relatedEntityId: documentId,
       relatedEntityType: 'document',
+    });
+  }
+
+  // Role Upgrade Request Notifications
+  public static async notifyUpgradeRequestAssigned(
+    ctx: MutationCtx,
+    verifierId: Id<'users'>,
+    requestId: Id<'roleUpgradeRequests'>
+  ) {
+    const request = await ctx.db.get(requestId);
+    if (!request) return;
+
+    const applicant = await ctx.db.get(request.userId);
+    if (!applicant) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: verifierId,
+      type: 'upgrade_request_assigned',
+      title: 'New Role Upgrade Request Assigned',
+      message: `Review role upgrade request from ${applicant.firstName} ${applicant.lastName}`,
+      priority: 'normal',
+      relatedEntityId: requestId,
+    });
+  }
+
+  public static async notifyRoleUpgradeApproved(
+    ctx: MutationCtx,
+    userId: Id<'users'>
+  ) {
+    return await this.createNotification(ctx, {
+      recipientId: userId,
+      type: 'role_upgrade_approved',
+      title: 'Role Upgrade Approved',
+      message: 'Your project creator role upgrade has been approved! You can now create and manage carbon credit projects.',
+      priority: 'high',
+    });
+  }
+
+  public static async notifyRoleUpgradeRejected(
+    ctx: MutationCtx,
+    userId: Id<'users'>,
+    reason: string
+  ) {
+    return await this.createNotification(ctx, {
+      recipientId: userId,
+      type: 'role_upgrade_rejected',
+      title: 'Role Upgrade Request Rejected',
+      message: `Your upgrade request was rejected. Reason: ${reason}. You can submit a new request after addressing the issues.`,
+      priority: 'normal',
     });
   }
 }

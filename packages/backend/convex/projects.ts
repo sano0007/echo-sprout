@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
-import { action, mutation, query, internalMutation } from './_generated/server';
-import { z, ZodError } from 'zod';
+import { action, internalMutation, mutation, query } from './_generated/server';
+import { z } from 'zod';
 import { Doc, Id } from './_generated/dataModel';
 import { WorkflowService } from '../services/workflow-service';
 import { VerifierAssignmentService } from '../services/verifier-assignment-service';
@@ -441,9 +441,8 @@ export const createProject = mutation({
       budget: args.budget,
       startDate: args.startDate,
       expectedCompletionDate: args.expectedCompletionDate,
-      actualCompletionDate: undefined,
-      status: 'active' as const,
-      verificationStatus: 'verified' as const,
+      status: 'draft',
+      verificationStatus: 'pending',
       totalCarbonCredits: args.totalCarbonCredits,
       pricePerCredit: args.pricePerCredit,
       creditsAvailable: args.creditsAvailable,
