@@ -16,7 +16,9 @@ export default function Navigation() {
   const isAdminDashboard =
     pathname === '/admin' || pathname?.startsWith('/admin/');
 
-  if (isAdminDashboard) {
+  const isHeroSection = pathname === '/';
+
+  if (isAdminDashboard || isHeroSection) {
     return null;
   }
 
