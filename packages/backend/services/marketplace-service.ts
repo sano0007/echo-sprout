@@ -39,7 +39,8 @@ export class MarketplaceService {
           location: project.location.name,
           price: project.pricePerCredit,
           credits: project.creditsAvailable,
-          image: 'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg',
+          image:
+            'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg',
           images: [],
           creator:
             creator?.organizationName ||
@@ -142,7 +143,10 @@ export class MarketplaceService {
     location: string
   ): MarketplaceProject[] {
     return projects.filter((p) =>
-      p.location.replace(/\s/g, '').toLowerCase().includes(location.replace(/\s/g, '').toLowerCase())
+      p.location
+        .replace(/\s/g, '')
+        .toLowerCase()
+        .includes(location.replace(/\s/g, '').toLowerCase())
     );
   }
 

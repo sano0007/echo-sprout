@@ -28,12 +28,13 @@ export const seedVivaDemo = mutation({
       const project1 = await ctx.db.insert('projects', {
         creatorId: projectCreatorId,
         title: 'Sri Lankan Reforestation Initiative',
-        description: 'A comprehensive reforestation project in the hill country of Sri Lanka, focusing on native species restoration and community involvement. This project aims to restore 500 hectares of degraded forest land while providing sustainable livelihoods for local communities.',
+        description:
+          'A comprehensive reforestation project in the hill country of Sri Lanka, focusing on native species restoration and community involvement. This project aims to restore 500 hectares of degraded forest land while providing sustainable livelihoods for local communities.',
         projectType: 'reforestation',
         location: {
           lat: 7.2906,
           long: 80.6337,
-          name: 'Central Province, Sri Lanka'
+          name: 'Central Province, Sri Lanka',
         },
         areaSize: 500,
         estimatedCO2Reduction: 15000,
@@ -49,8 +50,16 @@ export const seedVivaDemo = mutation({
         verificationStartedAt: Date.now() - 45 * 24 * 60 * 60 * 1000, // 45 days ago
         verificationCompletedAt: Date.now() - 30 * 24 * 60 * 60 * 1000, // 30 days ago
         qualityScore: 8.7,
-        requiredDocuments: ['project_plan', 'environmental_assessment', 'permits'],
-        submittedDocuments: ['project_plan', 'environmental_assessment', 'permits'],
+        requiredDocuments: [
+          'project_plan',
+          'environmental_assessment',
+          'permits',
+        ],
+        submittedDocuments: [
+          'project_plan',
+          'environmental_assessment',
+          'permits',
+        ],
         isDocumentationComplete: true,
         progressPercentage: 42,
         lastProgressUpdate: Date.now() - 3 * 24 * 60 * 60 * 1000, // 3 days ago
@@ -59,12 +68,13 @@ export const seedVivaDemo = mutation({
       const project2 = await ctx.db.insert('projects', {
         creatorId: projectCreatorId,
         title: 'Solar Energy Farm - Hambantota',
-        description: 'Large-scale solar energy installation in Hambantota district, contributing to renewable energy generation and carbon offset. This 10MW solar farm will provide clean energy to 5,000 households while generating significant carbon credits.',
+        description:
+          'Large-scale solar energy installation in Hambantota district, contributing to renewable energy generation and carbon offset. This 10MW solar farm will provide clean energy to 5,000 households while generating significant carbon credits.',
         projectType: 'solar',
         location: {
-          lat: 6.1240,
+          lat: 6.124,
           long: 81.1185,
-          name: 'Hambantota, Southern Province, Sri Lanka'
+          name: 'Hambantota, Southern Province, Sri Lanka',
         },
         areaSize: 25,
         estimatedCO2Reduction: 8000,
@@ -78,8 +88,17 @@ export const seedVivaDemo = mutation({
         creditsAvailable: 6400,
         creditsSold: 0,
         verificationStartedAt: Date.now() - 20 * 24 * 60 * 60 * 1000, // 20 days ago
-        requiredDocuments: ['project_plan', 'environmental_assessment', 'permits', 'technical_specs'],
-        submittedDocuments: ['project_plan', 'environmental_assessment', 'permits'],
+        requiredDocuments: [
+          'project_plan',
+          'environmental_assessment',
+          'permits',
+          'technical_specs',
+        ],
+        submittedDocuments: [
+          'project_plan',
+          'environmental_assessment',
+          'permits',
+        ],
         isDocumentationComplete: false,
         progressPercentage: 65,
         lastProgressUpdate: Date.now() - 1 * 24 * 60 * 60 * 1000, // 1 day ago
@@ -88,12 +107,13 @@ export const seedVivaDemo = mutation({
       const project3 = await ctx.db.insert('projects', {
         creatorId: projectCreatorId,
         title: 'Mangrove Restoration - Jaffna Peninsula',
-        description: 'Coastal mangrove ecosystem restoration project in Jaffna Peninsula, protecting coastlines and supporting marine biodiversity while sequestering carbon.',
+        description:
+          'Coastal mangrove ecosystem restoration project in Jaffna Peninsula, protecting coastlines and supporting marine biodiversity while sequestering carbon.',
         projectType: 'mangrove_restoration',
         location: {
           lat: 9.6615,
           long: 80.0255,
-          name: 'Jaffna Peninsula, Northern Province, Sri Lanka'
+          name: 'Jaffna Peninsula, Northern Province, Sri Lanka',
         },
         areaSize: 200,
         estimatedCO2Reduction: 5500,
@@ -109,8 +129,16 @@ export const seedVivaDemo = mutation({
         verificationStartedAt: Date.now() - 60 * 24 * 60 * 60 * 1000, // 60 days ago
         verificationCompletedAt: Date.now() - 40 * 24 * 60 * 60 * 1000, // 40 days ago
         qualityScore: 9.2,
-        requiredDocuments: ['project_plan', 'environmental_assessment', 'permits'],
-        submittedDocuments: ['project_plan', 'environmental_assessment', 'permits'],
+        requiredDocuments: [
+          'project_plan',
+          'environmental_assessment',
+          'permits',
+        ],
+        submittedDocuments: [
+          'project_plan',
+          'environmental_assessment',
+          'permits',
+        ],
         isDocumentationComplete: true,
         progressPercentage: 28,
         lastProgressUpdate: Date.now() - 5 * 24 * 60 * 60 * 1000, // 5 days ago
@@ -127,7 +155,8 @@ export const seedVivaDemo = mutation({
         submittedBy: projectCreatorId,
         updateType: 'milestone',
         title: 'First Quarter Milestone - Land Preparation Complete',
-        description: 'Successfully completed land preparation for the first 125 hectares. Soil testing has been conducted, and native species seedlings have been prepared in our nursery. Community training programs have been initiated with 45 local participants.',
+        description:
+          'Successfully completed land preparation for the first 125 hectares. Soil testing has been conducted, and native species seedlings have been prepared in our nursery. Community training programs have been initiated with 45 local participants.',
         progressPercentage: 25,
         photoStorageIds: [],
         photoUrls: [],
@@ -136,8 +165,10 @@ export const seedVivaDemo = mutation({
           treesPlanted: 2500,
           carbonImpactToDate: 125,
         },
-        nextSteps: 'Begin planting phase for the prepared areas. Continue community engagement and training programs.',
-        challenges: 'Minor delays due to monsoon season, but within acceptable parameters.',
+        nextSteps:
+          'Begin planting phase for the prepared areas. Continue community engagement and training programs.',
+        challenges:
+          'Minor delays due to monsoon season, but within acceptable parameters.',
         submittedAt: Date.now() - 45 * 24 * 60 * 60 * 1000,
         reportingDate: Date.now() - 45 * 24 * 60 * 60 * 1000,
         status: 'approved',
@@ -150,7 +181,8 @@ export const seedVivaDemo = mutation({
         submittedBy: projectCreatorId,
         updateType: 'measurement',
         title: 'Second Quarter Progress Report',
-        description: 'Continued tree planting operations with excellent survival rates. Expanded community involvement and established monitoring protocols for long-term sustainability tracking.',
+        description:
+          'Continued tree planting operations with excellent survival rates. Expanded community involvement and established monitoring protocols for long-term sustainability tracking.',
         progressPercentage: 42,
         photoStorageIds: [],
         photoUrls: [],
@@ -160,8 +192,10 @@ export const seedVivaDemo = mutation({
           survivalRate: 0.87,
           carbonImpactToDate: 315,
         },
-        nextSteps: 'Focus on maintenance and monitoring of planted areas. Prepare for monsoon season protection measures.',
-        challenges: 'Need additional protective measures for newly planted seedlings during heavy rains.',
+        nextSteps:
+          'Focus on maintenance and monitoring of planted areas. Prepare for monsoon season protection measures.',
+        challenges:
+          'Need additional protective measures for newly planted seedlings during heavy rains.',
         submittedAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
         reportingDate: Date.now() - 3 * 24 * 60 * 60 * 1000,
         status: 'pending_review',
@@ -174,7 +208,8 @@ export const seedVivaDemo = mutation({
         submittedBy: projectCreatorId,
         updateType: 'milestone',
         title: 'Infrastructure Development Complete',
-        description: 'All major infrastructure including grid connections, inverter stations, and access roads have been completed. Solar panel installation is 70% complete with excellent progress despite weather challenges.',
+        description:
+          'All major infrastructure including grid connections, inverter stations, and access roads have been completed. Solar panel installation is 70% complete with excellent progress despite weather challenges.',
         progressPercentage: 65,
         photoStorageIds: [],
         photoUrls: [],
@@ -184,8 +219,10 @@ export const seedVivaDemo = mutation({
           systemUptime: 0.95,
           carbonImpactToDate: 1200,
         },
-        nextSteps: 'Complete remaining solar panel installation and begin system commissioning tests.',
-        challenges: 'Equipment delivery delays due to global supply chain issues, but alternative sourcing arranged.',
+        nextSteps:
+          'Complete remaining solar panel installation and begin system commissioning tests.',
+        challenges:
+          'Equipment delivery delays due to global supply chain issues, but alternative sourcing arranged.',
         submittedAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
         reportingDate: Date.now() - 1 * 24 * 60 * 60 * 1000,
         status: 'pending_review',
@@ -198,7 +235,8 @@ export const seedVivaDemo = mutation({
         submittedBy: projectCreatorId,
         updateType: 'measurement',
         title: 'Early Stage Restoration Progress',
-        description: 'Initial mangrove planting phase showing promising results. Marine life surveys indicate positive ecosystem response. Community fishing cooperatives actively participating in conservation efforts.',
+        description:
+          'Initial mangrove planting phase showing promising results. Marine life surveys indicate positive ecosystem response. Community fishing cooperatives actively participating in conservation efforts.',
         progressPercentage: 28,
         photoStorageIds: [],
         photoUrls: [],
@@ -208,8 +246,10 @@ export const seedVivaDemo = mutation({
           areaRestored: 56,
           carbonImpactToDate: 420,
         },
-        nextSteps: 'Continue planting in designated areas. Establish monitoring stations for water quality and marine biodiversity.',
-        challenges: 'Tidal variations affecting planting schedule, but adaptation strategies implemented.',
+        nextSteps:
+          'Continue planting in designated areas. Establish monitoring stations for water quality and marine biodiversity.',
+        challenges:
+          'Tidal variations affecting planting schedule, but adaptation strategies implemented.',
         submittedAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
         reportingDate: Date.now() - 5 * 24 * 60 * 60 * 1000,
         status: 'approved',
@@ -232,7 +272,8 @@ export const seedVivaDemo = mutation({
         netAmount: 14250,
         paymentStatus: 'completed',
         certificateUrl: 'https://example.com/certificates/cert_001.pdf',
-        impactDescription: 'This purchase supports reforestation efforts in Sri Lanka, contributing to carbon sequestration and biodiversity conservation.',
+        impactDescription:
+          'This purchase supports reforestation efforts in Sri Lanka, contributing to carbon sequestration and biodiversity conservation.',
         transactionReference: 'TXN_RF_001_2024',
       });
 
@@ -246,7 +287,8 @@ export const seedVivaDemo = mutation({
         netAmount: 5700,
         paymentStatus: 'completed',
         certificateUrl: 'https://example.com/certificates/cert_002.pdf',
-        impactDescription: 'Supporting mangrove restoration and coastal protection in northern Sri Lanka.',
+        impactDescription:
+          'Supporting mangrove restoration and coastal protection in northern Sri Lanka.',
         transactionReference: 'TXN_MG_002_2024',
       });
 
@@ -259,7 +301,8 @@ export const seedVivaDemo = mutation({
         platformFee: 1875,
         netAmount: 35625,
         paymentStatus: 'processing',
-        impactDescription: 'Large purchase to offset company carbon footprint through reforestation.',
+        impactDescription:
+          'Large purchase to offset company carbon footprint through reforestation.',
         transactionReference: 'TXN_RF_003_2024',
       });
 
@@ -274,7 +317,8 @@ export const seedVivaDemo = mutation({
         projectId: project1,
         certificateNumber: 'CERT-RF-2024-001',
         creditsAmount: 1000,
-        impactDescription: 'Carbon offset through reforestation: 1000 tons CO2 equivalent',
+        impactDescription:
+          'Carbon offset through reforestation: 1000 tons CO2 equivalent',
         issueDate: Date.now() - 7 * 24 * 60 * 60 * 1000,
         certificateUrl: 'https://example.com/certificates/cert_001.pdf',
         qrCodeUrl: 'https://example.com/verify/cert_001',
@@ -287,7 +331,8 @@ export const seedVivaDemo = mutation({
         projectId: project3,
         certificateNumber: 'CERT-MG-2024-002',
         creditsAmount: 500,
-        impactDescription: 'Carbon offset through mangrove restoration: 500 tons CO2 equivalent',
+        impactDescription:
+          'Carbon offset through mangrove restoration: 500 tons CO2 equivalent',
         issueDate: Date.now() - 14 * 24 * 60 * 60 * 1000,
         certificateUrl: 'https://example.com/certificates/cert_002.pdf',
         qrCodeUrl: 'https://example.com/verify/cert_002',
@@ -319,7 +364,8 @@ export const seedVivaDemo = mutation({
         alertType: 'documentation_incomplete',
         severity: 'medium',
         message: 'Missing Technical Specifications Document',
-        description: 'The solar energy project is missing required technical specifications document for final verification.',
+        description:
+          'The solar energy project is missing required technical specifications document for final verification.',
         source: 'automated_monitoring',
         category: 'verification',
         tags: ['documentation', 'verification', 'solar'],
@@ -344,7 +390,8 @@ export const seedVivaDemo = mutation({
         alertType: 'progress_reminder',
         severity: 'low',
         message: 'Monthly Progress Update Due',
-        description: 'The reforestation project progress update is due within the next 3 days.',
+        description:
+          'The reforestation project progress update is due within the next 3 days.',
         source: 'automated_monitoring',
         category: 'monitoring',
         tags: ['progress', 'reminder', 'reforestation'],
@@ -368,7 +415,8 @@ export const seedVivaDemo = mutation({
         alertType: 'system_maintenance',
         severity: 'critical',
         message: 'Scheduled System Maintenance',
-        description: 'System maintenance scheduled for this weekend. All services will be temporarily unavailable.',
+        description:
+          'System maintenance scheduled for this weekend. All services will be temporarily unavailable.',
         source: 'manual_admin',
         category: 'system',
         tags: ['maintenance', 'scheduled', 'system'],
@@ -395,7 +443,8 @@ export const seedVivaDemo = mutation({
         projectId: project1,
         milestoneType: 'progress_25',
         title: 'Land Preparation Complete',
-        description: 'Complete land preparation and community engagement for first phase',
+        description:
+          'Complete land preparation and community engagement for first phase',
         plannedDate: Date.now() - 50 * 24 * 60 * 60 * 1000,
         actualDate: Date.now() - 45 * 24 * 60 * 60 * 1000,
         status: 'completed',
@@ -549,7 +598,6 @@ export const seedVivaDemo = mutation({
           pdfReports: 2,
         },
       };
-
     } catch (error) {
       console.error('❌ Error seeding VIVA demonstration data:', error);
       throw new Error(`Failed to seed data: ${error}`);
@@ -575,7 +623,6 @@ export const cleanupVivaDemo = mutation({
         success: true,
         message: 'Demo cleanup completed',
       };
-
     } catch (error) {
       console.error('❌ Error cleaning up demo data:', error);
       throw new Error(`Failed to cleanup: ${error}`);

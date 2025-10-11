@@ -53,16 +53,14 @@ export const getPDFReports = query({
     let query = ctx.db.query('pdf_reports');
 
     if (args.userId) {
-      query = query.filter(q => q.eq(q.field('requestedBy'), args.userId));
+      query = query.filter((q) => q.eq(q.field('requestedBy'), args.userId));
     }
 
     if (args.status) {
-      query = query.filter(q => q.eq(q.field('status'), args.status));
+      query = query.filter((q) => q.eq(q.field('status'), args.status));
     }
 
-    return await query
-      .order('desc')
-      .take(args.limit || 50);
+    return await query.order('desc').take(args.limit || 50);
   },
 });
 
@@ -80,7 +78,7 @@ export const getPDFReport = query({
       // Additional permission checks for admins/verifiers
       const user = await ctx.db
         .query('users')
-        .filter(q => q.eq(q.field('clerkId'), identity.subject))
+        .filter((q) => q.eq(q.field('clerkId'), identity.subject))
         .first();
 
       if (!user || !['admin', 'verifier'].includes(user.role)) {
@@ -121,7 +119,7 @@ export const createPDFReportRequest = mutation({
 
     const user = await ctx.db
       .query('users')
-      .filter(q => q.eq(q.field('clerkId'), identity.subject))
+      .filter((q) => q.eq(q.field('clerkId'), identity.subject))
       .first();
 
     if (!user) throw new Error('User not found');
@@ -140,7 +138,7 @@ export const createPDFReportRequest = mutation({
       progress: 0,
       requestedBy: identity.subject,
       requestedAt: Date.now(),
-      expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
       timeframe: args.timeframe,
       filters: args.filters,
       userInfo: {
@@ -216,7 +214,7 @@ export const deletePDFReport = mutation({
     if (report.requestedBy !== identity.subject) {
       const user = await ctx.db
         .query('users')
-        .filter(q => q.eq(q.field('clerkId'), identity.subject))
+        .filter((q) => q.eq(q.field('clerkId'), identity.subject))
         .first();
 
       if (!user || user.role !== 'admin') {
@@ -242,9 +240,12 @@ export const generatePDFReport = action({
       });
 
       // Get report details
-      const report = await ctx.runQuery(internal.pdf_reports._getPDFReportInternal, {
-        reportId: args.reportId,
-      });
+      const report = await ctx.runQuery(
+        internal.pdf_reports._getPDFReportInternal,
+        {
+          reportId: args.reportId,
+        }
+      );
 
       if (!report) {
         throw new Error('Report not found');
@@ -393,10 +394,15 @@ async function generateMonitoringReportData(ctx: any, report: any) {
   };
 }
 
-async function generateAnalyticsPDF(analyticsData: any, report: any): Promise<Uint8Array> {
+async function generateAnalyticsPDF(
+  analyticsData: any,
+  report: any
+): Promise<Uint8Array> {
   // This would integrate with the analytics PDF templates
   // For now, return a placeholder
-  const { AnalyticsPDFTemplates } = await import('../lib/analytics-pdf-templates');
+  const { AnalyticsPDFTemplates } = await import(
+    '../lib/analytics-pdf-templates'
+  );
 
   let templateData;
 
@@ -439,9 +445,14 @@ async function generateAnalyticsPDF(analyticsData: any, report: any): Promise<Ui
   return encoder.encode(mockPdfContent);
 }
 
-async function generateMonitoringPDF(monitoringData: any, report: any): Promise<Uint8Array> {
+async function generateMonitoringPDF(
+  monitoringData: any,
+  report: any
+): Promise<Uint8Array> {
   // This would integrate with the monitoring PDF templates
-  const { MonitoringPDFTemplates } = await import('../lib/monitoring-pdf-templates');
+  const { MonitoringPDFTemplates } = await import(
+    '../lib/monitoring-pdf-templates'
+  );
 
   let templateData;
 
@@ -484,7 +495,10 @@ async function generateMonitoringPDF(monitoringData: any, report: any): Promise<
   return encoder.encode(mockPdfContent);
 }
 
-async function savePDFToStorage(pdfData: Uint8Array, report: any): Promise<string> {
+async function savePDFToStorage(
+  pdfData: Uint8Array,
+  report: any
+): Promise<string> {
   // This would integrate with your file storage solution (S3, Cloudinary, etc.)
   // For now, return a placeholder URL
   const filename = `${report.reportType}_${report.title.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
@@ -502,12 +516,17 @@ export const cleanupExpiredReports = action({
   handler: async (ctx): Promise<{ cleaned: number; message: string }> => {
     const now = Date.now();
 
-    const expiredReports: Doc<'pdf_reports'>[] = await ctx.runQuery(api.pdf_reports.getPDFReports, {
-      status: 'completed',
-      limit: 1000,
-    });
+    const expiredReports: Doc<'pdf_reports'>[] = await ctx.runQuery(
+      api.pdf_reports.getPDFReports,
+      {
+        status: 'completed',
+        limit: 1000,
+      }
+    );
 
-    const expiredCount = expiredReports.filter((report: Doc<'pdf_reports'>) => report.expiresAt < now).length;
+    const expiredCount = expiredReports.filter(
+      (report: Doc<'pdf_reports'>) => report.expiresAt < now
+    ).length;
 
     for (const report of expiredReports) {
       if (report.expiresAt < now) {
@@ -527,10 +546,12 @@ export const cleanupExpiredReports = action({
 // Utility functions
 export const getReportStatistics = query({
   args: {
-    timeframe: v.optional(v.object({
-      start: v.number(),
-      end: v.number(),
-    })),
+    timeframe: v.optional(
+      v.object({
+        start: v.number(),
+        end: v.number(),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -538,7 +559,7 @@ export const getReportStatistics = query({
 
     const user = await ctx.db
       .query('users')
-      .filter(q => q.eq(q.field('clerkId'), identity.subject))
+      .filter((q) => q.eq(q.field('clerkId'), identity.subject))
       .first();
 
     if (!user || user.role !== 'admin') {
@@ -548,7 +569,7 @@ export const getReportStatistics = query({
     let query = ctx.db.query('pdf_reports');
 
     if (args.timeframe) {
-      query = query.filter(q =>
+      query = query.filter((q) =>
         q.and(
           q.gte(q.field('requestedAt'), args.timeframe!.start),
           q.lte(q.field('requestedAt'), args.timeframe!.end)
@@ -560,21 +581,24 @@ export const getReportStatistics = query({
 
     const stats = {
       total: reports.length,
-      completed: reports.filter(r => r.status === 'completed').length,
-      pending: reports.filter(r => r.status === 'pending').length,
-      processing: reports.filter(r => r.status === 'processing').length,
-      failed: reports.filter(r => r.status === 'failed').length,
-      analytics: reports.filter(r => r.templateType === 'analytics').length,
-      monitoring: reports.filter(r => r.templateType === 'monitoring').length,
+      completed: reports.filter((r) => r.status === 'completed').length,
+      pending: reports.filter((r) => r.status === 'pending').length,
+      processing: reports.filter((r) => r.status === 'processing').length,
+      failed: reports.filter((r) => r.status === 'failed').length,
+      analytics: reports.filter((r) => r.templateType === 'analytics').length,
+      monitoring: reports.filter((r) => r.templateType === 'monitoring').length,
       averageProcessingTime: 0,
     };
 
-    const completedReports = reports.filter(r => r.status === 'completed' && r.completedAt);
+    const completedReports = reports.filter(
+      (r) => r.status === 'completed' && r.completedAt
+    );
     if (completedReports.length > 0) {
       const totalProcessingTime = completedReports.reduce((sum, r) => {
         return sum + (r.completedAt! - r.requestedAt);
       }, 0);
-      stats.averageProcessingTime = totalProcessingTime / completedReports.length;
+      stats.averageProcessingTime =
+        totalProcessingTime / completedReports.length;
     }
 
     return stats;

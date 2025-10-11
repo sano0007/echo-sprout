@@ -8,7 +8,10 @@ type ProjectCardProps = {
   handleProjectPurchase: (project: MarketplaceProject) => void;
 };
 
-export const MarketplaceProjectCard = ({ project, handleProjectPurchase }: ProjectCardProps) => {
+export const MarketplaceProjectCard = ({
+  project,
+  handleProjectPurchase,
+}: ProjectCardProps) => {
   const projectDocuments = useQuery(
     api.documents.getDocumentsByEntity,
     project.id

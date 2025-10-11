@@ -57,18 +57,24 @@ export interface PDFReportStatistics {
 }
 
 export function usePDFReports() {
-  const [activePolling, setActivePolling] = useState<Set<Id<'pdf_reports'>>>(new Set());
+  const [activePolling, setActivePolling] = useState<Set<Id<'pdf_reports'>>>(
+    new Set()
+  );
 
   // Queries
   const reports = useQuery(api.pdf_reports.getPDFReports, {});
   const statistics = useQuery(api.pdf_reports.getReportStatistics, {});
 
   // Mutations
-  const createReportRequest = useMutation(api.pdf_reports.createPDFReportRequest);
+  const createReportRequest = useMutation(
+    api.pdf_reports.createPDFReportRequest
+  );
   const deleteReport = useMutation(api.pdf_reports.deletePDFReport);
 
   // Generate a new PDF report
-  const generateReport = async (request: PDFReportRequest): Promise<Id<'pdf_reports'>> => {
+  const generateReport = async (
+    request: PDFReportRequest
+  ): Promise<Id<'pdf_reports'>> => {
     try {
       const reportId = await createReportRequest({
         templateType: request.templateType,
@@ -117,12 +123,12 @@ export function usePDFReports() {
 
   // Start polling for report status updates
   const startPolling = (reportId: Id<'pdf_reports'>) => {
-    setActivePolling(prev => new Set(prev).add(reportId));
+    setActivePolling((prev) => new Set(prev).add(reportId));
   };
 
   // Stop polling for a specific report
   const stopPolling = (reportId: Id<'pdf_reports'>) => {
-    setActivePolling(prev => {
+    setActivePolling((prev) => {
       const newSet = new Set(prev);
       newSet.delete(reportId);
       return newSet;
@@ -136,7 +142,10 @@ export function usePDFReports() {
 
   // Get reports by template type
   const getReportsByType = (templateType: 'analytics' | 'monitoring') => {
-    return reports?.filter((report: any) => report.templateType === templateType) || [];
+    return (
+      reports?.filter((report: any) => report.templateType === templateType) ||
+      []
+    );
   };
 
   // Get report by ID
@@ -146,14 +155,20 @@ export function usePDFReports() {
 
   // Check if any reports are currently processing
   const hasProcessingReports = () => {
-    return reports?.some((report: any) => ['pending', 'processing'].includes(report.status)) || false;
+    return (
+      reports?.some((report: any) =>
+        ['pending', 'processing'].includes(report.status)
+      ) || false
+    );
   };
 
   // Get the most recent reports
   const getRecentReports = (limit: number = 10) => {
-    return reports
-      ?.sort((a: any, b: any) => b.requestedAt - a.requestedAt)
-      ?.slice(0, limit) || [];
+    return (
+      reports
+        ?.sort((a: any, b: any) => b.requestedAt - a.requestedAt)
+        ?.slice(0, limit) || []
+    );
   };
 
   // Format file size for display
@@ -161,7 +176,7 @@ export function usePDFReports() {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 Bytes';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   // Format processing time
@@ -198,7 +213,10 @@ export function usePDFReports() {
   useEffect(() => {
     if (reports) {
       reports.forEach((report: any) => {
-        if (activePolling.has(report._id) && ['completed', 'failed'].includes(report.status)) {
+        if (
+          activePolling.has(report._id) &&
+          ['completed', 'failed'].includes(report.status)
+        ) {
           stopPolling(report._id);
         }
       });

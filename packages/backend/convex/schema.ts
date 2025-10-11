@@ -91,14 +91,18 @@ export default defineSchema({
     startDate: v.string(),
     expectedCompletionDate: v.string(),
     actualCompletionDate: v.optional(v.string()),
-    milestone1: v.optional(v.object({
-      name: v.string(),
-      date: v.string(),
-    })),
-    milestone2: v.optional(v.object({
-      name: v.string(),
-      date: v.string(),
-    })),
+    milestone1: v.optional(
+      v.object({
+        name: v.string(),
+        date: v.string(),
+      })
+    ),
+    milestone2: v.optional(
+      v.object({
+        name: v.string(),
+        date: v.string(),
+      })
+    ),
     status: v.union(
       v.literal('draft'),
       v.literal('submitted'),
@@ -211,12 +215,14 @@ export default defineSchema({
     certificateUrl: v.optional(v.string()),
     impactDescription: v.string(),
     transactionReference: v.string(), // Unique transaction reference
-    refundDetails: v.optional(v.object({
-      refundReason: v.string(),
-      refundAmount: v.number(),
-      adminNotes: v.string(),
-      processedAt: v.number(),
-    })),
+    refundDetails: v.optional(
+      v.object({
+        refundReason: v.string(),
+        refundAmount: v.number(),
+        adminNotes: v.string(),
+        processedAt: v.number(),
+      })
+    ),
   })
     .index('by_buyer', ['buyerId'])
     .index('by_project', ['projectId'])
@@ -439,7 +445,6 @@ export default defineSchema({
     .index('by_type', ['documentType'])
     .index('by_verification_status', ['isVerified'])
     .index('by_required', ['entityType', 'isRequired']),
-
 
   // ============= EDUCATIONAL CONTENT =============
   educationalContent: defineTable({
@@ -1235,12 +1240,14 @@ export default defineSchema({
     photoStorageIds: v.optional(v.array(v.id('_storage'))),
     photoUrls: v.optional(v.array(v.string())), // Cached URLs for quick access
     // Old format (Cloudinary) - for backward compatibility
-    photos: v.optional(v.array(
-      v.object({
-        cloudinary_public_id: v.string(),
-        cloudinary_url: v.string(),
-      })
-    )),
+    photos: v.optional(
+      v.array(
+        v.object({
+          cloudinary_public_id: v.string(),
+          cloudinary_url: v.string(),
+        })
+      )
+    ),
     location: v.optional(
       v.object({
         lat: v.float64(),
@@ -1266,12 +1273,14 @@ export default defineSchema({
     challenges: v.optional(v.string()),
     submittedAt: v.optional(v.float64()),
     reportingDate: v.float64(),
-    status: v.optional(v.union(
-      v.literal('pending_review'),
-      v.literal('approved'),
-      v.literal('rejected'),
-      v.literal('needs_revision')
-    )),
+    status: v.optional(
+      v.union(
+        v.literal('pending_review'),
+        v.literal('approved'),
+        v.literal('rejected'),
+        v.literal('needs_revision')
+      )
+    ),
     isVerified: v.boolean(),
     verifiedBy: v.optional(v.id('users')),
     verifiedAt: v.optional(v.float64()),

@@ -11,9 +11,9 @@ export interface CertificateData {
   purchaseDate: string;
   transactionReference: string;
   projectLocation?: {
-    lat: number
-    lon: number
-    name: string
+    lat: number;
+    lon: number;
+    name: string;
   };
   verificationStandard?: string;
 }

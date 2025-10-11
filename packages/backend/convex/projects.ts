@@ -134,13 +134,15 @@ const UpdateProjectSchema = z
     title: z.string().optional(),
     description: z.string().optional(),
     projectType: ProjectTypeSchema.optional(),
-    location: z.object({
-      lat: z.number().optional(),
-      long: z.number().optional(),
-      name: z.string().optional(),
-      city: z.string().optional(),
-      country: z.string().optional(),
-    }).optional(),
+    location: z
+      .object({
+        lat: z.number().optional(),
+        long: z.number().optional(),
+        name: z.string().optional(),
+        city: z.string().optional(),
+        country: z.string().optional(),
+      })
+      .optional(),
     areaSize: z.number().optional(),
     estimatedCO2Reduction: z.number().optional(),
     budget: z.number().optional(),
@@ -160,14 +162,18 @@ const UpdateProjectSchema = z
       ])
       .optional(),
     requiredDocuments: z.array(z.string()).optional(),
-    milestone1: z.object({
-      name: z.string().optional(),
-      date: z.string().optional(),
-    }).optional(),
-    milestone2: z.object({
-      name: z.string().optional(),
-      date: z.string().optional(),
-    }).optional(),
+    milestone1: z
+      .object({
+        name: z.string().optional(),
+        date: z.string().optional(),
+      })
+      .optional(),
+    milestone2: z
+      .object({
+        name: z.string().optional(),
+        date: z.string().optional(),
+      })
+      .optional(),
   })
   .refine(
     (data) => {
@@ -533,7 +539,7 @@ export const createProjectForSeeding = internalMutation({
       isDocumentationComplete: args.isDocumentationComplete,
     });
 
-      return projectId;
+    return projectId;
   },
 });
 
@@ -560,20 +566,20 @@ export const deleteAllProjects = internalMutation({
 });
 
 export const getProject = query({
-    args: { projectId: v.id('projects') },
-    handler: async (ctx, { projectId }) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error('Not authenticated');
-        }
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
 
-        const project = await ctx.db.get(projectId);
-        if (!project) {
-            throw new Error('Project not found');
-        }
+    const project = await ctx.db.get(projectId);
+    if (!project) {
+      throw new Error('Project not found');
+    }
 
-        return project;
-    },
+    return project;
+  },
 });
 
 export const getUserProjects = query({
@@ -793,14 +799,18 @@ export const updateProject = mutation({
     pricePerCredit: v.optional(v.number()),
     status: v.optional(v.string()),
     requiredDocuments: v.optional(v.array(v.string())),
-    milestone1: v.optional(v.object({
-      name: v.string(),
-      date: v.string(),
-    })),
-    milestone2: v.optional(v.object({
-      name: v.string(),
-      date: v.string(),
-    })),
+    milestone1: v.optional(
+      v.object({
+        name: v.string(),
+        date: v.string(),
+      })
+    ),
+    milestone2: v.optional(
+      v.object({
+        name: v.string(),
+        date: v.string(),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -1331,7 +1341,8 @@ export const getProjectTimeline = query({
 
     const canView =
       ('creatorId' in project && project.creatorId === user._id) ||
-      ('assignedVerifierId' in project && project.assignedVerifierId === user._id) ||
+      ('assignedVerifierId' in project &&
+        project.assignedVerifierId === user._id) ||
       user.role === 'admin';
 
     if (!canView) {

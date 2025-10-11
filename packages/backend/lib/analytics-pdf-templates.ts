@@ -1,4 +1,9 @@
-import type { PDFTemplateData, PDFSection, MetricData, ChartData } from './pdf-types';
+import type {
+  PDFTemplateData,
+  PDFSection,
+  MetricData,
+  ChartData,
+} from './pdf-types';
 
 // Analytics-specific types
 export interface AnalyticsData {
@@ -142,7 +147,9 @@ export class AnalyticsPDFTemplates {
     analyticsData: AnalyticsData,
     userInfo: { name: string; email: string; role: string }
   ): PDFTemplateData {
-    const platformMetrics = analyticsData.metrics.filter(m => m.category === 'platform');
+    const platformMetrics = analyticsData.metrics.filter(
+      (m) => m.category === 'platform'
+    );
 
     const sections: PDFSection[] = [
       {
@@ -161,7 +168,9 @@ export class AnalyticsPDFTemplates {
         title: 'Performance Trends',
         type: 'chart',
         order: 3,
-        data: analyticsData.charts.find(c => c.id === 'projects_over_time') || {
+        data: analyticsData.charts.find(
+          (c) => c.id === 'projects_over_time'
+        ) || {
           title: 'Projects Created Over Time',
           type: 'line',
         },
@@ -187,7 +196,9 @@ export class AnalyticsPDFTemplates {
         primaryColor: '#3b82f6',
         secondaryColor: '#1e40af',
         companyName: 'EcoSprout',
-        footer: 'EcoSprout Platform Analytics • Generated on ' + new Date().toLocaleDateString(),
+        footer:
+          'EcoSprout Platform Analytics • Generated on ' +
+          new Date().toLocaleDateString(),
       },
     };
   }
@@ -199,7 +210,9 @@ export class AnalyticsPDFTemplates {
     analyticsData: AnalyticsData,
     userInfo: { name: string; email: string; role: string }
   ): PDFTemplateData {
-    const environmentalMetrics = analyticsData.metrics.filter(m => m.category === 'environmental');
+    const environmentalMetrics = analyticsData.metrics.filter(
+      (m) => m.category === 'environmental'
+    );
 
     const sections: PDFSection[] = [
       {
@@ -259,7 +272,9 @@ export class AnalyticsPDFTemplates {
     analyticsData: AnalyticsData,
     userInfo: { name: string; email: string; role: string }
   ): PDFTemplateData {
-    const financialMetrics = analyticsData.metrics.filter(m => m.category === 'financial');
+    const financialMetrics = analyticsData.metrics.filter(
+      (m) => m.category === 'financial'
+    );
 
     const sections: PDFSection[] = [
       {
@@ -315,10 +330,14 @@ export class AnalyticsPDFTemplates {
   // Helper methods for generating content
 
   private static generateExecutiveSummary(data: AnalyticsData): string {
-    const totalProjects = data.metrics.find(m => m.id === 'total_projects')?.value || 0;
-    const activeProjects = data.metrics.find(m => m.id === 'active_projects')?.value || 0;
-    const totalRevenue = data.metrics.find(m => m.id === 'total_revenue')?.value || 0;
-    const co2Offset = data.metrics.find(m => m.id === 'co2_offset')?.value || 0;
+    const totalProjects =
+      data.metrics.find((m) => m.id === 'total_projects')?.value || 0;
+    const activeProjects =
+      data.metrics.find((m) => m.id === 'active_projects')?.value || 0;
+    const totalRevenue =
+      data.metrics.find((m) => m.id === 'total_revenue')?.value || 0;
+    const co2Offset =
+      data.metrics.find((m) => m.id === 'co2_offset')?.value || 0;
 
     return `This comprehensive analytics report covers the period from ${data.timeframe.start.toLocaleDateString()} to ${data.timeframe.end.toLocaleDateString()}.
 
@@ -332,79 +351,123 @@ This report provides detailed insights into platform performance, environmental 
   }
 
   private static generatePlatformPerformanceTable(metrics: AnalyticsMetric[]) {
-    const platformMetrics = metrics.filter(m => m.category === 'platform');
+    const platformMetrics = metrics.filter((m) => m.category === 'platform');
 
     return {
-      headers: ['Metric', 'Current Value', 'Previous Period', 'Change', 'Trend'],
-      rows: platformMetrics.map(metric => [
+      headers: [
+        'Metric',
+        'Current Value',
+        'Previous Period',
+        'Change',
+        'Trend',
+      ],
+      rows: platformMetrics.map((metric) => [
         metric.name,
         this.formatMetricValue(metric.value, metric.format, metric.unit),
-        this.formatMetricValue(metric.previousValue, metric.format, metric.unit),
+        this.formatMetricValue(
+          metric.previousValue,
+          metric.format,
+          metric.unit
+        ),
         `${metric.change > 0 ? '+' : ''}${metric.change.toFixed(1)}%`,
-        metric.changeType === 'increase' ? '↗️' : metric.changeType === 'decrease' ? '↘️' : '→',
+        metric.changeType === 'increase'
+          ? '↗️'
+          : metric.changeType === 'decrease'
+            ? '↘️'
+            : '→',
       ]),
     };
   }
 
   private static generateEnvironmentalImpactTable(metrics: AnalyticsMetric[]) {
-    const environmentalMetrics = metrics.filter(m => m.category === 'environmental');
+    const environmentalMetrics = metrics.filter(
+      (m) => m.category === 'environmental'
+    );
 
     return {
-      headers: ['Environmental Metric', 'Achievement', 'Previous Period', 'Improvement'],
-      rows: environmentalMetrics.map(metric => [
+      headers: [
+        'Environmental Metric',
+        'Achievement',
+        'Previous Period',
+        'Improvement',
+      ],
+      rows: environmentalMetrics.map((metric) => [
         metric.name,
         this.formatMetricValue(metric.value, metric.format, metric.unit),
-        this.formatMetricValue(metric.previousValue, metric.format, metric.unit),
+        this.formatMetricValue(
+          metric.previousValue,
+          metric.format,
+          metric.unit
+        ),
         `${metric.change > 0 ? '+' : ''}${metric.change.toFixed(1)}%`,
       ]),
     };
   }
 
   private static generateFinancialPerformanceTable(metrics: AnalyticsMetric[]) {
-    const financialMetrics = metrics.filter(m => m.category === 'financial');
+    const financialMetrics = metrics.filter((m) => m.category === 'financial');
 
     return {
-      headers: ['Financial Metric', 'Current Value', 'Previous Period', 'Growth'],
-      rows: financialMetrics.map(metric => [
+      headers: [
+        'Financial Metric',
+        'Current Value',
+        'Previous Period',
+        'Growth',
+      ],
+      rows: financialMetrics.map((metric) => [
         metric.name,
         this.formatMetricValue(metric.value, metric.format, metric.unit),
-        this.formatMetricValue(metric.previousValue, metric.format, metric.unit),
+        this.formatMetricValue(
+          metric.previousValue,
+          metric.format,
+          metric.unit
+        ),
         `${metric.change > 0 ? '+' : ''}${metric.change.toFixed(1)}%`,
       ]),
     };
   }
 
   private static generateUserEngagementTable(metrics: AnalyticsMetric[]) {
-    const userMetrics = metrics.filter(m => m.category === 'user');
+    const userMetrics = metrics.filter((m) => m.category === 'user');
 
     return {
       headers: ['User Metric', 'Current Value', 'Previous Period', 'Change'],
-      rows: userMetrics.map(metric => [
+      rows: userMetrics.map((metric) => [
         metric.name,
         this.formatMetricValue(metric.value, metric.format, metric.unit),
-        this.formatMetricValue(metric.previousValue, metric.format, metric.unit),
+        this.formatMetricValue(
+          metric.previousValue,
+          metric.format,
+          metric.unit
+        ),
         `${metric.change > 0 ? '+' : ''}${metric.change.toFixed(1)}%`,
       ]),
     };
   }
 
   private static generateInsightsList(insights: AnalyticsInsight[]): string[] {
-    return insights.map(insight => `${insight.title}: ${insight.description}`);
+    return insights.map(
+      (insight) => `${insight.title}: ${insight.description}`
+    );
   }
 
-  private static generateRecommendationsList(insights: AnalyticsInsight[]): string[] {
+  private static generateRecommendationsList(
+    insights: AnalyticsInsight[]
+  ): string[] {
     const recommendations: string[] = [];
-    insights.forEach(insight => {
+    insights.forEach((insight) => {
       if (insight.recommendations) {
         recommendations.push(...insight.recommendations);
       }
     });
-    return recommendations.length > 0 ? recommendations : [
-      'Continue monitoring key performance indicators',
-      'Focus on sustainable growth strategies',
-      'Enhance user engagement initiatives',
-      'Optimize platform performance based on data insights',
-    ];
+    return recommendations.length > 0
+      ? recommendations
+      : [
+          'Continue monitoring key performance indicators',
+          'Focus on sustainable growth strategies',
+          'Enhance user engagement initiatives',
+          'Optimize platform performance based on data insights',
+        ];
   }
 
   private static generateFiltersDescription(filters: AnalyticsFilters): string {
@@ -420,7 +483,9 @@ This report provides detailed insights into platform performance, environmental 
       parts.push(`Regions: ${filters.regions.join(', ')}`);
     }
     if (filters.dateRange) {
-      parts.push(`Date Range: ${filters.dateRange.start} to ${filters.dateRange.end}`);
+      parts.push(
+        `Date Range: ${filters.dateRange.start} to ${filters.dateRange.end}`
+      );
     }
 
     return parts.length > 0
@@ -428,7 +493,11 @@ This report provides detailed insights into platform performance, environmental 
       : 'No filters were applied to this report.';
   }
 
-  private static formatMetricValue(value: number, format: string, unit: string): string {
+  private static formatMetricValue(
+    value: number,
+    format: string,
+    unit: string
+  ): string {
     switch (format) {
       case 'currency':
         return new Intl.NumberFormat('en-US', {
@@ -450,7 +519,7 @@ This report provides detailed insights into platform performance, environmental 
   }
 
   private static convertToMetricData(metrics: AnalyticsMetric[]): MetricData[] {
-    return metrics.map(metric => ({
+    return metrics.map((metric) => ({
       id: metric.id,
       name: metric.name,
       value: metric.value,
@@ -464,7 +533,7 @@ This report provides detailed insights into platform performance, environmental 
   }
 
   private static convertToChartData(charts: AnalyticsChart[]): ChartData[] {
-    return charts.map(chart => ({
+    return charts.map((chart) => ({
       id: chart.id,
       title: chart.title,
       type: chart.type,
@@ -474,9 +543,12 @@ This report provides detailed insights into platform performance, environmental 
 
   // Additional helper methods for specific table generations
   private static generatePlatformOverview(metrics: AnalyticsMetric[]): string {
-    const totalProjects = metrics.find(m => m.id === 'total_projects')?.value || 0;
-    const activeProjects = metrics.find(m => m.id === 'active_projects')?.value || 0;
-    const successRate = metrics.find(m => m.id === 'avg_project_success')?.value || 0;
+    const totalProjects =
+      metrics.find((m) => m.id === 'total_projects')?.value || 0;
+    const activeProjects =
+      metrics.find((m) => m.id === 'active_projects')?.value || 0;
+    const successRate =
+      metrics.find((m) => m.id === 'avg_project_success')?.value || 0;
 
     return `Platform currently manages ${totalProjects.toLocaleString()} total projects with ${activeProjects.toLocaleString()} active projects. The platform maintains a ${successRate}% project success rate, demonstrating strong project management and execution capabilities.`;
   }
@@ -485,15 +557,37 @@ This report provides detailed insights into platform performance, environmental 
     return {
       headers: ['Project Metric', 'Value', 'Status'],
       rows: [
-        ['Total Projects', metrics.find(m => m.id === 'total_projects')?.value.toLocaleString() || '0', 'Active'],
-        ['Active Projects', metrics.find(m => m.id === 'active_projects')?.value.toLocaleString() || '0', 'In Progress'],
-        ['Success Rate', `${metrics.find(m => m.id === 'avg_project_success')?.value || 0}%`, 'Excellent'],
-        ['Verification Rate', `${metrics.find(m => m.id === 'verification_rate')?.value || 0}%`, 'High'],
+        [
+          'Total Projects',
+          metrics
+            .find((m) => m.id === 'total_projects')
+            ?.value.toLocaleString() || '0',
+          'Active',
+        ],
+        [
+          'Active Projects',
+          metrics
+            .find((m) => m.id === 'active_projects')
+            ?.value.toLocaleString() || '0',
+          'In Progress',
+        ],
+        [
+          'Success Rate',
+          `${metrics.find((m) => m.id === 'avg_project_success')?.value || 0}%`,
+          'Excellent',
+        ],
+        [
+          'Verification Rate',
+          `${metrics.find((m) => m.id === 'verification_rate')?.value || 0}%`,
+          'High',
+        ],
       ],
     };
   }
 
-  private static generatePlatformHealthIndicators(metrics: AnalyticsMetric[]): string[] {
+  private static generatePlatformHealthIndicators(
+    metrics: AnalyticsMetric[]
+  ): string[] {
     return [
       'Platform stability maintained at 99.9% uptime',
       'Project approval process averaging 3-5 business days',
@@ -503,32 +597,55 @@ This report provides detailed insights into platform performance, environmental 
     ];
   }
 
-  private static generateEnvironmentalOverview(metrics: AnalyticsMetric[]): string {
-    const co2Offset = metrics.find(m => m.id === 'co2_offset')?.value || 0;
-    const treesPlanted = metrics.find(m => m.id === 'trees_planted')?.value || 0;
+  private static generateEnvironmentalOverview(
+    metrics: AnalyticsMetric[]
+  ): string {
+    const co2Offset = metrics.find((m) => m.id === 'co2_offset')?.value || 0;
+    const treesPlanted =
+      metrics.find((m) => m.id === 'trees_planted')?.value || 0;
 
     return `Environmental impact achievements include ${co2Offset.toLocaleString()} tons of CO₂ offset and ${(treesPlanted / 1000000).toFixed(1)} million trees planted. These metrics demonstrate significant positive environmental impact through platform activities.`;
   }
 
   private static generateCarbonOffsetTable(metrics: AnalyticsMetric[]) {
-    const co2Metric = metrics.find(m => m.id === 'co2_offset');
+    const co2Metric = metrics.find((m) => m.id === 'co2_offset');
     return {
       headers: ['Carbon Metric', 'Achievement', 'Equivalent Impact'],
       rows: [
-        ['Total CO₂ Offset', `${co2Metric?.value.toLocaleString() || 0} tons`, 'Equivalent to removing 27,000 cars from roads'],
-        ['Monthly Average', `${((co2Metric?.value || 0) / 12).toFixed(0)} tons`, 'Consistent monthly progress'],
-        ['Per Project Average', `${((co2Metric?.value || 0) / 1000).toFixed(1)} tons`, 'High per-project impact'],
+        [
+          'Total CO₂ Offset',
+          `${co2Metric?.value.toLocaleString() || 0} tons`,
+          'Equivalent to removing 27,000 cars from roads',
+        ],
+        [
+          'Monthly Average',
+          `${((co2Metric?.value || 0) / 12).toFixed(0)} tons`,
+          'Consistent monthly progress',
+        ],
+        [
+          'Per Project Average',
+          `${((co2Metric?.value || 0) / 1000).toFixed(1)} tons`,
+          'High per-project impact',
+        ],
       ],
     };
   }
 
   private static generateReforestationTable(metrics: AnalyticsMetric[]) {
-    const treesMetric = metrics.find(m => m.id === 'trees_planted');
+    const treesMetric = metrics.find((m) => m.id === 'trees_planted');
     return {
       headers: ['Reforestation Metric', 'Achievement', 'Impact'],
       rows: [
-        ['Trees Planted', `${(treesMetric?.value || 0).toLocaleString()}`, 'Forest restoration'],
-        ['Forest Area', `${((treesMetric?.value || 0) * 0.001).toFixed(0)} hectares`, 'Habitat creation'],
+        [
+          'Trees Planted',
+          `${(treesMetric?.value || 0).toLocaleString()}`,
+          'Forest restoration',
+        ],
+        [
+          'Forest Area',
+          `${((treesMetric?.value || 0) * 0.001).toFixed(0)} hectares`,
+          'Habitat creation',
+        ],
         ['Survival Rate', '95%', 'Excellent maintenance'],
       ],
     };
@@ -545,7 +662,9 @@ This report provides detailed insights into platform performance, environmental 
     };
   }
 
-  private static generateEnvironmentalProjections(metrics: AnalyticsMetric[]): string[] {
+  private static generateEnvironmentalProjections(
+    metrics: AnalyticsMetric[]
+  ): string[] {
     return [
       'Projected to offset 150,000+ tons CO₂ by end of year',
       'On track to plant 3+ million trees by year-end',
@@ -556,33 +675,58 @@ This report provides detailed insights into platform performance, environmental 
   }
 
   private static generateFinancialSummary(metrics: AnalyticsMetric[]): string {
-    const revenue = metrics.find(m => m.id === 'total_revenue')?.value || 0;
-    const creditsTraded = metrics.find(m => m.id === 'credits_traded')?.value || 0;
+    const revenue = metrics.find((m) => m.id === 'total_revenue')?.value || 0;
+    const creditsTraded =
+      metrics.find((m) => m.id === 'credits_traded')?.value || 0;
 
     return `Financial performance shows strong growth with $${(revenue / 1000000).toFixed(1)}M total revenue and ${creditsTraded.toLocaleString()} carbon credits traded. The platform demonstrates sustainable financial growth while maintaining focus on environmental impact.`;
   }
 
   private static generateRevenueAnalysisTable(metrics: AnalyticsMetric[]) {
-    const revenueMetric = metrics.find(m => m.id === 'total_revenue');
+    const revenueMetric = metrics.find((m) => m.id === 'total_revenue');
     return {
       headers: ['Revenue Stream', 'Amount', 'Growth'],
       rows: [
-        ['Platform Fees', `$${((revenueMetric?.value || 0) * 0.3 / 1000000).toFixed(1)}M`, '+12%'],
-        ['Credit Trading', `$${((revenueMetric?.value || 0) * 0.5 / 1000000).toFixed(1)}M`, '+18%'],
-        ['Verification Services', `$${((revenueMetric?.value || 0) * 0.2 / 1000000).toFixed(1)}M`, '+15%'],
+        [
+          'Platform Fees',
+          `$${(((revenueMetric?.value || 0) * 0.3) / 1000000).toFixed(1)}M`,
+          '+12%',
+        ],
+        [
+          'Credit Trading',
+          `$${(((revenueMetric?.value || 0) * 0.5) / 1000000).toFixed(1)}M`,
+          '+18%',
+        ],
+        [
+          'Verification Services',
+          `$${(((revenueMetric?.value || 0) * 0.2) / 1000000).toFixed(1)}M`,
+          '+15%',
+        ],
       ],
     };
   }
 
   private static generateCarbonTradingTable(metrics: AnalyticsMetric[]) {
-    const creditsMetric = metrics.find(m => m.id === 'credits_traded');
-    const priceMetric = metrics.find(m => m.id === 'avg_credit_price');
+    const creditsMetric = metrics.find((m) => m.id === 'credits_traded');
+    const priceMetric = metrics.find((m) => m.id === 'avg_credit_price');
     return {
       headers: ['Trading Metric', 'Value', 'Trend'],
       rows: [
-        ['Credits Traded', `${creditsMetric?.value.toLocaleString() || 0}`, '↗️ Growing'],
-        ['Average Price', `$${priceMetric?.value.toFixed(2) || 0}`, '↗️ Increasing'],
-        ['Market Volume', `$${((creditsMetric?.value || 0) * (priceMetric?.value || 0) / 1000000).toFixed(1)}M`, '↗️ Expanding'],
+        [
+          'Credits Traded',
+          `${creditsMetric?.value.toLocaleString() || 0}`,
+          '↗️ Growing',
+        ],
+        [
+          'Average Price',
+          `$${priceMetric?.value.toFixed(2) || 0}`,
+          '↗️ Increasing',
+        ],
+        [
+          'Market Volume',
+          `$${(((creditsMetric?.value || 0) * (priceMetric?.value || 0)) / 1000000).toFixed(1)}M`,
+          '↗️ Expanding',
+        ],
       ],
     };
   }
@@ -598,7 +742,9 @@ This report provides detailed insights into platform performance, environmental 
     };
   }
 
-  private static generateFinancialOutlook(metrics: AnalyticsMetric[]): string[] {
+  private static generateFinancialOutlook(
+    metrics: AnalyticsMetric[]
+  ): string[] {
     return [
       'Revenue projected to reach $25M by end of fiscal year',
       'Credit trading volume expected to grow 25% quarterly',

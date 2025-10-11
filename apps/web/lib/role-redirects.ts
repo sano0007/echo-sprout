@@ -3,7 +3,11 @@
  * Maps user roles to their default dashboard routes
  */
 
-export type UserRole = 'admin' | 'project_creator' | 'verifier' | 'credit_buyer';
+export type UserRole =
+  | 'admin'
+  | 'project_creator'
+  | 'verifier'
+  | 'credit_buyer';
 
 export const ROLE_REDIRECTS: Record<UserRole, string> = {
   admin: '/admin/dashboard',

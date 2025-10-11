@@ -30,7 +30,10 @@ export async function getCurrentUserWithRole() {
 /**
  * Check if user has required role
  */
-export function hasRole(userRole: UserRole | undefined, requiredRole: UserRole): boolean {
+export function hasRole(
+  userRole: UserRole | undefined,
+  requiredRole: UserRole
+): boolean {
   if (!userRole) return false;
 
   // Admin has access to everything
@@ -42,7 +45,10 @@ export function hasRole(userRole: UserRole | undefined, requiredRole: UserRole):
 /**
  * Check if user has any of the required roles
  */
-export function hasAnyRole(userRole: UserRole | undefined, requiredRoles: UserRole[]): boolean {
+export function hasAnyRole(
+  userRole: UserRole | undefined,
+  requiredRoles: UserRole[]
+): boolean {
   if (!userRole) return false;
 
   // Admin has access to everything

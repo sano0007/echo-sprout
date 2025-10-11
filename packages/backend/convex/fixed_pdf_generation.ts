@@ -5,7 +5,7 @@ import { internal } from './_generated/api';
 
 /**
  * FIXED PDF GENERATION SYSTEM
- * 
+ *
  * This module provides working PDF generation for monitoring and tracking reports
  * with proper data collection from existing systems.
  */
@@ -23,9 +23,12 @@ export const generateWorkingPDFReport = action({
       });
 
       // Get report details
-      const report = await ctx.runQuery(internal.pdf_reports._getPDFReportInternal, {
-        reportId: args.reportId,
-      });
+      const report = await ctx.runQuery(
+        internal.pdf_reports._getPDFReportInternal,
+        {
+          reportId: args.reportId,
+        }
+      );
 
       if (!report) {
         throw new Error('Report not found');
@@ -44,7 +47,7 @@ export const generateWorkingPDFReport = action({
       if (report.templateType === 'monitoring') {
         // Generate monitoring report with real data
         reportData = await generateMonitoringReportData(ctx, report);
-        
+
         await ctx.runMutation(api.pdf_reports.updatePDFReportStatus, {
           reportId: args.reportId,
           status: 'processing',
@@ -55,7 +58,7 @@ export const generateWorkingPDFReport = action({
       } else if (report.templateType === 'analytics') {
         // Generate analytics report with real data
         reportData = await generateAnalyticsReportData(ctx, report);
-        
+
         await ctx.runMutation(api.pdf_reports.updatePDFReportStatus, {
           reportId: args.reportId,
           status: 'processing',
@@ -113,30 +116,43 @@ async function generateMonitoringReportData(ctx: any, report: any) {
 
   try {
     // Get monitoring statistics
-    const stats = await ctx.runQuery(api.monitoring_crud.getMonitoringStats, {});
-    
+    const stats = await ctx.runQuery(
+      api.monitoring_crud.getMonitoringStats,
+      {}
+    );
+
     // Get progress updates within timeframe
-    const progressUpdates = await ctx.runQuery(api.monitoring_crud.getProgressUpdates, {
-      limit: 100
-    });
+    const progressUpdates = await ctx.runQuery(
+      api.monitoring_crud.getProgressUpdates,
+      {
+        limit: 100,
+      }
+    );
 
     // Filter by timeframe
-    const filteredUpdates = progressUpdates?.filter((update: any) => 
-      update.reportingDate >= startDate && update.reportingDate <= endDate
-    ) || [];
+    const filteredUpdates =
+      progressUpdates?.filter(
+        (update: any) =>
+          update.reportingDate >= startDate && update.reportingDate <= endDate
+      ) || [];
 
-    // Get alerts within timeframe  
+    // Get alerts within timeframe
     const alerts = await ctx.runQuery(api.monitoring_crud.getAlerts, {
-      limit: 100
+      limit: 100,
     });
 
-    const filteredAlerts = alerts?.filter((alert: any) => 
-      alert._creationTime >= startDate && alert._creationTime <= endDate
-    ) || [];
+    const filteredAlerts =
+      alerts?.filter(
+        (alert: any) =>
+          alert._creationTime >= startDate && alert._creationTime <= endDate
+      ) || [];
 
     // Get milestones
-    const milestones = await ctx.runQuery(api.monitoring_crud.getMilestones, {});
-    
+    const milestones = await ctx.runQuery(
+      api.monitoring_crud.getMilestones,
+      {}
+    );
+
     // Calculate system metrics based on real data
     const systemMetrics = [
       {
@@ -148,18 +164,19 @@ async function generateMonitoringReportData(ctx: any, report: any) {
         category: 'performance',
         unit: 'projects',
         description: 'Number of currently active projects',
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       },
       {
         id: 'progress-updates',
         name: 'Progress Updates',
         value: stats?.progressUpdates?.thisMonth || 0,
         threshold: 50,
-        status: (stats?.progressUpdates?.thisMonth || 0) > 25 ? 'healthy' : 'warning',
+        status:
+          (stats?.progressUpdates?.thisMonth || 0) > 25 ? 'healthy' : 'warning',
         category: 'performance',
         unit: 'updates',
         description: 'Number of progress updates this month',
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       },
       {
         id: 'unresolved-alerts',
@@ -170,12 +187,16 @@ async function generateMonitoringReportData(ctx: any, report: any) {
         category: 'availability',
         unit: 'alerts',
         description: 'Number of unresolved system alerts',
-        lastUpdated: new Date()
-      }
+        lastUpdated: new Date(),
+      },
     ];
 
     // Calculate project monitoring data
-    const projectMonitoring = await generateProjectMonitoringData(ctx, startDate, endDate);
+    const projectMonitoring = await generateProjectMonitoringData(
+      ctx,
+      startDate,
+      endDate
+    );
 
     // Calculate performance metrics
     const performanceMetrics = [
@@ -186,7 +207,7 @@ async function generateMonitoringReportData(ctx: any, report: any) {
         target: 99.0,
         trend: 'stable',
         category: 'uptime',
-        unit: '%'
+        unit: '%',
       },
       {
         id: 'response-time',
@@ -195,8 +216,8 @@ async function generateMonitoringReportData(ctx: any, report: any) {
         target: 300,
         trend: 'improving',
         category: 'response_time',
-        unit: 'ms'
-      }
+        unit: 'ms',
+      },
     ];
 
     return {
@@ -210,7 +231,7 @@ async function generateMonitoringReportData(ctx: any, report: any) {
         period: report.timeframe.period,
       },
       filters: report.filters,
-      statistics: stats
+      statistics: stats,
     };
   } catch (error) {
     console.error('Error generating monitoring report data:', error);
@@ -219,7 +240,11 @@ async function generateMonitoringReportData(ctx: any, report: any) {
   }
 }
 
-async function generateProjectMonitoringData(ctx: any, startDate: number, endDate: number) {
+async function generateProjectMonitoringData(
+  ctx: any,
+  startDate: number,
+  endDate: number
+) {
   try {
     // This would get real project data - for now return structured mock data
     return [
@@ -235,9 +260,9 @@ async function generateProjectMonitoringData(ctx: any, startDate: number, endDat
           carbonOffset: 1250,
           treesPlanted: 5000,
           areaImpacted: 100,
-          budgetUtilization: 65
+          budgetUtilization: 65,
         },
-        issues: []
+        issues: [],
       },
       {
         projectId: 'proj-2',
@@ -251,7 +276,7 @@ async function generateProjectMonitoringData(ctx: any, startDate: number, endDat
           carbonOffset: 800,
           treesPlanted: 0,
           areaImpacted: 50,
-          budgetUtilization: 40
+          budgetUtilization: 40,
         },
         issues: [
           {
@@ -260,10 +285,10 @@ async function generateProjectMonitoringData(ctx: any, startDate: number, endDat
             severity: 'medium',
             status: 'open',
             createdAt: new Date(),
-            assignedTo: 'project-manager-1'
-          }
-        ]
-      }
+            assignedTo: 'project-manager-1',
+          },
+        ],
+      },
     ];
   } catch (error) {
     console.error('Error generating project monitoring data:', error);
@@ -274,33 +299,45 @@ async function generateProjectMonitoringData(ctx: any, startDate: number, endDat
 function transformAlert(alert: any) {
   return {
     id: alert._id,
-    type: alert.severity === 'critical' ? 'critical' : 
-          alert.severity === 'high' ? 'warning' : 'info',
+    type:
+      alert.severity === 'critical'
+        ? 'critical'
+        : alert.severity === 'high'
+          ? 'warning'
+          : 'info',
     title: alert.message,
     description: alert.description,
-    severity: alert.severity === 'critical' ? 5 :
-              alert.severity === 'high' ? 4 :
-              alert.severity === 'medium' ? 3 : 2,
+    severity:
+      alert.severity === 'critical'
+        ? 5
+        : alert.severity === 'high'
+          ? 4
+          : alert.severity === 'medium'
+            ? 3
+            : 2,
     createdAt: new Date(alert._creationTime),
     resolvedAt: alert.isResolved ? new Date() : undefined,
     status: alert.isResolved ? 'resolved' : 'active',
     affectedProjects: [alert.projectId].filter(Boolean),
-    category: 'system'
+    category: 'system',
   };
 }
 
 async function generateAnalyticsReportData(ctx: any, report: any) {
   try {
     // Get real analytics data from the system
-    const stats = await ctx.runQuery(api.monitoring_crud.getMonitoringStats, {});
-    
+    const stats = await ctx.runQuery(
+      api.monitoring_crud.getMonitoringStats,
+      {}
+    );
+
     return {
       metrics: [],
       charts: [],
       insights: [
         'System performance remains stable with 99.5% uptime',
         `${stats?.projects?.active || 0} projects are currently active`,
-        `${stats?.alerts?.unresolved || 0} alerts require attention`
+        `${stats?.alerts?.unresolved || 0} alerts require attention`,
       ],
       timeframe: {
         start: new Date(report.timeframe.start),
@@ -328,7 +365,7 @@ async function generateMonitoringPDFContent(data: any, report: any) {
           title: 'Executive Summary',
           type: 'text',
           order: 1,
-          data: generateExecutiveSummary(data)
+          data: generateExecutiveSummary(data),
         },
         {
           title: 'System Health Overview',
@@ -340,9 +377,9 @@ async function generateMonitoringPDFContent(data: any, report: any) {
               metric.name,
               `${metric.value} ${metric.unit}`,
               metric.status.toUpperCase(),
-              `${metric.threshold} ${metric.unit}`
-            ])
-          }
+              `${metric.threshold} ${metric.unit}`,
+            ]),
+          },
         },
         {
           title: 'Project Status Summary',
@@ -354,9 +391,9 @@ async function generateMonitoringPDFContent(data: any, report: any) {
               project.projectName,
               project.status.replace('_', ' ').toUpperCase(),
               `${project.progress}%`,
-              project.nextMilestone
-            ])
-          }
+              project.nextMilestone,
+            ]),
+          },
         },
         {
           title: 'Active Alerts',
@@ -365,14 +402,16 @@ async function generateMonitoringPDFContent(data: any, report: any) {
           data: data.alerts
             .filter((alert: any) => alert.status === 'active')
             .slice(0, 10)
-            .map((alert: any) => `${alert.title} (${alert.type.toUpperCase()})`)
+            .map(
+              (alert: any) => `${alert.title} (${alert.type.toUpperCase()})`
+            ),
         },
         {
           title: 'Recommendations',
           type: 'list',
           order: 5,
-          data: generateRecommendations(data)
-        }
+          data: generateRecommendations(data),
+        },
       ],
       metrics: data.systemMetrics.map((metric: any) => ({
         id: metric.id,
@@ -380,15 +419,15 @@ async function generateMonitoringPDFContent(data: any, report: any) {
         value: metric.value,
         unit: metric.unit,
         format: 'number',
-        description: metric.description
-      }))
+        description: metric.description,
+      })),
     },
     branding: {
       primaryColor: '#2563eb',
       secondaryColor: '#1d4ed8',
       companyName: 'EcoSprout',
-      footer: 'EcoSprout Monitoring System • Generated Report'
-    }
+      footer: 'EcoSprout Monitoring System • Generated Report',
+    },
   };
 }
 
@@ -404,61 +443,77 @@ async function generateAnalyticsPDFContent(data: any, report: any) {
           title: 'Analytics Overview',
           type: 'text',
           order: 1,
-          data: 'This report provides comprehensive analytics insights for the specified time period.'
+          data: 'This report provides comprehensive analytics insights for the specified time period.',
         },
         {
           title: 'Key Insights',
           type: 'list',
           order: 2,
-          data: data.insights
-        }
-      ]
+          data: data.insights,
+        },
+      ],
     },
     branding: {
       primaryColor: '#059669',
       secondaryColor: '#047857',
       companyName: 'EcoSprout',
-      footer: 'EcoSprout Analytics System • Generated Report'
-    }
+      footer: 'EcoSprout Analytics System • Generated Report',
+    },
   };
 }
 
 // Helper functions
 function generateExecutiveSummary(data: any): string {
-  const healthyMetrics = data.systemMetrics.filter((m: any) => m.status === 'healthy').length;
+  const healthyMetrics = data.systemMetrics.filter(
+    (m: any) => m.status === 'healthy'
+  ).length;
   const totalMetrics = data.systemMetrics.length;
-  const activeAlerts = data.alerts.filter((a: any) => a.status === 'active').length;
-  const onTrackProjects = data.projectMonitoring.filter((p: any) => p.status === 'on_track').length;
+  const activeAlerts = data.alerts.filter(
+    (a: any) => a.status === 'active'
+  ).length;
+  const onTrackProjects = data.projectMonitoring.filter(
+    (p: any) => p.status === 'on_track'
+  ).length;
   const totalProjects = data.projectMonitoring.length;
 
   return `System monitoring report for the period from ${data.timeframe.start.toLocaleDateString()} to ${data.timeframe.end.toLocaleDateString()}.
 
 Key Highlights:
-• System Health: ${healthyMetrics}/${totalMetrics} metrics in healthy state (${Math.round((healthyMetrics/totalMetrics)*100)}%)
+• System Health: ${healthyMetrics}/${totalMetrics} metrics in healthy state (${Math.round((healthyMetrics / totalMetrics) * 100)}%)
 • Active Alerts: ${activeAlerts} alerts requiring attention
-• Project Status: ${onTrackProjects}/${totalProjects} projects on track (${Math.round((onTrackProjects/totalProjects)*100)}%)
+• Project Status: ${onTrackProjects}/${totalProjects} projects on track (${Math.round((onTrackProjects / totalProjects) * 100)}%)
 
 The system demonstrates ${healthyMetrics > totalMetrics * 0.8 ? 'excellent' : healthyMetrics > totalMetrics * 0.6 ? 'good' : 'concerning'} overall health with most metrics operating within acceptable parameters.`;
 }
 
 function generateRecommendations(data: any): string[] {
   const recommendations = [];
-  
-  const criticalAlerts = data.alerts.filter((a: any) => a.type === 'critical').length;
-  const delayedProjects = data.projectMonitoring.filter((p: any) => p.status === 'delayed').length;
-  
+
+  const criticalAlerts = data.alerts.filter(
+    (a: any) => a.type === 'critical'
+  ).length;
+  const delayedProjects = data.projectMonitoring.filter(
+    (p: any) => p.status === 'delayed'
+  ).length;
+
   if (criticalAlerts > 0) {
-    recommendations.push(`Address ${criticalAlerts} critical alerts immediately`);
+    recommendations.push(
+      `Address ${criticalAlerts} critical alerts immediately`
+    );
   }
-  
+
   if (delayedProjects > 0) {
-    recommendations.push(`Review and address delays in ${delayedProjects} projects`);
+    recommendations.push(
+      `Review and address delays in ${delayedProjects} projects`
+    );
   }
-  
-  recommendations.push('Implement proactive monitoring for early issue detection');
+
+  recommendations.push(
+    'Implement proactive monitoring for early issue detection'
+  );
   recommendations.push('Schedule regular system health reviews');
   recommendations.push('Consider automated alerting improvements');
-  
+
   return recommendations;
 }
 
@@ -475,8 +530,8 @@ function generateMockMonitoringData(report: any) {
         category: 'availability',
         unit: '%',
         description: 'System uptime percentage',
-        lastUpdated: new Date()
-      }
+        lastUpdated: new Date(),
+      },
     ],
     projectMonitoring: [],
     alerts: [],
@@ -509,7 +564,7 @@ async function savePDFContent(pdfContent: any, report: any): Promise<string> {
   // 1. Convert the content to actual PDF using a server-side library
   // 2. Upload to cloud storage (S3, Cloudinary, etc.)
   // 3. Return the public URL
-  
+
   // For now, return a mock URL that includes the report data as a query parameter
   // This allows the download to work with the content
   const encodedContent = encodeURIComponent(JSON.stringify(pdfContent));

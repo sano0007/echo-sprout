@@ -46,25 +46,25 @@ export interface UseAnalyticsDashboardOptions {
   category?: 'all' | 'platform' | 'environmental' | 'financial' | 'user';
 }
 
-export function useAnalyticsDashboard(options: UseAnalyticsDashboardOptions = {}) {
+export function useAnalyticsDashboard(
+  options: UseAnalyticsDashboardOptions = {}
+) {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const { timeframe = '30d', category = 'all' } = options;
 
-  const data = useQuery(
-    api.analytics.getDashboardAnalytics,
-    {
-      timeframe,
-      category,
-    }
-  );
+  const data = useQuery(api.analytics.getDashboardAnalytics, {
+    timeframe,
+    category,
+  });
 
   const refresh = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   }, []);
 
   const isLoading = data === undefined;
-  const error = data === null ? new Error('Failed to load analytics data') : null;
+  const error =
+    data === null ? new Error('Failed to load analytics data') : null;
 
   return {
     data: data as DashboardAnalytics | undefined,
@@ -75,7 +75,9 @@ export function useAnalyticsDashboard(options: UseAnalyticsDashboardOptions = {}
 }
 
 // Hook for specific metrics
-export function useAnalyticsMetrics(options: UseAnalyticsDashboardOptions = {}) {
+export function useAnalyticsMetrics(
+  options: UseAnalyticsDashboardOptions = {}
+) {
   const { data, isLoading, error, refresh } = useAnalyticsDashboard(options);
 
   return {
@@ -99,12 +101,19 @@ export function useAnalyticsCharts(options: UseAnalyticsDashboardOptions = {}) {
 }
 
 // Hook for filtered analytics by category
-export function useAnalyticsByCategory(category: 'platform' | 'environmental' | 'financial' | 'user', timeframe: '7d' | '30d' | '90d' | '1y' = '30d') {
+export function useAnalyticsByCategory(
+  category: 'platform' | 'environmental' | 'financial' | 'user',
+  timeframe: '7d' | '30d' | '90d' | '1y' = '30d'
+) {
   return useAnalyticsDashboard({ category, timeframe });
 }
 
 // Utility function to format values based on metric format
-export function formatMetricValue(value: number, format: string, unit: string): string {
+export function formatMetricValue(
+  value: number,
+  format: string,
+  unit: string
+): string {
   switch (format) {
     case 'currency':
       return new Intl.NumberFormat('en-US', {

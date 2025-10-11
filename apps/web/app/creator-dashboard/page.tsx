@@ -69,14 +69,18 @@ export default function CreatorDashboard() {
     completedProjects:
       userProjects?.filter((p: any) => p.status === 'completed')?.length || 0,
     totalCreditsGenerated:
-      userProjects?.reduce((sum: number, p: any) => sum + (p.totalCarbonCredits || 0), 0) ||
-      0,
+      userProjects?.reduce(
+        (sum: number, p: any) => sum + (p.totalCarbonCredits || 0),
+        0
+      ) || 0,
     totalRevenue:
-      userProjects?.reduce((sum: number, p: any) => sum + (p.budget || 0), 0) || 0,
+      userProjects?.reduce((sum: number, p: any) => sum + (p.budget || 0), 0) ||
+      0,
     pendingReports:
       userProjects?.filter((p: any) => p.status === 'active')?.length || 0,
     upcomingMilestones:
-      (userProjects?.filter((p: any) => p.status === 'active')?.length || 0) * 2,
+      (userProjects?.filter((p: any) => p.status === 'active')?.length || 0) *
+      2,
   };
 
   // Use real projects data from backend
@@ -677,8 +681,8 @@ export default function CreatorDashboard() {
                       <div className="text-center py-4">
                         <div className="text-gray-600">Loading projects...</div>
                       </div>
-                    ) : projects.filter((p: any) => p.status === 'active').length ===
-                      0 ? (
+                    ) : projects.filter((p: any) => p.status === 'active')
+                        .length === 0 ? (
                       <div className="text-center py-4">
                         <div className="text-gray-600">
                           No active projects to submit updates for.

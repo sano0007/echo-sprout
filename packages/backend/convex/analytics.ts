@@ -252,7 +252,9 @@ async function calculateMetrics(data: {
   // Calculate current totals
   const totalProjects = allProjects.length;
   const totalUsers = allUsers.length;
-  const activeProjects = allProjects.filter((p) => p.status === 'active').length;
+  const activeProjects = allProjects.filter(
+    (p) => p.status === 'active'
+  ).length;
   const activeUsers = allUsers.filter((u) => u.isActive).length;
 
   // Calculate environmental metrics
@@ -260,13 +262,10 @@ async function calculateMetrics(data: {
     (sum, update) => sum + (update.carbonImpactToDate || 0),
     0
   );
-  const totalTreesPlanted = allProgressUpdates.reduce(
-    (sum, update) => {
-      const measurementData = update.measurementData || {};
-      return sum + (measurementData.treesPlanted || 0);
-    },
-    0
-  );
+  const totalTreesPlanted = allProgressUpdates.reduce((sum, update) => {
+    const measurementData = update.measurementData || {};
+    return sum + (measurementData.treesPlanted || 0);
+  }, 0);
 
   // Calculate financial metrics
   const totalRevenue = allTransactions.reduce(
@@ -289,7 +288,7 @@ async function calculateMetrics(data: {
   ).length;
   const projectSuccessRate =
     allProjects.length > 0 ? (completedProjects / allProjects.length) * 100 : 0;
-  
+
   const verifiedProjects = allProjects.filter(
     (p) => p.verificationStatus === 'verified'
   ).length;
@@ -299,7 +298,9 @@ async function calculateMetrics(data: {
   // Calculate previous period totals for comparison
   const prevTotalProjects = prevProjects.length;
   const prevTotalUsers = prevUsers.length;
-  const prevActiveProjects = prevProjects.filter((p) => p.status === 'active').length;
+  const prevActiveProjects = prevProjects.filter(
+    (p) => p.status === 'active'
+  ).length;
   const prevActiveUsers = prevUsers.filter((u) => u.isActive).length;
   const prevTotalRevenue = prevTransactions.reduce(
     (sum, t) => sum + (t.platformFee || 0),
@@ -315,12 +316,19 @@ async function calculateMetrics(data: {
   );
 
   // Helper function to calculate percentage change
-  const calculateChange = (current: number, previous: number): { change: number; changeType: 'increase' | 'decrease' | 'stable' } => {
+  const calculateChange = (
+    current: number,
+    previous: number
+  ): { change: number; changeType: 'increase' | 'decrease' | 'stable' } => {
     if (previous === 0) {
-      return { change: current > 0 ? 100 : 0, changeType: current > 0 ? 'increase' : 'stable' };
+      return {
+        change: current > 0 ? 100 : 0,
+        changeType: current > 0 ? 'increase' : 'stable',
+      };
     }
     const change = ((current - previous) / previous) * 100;
-    const changeType = change > 1 ? 'increase' : change < -1 ? 'decrease' : 'stable';
+    const changeType =
+      change > 1 ? 'increase' : change < -1 ? 'decrease' : 'stable';
     return { change: Math.abs(change), changeType };
   };
 
@@ -340,8 +348,16 @@ async function calculateMetrics(data: {
       id: 'active_projects',
       name: 'Active Projects',
       value: activeProjects,
-      previousValue: activeProjects - (projects.filter(p => p.status === 'active').length - prevActiveProjects),
-      ...calculateChange(activeProjects, activeProjects - (projects.filter(p => p.status === 'active').length - prevActiveProjects)),
+      previousValue:
+        activeProjects -
+        (projects.filter((p) => p.status === 'active').length -
+          prevActiveProjects),
+      ...calculateChange(
+        activeProjects,
+        activeProjects -
+          (projects.filter((p) => p.status === 'active').length -
+            prevActiveProjects)
+      ),
       unit: 'projects',
       format: 'number',
       category: 'platform',
@@ -362,8 +378,13 @@ async function calculateMetrics(data: {
       id: 'active_users',
       name: 'Active Users',
       value: activeUsers,
-      previousValue: activeUsers - (users.filter(u => u.isActive).length - prevActiveUsers),
-      ...calculateChange(activeUsers, activeUsers - (users.filter(u => u.isActive).length - prevActiveUsers)),
+      previousValue:
+        activeUsers -
+        (users.filter((u) => u.isActive).length - prevActiveUsers),
+      ...calculateChange(
+        activeUsers,
+        activeUsers - (users.filter((u) => u.isActive).length - prevActiveUsers)
+      ),
       unit: 'users',
       format: 'number',
       category: 'user',
@@ -373,9 +394,17 @@ async function calculateMetrics(data: {
       id: 'co2_offset',
       name: 'CO₂ Offset',
       value: totalCO2Offset,
-      previousValue: totalCO2Offset - progressUpdates.reduce((sum, update) => sum + (update.carbonImpactToDate || 0), 0),
+      previousValue:
+        totalCO2Offset -
+        progressUpdates.reduce(
+          (sum, update) => sum + (update.carbonImpactToDate || 0),
+          0
+        ),
       ...calculateChange(
-        progressUpdates.reduce((sum, update) => sum + (update.carbonImpactToDate || 0), 0),
+        progressUpdates.reduce(
+          (sum, update) => sum + (update.carbonImpactToDate || 0),
+          0
+        ),
         prevTotalCO2Offset
       ),
       unit: 'tons',
@@ -387,28 +416,21 @@ async function calculateMetrics(data: {
       id: 'trees_planted',
       name: 'Trees Planted',
       value: totalTreesPlanted,
-      previousValue: totalTreesPlanted - progressUpdates.reduce(
-        (sum, update) => {
+      previousValue:
+        totalTreesPlanted -
+        progressUpdates.reduce((sum, update) => {
           const measurementData = update.measurementData || {};
           return sum + (measurementData.treesPlanted || 0);
-        },
-        0
-      ),
+        }, 0),
       ...calculateChange(
-        progressUpdates.reduce(
-          (sum, update) => {
-            const measurementData = update.measurementData || {};
-            return sum + (measurementData.treesPlanted || 0);
-          },
-          0
-        ),
-        prevProgressUpdates.reduce(
-          (sum, update) => {
-            const measurementData = update.measurementData || {};
-            return sum + (measurementData.treesPlanted || 0);
-          },
-          0
-        )
+        progressUpdates.reduce((sum, update) => {
+          const measurementData = update.measurementData || {};
+          return sum + (measurementData.treesPlanted || 0);
+        }, 0),
+        prevProgressUpdates.reduce((sum, update) => {
+          const measurementData = update.measurementData || {};
+          return sum + (measurementData.treesPlanted || 0);
+        }, 0)
       ),
       unit: 'trees',
       format: 'number',
@@ -419,7 +441,9 @@ async function calculateMetrics(data: {
       id: 'total_revenue',
       name: 'Total Revenue',
       value: totalRevenue,
-      previousValue: totalRevenue - transactions.reduce((sum, t) => sum + (t.platformFee || 0), 0),
+      previousValue:
+        totalRevenue -
+        transactions.reduce((sum, t) => sum + (t.platformFee || 0), 0),
       ...calculateChange(
         transactions.reduce((sum, t) => sum + (t.platformFee || 0), 0),
         prevTotalRevenue
@@ -433,7 +457,9 @@ async function calculateMetrics(data: {
       id: 'credits_traded',
       name: 'Credits Traded',
       value: creditsTraded,
-      previousValue: creditsTraded - transactions.reduce((sum, t) => sum + (t.creditAmount || 0), 0),
+      previousValue:
+        creditsTraded -
+        transactions.reduce((sum, t) => sum + (t.creditAmount || 0), 0),
       ...calculateChange(
         transactions.reduce((sum, t) => sum + (t.creditAmount || 0), 0),
         prevCreditsTraded
@@ -448,7 +474,10 @@ async function calculateMetrics(data: {
       name: 'Project Success Rate',
       value: projectSuccessRate,
       previousValue: Math.max(0, projectSuccessRate - 5),
-      ...calculateChange(projectSuccessRate, Math.max(0, projectSuccessRate - 5)),
+      ...calculateChange(
+        projectSuccessRate,
+        Math.max(0, projectSuccessRate - 5)
+      ),
       unit: '%',
       format: 'percentage',
       category: 'platform',
@@ -495,8 +524,22 @@ async function generateCharts(data: {
   const groupByTimePeriod = (items: any[], timeField: string) => {
     const now = Date.now();
     const periods = [];
-    const periodLength = timeframe === '7d' ? 1 : timeframe === '30d' ? 7 : timeframe === '90d' ? 7 : 30; // days
-    const totalPeriods = timeframe === '7d' ? 7 : timeframe === '30d' ? 5 : timeframe === '90d' ? 13 : 12;
+    const periodLength =
+      timeframe === '7d'
+        ? 1
+        : timeframe === '30d'
+          ? 7
+          : timeframe === '90d'
+            ? 7
+            : 30; // days
+    const totalPeriods =
+      timeframe === '7d'
+        ? 7
+        : timeframe === '30d'
+          ? 5
+          : timeframe === '90d'
+            ? 13
+            : 12;
 
     for (let i = totalPeriods - 1; i >= 0; i--) {
       const periodStart = now - (i + 1) * periodLength * 24 * 60 * 60 * 1000;
@@ -601,5 +644,8 @@ function formatProjectType(type: string): string {
     waste_management: 'Waste Management',
     mangrove_restoration: 'Mangrove Restoration',
   };
-  return typeMap[type] || type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  return (
+    typeMap[type] ||
+    type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+  );
 }

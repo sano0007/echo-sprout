@@ -363,10 +363,13 @@ const TransactionTable = ({
   isDownloading: boolean;
   isViewing: boolean;
 }) => {
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [refundingTransaction, setRefundingTransaction] = useState<Transaction | null>(null);
-  const [deletingTransaction, setDeletingTransaction] = useState<Transaction | null>(null);
-  const [certificateUrl, setCertificateUrl] = useState("");
+  const [editingTransaction, setEditingTransaction] =
+    useState<Transaction | null>(null);
+  const [refundingTransaction, setRefundingTransaction] =
+    useState<Transaction | null>(null);
+  const [deletingTransaction, setDeletingTransaction] =
+    useState<Transaction | null>(null);
+  const [certificateUrl, setCertificateUrl] = useState('');
 
   const handleAddCertificate = () => {
     if (editingTransaction && certificateUrl.trim()) {
@@ -602,13 +605,17 @@ const TransactionTable = ({
         />
       )}
 
-      <Dialog open={!!deletingTransaction} onOpenChange={() => setDeletingTransaction(null)}>
+      <Dialog
+        open={!!deletingTransaction}
+        onOpenChange={() => setDeletingTransaction(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Transaction</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete transaction {deletingTransaction?.transactionReference}?
-              This action cannot be undone.
+              Are you sure you want to delete transaction{' '}
+              {deletingTransaction?.transactionReference}? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -621,9 +628,18 @@ const TransactionTable = ({
                   </h3>
                   <div className="mt-2 text-sm text-red-700">
                     <ul className="list-disc pl-5 space-y-1">
-                      <li>Transaction reference: {deletingTransaction?.transactionReference}</li>
-                      <li>Amount: ${deletingTransaction?.totalAmount.toLocaleString()}</li>
-                      <li>Credits: {deletingTransaction?.creditAmount.toLocaleString()}</li>
+                      <li>
+                        Transaction reference:{' '}
+                        {deletingTransaction?.transactionReference}
+                      </li>
+                      <li>
+                        Amount: $
+                        {deletingTransaction?.totalAmount.toLocaleString()}
+                      </li>
+                      <li>
+                        Credits:{' '}
+                        {deletingTransaction?.creditAmount.toLocaleString()}
+                      </li>
                       <li>Status: {deletingTransaction?.paymentStatus}</li>
                     </ul>
                   </div>
@@ -632,7 +648,10 @@ const TransactionTable = ({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeletingTransaction(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeletingTransaction(null)}
+            >
               Cancel
             </Button>
             <Button
@@ -712,11 +731,11 @@ export default function TransactionsPage() {
   const handleDeleteTransaction = async (transactionId: string) => {
     try {
       await deleteTransaction({
-        transactionId: transactionId as any
+        transactionId: transactionId as any,
       });
       handleRefreshTransactions();
     } catch (error) {
-      console.error("Failed to delete transaction:", error);
+      console.error('Failed to delete transaction:', error);
       alert('Failed to delete transaction. Please try again.');
     }
   };
@@ -762,7 +781,9 @@ export default function TransactionsPage() {
 
   const getFilteredTransactions = (status: string) => {
     if (status === 'all') return allTransactions;
-    return allTransactions.filter((t: Transaction) => t.paymentStatus === status);
+    return allTransactions.filter(
+      (t: Transaction) => t.paymentStatus === status
+    );
   };
 
   return (
