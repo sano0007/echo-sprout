@@ -4,9 +4,9 @@ import { MarketplaceProject } from '@echo-sprout/types';
 import { api } from '@packages/backend';
 import { useQuery } from 'convex/react';
 import _ from 'lodash';
-import Image from 'next/image';
 import { useCallback, useMemo, useState } from 'react';
 import ReactPaginate from 'react-paginate';
+import { Country } from 'country-state-city';
 import { MarketplaceProjectCard } from '@/components/marketplace/ProjectCard';
 
 export default function Marketplace() {
@@ -19,6 +19,9 @@ export default function Marketplace() {
     page: 1,
     limit: 6,
   });
+
+  // Location selection state
+  const [selectedCountry, setSelectedCountry] = useState('');
 
   // Use Convex query directly
   const marketplaceData = useQuery(api.marketplace.getMarketplaceProjects, {
@@ -57,6 +60,7 @@ export default function Marketplace() {
       page: 1,
       limit: 6,
     });
+    setSelectedCountry('');
   };
   const [query, setQuery] = useState<string>('');
   const [showCreditModal, setShowCreditModal] = useState<boolean>(false);
@@ -192,7 +196,7 @@ export default function Marketplace() {
           )}
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-4 mb-4">
           <select
             value={filters.priceRange}
             onChange={(e) => setFilters({ priceRange: e.target.value })}
@@ -205,16 +209,22 @@ export default function Marketplace() {
           </select>
 
           <select
-            value={filters.location}
-            onChange={(e) => setFilters({ location: e.target.value })}
-            className="p-3 border rounded bg-white"
+            value={selectedCountry}
+            onChange={(e) => {
+              const countryCode = e.target.value;
+              setSelectedCountry(countryCode);
+
+              const country = Country.getCountryByCode(countryCode);
+              setFilters({ location: country?.name || '' });
+            }}
+            className="w-full p-3 border rounded bg-white"
           >
-            <option value="">All Locations</option>
-            <option value="brazil">Brazil</option>
-            <option value="india">India</option>
-            <option value="denmark">Denmark</option>
-            <option value="germany">Germany</option>
-            <option value="srilanka">Sri Lanka</option>
+            <option value="">All Countries</option>
+            {Country.getAllCountries().map((country) => (
+              <option key={country.isoCode} value={country.isoCode}>
+                {country.name}
+              </option>
+            ))}
           </select>
 
           <select
@@ -227,6 +237,8 @@ export default function Marketplace() {
             <option value="solar">Solar Energy</option>
             <option value="wind">Wind Energy</option>
             <option value="biogas">Biogas</option>
+            <option value="waste">Waste Management</option>
+            <option value="mangrove">Mangrove Restoration</option>
           </select>
 
           <select

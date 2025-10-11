@@ -57,12 +57,6 @@ export default function NotFound() {
               Verification Dashboard
             </Link>
             <Link
-              href="/profile"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              Profile
-            </Link>
-            <Link
               href="/community/forum"
               className="text-blue-600 hover:text-blue-800 hover:underline"
             >
