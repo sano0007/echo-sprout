@@ -77,6 +77,8 @@ export default function CreatorDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
+  const [showPDFModal, setShowPDFModal] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Fetch real data from backend
   const currentUser = useQuery(api.users.getCurrentUser, {});
@@ -107,6 +109,10 @@ export default function CreatorDashboard() {
     api.progress_updates.submitProgressUpdate
   );
   const deleteProject = useMutation(api.projects.deleteProject);
+  const createPDFReport = useMutation(api.pdf_reports.createPDFReportRequest);
+  const pdfReports = useQuery(api.pdf_reports.getPDFReports, {
+    limit: 10,
+  });
 
   // Calculate dynamic stats from real data
   const creatorStats = useMemo(() => {
@@ -396,6 +402,44 @@ export default function CreatorDashboard() {
     } catch (error) {
       console.error('Error deleting project:', error);
       toast.error('Failed to delete project');
+    }
+  };
+
+  // Generate PDF Report handler
+  const handleGeneratePDFReport = async () => {
+    if (!currentUser) {
+      toast.error('Please sign in to generate reports');
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    try {
+      const now = Date.now();
+      const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+
+      await createPDFReport({
+        templateType: 'analytics',
+        reportType: 'creator_dashboard',
+        title: 'Creator Dashboard Analytics Report',
+        timeframe: {
+          start: thirtyDaysAgo,
+          end: now,
+          period: 'last_30_days',
+        },
+        filters: {
+          userId: currentUser._id,
+          includeCharts: true,
+          includeProjects: true,
+        },
+      });
+
+      toast.success('PDF report generation started! You will be notified when it\'s ready.');
+      setShowPDFModal(false);
+    } catch (error: any) {
+      console.error('Error generating PDF:', error);
+      toast.error(error.message || 'Failed to generate PDF report');
+    } finally {
+      setIsGeneratingPDF(false);
     }
   };
 
@@ -1621,6 +1665,76 @@ export default function CreatorDashboard() {
         </TabsContent>
 
         <TabsContent value="analytics">
+          {/* PDF Report Generation Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Export Analytics Report</CardTitle>
+                  <CardDescription>
+                    Generate a comprehensive PDF report of your dashboard analytics
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={() => setShowPDFModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={isGeneratingPDF}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {isGeneratingPDF ? 'Generating...' : 'Generate PDF Report'}
+                </Button>
+              </div>
+            </CardHeader>
+            {pdfReports && pdfReports.length > 0 && (
+              <CardContent>
+                <h3 className="text-sm font-semibold mb-3">Recent Reports</h3>
+                <div className="space-y-2">
+                  {pdfReports.slice(0, 3).map((report: any) => (
+                    <div
+                      key={report._id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <p className="font-medium text-sm">{report.title}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(report.requestedAt).toLocaleDateString()} •{' '}
+                            <span
+                              className={
+                                report.status === 'completed'
+                                  ? 'text-green-600'
+                                  : report.status === 'failed'
+                                  ? 'text-red-600'
+                                  : 'text-yellow-600'
+                              }
+                            >
+                              {report.status}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      {report.status === 'completed' && report.fileUrl && (
+                        <a
+                          href={report.fileUrl}
+                          download
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        >
+                          Download
+                        </a>
+                      )}
+                      {report.status === 'processing' && (
+                        <span className="text-sm text-gray-500">
+                          {report.progress}%
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -1764,6 +1878,69 @@ export default function CreatorDashboard() {
               onCancel={() => setShowProgressModal(false)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* PDF Report Generation Modal */}
+      <Dialog open={showPDFModal} onOpenChange={setShowPDFModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Generate PDF Report</DialogTitle>
+            <DialogDescription>
+              Export your dashboard analytics as a comprehensive PDF report
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Report Contents</h4>
+              <ul className="text-sm text-gray-600 space-y-1 ml-4">
+                <li>• Revenue Analytics (Last 30 days)</li>
+                <li>• Carbon Credits Generated</li>
+                <li>• Project Performance Metrics</li>
+                <li>• Environmental Impact Summary</li>
+                <li>• Project Status Overview</li>
+              </ul>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex gap-2">
+                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium">Processing Time</p>
+                  <p>
+                    Report generation typically takes 1-2 minutes. You'll be notified when it's ready for download.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowPDFModal(false)}
+                disabled={isGeneratingPDF}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleGeneratePDFReport}
+                disabled={isGeneratingPDF}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <Clock className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Generate Report
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
