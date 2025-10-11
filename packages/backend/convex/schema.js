@@ -995,6 +995,11 @@ exports.default = (0, server_1.defineSchema)({
         verifiedBy: values_1.v.optional(values_1.v.id('users')),
         verifiedAt: values_1.v.optional(values_1.v.float64()),
         verificationNotes: values_1.v.optional(values_1.v.string()),
+        // Verifier assignment fields
+        assignedVerifierId: values_1.v.optional(values_1.v.id('users')),
+        reviewedAt: values_1.v.optional(values_1.v.float64()),
+        reviewNotes: values_1.v.optional(values_1.v.string()),
+        rejectionReason: values_1.v.optional(values_1.v.string()),
         // Legacy fields for backward compatibility
         carbonImpactToDate: values_1.v.optional(values_1.v.float64()),
         treesPlanted: values_1.v.optional(values_1.v.float64()),
@@ -1004,8 +1009,31 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_project', ['projectId'])
         .index('by_submitter', ['submittedBy'])
         .index('by_reporter', ['reportedBy']) // Legacy index
+        .index('by_verifier', ['assignedVerifierId'])
         .index('by_status', ['status'])
         .index('by_project_status', ['projectId', 'status'])
         .index('by_submitted_at', ['submittedAt'])
         .index('by_reporting_date', ['reportingDate']),
+    // ============= PROGRESS REPORT REQUESTS =============
+    progressReportRequests: (0, server_1.defineTable)({
+        projectId: values_1.v.id('projects'),
+        requestedBy: values_1.v.id('users'), // verifier or system user ID
+        creatorId: values_1.v.id('users'),
+        requestType: values_1.v.union(values_1.v.literal('manual'), // verifier requested
+        values_1.v.literal('scheduled_monthly'), values_1.v.literal('milestone_based')),
+        status: values_1.v.union(values_1.v.literal('pending'), // waiting for creator to submit
+        values_1.v.literal('submitted'), // creator submitted, links to progressUpdate
+        values_1.v.literal('overdue'), // past due date
+        values_1.v.literal('cancelled')),
+        dueDate: values_1.v.float64(),
+        requestNotes: values_1.v.optional(values_1.v.string()),
+        submittedUpdateId: values_1.v.optional(values_1.v.id('progressUpdates')),
+        createdAt: values_1.v.float64(),
+    })
+        .index('by_creator', ['creatorId'])
+        .index('by_project', ['projectId'])
+        .index('by_status', ['status'])
+        .index('by_creator_status', ['creatorId', 'status'])
+        .index('by_project_status', ['projectId', 'status'])
+        .index('by_due_date', ['dueDate']),
 });
