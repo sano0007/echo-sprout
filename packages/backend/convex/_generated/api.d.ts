@@ -51,6 +51,7 @@ import type * as project_validators from "../project_validators.js";
 import type * as projects from "../projects.js";
 import type * as report_template_engine from "../report_template_engine.js";
 import type * as run_seed from "../run_seed.js";
+import type * as storage_upload from "../storage_upload.js";
 import type * as third_party_validation from "../third_party_validation.js";
 import type * as transactions from "../transactions.js";
 import type * as trend_analysis from "../trend_analysis.js";
@@ -108,6 +109,7 @@ declare const fullApi: ApiFromModules<{
   projects: typeof projects;
   report_template_engine: typeof report_template_engine;
   run_seed: typeof run_seed;
+  storage_upload: typeof storage_upload;
   third_party_validation: typeof third_party_validation;
   transactions: typeof transactions;
   trend_analysis: typeof trend_analysis;
