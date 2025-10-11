@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 export default function VerificationDashboard() {
-  const [activeTab, setActiveTab] = useState<'pendingAcceptance' | 'accepted' | 'inProgress' | 'completed' | 'upgradeRequests'>('pendingAcceptance');
+  const [activeTab, setActiveTab] = useState<'pendingAcceptance' | 'accepted' | 'inProgress' | 'completed' | 'upgradeRequests' | 'progressReviews'>('pendingAcceptance');
 
   const permissions = useQuery(api.permissions.getCurrentUserPermissions);
 
@@ -33,8 +33,16 @@ export default function VerificationDashboard() {
     paginationOpts: { numItems: 50, cursor: null },
   });
 
+  const progressUpdates = useQuery(api.progress_updates.getMyAssignedProgressUpdates, {
+    paginationOpts: { numItems: 50, cursor: null },
+  });
+
   const approveRequest = useMutation(api.users.approveRoleUpgradeRequest);
   const rejectRequest = useMutation(api.users.rejectRoleUpgradeRequest);
+
+  const approveProgress = useMutation(api.progress_updates.approveProgressUpdate);
+  const rejectProgress = useMutation(api.progress_updates.rejectProgressUpdate);
+  const requestRevision = useMutation(api.progress_updates.requestProgressRevision);
 
   if (!permissions || !verifierStats || !acceptanceStats || !myVerifications) {
     return (
@@ -199,6 +207,12 @@ export default function VerificationDashboard() {
             >
               Role Upgrades ({upgradeRequests?.page?.length || 0})
             </button>
+            <button
+              onClick={() => setActiveTab('progressReviews')}
+              className={`px-6 py-4 text-sm font-medium ${activeTab === 'progressReviews' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+            >
+              Progress Reviews ({progressUpdates?.page?.length || 0})
+            </button>
           </nav>
         </div>
 
@@ -294,6 +308,49 @@ export default function VerificationDashboard() {
                     request={request}
                     onApprove={handleApproveRequest}
                     onReject={handleRejectRequest}
+                  />
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Progress Reviews */}
+          {activeTab === 'progressReviews' && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Progress Update Reviews</h2>
+              {!progressUpdates?.page || progressUpdates.page.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <p>No progress updates assigned for review.</p>
+                </div>
+              ) : (
+                progressUpdates.page.map((update: any) => (
+                  <ProgressReviewCard
+                    key={update._id}
+                    update={update}
+                    onApprove={async (updateId, reviewNotes) => {
+                      try {
+                        await approveProgress({ updateId, reviewNotes });
+                        toast.success('Progress update approved successfully!');
+                      } catch (error: any) {
+                        toast.error(error.message || 'Failed to approve progress update');
+                      }
+                    }}
+                    onReject={async (updateId, rejectionReason) => {
+                      try {
+                        await rejectProgress({ updateId, rejectionReason });
+                        toast.success('Progress update rejected');
+                      } catch (error: any) {
+                        toast.error(error.message || 'Failed to reject progress update');
+                      }
+                    }}
+                    onRequestRevision={async (updateId, revisionNotes) => {
+                      try {
+                        await requestRevision({ updateId, revisionNotes });
+                        toast.success('Revision requested successfully');
+                      } catch (error: any) {
+                        toast.error(error.message || 'Failed to request revision');
+                      }
+                    }}
                   />
                 ))
               )}
@@ -717,6 +774,325 @@ function UpgradeRequestCard({
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProgressReviewCard({
+  update,
+  onApprove,
+  onReject,
+  onRequestRevision,
+}: {
+  update: any;
+  onApprove: (updateId: any, reviewNotes?: string) => Promise<void>;
+  onReject: (updateId: any, rejectionReason: string) => Promise<void>;
+  onRequestRevision: (updateId: any, revisionNotes: string) => Promise<void>;
+}) {
+  const [showDetails, setShowDetails] = useState(false);
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showRevisionModal, setShowRevisionModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [revisionNotes, setRevisionNotes] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
+
+  const handleApprove = async () => {
+    setIsProcessing(true);
+    try {
+      await onApprove(update._id, reviewNotes || undefined);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) return;
+    setIsProcessing(true);
+    try {
+      await onReject(update._id, rejectionReason);
+      setShowRejectModal(false);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRequestRevision = async () => {
+    if (!revisionNotes.trim()) return;
+    setIsProcessing(true);
+    try {
+      await onRequestRevision(update._id, revisionNotes);
+      setShowRevisionModal(false);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const getUpdateTypeColor = (type: string) => {
+    switch (type) {
+      case 'milestone':
+        return 'bg-blue-100 text-blue-800';
+      case 'measurement':
+        return 'bg-green-100 text-green-800';
+      case 'photo':
+        return 'bg-purple-100 text-purple-800';
+      case 'issue':
+        return 'bg-red-100 text-red-800';
+      case 'completion':
+        return 'bg-teal-100 text-teal-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900">{update.title}</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Project: <span className="font-medium">{update.project?.title}</span>
+          </p>
+          <p className="text-sm text-gray-600">
+            Creator: {update.creator?.firstName} {update.creator?.lastName}
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Submitted {new Date(update.reportingDate).toLocaleDateString()} at{' '}
+            {new Date(update.reportingDate).toLocaleTimeString()}
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 items-end">
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getUpdateTypeColor(update.updateType)}`}>
+            {update.updateType}
+          </span>
+          <span className="text-sm font-semibold text-blue-600">
+            {update.progressPercentage}% Complete
+          </span>
+        </div>
+      </div>
+
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+      >
+        {showDetails ? 'Hide' : 'Show'} Details →
+      </button>
+
+      {showDetails && (
+        <div className="mt-4 space-y-4 border-t pt-4">
+          <div>
+            <p className="font-medium text-gray-900 mb-1">Description:</p>
+            <p className="text-gray-700 bg-gray-50 p-3 rounded">{update.description}</p>
+          </div>
+
+          {/* Photos */}
+          {update.photoUrls && update.photoUrls.length > 0 && (
+            <div>
+              <p className="font-medium text-gray-900 mb-2">Photos:</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {update.photoUrls.map((url: string, index: number) => (
+                  <div
+                    key={index}
+                    className="relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setExpandedPhoto(url)}
+                  >
+                    <img src={url} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Location */}
+          {update.location && (
+            <div>
+              <p className="font-medium text-gray-900 mb-1">Location:</p>
+              <p className="text-gray-700 bg-gray-50 p-3 rounded">
+                {update.location.name} ({update.location.lat.toFixed(4)}, {update.location.long.toFixed(4)})
+              </p>
+            </div>
+          )}
+
+          {/* Measurement Data */}
+          {update.measurementData && (
+            <div>
+              <p className="font-medium text-gray-900 mb-2">Measurements:</p>
+              <div className="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded">
+                {update.measurementData.treesPlanted && (
+                  <div>
+                    <p className="text-sm text-gray-600">Trees Planted</p>
+                    <p className="font-semibold text-gray-900">{update.measurementData.treesPlanted}</p>
+                  </div>
+                )}
+                {update.measurementData.energyGenerated && (
+                  <div>
+                    <p className="text-sm text-gray-600">Energy Generated (kWh)</p>
+                    <p className="font-semibold text-gray-900">{update.measurementData.energyGenerated}</p>
+                  </div>
+                )}
+                {update.measurementData.wasteProcessed && (
+                  <div>
+                    <p className="text-sm text-gray-600">Waste Processed (kg)</p>
+                    <p className="font-semibold text-gray-900">{update.measurementData.wasteProcessed}</p>
+                  </div>
+                )}
+                {update.measurementData.carbonImpactToDate && (
+                  <div>
+                    <p className="text-sm text-gray-600">Carbon Impact (tons CO₂)</p>
+                    <p className="font-semibold text-gray-900">{update.measurementData.carbonImpactToDate}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Challenges */}
+          {update.challenges && (
+            <div>
+              <p className="font-medium text-gray-900 mb-1">Challenges:</p>
+              <p className="text-gray-700 bg-gray-50 p-3 rounded">{update.challenges}</p>
+            </div>
+          )}
+
+          {/* Next Steps */}
+          {update.nextSteps && (
+            <div>
+              <p className="font-medium text-gray-900 mb-1">Next Steps:</p>
+              <p className="text-gray-700 bg-gray-50 p-3 rounded">{update.nextSteps}</p>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Review Notes (Optional)
+            </label>
+            <textarea
+              value={reviewNotes}
+              onChange={(e) => setReviewNotes(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={3}
+              placeholder="Add any notes about your review..."
+            />
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={handleApprove}
+              disabled={isProcessing}
+              className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+              {isProcessing ? 'Processing...' : 'Approve Update'}
+            </button>
+            <button
+              onClick={() => setShowRevisionModal(true)}
+              disabled={isProcessing}
+              className="flex-1 bg-orange-600 text-white py-3 px-4 rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+              Request Revision
+            </button>
+            <button
+              onClick={() => setShowRejectModal(true)}
+              disabled={isProcessing}
+              className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+              Reject Update
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Reject Progress Update</h3>
+            <p className="text-gray-600 mb-4">
+              Please provide a reason for rejecting this progress update. The creator will receive your explanation.
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
+              rows={4}
+              placeholder="Explain why this update is being rejected..."
+              required
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason('');
+                }}
+                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={isProcessing || !rejectionReason.trim()}
+                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isProcessing ? 'Rejecting...' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Revision Modal */}
+      {showRevisionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Request Revision</h3>
+            <p className="text-gray-600 mb-4">
+              Please specify what needs to be revised. The creator will receive your notes.
+            </p>
+            <textarea
+              value={revisionNotes}
+              onChange={(e) => setRevisionNotes(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4"
+              rows={4}
+              placeholder="Explain what needs to be revised..."
+              required
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRevisionModal(false);
+                  setRevisionNotes('');
+                }}
+                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRequestRevision}
+                disabled={isProcessing || !revisionNotes.trim()}
+                className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isProcessing ? 'Requesting...' : 'Request Revision'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Lightbox */}
+      {expandedPhoto && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+          onClick={() => setExpandedPhoto(null)}
+        >
+          <img src={expandedPhoto} alt="Expanded view" className="max-w-full max-h-full object-contain" />
+          <button
+            onClick={() => setExpandedPhoto(null)}
+            className="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-70"
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>

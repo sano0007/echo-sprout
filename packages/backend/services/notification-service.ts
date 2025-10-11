@@ -16,7 +16,11 @@ export type NotificationType =
   | 'quality_score_updated'
   | 'upgrade_request_assigned'
   | 'role_upgrade_approved'
-  | 'role_upgrade_rejected';
+  | 'role_upgrade_rejected'
+  | 'progress_review_assigned'
+  | 'progress_approved'
+  | 'progress_rejected'
+  | 'progress_needs_revision';
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -425,6 +429,84 @@ export class NotificationService {
       title: 'Role Upgrade Request Rejected',
       message: `Your upgrade request was rejected. Reason: ${reason}. You can submit a new request after addressing the issues.`,
       priority: 'normal',
+    });
+  }
+
+  // Progress Update Review Notifications
+  public static async notifyProgressReviewAssigned(
+    ctx: MutationCtx,
+    verifierId: Id<'users'>,
+    updateId: Id<'progressUpdates'>
+  ) {
+    const update = await ctx.db.get(updateId);
+    if (!update) return;
+
+    const project = await ctx.db.get(update.projectId);
+    if (!project) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: verifierId,
+      type: 'progress_review_assigned',
+      title: 'New Progress Update Assigned for Review',
+      message: `Review progress update for project: ${project.title}`,
+      priority: 'normal',
+      relatedEntityId: updateId,
+    });
+  }
+
+  public static async notifyProgressApproved(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    updateId: Id<'progressUpdates'>
+  ) {
+    const update = await ctx.db.get(updateId);
+    if (!update) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_approved',
+      title: 'Progress Update Approved',
+      message: `Your progress update "${update.title}" has been approved by the verifier.`,
+      priority: 'normal',
+      relatedEntityId: updateId,
+    });
+  }
+
+  public static async notifyProgressRejected(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    updateId: Id<'progressUpdates'>,
+    reason: string
+  ) {
+    const update = await ctx.db.get(updateId);
+    if (!update) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_rejected',
+      title: 'Progress Update Rejected',
+      message: `Your progress update "${update.title}" was rejected. Reason: ${reason}`,
+      priority: 'high',
+      relatedEntityId: updateId,
+    });
+  }
+
+  public static async notifyProgressNeedsRevision(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    updateId: Id<'progressUpdates'>,
+    revisionNotes: string
+  ) {
+    const update = await ctx.db.get(updateId);
+    if (!update) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_needs_revision',
+      title: 'Progress Update Needs Revision',
+      message: `Your progress update "${update.title}" needs revision. Notes: ${revisionNotes}`,
+      priority: 'normal',
+      relatedEntityId: updateId,
     });
   }
 }

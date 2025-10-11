@@ -173,7 +173,7 @@ export default function AdminDashboard() {
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <p className="text-2xl font-bold text-emerald-600">
-            ₹{(platformMetrics.platformRevenue / 1000).toFixed(0)}K
+            ${(platformMetrics.platformRevenue / 1000).toFixed(0)}K
           </p>
           <p className="text-sm text-gray-600">Platform Revenue</p>
           <p className="text-xs text-green-600 mt-1">This year</p>
@@ -510,9 +510,9 @@ export default function AdminDashboard() {
                           Average Credit Price
                         </td>
                         <td className="px-4 py-2 text-sm font-medium">
-                          ₹16.50
+                          $16.50
                         </td>
-                        <td className="px-4 py-2 text-sm">₹15.80</td>
+                        <td className="px-4 py-2 text-sm">$15.80</td>
                         <td className="px-4 py-2 text-sm text-green-600">
                           +4.4%
                         </td>
@@ -522,9 +522,9 @@ export default function AdminDashboard() {
                           Platform Commission
                         </td>
                         <td className="px-4 py-2 text-sm font-medium">
-                          ₹42,300
+                          $42,300
                         </td>
-                        <td className="px-4 py-2 text-sm">₹38,900</td>
+                        <td className="px-4 py-2 text-sm">$38,900</td>
                         <td className="px-4 py-2 text-sm text-green-600">
                           +8.7%
                         </td>

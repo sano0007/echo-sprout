@@ -6,6 +6,8 @@ import {
 } from './_generated/server';
 import { v } from 'convex/values';
 import { UserService } from '../services/user-service';
+import { VerifierAssignmentService } from '../services/verifier-assignment-service';
+import { NotificationService } from '../services/notification-service';
 import type { ProgressValidationResult } from '../types/monitoring-types';
 
 export const submitProgressUpdate = mutation({
@@ -22,10 +24,18 @@ export const submitProgressUpdate = mutation({
     description: v.string(),
     progressPercentage: v.number(),
     photos: v.array(
-      v.object({
-        storageId: v.string(),
-        fileUrl: v.string(),
-      })
+      v.union(
+        // New format (Convex storage)
+        v.object({
+          storageId: v.string(),
+          fileUrl: v.string(),
+        }),
+        // Old format (Cloudinary) - for backward compatibility
+        v.object({
+          cloudinary_public_id: v.string(),
+          cloudinary_url: v.string(),
+        })
+      )
     ),
     location: v.optional(
       v.object({
@@ -91,19 +101,46 @@ export const submitProgressUpdate = mutation({
 
     // Basic validation for Convex-stored photos
     const photoErrors: string[] = [];
+    const photoStorageIds: any[] = [];
+    const photoUrls: string[] = [];
+    const cloudinaryPhotos: any[] = [];
+
     if (!Array.isArray(args.photos)) {
       throw new Error('Photos must be an array');
     }
+
     for (let i = 0; i < args.photos.length; i++) {
       const p = args.photos[i] as any;
-      if (
-        !p ||
-        typeof p.storageId !== 'string' ||
-        typeof p.fileUrl !== 'string'
-      ) {
-        photoErrors.push(`Photo ${i + 1} is missing storageId or fileUrl`);
+      if (!p || typeof p !== 'object') {
+        photoErrors.push(`Photo ${i + 1} is invalid`);
+        continue;
+      }
+
+      // Check if it's new format (Convex storage)
+      if ('storageId' in p && 'fileUrl' in p) {
+        if (typeof p.storageId === 'string' && typeof p.fileUrl === 'string') {
+          photoStorageIds.push(p.storageId);
+          photoUrls.push(p.fileUrl);
+        } else {
+          photoErrors.push(`Photo ${i + 1} has invalid storageId or fileUrl`);
+        }
+      }
+      // Check if it's old format (Cloudinary)
+      else if ('cloudinary_public_id' in p && 'cloudinary_url' in p) {
+        if (typeof p.cloudinary_public_id === 'string' && typeof p.cloudinary_url === 'string') {
+          cloudinaryPhotos.push({
+            cloudinary_public_id: p.cloudinary_public_id,
+            cloudinary_url: p.cloudinary_url,
+          });
+          photoUrls.push(p.cloudinary_url);
+        } else {
+          photoErrors.push(`Photo ${i + 1} has invalid Cloudinary data`);
+        }
+      } else {
+        photoErrors.push(`Photo ${i + 1} is missing required fields`);
       }
     }
+
     if (photoErrors.length > 0) {
       throw new Error(`Photo validation failed: ${photoErrors.join(', ')}`);
     }
@@ -111,15 +148,18 @@ export const submitProgressUpdate = mutation({
     const updateId = await ctx.db.insert('progressUpdates', {
       projectId: args.projectId,
       reportedBy: currentUser._id,
+      submittedBy: currentUser._id,
       updateType: args.updateType,
       title: args.title,
       description: args.description,
       progressPercentage: args.progressPercentage,
-      photoStorageIds: args.photos.map((p) => p.storageId as any),
-      photoUrls: args.photos.map((p) => p.fileUrl),
+      photoStorageIds: photoStorageIds.length > 0 ? photoStorageIds : undefined,
+      photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
+      photos: cloudinaryPhotos.length > 0 ? cloudinaryPhotos : undefined,
       location: args.location,
       measurementData: args.measurementData,
       reportingDate: args.reportingDate || Date.now(),
+      status: 'pending_review',
       isVerified: false,
 
       carbonImpactToDate: args.measurementData?.carbonImpactToDate,
@@ -127,6 +167,9 @@ export const submitProgressUpdate = mutation({
       energyGenerated: args.measurementData?.energyGenerated,
       wasteProcessed: args.measurementData?.wasteProcessed,
     });
+
+    // Auto-assign to a verifier
+    await VerifierAssignmentService.autoAssignProgressUpdate(ctx, updateId);
 
     if (args.progressPercentage > (project.progressPercentage || 0)) {
       await ctx.db.patch(args.projectId, {
@@ -808,5 +851,387 @@ export const getUpcomingMilestones = internalQuery({
       )
       .order('asc')
       .take(3);
+  },
+});
+
+// ============= PROGRESS UPDATE REVIEW MUTATIONS =============
+
+/**
+ * Approve a progress update (Verifier only)
+ */
+export const approveProgressUpdate = mutation({
+  args: {
+    updateId: v.id('progressUpdates'),
+    reviewNotes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+
+    // Check if user is a verifier
+    if (currentUser.role !== 'verifier' && currentUser.role !== 'admin') {
+      throw new Error('Only verifiers can approve progress updates');
+    }
+
+    const update = await ctx.db.get(args.updateId);
+    if (!update) {
+      throw new Error('Progress update not found');
+    }
+
+    // Check if assigned to this verifier
+    if (
+      update.assignedVerifierId !== currentUser._id &&
+      currentUser.role !== 'admin'
+    ) {
+      throw new Error('You are not assigned to this progress update');
+    }
+
+    // Update progress status
+    await ctx.db.patch(args.updateId, {
+      status: 'approved',
+      isVerified: true,
+      verifiedBy: currentUser._id,
+      verifiedAt: Date.now(),
+      reviewedAt: Date.now(),
+      reviewNotes: args.reviewNotes,
+    });
+
+    // Get project to update its progress
+    const project = await ctx.db.get(update.projectId);
+    if (project && update.progressPercentage > (project.progressPercentage || 0)) {
+      await ctx.db.patch(update.projectId, {
+        progressPercentage: update.progressPercentage,
+        lastProgressUpdate: Date.now(),
+      });
+    }
+
+    // Send notification to creator
+    const creatorId = update.submittedBy || update.reportedBy;
+    if (creatorId) {
+      await NotificationService.notifyProgressApproved(
+        ctx,
+        creatorId,
+        args.updateId
+      );
+    }
+
+    return { success: true };
+  },
+});
+
+/**
+ * Reject a progress update (Verifier only)
+ */
+export const rejectProgressUpdate = mutation({
+  args: {
+    updateId: v.id('progressUpdates'),
+    rejectionReason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+
+    // Check if user is a verifier
+    if (currentUser.role !== 'verifier' && currentUser.role !== 'admin') {
+      throw new Error('Only verifiers can reject progress updates');
+    }
+
+    const update = await ctx.db.get(args.updateId);
+    if (!update) {
+      throw new Error('Progress update not found');
+    }
+
+    // Check if assigned to this verifier
+    if (
+      update.assignedVerifierId !== currentUser._id &&
+      currentUser.role !== 'admin'
+    ) {
+      throw new Error('You are not assigned to this progress update');
+    }
+
+    // Update progress status
+    await ctx.db.patch(args.updateId, {
+      status: 'rejected',
+      reviewedAt: Date.now(),
+      rejectionReason: args.rejectionReason,
+    });
+
+    // Send notification to creator
+    const creatorId = update.submittedBy || update.reportedBy;
+    if (creatorId) {
+      await NotificationService.notifyProgressRejected(
+        ctx,
+        creatorId,
+        args.updateId,
+        args.rejectionReason
+      );
+    }
+
+    return { success: true };
+  },
+});
+
+/**
+ * Request revision for a progress update (Verifier only)
+ */
+export const requestProgressRevision = mutation({
+  args: {
+    updateId: v.id('progressUpdates'),
+    revisionNotes: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+
+    // Check if user is a verifier
+    if (currentUser.role !== 'verifier' && currentUser.role !== 'admin') {
+      throw new Error('Only verifiers can request revisions');
+    }
+
+    const update = await ctx.db.get(args.updateId);
+    if (!update) {
+      throw new Error('Progress update not found');
+    }
+
+    // Check if assigned to this verifier
+    if (
+      update.assignedVerifierId !== currentUser._id &&
+      currentUser.role !== 'admin'
+    ) {
+      throw new Error('You are not assigned to this progress update');
+    }
+
+    // Update progress status
+    await ctx.db.patch(args.updateId, {
+      status: 'needs_revision',
+      reviewedAt: Date.now(),
+      reviewNotes: args.revisionNotes,
+    });
+
+    // Send notification to creator
+    const creatorId = update.submittedBy || update.reportedBy;
+    if (creatorId) {
+      await NotificationService.notifyProgressNeedsRevision(
+        ctx,
+        creatorId,
+        args.updateId,
+        args.revisionNotes
+      );
+    }
+
+    return { success: true };
+  },
+});
+
+// ============= PROGRESS UPDATE REVIEW QUERIES =============
+
+/**
+ * Get progress updates assigned to current verifier
+ */
+export const getMyAssignedProgressUpdates = query({
+  args: {
+    paginationOpts: v.optional(
+      v.object({
+        numItems: v.number(),
+        cursor: v.union(v.string(), v.null()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      return { page: [], isDone: true, continueCursor: '' };
+    }
+
+    // Check if user is a verifier
+    if (currentUser.role !== 'verifier' && currentUser.role !== 'admin') {
+      return { page: [], isDone: true, continueCursor: '' };
+    }
+
+    // Get progress updates assigned to this verifier
+    const updates = await ctx.db
+      .query('progressUpdates')
+      .withIndex('by_verifier', (q) =>
+        q.eq('assignedVerifierId', currentUser._id)
+      )
+      .filter((q) => q.eq(q.field('status'), 'pending_review'))
+      .order('desc')
+      .collect();
+
+    // Enrich with project and creator data
+    const enrichedUpdates = await Promise.all(
+      updates.map(async (update) => {
+        const project = await ctx.db.get(update.projectId);
+        const creator = await ctx.db.get(
+          update.submittedBy || update.reportedBy!
+        );
+
+        return {
+          ...update,
+          project: project
+            ? {
+                _id: project._id,
+                title: project.title,
+                projectType: project.projectType,
+              }
+            : null,
+          creator: creator
+            ? {
+                _id: creator._id,
+                firstName: creator.firstName,
+                lastName: creator.lastName,
+                email: creator.email,
+              }
+            : null,
+        };
+      })
+    );
+
+    return {
+      page: enrichedUpdates,
+      isDone: true,
+      continueCursor: '',
+    };
+  },
+});
+
+/**
+ * Get progress update details with full context
+ */
+export const getProgressUpdateDetails = query({
+  args: {
+    updateId: v.id('progressUpdates'),
+  },
+  handler: async (ctx, args) => {
+    const update = await ctx.db.get(args.updateId);
+    if (!update) {
+      return null;
+    }
+
+    const project = await ctx.db.get(update.projectId);
+    const creator = await ctx.db.get(update.submittedBy || update.reportedBy!);
+    const verifier = update.assignedVerifierId
+      ? await ctx.db.get(update.assignedVerifierId)
+      : null;
+
+    return {
+      ...update,
+      project: project
+        ? {
+            _id: project._id,
+            title: project.title,
+            projectType: project.projectType,
+            location: project.location,
+          }
+        : null,
+      creator: creator
+        ? {
+            _id: creator._id,
+            firstName: creator.firstName,
+            lastName: creator.lastName,
+            email: creator.email,
+          }
+        : null,
+      verifier: verifier
+        ? {
+            _id: verifier._id,
+            firstName: verifier.firstName,
+            lastName: verifier.lastName,
+          }
+        : null,
+    };
+  },
+});
+
+/**
+ * Get creator's pending progress submissions
+ */
+export const getMyPendingProgressSubmissions = query({
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      return [];
+    }
+
+    // Get all progress updates by this user that are pending or need revision
+    const updates = await ctx.db
+      .query('progressUpdates')
+      .withIndex('by_submitter', (q) => q.eq('submittedBy', currentUser._id))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field('status'), 'pending_review'),
+          q.eq(q.field('status'), 'needs_revision')
+        )
+      )
+      .order('desc')
+      .collect();
+
+    // Enrich with project data
+    const enrichedUpdates = await Promise.all(
+      updates.map(async (update) => {
+        const project = await ctx.db.get(update.projectId);
+
+        return {
+          ...update,
+          project: project
+            ? {
+                _id: project._id,
+                title: project.title,
+                projectType: project.projectType,
+              }
+            : null,
+        };
+      })
+    );
+
+    return enrichedUpdates;
+  },
+});
+
+/**
+ * Get creator's approved progress updates
+ */
+export const getMyApprovedProgressUpdates = query({
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      return [];
+    }
+
+    // Get all approved progress updates by this user
+    const updates = await ctx.db
+      .query('progressUpdates')
+      .withIndex('by_submitter', (q) => q.eq('submittedBy', currentUser._id))
+      .filter((q) => q.eq(q.field('status'), 'approved'))
+      .order('desc')
+      .collect();
+
+    // Enrich with project data
+    const enrichedUpdates = await Promise.all(
+      updates.map(async (update) => {
+        const project = await ctx.db.get(update.projectId);
+
+        return {
+          ...update,
+          project: project
+            ? {
+                _id: project._id,
+                title: project.title,
+                projectType: project.projectType,
+              }
+            : null,
+        };
+      })
+    );
+
+    return enrichedUpdates;
   },
 });

@@ -1323,6 +1323,11 @@ export default defineSchema({
     verifiedBy: v.optional(v.id('users')),
     verifiedAt: v.optional(v.float64()),
     verificationNotes: v.optional(v.string()),
+    // Verifier assignment fields
+    assignedVerifierId: v.optional(v.id('users')),
+    reviewedAt: v.optional(v.float64()),
+    reviewNotes: v.optional(v.string()),
+    rejectionReason: v.optional(v.string()),
     // Legacy fields for backward compatibility
     carbonImpactToDate: v.optional(v.float64()),
     treesPlanted: v.optional(v.float64()),
@@ -1332,6 +1337,7 @@ export default defineSchema({
     .index('by_project', ['projectId'])
     .index('by_submitter', ['submittedBy'])
     .index('by_reporter', ['reportedBy']) // Legacy index
+    .index('by_verifier', ['assignedVerifierId'])
     .index('by_status', ['status'])
     .index('by_project_status', ['projectId', 'status'])
     .index('by_submitted_at', ['submittedAt'])

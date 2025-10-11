@@ -995,6 +995,11 @@ exports.default = (0, server_1.defineSchema)({
         verifiedBy: values_1.v.optional(values_1.v.id('users')),
         verifiedAt: values_1.v.optional(values_1.v.float64()),
         verificationNotes: values_1.v.optional(values_1.v.string()),
+        // Verifier assignment fields
+        assignedVerifierId: values_1.v.optional(values_1.v.id('users')),
+        reviewedAt: values_1.v.optional(values_1.v.float64()),
+        reviewNotes: values_1.v.optional(values_1.v.string()),
+        rejectionReason: values_1.v.optional(values_1.v.string()),
         // Legacy fields for backward compatibility
         carbonImpactToDate: values_1.v.optional(values_1.v.float64()),
         treesPlanted: values_1.v.optional(values_1.v.float64()),
@@ -1004,6 +1009,7 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_project', ['projectId'])
         .index('by_submitter', ['submittedBy'])
         .index('by_reporter', ['reportedBy']) // Legacy index
+        .index('by_verifier', ['assignedVerifierId'])
         .index('by_status', ['status'])
         .index('by_project_status', ['projectId', 'status'])
         .index('by_submitted_at', ['submittedAt'])
