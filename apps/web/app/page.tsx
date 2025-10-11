@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import {HeroSection} from "@/components/landing/HeroSection";
+import {HowItWorksSection} from "@/components/landing/HowItWorksSection";
+import {FAQSection} from "@/components/landing/FAQSection";
 
 export default function Home() {
   return (
@@ -32,6 +34,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* How It Works Section */}
+      <HowItWorksSection />
 
       {/* Features Section */}
       <section className="py-20">
@@ -86,6 +91,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQSection />
 
       {/* CTA Section */}
       <section className="py-20 bg-gray-900 text-white">
