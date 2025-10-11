@@ -101,7 +101,6 @@ export default function LearnAnalyticsPage() {
         const canvas = await html2canvas(root, {
           useCORS: true,
           logging: false,
-          backgroundColor: '#ffffff',
           width: root.scrollWidth,
           height: root.scrollHeight,
         });
@@ -172,7 +171,6 @@ export default function LearnAnalyticsPage() {
           const canvas = await html2canvas(el, {
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff',
             width: w,
             height: h,
           });

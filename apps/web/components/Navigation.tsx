@@ -159,12 +159,6 @@ export default function Navigation() {
               >
                 Dashboard
               </Link>
-              <Link
-                href="/profile"
-                className="hidden md:inline-flex text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Profile
-              </Link>
               <UserButton
                 appearance={{
                   elements: {

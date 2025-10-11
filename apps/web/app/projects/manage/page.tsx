@@ -902,7 +902,7 @@ export default function ManageProjects() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2">
-                        Price per Credit (Rs.)
+                        Price per Credit ($)
                       </label>
                       <input
                         type="number"
