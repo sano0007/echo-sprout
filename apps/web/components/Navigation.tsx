@@ -4,11 +4,14 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import {getDashboardRoute, useCurrentUser} from "@/hooks";
 
 export default function Navigation() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const currentUser = useCurrentUser()
+  const dashboardRoute = getDashboardRoute(currentUser)
 
   const isAdminDashboard =
     pathname === '/admin' || pathname?.startsWith('/admin/');
@@ -151,6 +154,12 @@ export default function Navigation() {
           <div className="flex items-center space-x-4">
             <SignedIn>
               <Link
+                href={dashboardRoute}
+                className="hidden md:inline-flex text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
                 href="/profile"
                 className="hidden md:inline-flex text-gray-700 hover:text-blue-600 transition-colors"
               >
@@ -262,6 +271,13 @@ export default function Navigation() {
             {/* Mobile Auth Section */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <SignedIn>
+                <Link
+                  href="/profile"
+                  className="block px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
                 <Link
                   href="/profile"
                   className="block px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors"
