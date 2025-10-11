@@ -62,7 +62,9 @@ export default function MonitoringSearch() {
     tags: [],
   });
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const [selectedResults, setSelectedResults] = useState<Set<string>>(new Set());
+  const [selectedResults, setSelectedResults] = useState<Set<string>>(
+    new Set()
+  );
   const [resultStats, setResultStats] = useState({
     total: 0,
     byType: {} as Record<string, number>,
@@ -76,11 +78,13 @@ export default function MonitoringSearch() {
   // Search query - only execute when we have a search term
   const searchQuery = useQuery(
     api.monitoring_crud.searchMonitoringData,
-    searchTerm.trim().length >= 2 ? {
-      searchTerm: searchTerm.trim(),
-      entityTypes: activeFilters.entityTypes as any,
-      limit: 100,
-    } : "skip"
+    searchTerm.trim().length >= 2
+      ? {
+          searchTerm: searchTerm.trim(),
+          entityTypes: activeFilters.entityTypes as any,
+          limit: 100,
+        }
+      : 'skip'
   );
 
   // Effect for processing search results
@@ -131,37 +135,72 @@ export default function MonitoringSearch() {
       // Calculate stats
       const stats = {
         total: filteredResults.length,
-        byType: filteredResults.reduce((acc: any, result: any) => {
-          acc[result.entityType] = (acc[result.entityType] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>),
+        byType: filteredResults.reduce(
+          (acc: any, result: any) => {
+            acc[result.entityType] = (acc[result.entityType] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        ),
       };
       setResultStats(stats);
 
       // Add to search history
       if (searchTerm.trim() && !searchHistory.includes(searchTerm.trim())) {
-        setSearchHistory(prev => [searchTerm.trim(), ...prev.slice(0, 9)]);
+        setSearchHistory((prev) => [searchTerm.trim(), ...prev.slice(0, 9)]);
       }
     }
   }, [searchQuery, searchTerm, activeFilters, searchHistory]);
 
   // Entity type options
   const entityTypeOptions = [
-    { value: 'progress_updates', label: 'Progress Updates', icon: FileText, color: 'text-blue-600' },
-    { value: 'milestones', label: 'Milestones', icon: Target, color: 'text-green-600' },
-    { value: 'alerts', label: 'Alerts', icon: AlertCircle, color: 'text-red-600' },
-    { value: 'projects', label: 'Projects', icon: BarChart3, color: 'text-purple-600' },
+    {
+      value: 'progress_updates',
+      label: 'Progress Updates',
+      icon: FileText,
+      color: 'text-blue-600',
+    },
+    {
+      value: 'milestones',
+      label: 'Milestones',
+      icon: Target,
+      color: 'text-green-600',
+    },
+    {
+      value: 'alerts',
+      label: 'Alerts',
+      icon: AlertCircle,
+      color: 'text-red-600',
+    },
+    {
+      value: 'projects',
+      label: 'Projects',
+      icon: BarChart3,
+      color: 'text-purple-600',
+    },
   ];
 
   // Status options
   const statusOptions = [
-    'pending', 'in_progress', 'completed', 'delayed', 'active', 'inactive', 'submitted', 'approved', 'rejected'
+    'pending',
+    'in_progress',
+    'completed',
+    'delayed',
+    'active',
+    'inactive',
+    'submitted',
+    'approved',
+    'rejected',
   ];
 
   // Severity options
   const severityOptions = [
     { value: 'low', label: 'Low', color: 'bg-green-100 text-green-800' },
-    { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
+    {
+      value: 'medium',
+      label: 'Medium',
+      color: 'bg-yellow-100 text-yellow-800',
+    },
     { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-800' },
     { value: 'critical', label: 'Critical', color: 'bg-red-100 text-red-800' },
   ];
@@ -176,7 +215,7 @@ export default function MonitoringSearch() {
 
   // Update filter
   const updateFilter = (key: keyof SearchFilters, value: any) => {
-    setActiveFilters(prev => ({
+    setActiveFilters((prev) => ({
       ...prev,
       [key]: value,
     }));
@@ -185,7 +224,7 @@ export default function MonitoringSearch() {
   // Toggle entity type
   const toggleEntityType = (entityType: string) => {
     const newTypes = activeFilters.entityTypes.includes(entityType)
-      ? activeFilters.entityTypes.filter(t => t !== entityType)
+      ? activeFilters.entityTypes.filter((t) => t !== entityType)
       : [...activeFilters.entityTypes, entityType];
     updateFilter('entityTypes', newTypes);
   };
@@ -193,7 +232,7 @@ export default function MonitoringSearch() {
   // Toggle status filter
   const toggleStatus = (status: string) => {
     const newStatuses = activeFilters.status.includes(status)
-      ? activeFilters.status.filter(s => s !== status)
+      ? activeFilters.status.filter((s) => s !== status)
       : [...activeFilters.status, status];
     updateFilter('status', newStatuses);
   };
@@ -201,7 +240,7 @@ export default function MonitoringSearch() {
   // Toggle severity filter
   const toggleSeverity = (severity: string) => {
     const newSeverities = activeFilters.severity.includes(severity)
-      ? activeFilters.severity.filter(s => s !== severity)
+      ? activeFilters.severity.filter((s) => s !== severity)
       : [...activeFilters.severity, severity];
     updateFilter('severity', newSeverities);
   };
@@ -243,7 +282,7 @@ export default function MonitoringSearch() {
 
   // Select all visible results
   const selectAllResults = () => {
-    const allIds = new Set(searchResults.map(r => r._id));
+    const allIds = new Set(searchResults.map((r) => r._id));
     setSelectedResults(allIds);
   };
 
@@ -254,11 +293,13 @@ export default function MonitoringSearch() {
 
   // Export selected results
   const exportResults = () => {
-    const selectedData = searchResults.filter(r => selectedResults.has(r._id));
+    const selectedData = searchResults.filter((r) =>
+      selectedResults.has(r._id)
+    );
 
     if (selectedData.length === 0) return;
 
-    const csvData = selectedData.map(result => ({
+    const csvData = selectedData.map((result) => ({
       Type: result.entityType,
       Title: result.title,
       Description: result.description,
@@ -268,7 +309,11 @@ export default function MonitoringSearch() {
 
     const csvContent = [
       Object.keys(csvData[0] || {}).join(','),
-      ...csvData.map(row => Object.values(row).map(value => `"${value}"`).join(','))
+      ...csvData.map((row) =>
+        Object.values(row)
+          .map((value) => `"${value}"`)
+          .join(',')
+      ),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -282,8 +327,10 @@ export default function MonitoringSearch() {
 
   // Get entity type icon and color
   const getEntityTypeDisplay = (entityType: string) => {
-    const option = entityTypeOptions.find(opt => opt.value === entityType);
-    return option || { icon: FileText, color: 'text-gray-600', label: entityType };
+    const option = entityTypeOptions.find((opt) => opt.value === entityType);
+    return (
+      option || { icon: FileText, color: 'text-gray-600', label: entityType }
+    );
   };
 
   // Format date
@@ -403,7 +450,9 @@ export default function MonitoringSearch() {
                     <label key={option.value} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={activeFilters.entityTypes.includes(option.value)}
+                        checked={activeFilters.entityTypes.includes(
+                          option.value
+                        )}
                         onChange={() => toggleEntityType(option.value)}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
@@ -497,7 +546,9 @@ export default function MonitoringSearch() {
                       onChange={() => toggleSeverity(severity.value)}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${severity.color}`}>
+                    <span
+                      className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${severity.color}`}
+                    >
                       {severity.label}
                     </span>
                   </label>
@@ -515,12 +566,11 @@ export default function MonitoringSearch() {
               Clear all filters
             </button>
             <div className="text-sm text-gray-600">
-              Active filters: {
-                activeFilters.entityTypes.length +
+              Active filters:{' '}
+              {activeFilters.entityTypes.length +
                 (activeFilters.dateRange.start ? 1 : 0) +
                 activeFilters.status.length +
-                activeFilters.severity.length
-              }
+                activeFilters.severity.length}
             </div>
           </div>
         </div>
@@ -539,7 +589,10 @@ export default function MonitoringSearch() {
                   const display = getEntityTypeDisplay(type);
                   const Icon = display.icon;
                   return (
-                    <div key={type} className="flex items-center space-x-1 text-sm">
+                    <div
+                      key={type}
+                      className="flex items-center space-x-1 text-sm"
+                    >
                       <Icon className={`h-4 w-4 ${display.color}`} />
                       <span className="text-gray-600">{count}</span>
                     </div>
@@ -549,10 +602,16 @@ export default function MonitoringSearch() {
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={selectedResults.size === searchResults.length ? clearSelections : selectAllResults}
+                onClick={
+                  selectedResults.size === searchResults.length
+                    ? clearSelections
+                    : selectAllResults
+                }
                 className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
               >
-                {selectedResults.size === searchResults.length ? 'Deselect All' : 'Select All'}
+                {selectedResults.size === searchResults.length
+                  ? 'Deselect All'
+                  : 'Select All'}
               </button>
               {selectedResults.size > 0 && (
                 <button
@@ -570,15 +629,17 @@ export default function MonitoringSearch() {
 
       {/* Results List */}
       <div className="divide-y divide-gray-200">
-        {searchResults.length === 0 && searchTerm.trim().length >= 2 && !isSearching && (
-          <div className="p-8 text-center text-gray-500">
-            <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium">No results found</p>
-            <p className="text-sm mt-1">
-              Try adjusting your search terms or filters
-            </p>
-          </div>
-        )}
+        {searchResults.length === 0 &&
+          searchTerm.trim().length >= 2 &&
+          !isSearching && (
+            <div className="p-8 text-center text-gray-500">
+              <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg font-medium">No results found</p>
+              <p className="text-sm mt-1">
+                Try adjusting your search terms or filters
+              </p>
+            </div>
+          )}
 
         {searchResults.map((result) => {
           const entityDisplay = getEntityTypeDisplay(result.entityType);
@@ -588,7 +649,9 @@ export default function MonitoringSearch() {
             <div
               key={result._id}
               className={`p-4 hover:bg-gray-50 transition-colors ${
-                selectedResults.has(result._id) ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                selectedResults.has(result._id)
+                  ? 'bg-blue-50 border-l-4 border-blue-500'
+                  : ''
               }`}
             >
               <div className="flex items-start space-x-3">
@@ -606,14 +669,20 @@ export default function MonitoringSearch() {
                     </h3>
                     <div className="flex items-center space-x-2 ml-4">
                       {result.status && (
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(result.status)}`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(result.status)}`}
+                        >
                           {result.status.replace('_', ' ')}
                         </span>
                       )}
                       {result.severity && (
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          severityOptions.find(s => s.value === result.severity)?.color || 'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            severityOptions.find(
+                              (s) => s.value === result.severity
+                            )?.color || 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
                           {result.severity}
                         </span>
                       )}
@@ -624,7 +693,9 @@ export default function MonitoringSearch() {
                   </p>
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center space-x-4 text-xs text-gray-500">
-                      <span className="capitalize">{entityDisplay.label.slice(0, -1)}</span>
+                      <span className="capitalize">
+                        {entityDisplay.label.slice(0, -1)}
+                      </span>
                       <span>Created {formatDate(result._creationTime)}</span>
                       {result.lastUpdated && (
                         <span>Updated {formatDate(result.lastUpdated)}</span>
@@ -644,7 +715,7 @@ export default function MonitoringSearch() {
           <button
             onClick={() => {
               // Trigger a re-search with higher limit
-              setSearchResults(prev => [...prev]);
+              setSearchResults((prev) => [...prev]);
             }}
             className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 transition-colors"
           >

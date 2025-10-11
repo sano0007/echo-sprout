@@ -5,8 +5,9 @@ import { api } from '@packages/backend';
 import { useQuery } from 'convex/react';
 import _ from 'lodash';
 import Image from 'next/image';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import ReactPaginate from 'react-paginate';
+import { MarketplaceProjectCard } from '@/components/marketplace/ProjectCard';
 
 export default function Marketplace() {
   const [filters, setFiltersState] = useState({
@@ -276,68 +277,11 @@ export default function Marketplace() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project: MarketplaceProject) => (
-            <div
+            <MarketplaceProjectCard
               key={project.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-            >
-              <Image
-                src={project.image}
-                alt={project.name}
-                width={300}
-                height={200}
-                className="w-full h-48 object-cover bg-gray-200"
-              />
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-lg font-semibold">{project.name}</h3>
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                    {project.type}
-                  </span>
-                </div>
-
-                <p className="text-gray-600 mb-2">{project.location}</p>
-                <p className="text-sm text-gray-600 mb-4">
-                  by {project.creator}
-                </p>
-
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center">
-                    <span className="text-yellow-500">★★★★★</span>
-                    <span className="ml-1 text-sm text-gray-600">
-                      ({project.rating})
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <p className="text-2xl font-bold text-green-600">
-                      $ {project.price.toFixed(2)}
-                    </p>
-                    <p className="text-sm text-gray-600">per credit</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-semibold">{project.credits}</p>
-                    <p className="text-sm text-gray-600">credits available</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleProjectPurchase(project)}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                  >
-                    Contribute
-                  </button>
-                  <a
-                    href={`/marketplace/${project.id}`}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded text-center hover:bg-gray-400"
-                  >
-                    View Details
-                  </a>
-                </div>
-              </div>
-            </div>
+              project={project}
+              handleProjectPurchase={handleProjectPurchase}
+            />
           ))}
         </div>
       )}

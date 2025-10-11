@@ -791,7 +791,7 @@ export const deleteTransaction = mutation({
 
     return {
       success: true,
-      message: `Transaction ${transaction.transactionReference} deleted successfully`
+      message: `Transaction ${transaction.transactionReference} deleted successfully`,
     };
   },
 });

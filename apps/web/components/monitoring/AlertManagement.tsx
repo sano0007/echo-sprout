@@ -12,7 +12,7 @@ import {
   Settings,
   Shield,
 } from 'lucide-react';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 
@@ -81,13 +81,19 @@ export default function AlertManagement({
 
   // Admin cleanup mutations
   const deleteAlert = useMutation(api.alert_management.deleteAlert);
-  const bulkDeleteResolvedAlerts = useMutation(api.alert_management.bulkDeleteResolvedAlerts);
+  const bulkDeleteResolvedAlerts = useMutation(
+    api.alert_management.bulkDeleteResolvedAlerts
+  );
 
   // Admin cleanup functions
   const handleDeleteAlert = async (alertId: string) => {
     if (!isAdmin) return;
 
-    if (confirm('Are you sure you want to delete this alert? This action cannot be undone.')) {
+    if (
+      confirm(
+        'Are you sure you want to delete this alert? This action cannot be undone.'
+      )
+    ) {
       try {
         await deleteAlert({ alertId: alertId as any });
         // Refresh alerts would happen automatically with Convex
@@ -101,9 +107,15 @@ export default function AlertManagement({
   const handleBulkCleanup = async () => {
     if (!isAdmin) return;
 
-    if (confirm(`Are you sure you want to delete all resolved alerts older than ${cleanupDays} days? This action cannot be undone.`)) {
+    if (
+      confirm(
+        `Are you sure you want to delete all resolved alerts older than ${cleanupDays} days? This action cannot be undone.`
+      )
+    ) {
       try {
-        const result = await bulkDeleteResolvedAlerts({ olderThanDays: cleanupDays });
+        const result = await bulkDeleteResolvedAlerts({
+          olderThanDays: cleanupDays,
+        });
         alert(`Successfully deleted ${result.deletedCount} resolved alerts.`);
       } catch (error) {
         console.error('Failed to cleanup alerts:', error);
@@ -287,7 +299,9 @@ export default function AlertManagement({
             <div className="bg-white p-3 rounded border">
               <h4 className="font-medium text-gray-900 mb-2">Bulk Cleanup</h4>
               <div className="flex items-center gap-2 mb-2">
-                <label className="text-sm text-gray-600">Delete resolved alerts older than:</label>
+                <label className="text-sm text-gray-600">
+                  Delete resolved alerts older than:
+                </label>
                 <input
                   type="number"
                   value={cleanupDays}
@@ -309,7 +323,9 @@ export default function AlertManagement({
 
             {/* Cleanup Stats */}
             <div className="bg-white p-3 rounded border">
-              <h4 className="font-medium text-gray-900 mb-2">Cleanup Statistics</h4>
+              <h4 className="font-medium text-gray-900 mb-2">
+                Cleanup Statistics
+              </h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Alerts:</span>
@@ -317,11 +333,15 @@ export default function AlertManagement({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Active Alerts:</span>
-                  <span className="font-medium text-red-600">{activeAlerts.length}</span>
+                  <span className="font-medium text-red-600">
+                    {activeAlerts.length}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Resolved Alerts:</span>
-                  <span className="font-medium text-green-600">{alerts.length - activeAlerts.length}</span>
+                  <span className="font-medium text-green-600">
+                    {alerts.length - activeAlerts.length}
+                  </span>
                 </div>
               </div>
             </div>

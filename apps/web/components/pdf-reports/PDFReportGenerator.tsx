@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, FileText, Clock, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import {
+  Download,
+  FileText,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Loader2,
+} from 'lucide-react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@packages/backend/convex/_generated/api';
 import { Id } from '@packages/backend/convex/_generated/dataModel';
@@ -42,9 +49,13 @@ export default function PDFReportGenerator({
   onReportGenerated,
 }: PDFReportGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedReport, setGeneratedReport] = useState<PDFReport | null>(null);
+  const [generatedReport, setGeneratedReport] = useState<PDFReport | null>(
+    null
+  );
 
-  const createReportRequest = useMutation(api.pdf_reports.createPDFReportRequest);
+  const createReportRequest = useMutation(
+    api.pdf_reports.createPDFReportRequest
+  );
 
   const handleGenerateReport = async () => {
     try {
@@ -151,7 +162,7 @@ export default function PDFReportGenerator({
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 Bytes';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   return (
@@ -162,7 +173,8 @@ export default function PDFReportGenerator({
           <div>
             <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
             <p className="text-sm text-gray-600">
-              {templateType.charAt(0).toUpperCase() + templateType.slice(1)} Report
+              {templateType.charAt(0).toUpperCase() + templateType.slice(1)}{' '}
+              Report
             </p>
           </div>
         </div>
@@ -191,7 +203,8 @@ export default function PDFReportGenerator({
         <div className="col-span-2">
           <span className="text-gray-600">Date Range:</span>
           <span className="ml-2 font-medium">
-            {timeframe.start.toLocaleDateString()} - {timeframe.end.toLocaleDateString()}
+            {timeframe.start.toLocaleDateString()} -{' '}
+            {timeframe.end.toLocaleDateString()}
           </span>
         </div>
       </div>
@@ -201,7 +214,9 @@ export default function PDFReportGenerator({
         <div className="border-t pt-4">
           <div className="flex items-center space-x-3 mb-3">
             <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-            <span className="text-sm font-medium text-gray-700">Generating PDF Report...</span>
+            <span className="text-sm font-medium text-gray-700">
+              Generating PDF Report...
+            </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -210,7 +225,8 @@ export default function PDFReportGenerator({
             />
           </div>
           <p className="text-xs text-gray-600 mt-2">
-            This may take a few minutes depending on the data size and complexity.
+            This may take a few minutes depending on the data size and
+            complexity.
           </p>
         </div>
       )}
@@ -223,7 +239,9 @@ export default function PDFReportGenerator({
               {getStatusIcon(generatedReport.status)}
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-700">Report Generated</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Report Generated
+                  </span>
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(generatedReport.status)}`}
                   >
@@ -233,7 +251,8 @@ export default function PDFReportGenerator({
                 <div className="text-xs text-gray-600 mt-1">
                   {generatedReport.completedAt && (
                     <span>
-                      Completed: {new Date(generatedReport.completedAt).toLocaleString()}
+                      Completed:{' '}
+                      {new Date(generatedReport.completedAt).toLocaleString()}
                     </span>
                   )}
                   {generatedReport.fileSize && (
@@ -245,31 +264,35 @@ export default function PDFReportGenerator({
               </div>
             </div>
 
-            {generatedReport.status === 'completed' && generatedReport.fileUrl && (
-              <button
-                onClick={handleDownload}
-                className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-              >
-                <Download className="h-4 w-4" />
-                <span>Download</span>
-              </button>
-            )}
+            {generatedReport.status === 'completed' &&
+              generatedReport.fileUrl && (
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </button>
+              )}
           </div>
 
-          {generatedReport.status === 'failed' && generatedReport.errorMessage && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">
-                <strong>Error:</strong> {generatedReport.errorMessage}
-              </p>
-            </div>
-          )}
+          {generatedReport.status === 'failed' &&
+            generatedReport.errorMessage && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">
+                  <strong>Error:</strong> {generatedReport.errorMessage}
+                </p>
+              </div>
+            )}
         </div>
       )}
 
       {/* Filters Applied */}
       {filters && Object.keys(filters).length > 0 && (
         <div className="border-t pt-4 mt-4">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Applied Filters:</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-2">
+            Applied Filters:
+          </h4>
           <div className="flex flex-wrap gap-2">
             {Object.entries(filters).map(([key, value]) => (
               <span

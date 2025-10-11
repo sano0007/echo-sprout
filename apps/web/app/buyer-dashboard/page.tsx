@@ -16,7 +16,9 @@ import ProjectTypeChart, {
 
 export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
+  const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(
+    null
+  );
   const { user, isSignedIn, isLoaded } = useUser();
   const {
     downloadCertificateDirectly,
@@ -177,7 +179,10 @@ export default function BuyerDashboard() {
   };
 
   // Handle invoice download
-  const handleDownloadInvoice = async (transactionReference: string, stripePaymentIntentId?: string) => {
+  const handleDownloadInvoice = async (
+    transactionReference: string,
+    stripePaymentIntentId?: string
+  ) => {
     if (!stripePaymentIntentId) {
       alert('Invoice not available for this transaction');
       return;
@@ -185,7 +190,9 @@ export default function BuyerDashboard() {
 
     setDownloadingInvoice(transactionReference);
     try {
-      const response = await fetch(`/api/stripe/receipt?paymentIntentId=${stripePaymentIntentId}`);
+      const response = await fetch(
+        `/api/stripe/receipt?paymentIntentId=${stripePaymentIntentId}`
+      );
       const data = await response.json();
 
       if (data.success && data.receiptUrl) {
@@ -446,11 +453,20 @@ export default function BuyerDashboard() {
 
                       <div className="mt-4 flex gap-3">
                         <button
-                          onClick={() => handleDownloadInvoice(purchase.transactionReference, purchase.stripePaymentIntentId)}
-                          disabled={downloadingInvoice === purchase.transactionReference}
+                          onClick={() =>
+                            handleDownloadInvoice(
+                              purchase.transactionReference,
+                              purchase.stripePaymentIntentId
+                            )
+                          }
+                          disabled={
+                            downloadingInvoice === purchase.transactionReference
+                          }
                           className="bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {downloadingInvoice === purchase.transactionReference ? 'Loading...' : 'View Invoice'}
+                          {downloadingInvoice === purchase.transactionReference
+                            ? 'Loading...'
+                            : 'View Invoice'}
                         </button>
                       </div>
                     </div>

@@ -54,12 +54,34 @@ import {
   Factory,
 } from 'lucide-react';
 import { api } from '@packages/backend/convex/_generated/api';
-import type { ActiveAlert, StatusBreakdown, TypeBreakdown, RoleBreakdown, SourceBreakdown, RegionBreakdown, ImpactByRegion, TimeSeriesPoint, TrendData } from '@packages/backend/convex/analytics_engine';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type {
+  ActiveAlert,
+  StatusBreakdown,
+  TypeBreakdown,
+  RoleBreakdown,
+  SourceBreakdown,
+  RegionBreakdown,
+  ImpactByRegion,
+  TimeSeriesPoint,
+  TrendData,
+} from '@packages/backend/convex/analytics_engine';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 
 // Color palette for charts
@@ -145,16 +167,29 @@ export default function AdminAnalyticsPage() {
   }, [selectedTimeRange]);
 
   // Data fetching with Convex queries
-  const projectData = useQuery(api.analytics_engine.aggregateProjectData, { timeframe });
-  const userData = useQuery(api.analytics_engine.aggregateUserData, { timeframe });
-  const transactionData = useQuery(api.analytics_engine.aggregateTransactionData, { timeframe });
-  const impactData = useQuery(api.analytics_engine.aggregateImpactData, { timeframe });
-  const platformPerformance = useQuery(api.analytics_engine.calculatePlatformPerformance, { timeframe });
+  const projectData = useQuery(api.analytics_engine.aggregateProjectData, {
+    timeframe,
+  });
+  const userData = useQuery(api.analytics_engine.aggregateUserData, {
+    timeframe,
+  });
+  const transactionData = useQuery(
+    api.analytics_engine.aggregateTransactionData,
+    { timeframe }
+  );
+  const impactData = useQuery(api.analytics_engine.aggregateImpactData, {
+    timeframe,
+  });
+  const platformPerformance = useQuery(
+    api.analytics_engine.calculatePlatformPerformance,
+    { timeframe }
+  );
   const realTimeMetrics = useQuery(api.analytics_engine.getCurrentMetrics, {});
   const systemHealth = useQuery(api.analytics_engine.getSystemHealth, {});
 
   // Loading state
-  const isLoading = !projectData || !userData || !transactionData || !impactData;
+  const isLoading =
+    !projectData || !userData || !transactionData || !impactData;
 
   // Refresh data
   const handleRefresh = async () => {
@@ -165,7 +200,8 @@ export default function AdminAnalyticsPage() {
 
   // Overview metrics calculation
   const overviewMetrics = useMemo(() => {
-    if (!projectData || !userData || !transactionData || !impactData) return null;
+    if (!projectData || !userData || !transactionData || !impactData)
+      return null;
 
     return {
       totalProjects: projectData.totalProjects,
@@ -181,11 +217,13 @@ export default function AdminAnalyticsPage() {
 
   // Prepare chart data
   const prepareChartData = (data: any[], xKey: string, yKey: string) => {
-    return data?.map(item => ({
-      ...item,
-      [xKey]: item[xKey],
-      [yKey]: Number(item[yKey]) || 0
-    })) || [];
+    return (
+      data?.map((item) => ({
+        ...item,
+        [xKey]: item[xKey],
+        [yKey]: Number(item[yKey]) || 0,
+      })) || []
+    );
   };
 
   // Overview Stats Cards
@@ -197,14 +235,24 @@ export default function AdminAnalyticsPage() {
           <Activity className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{overviewMetrics?.totalProjects || 0}</div>
+          <div className="text-2xl font-bold">
+            {overviewMetrics?.totalProjects || 0}
+          </div>
           <div className="flex items-center text-xs text-muted-foreground">
-            {overviewMetrics?.projectGrowth && overviewMetrics?.projectGrowth > 0 ? (
+            {overviewMetrics?.projectGrowth &&
+            overviewMetrics?.projectGrowth > 0 ? (
               <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
             ) : (
               <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
             )}
-            <span className={overviewMetrics?.projectGrowth && overviewMetrics?.projectGrowth > 0 ? "text-green-600" : "text-red-600"}>
+            <span
+              className={
+                overviewMetrics?.projectGrowth &&
+                overviewMetrics?.projectGrowth > 0
+                  ? 'text-green-600'
+                  : 'text-red-600'
+              }
+            >
               {Math.abs(overviewMetrics?.projectGrowth || 0).toFixed(1)}%
             </span>
             <span className="ml-1">from last period</span>
@@ -218,10 +266,14 @@ export default function AdminAnalyticsPage() {
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{overviewMetrics?.totalUsers || 0}</div>
+          <div className="text-2xl font-bold">
+            {overviewMetrics?.totalUsers || 0}
+          </div>
           <div className="flex items-center text-xs text-muted-foreground">
             <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-            <span className="text-green-600">{overviewMetrics?.userGrowth?.toFixed(1)}%</span>
+            <span className="text-green-600">
+              {overviewMetrics?.userGrowth?.toFixed(1)}%
+            </span>
             <span className="ml-1">from last period</span>
           </div>
         </CardContent>
@@ -237,12 +289,20 @@ export default function AdminAnalyticsPage() {
             ${(overviewMetrics?.totalRevenue || 0).toLocaleString()}
           </div>
           <div className="flex items-center text-xs text-muted-foreground">
-            {overviewMetrics?.revenueGrowth && overviewMetrics?.revenueGrowth > 0 ? (
+            {overviewMetrics?.revenueGrowth &&
+            overviewMetrics?.revenueGrowth > 0 ? (
               <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
             ) : (
               <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
             )}
-            <span className={overviewMetrics?.revenueGrowth && overviewMetrics?.revenueGrowth > 0 ? "text-green-600" : "text-red-600"}>
+            <span
+              className={
+                overviewMetrics?.revenueGrowth &&
+                overviewMetrics?.revenueGrowth > 0
+                  ? 'text-green-600'
+                  : 'text-red-600'
+              }
+            >
               {Math.abs(overviewMetrics?.revenueGrowth || 0).toFixed(1)}%
             </span>
             <span className="ml-1">from last period</span>
@@ -261,7 +321,9 @@ export default function AdminAnalyticsPage() {
           </div>
           <div className="flex items-center text-xs text-muted-foreground">
             <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-            <span className="text-green-600">{Math.abs(overviewMetrics?.impactGrowth || 0).toFixed(1)}%</span>
+            <span className="text-green-600">
+              {Math.abs(overviewMetrics?.impactGrowth || 0).toFixed(1)}%
+            </span>
             <span className="ml-1">from last period</span>
           </div>
         </CardContent>
@@ -283,7 +345,13 @@ export default function AdminAnalyticsPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">System Status</span>
-              <Badge variant={systemHealth?.overall.status === 'healthy' ? 'default' : 'destructive'}>
+              <Badge
+                variant={
+                  systemHealth?.overall.status === 'healthy'
+                    ? 'default'
+                    : 'destructive'
+                }
+              >
                 {systemHealth?.overall.status || 'Unknown'}
               </Badge>
             </div>
@@ -303,9 +371,7 @@ export default function AdminAnalyticsPage() {
             <div className="text-2xl font-bold">
               {realTimeMetrics?.activeUsers || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Currently online
-            </p>
+            <p className="text-xs text-muted-foreground">Currently online</p>
           </div>
 
           <div className="space-y-2">
@@ -316,9 +382,7 @@ export default function AdminAnalyticsPage() {
             <div className="text-2xl font-bold">
               {realTimeMetrics?.responseTime || 0}ms
             </div>
-            <p className="text-xs text-muted-foreground">
-              Average response
-            </p>
+            <p className="text-xs text-muted-foreground">Average response</p>
           </div>
         </div>
 
@@ -329,7 +393,10 @@ export default function AdminAnalyticsPage() {
               Active Alerts
             </h4>
             {systemHealth.alerts.slice(0, 3).map((alert: ActiveAlert) => (
-              <div key={alert.id} className="flex items-center justify-between p-2 bg-orange-50 rounded-md">
+              <div
+                key={alert.id}
+                className="flex items-center justify-between p-2 bg-orange-50 rounded-md"
+              >
                 <span className="text-sm">{alert.message}</span>
                 <Badge variant="outline" className="text-xs">
                   {alert.severity}
@@ -362,11 +429,20 @@ export default function AdminAnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={(props: any) => `${props.status}: ${props.percentage.toFixed(1)}%`}
+                    label={(props: any) =>
+                      `${props.status}: ${props.percentage.toFixed(1)}%`
+                    }
                   >
-                    {projectData.projectsByStatus.map((entry: StatusBreakdown, index: number) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]} />
-                    ))}
+                    {projectData.projectsByStatus.map(
+                      (entry: StatusBreakdown, index: number) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]
+                          }
+                        />
+                      )
+                    )}
                   </Pie>
                   <Tooltip />
                   <Legend />
@@ -402,26 +478,32 @@ export default function AdminAnalyticsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Project Trends</CardTitle>
-          <CardDescription>Project creation and completion over time</CardDescription>
+          <CardDescription>
+            Project creation and completion over time
+          </CardDescription>
         </CardHeader>
         <CardContent className="h-80">
           {projectData?.timeSeriesData && (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={projectData.timeSeriesData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="timestamp" 
-                  tickFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
+                <XAxis
+                  dataKey="timestamp"
+                  tickFormatter={(timestamp) =>
+                    new Date(timestamp).toLocaleDateString()
+                  }
                 />
                 <YAxis />
-                <Tooltip 
-                  labelFormatter={(timestamp) => new Date(timestamp as number).toLocaleDateString()}
+                <Tooltip
+                  labelFormatter={(timestamp) =>
+                    new Date(timestamp as number).toLocaleDateString()
+                  }
                 />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke={CHART_COLORS.primary} 
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={CHART_COLORS.primary}
                   strokeWidth={2}
                 />
               </LineChart>
@@ -437,16 +519,28 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Success Rate</span>
-              <span className="font-semibold">{projectData?.averageMetrics.averageSuccessRate?.toFixed(1)}%</span>
+              <span className="text-sm text-muted-foreground">
+                Success Rate
+              </span>
+              <span className="font-semibold">
+                {projectData?.averageMetrics.averageSuccessRate?.toFixed(1)}%
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Completion Time</span>
-              <span className="font-semibold">{projectData?.averageMetrics.averageCompletionTime} days</span>
+              <span className="text-sm text-muted-foreground">
+                Completion Time
+              </span>
+              <span className="font-semibold">
+                {projectData?.averageMetrics.averageCompletionTime} days
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Quality Score</span>
-              <span className="font-semibold">{projectData?.averageMetrics.qualityScore?.toFixed(1)}/100</span>
+              <span className="text-sm text-muted-foreground">
+                Quality Score
+              </span>
+              <span className="font-semibold">
+                {projectData?.averageMetrics.qualityScore?.toFixed(1)}/100
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -457,22 +551,27 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {projectData?.projectsByRegion?.slice(0, 4).map((region: RegionBreakdown) => (
-                <div key={`${region.country}-${region.region}`} className="flex justify-between items-center">
-                  <span className="text-sm">{region.country}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-600 h-2 rounded-full"
-                        style={{ width: `${region.percentage}%` }}
-                      />
+              {projectData?.projectsByRegion
+                ?.slice(0, 4)
+                .map((region: RegionBreakdown) => (
+                  <div
+                    key={`${region.country}-${region.region}`}
+                    className="flex justify-between items-center"
+                  >
+                    <span className="text-sm">{region.country}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-green-600 h-2 rounded-full"
+                          style={{ width: `${region.percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-10 text-right">
+                        {region.percentage.toFixed(0)}%
+                      </span>
                     </div>
-                    <span className="text-sm font-medium w-10 text-right">
-                      {region.percentage.toFixed(0)}%
-                    </span>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </CardContent>
         </Card>
@@ -483,16 +582,28 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Data Completeness</span>
-              <span className="font-semibold">{projectData?.qualityScores.dataCompleteness?.toFixed(1)}%</span>
+              <span className="text-sm text-muted-foreground">
+                Data Completeness
+              </span>
+              <span className="font-semibold">
+                {projectData?.qualityScores.dataCompleteness?.toFixed(1)}%
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Reporting Timeliness</span>
-              <span className="font-semibold">{projectData?.qualityScores.reportingTimeliness?.toFixed(1)}%</span>
+              <span className="text-sm text-muted-foreground">
+                Reporting Timeliness
+              </span>
+              <span className="font-semibold">
+                {projectData?.qualityScores.reportingTimeliness?.toFixed(1)}%
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Verification Rate</span>
-              <span className="font-semibold">{projectData?.qualityScores.verificationRate?.toFixed(1)}%</span>
+              <span className="text-sm text-muted-foreground">
+                Verification Rate
+              </span>
+              <span className="font-semibold">
+                {projectData?.qualityScores.verificationRate?.toFixed(1)}%
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -520,11 +631,20 @@ export default function AdminAnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={(props: any) => `${props.role}: ${props.percentage.toFixed(1)}%`}
+                    label={(props: any) =>
+                      `${props.role}: ${props.percentage.toFixed(1)}%`
+                    }
                   >
-                    {userData.usersByRole.map((entry: RoleBreakdown, index: number) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]} />
-                    ))}
+                    {userData.usersByRole.map(
+                      (entry: RoleBreakdown, index: number) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]
+                          }
+                        />
+                      )
+                    )}
                   </Pie>
                   <Tooltip />
                   <Legend />
@@ -544,18 +664,22 @@ export default function AdminAnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={userData.timeSeriesData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="timestamp" 
-                    tickFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
+                  <XAxis
+                    dataKey="timestamp"
+                    tickFormatter={(timestamp) =>
+                      new Date(timestamp).toLocaleDateString()
+                    }
                   />
                   <YAxis />
-                  <Tooltip 
-                    labelFormatter={(timestamp) => new Date(timestamp as number).toLocaleDateString()}
+                  <Tooltip
+                    labelFormatter={(timestamp) =>
+                      new Date(timestamp as number).toLocaleDateString()
+                    }
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke={CHART_COLORS.secondary} 
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke={CHART_COLORS.secondary}
                     fill={CHART_COLORS.secondary}
                     fillOpacity={0.3}
                   />
@@ -573,16 +697,28 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Daily Active</span>
-              <span className="font-semibold">{userData?.userActivity.dailyActiveUsers}</span>
+              <span className="text-sm text-muted-foreground">
+                Daily Active
+              </span>
+              <span className="font-semibold">
+                {userData?.userActivity.dailyActiveUsers}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Weekly Active</span>
-              <span className="font-semibold">{userData?.userActivity.weeklyActiveUsers}</span>
+              <span className="text-sm text-muted-foreground">
+                Weekly Active
+              </span>
+              <span className="font-semibold">
+                {userData?.userActivity.weeklyActiveUsers}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Monthly Active</span>
-              <span className="font-semibold">{userData?.userActivity.monthlyActiveUsers}</span>
+              <span className="text-sm text-muted-foreground">
+                Monthly Active
+              </span>
+              <span className="font-semibold">
+                {userData?.userActivity.monthlyActiveUsers}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -593,16 +729,26 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Session Duration</span>
-              <span className="font-semibold">{userData?.userActivity.averageSessionDuration?.toFixed(1)}m</span>
+              <span className="text-sm text-muted-foreground">
+                Session Duration
+              </span>
+              <span className="font-semibold">
+                {userData?.userActivity.averageSessionDuration?.toFixed(1)}m
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Actions/Session</span>
-              <span className="font-semibold">{userData?.userActivity.averageActionsPerSession?.toFixed(1)}</span>
+              <span className="text-sm text-muted-foreground">
+                Actions/Session
+              </span>
+              <span className="font-semibold">
+                {userData?.userActivity.averageActionsPerSession?.toFixed(1)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Bounce Rate</span>
-              <span className="font-semibold">{userData?.userActivity.bounceRate?.toFixed(1)}%</span>
+              <span className="font-semibold">
+                {userData?.userActivity.bounceRate?.toFixed(1)}%
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -614,15 +760,27 @@ export default function AdminAnalyticsPage() {
           <CardContent className="space-y-3">
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Churn Rate</span>
-              <span className="font-semibold">{((userData?.retentionMetrics.churnRate || 0) * 100).toFixed(1)}%</span>
+              <span className="font-semibold">
+                {((userData?.retentionMetrics.churnRate || 0) * 100).toFixed(1)}
+                %
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">LTV</span>
-              <span className="font-semibold">${userData?.retentionMetrics.ltv?.toFixed(0)}</span>
+              <span className="font-semibold">
+                ${userData?.retentionMetrics.ltv?.toFixed(0)}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Winback Rate</span>
-              <span className="font-semibold">{((userData?.retentionMetrics.winbackRate || 0) * 100).toFixed(1)}%</span>
+              <span className="text-sm text-muted-foreground">
+                Winback Rate
+              </span>
+              <span className="font-semibold">
+                {((userData?.retentionMetrics.winbackRate || 0) * 100).toFixed(
+                  1
+                )}
+                %
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -632,7 +790,9 @@ export default function AdminAnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Feature Usage</CardTitle>
-            <CardDescription>How users interact with different features</CardDescription>
+            <CardDescription>
+              How users interact with different features
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -642,8 +802,16 @@ export default function AdminAnalyticsPage() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="usageCount" fill={CHART_COLORS.primary} name="Usage Count" />
-                <Bar dataKey="uniqueUsers" fill={CHART_COLORS.secondary} name="Unique Users" />
+                <Bar
+                  dataKey="usageCount"
+                  fill={CHART_COLORS.primary}
+                  name="Usage Count"
+                />
+                <Bar
+                  dataKey="uniqueUsers"
+                  fill={CHART_COLORS.secondary}
+                  name="Unique Users"
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -666,23 +834,29 @@ export default function AdminAnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={transactionData.timeSeriesData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="timestamp" 
-                    tickFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
+                  <XAxis
+                    dataKey="timestamp"
+                    tickFormatter={(timestamp) =>
+                      new Date(timestamp).toLocaleDateString()
+                    }
                   />
                   <YAxis />
-                  <Tooltip 
-                    labelFormatter={(timestamp) => new Date(timestamp as number).toLocaleDateString()}
+                  <Tooltip
+                    labelFormatter={(timestamp) =>
+                      new Date(timestamp as number).toLocaleDateString()
+                    }
                     formatter={(value: number, name: string) => [
-                      name === 'transaction_volume' ? `$${value.toLocaleString()}` : value,
-                      name === 'transaction_volume' ? 'Volume' : 'Count'
+                      name === 'transaction_volume'
+                        ? `$${value.toLocaleString()}`
+                        : value,
+                      name === 'transaction_volume' ? 'Volume' : 'Count',
                     ]}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke={CHART_COLORS.success} 
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke={CHART_COLORS.success}
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -707,13 +881,27 @@ export default function AdminAnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={(props: any) => `${props.source}: ${props.percentage.toFixed(1)}%`}
+                    label={(props: any) =>
+                      `${props.source}: ${props.percentage.toFixed(1)}%`
+                    }
                   >
-                    {transactionData.revenueMetrics.revenueBySource.map((entry: SourceBreakdown, index: number) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]} />
-                    ))}
+                    {transactionData.revenueMetrics.revenueBySource.map(
+                      (entry: SourceBreakdown, index: number) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            CHART_COLOR_ARRAY[index % CHART_COLOR_ARRAY.length]
+                          }
+                        />
+                      )
+                    )}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']} />
+                  <Tooltip
+                    formatter={(value: number) => [
+                      `$${value.toLocaleString()}`,
+                      'Amount',
+                    ]}
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -729,16 +917,24 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Total Volume</span>
-              <span className="font-semibold">${transactionData?.totalVolume?.toLocaleString()}</span>
+              <span className="text-sm text-muted-foreground">
+                Total Volume
+              </span>
+              <span className="font-semibold">
+                ${transactionData?.totalVolume?.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Total Count</span>
-              <span className="font-semibold">{transactionData?.totalTransactions?.toLocaleString()}</span>
+              <span className="font-semibold">
+                {transactionData?.totalTransactions?.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Avg. Size</span>
-              <span className="font-semibold">${transactionData?.averageTransactionSize?.toFixed(0)}</span>
+              <span className="font-semibold">
+                ${transactionData?.averageTransactionSize?.toFixed(0)}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -749,16 +945,28 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Total Revenue</span>
-              <span className="font-semibold">${transactionData?.revenueMetrics.totalRevenue?.toLocaleString()}</span>
+              <span className="text-sm text-muted-foreground">
+                Total Revenue
+              </span>
+              <span className="font-semibold">
+                $
+                {transactionData?.revenueMetrics.totalRevenue?.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Growth Rate</span>
-              <span className="font-semibold">{transactionData?.revenueMetrics.revenueGrowthRate?.toFixed(1)}%</span>
+              <span className="font-semibold">
+                {transactionData?.revenueMetrics.revenueGrowthRate?.toFixed(1)}%
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">ARPU</span>
-              <span className="font-semibold">${transactionData?.revenueMetrics.averageRevenuePerUser?.toFixed(0)}</span>
+              <span className="font-semibold">
+                $
+                {transactionData?.revenueMetrics.averageRevenuePerUser?.toFixed(
+                  0
+                )}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -769,16 +977,35 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Gross Margin</span>
-              <span className="font-semibold">{transactionData?.revenueMetrics.profitability.grossMargin?.toFixed(1)}%</span>
+              <span className="text-sm text-muted-foreground">
+                Gross Margin
+              </span>
+              <span className="font-semibold">
+                {transactionData?.revenueMetrics.profitability.grossMargin?.toFixed(
+                  1
+                )}
+                %
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Net Margin</span>
-              <span className="font-semibold">{transactionData?.revenueMetrics.profitability.netMargin?.toFixed(1)}%</span>
+              <span className="font-semibold">
+                {transactionData?.revenueMetrics.profitability.netMargin?.toFixed(
+                  1
+                )}
+                %
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Payback Period</span>
-              <span className="font-semibold">{transactionData?.revenueMetrics.profitability.paybackPeriod?.toFixed(1)}m</span>
+              <span className="text-sm text-muted-foreground">
+                Payback Period
+              </span>
+              <span className="font-semibold">
+                {transactionData?.revenueMetrics.profitability.paybackPeriod?.toFixed(
+                  1
+                )}
+                m
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -789,16 +1016,29 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Market Share</span>
-              <span className="font-semibold">{transactionData?.marketMetrics.marketShare?.toFixed(1)}%</span>
+              <span className="text-sm text-muted-foreground">
+                Market Share
+              </span>
+              <span className="font-semibold">
+                {transactionData?.marketMetrics.marketShare?.toFixed(1)}%
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Position</span>
-              <span className="font-semibold">{transactionData?.marketMetrics.competitivePosition}</span>
+              <span className="font-semibold">
+                {transactionData?.marketMetrics.competitivePosition}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Demand Forecast</span>
-              <span className="font-semibold">${(transactionData?.marketMetrics.demandForecast || 0).toLocaleString()}</span>
+              <span className="text-sm text-muted-foreground">
+                Demand Forecast
+              </span>
+              <span className="font-semibold">
+                $
+                {(
+                  transactionData?.marketMetrics.demandForecast || 0
+                ).toLocaleString()}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -813,7 +1053,9 @@ export default function AdminAnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Impact by Type</CardTitle>
-            <CardDescription>Carbon impact distribution by project type</CardDescription>
+            <CardDescription>
+              Carbon impact distribution by project type
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-80">
             {impactData?.impactByType && (
@@ -822,7 +1064,12 @@ export default function AdminAnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="projectType" />
                   <YAxis />
-                  <Tooltip formatter={(value: number) => [`${value.toLocaleString()} tCO₂`, 'Impact']} />
+                  <Tooltip
+                    formatter={(value: number) => [
+                      `${value.toLocaleString()} tCO₂`,
+                      'Impact',
+                    ]}
+                  />
                   <Legend />
                   <Bar dataKey="totalImpact" fill={CHART_COLORS.primary} />
                 </BarChart>
@@ -839,21 +1086,32 @@ export default function AdminAnalyticsPage() {
           <CardContent className="h-80">
             {impactData?.timeSeriesData && (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={impactData.timeSeriesData.filter((d: TimeSeriesPoint) => d.metric === 'carbon_impact')}>
+                <AreaChart
+                  data={impactData.timeSeriesData.filter(
+                    (d: TimeSeriesPoint) => d.metric === 'carbon_impact'
+                  )}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="timestamp" 
-                    tickFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
+                  <XAxis
+                    dataKey="timestamp"
+                    tickFormatter={(timestamp) =>
+                      new Date(timestamp).toLocaleDateString()
+                    }
                   />
                   <YAxis />
-                  <Tooltip 
-                    labelFormatter={(timestamp) => new Date(timestamp as number).toLocaleDateString()}
-                    formatter={(value: number) => [`${value.toLocaleString()} tCO₂`, 'Carbon Impact']}
+                  <Tooltip
+                    labelFormatter={(timestamp) =>
+                      new Date(timestamp as number).toLocaleDateString()
+                    }
+                    formatter={(value: number) => [
+                      `${value.toLocaleString()} tCO₂`,
+                      'Carbon Impact',
+                    ]}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke={CHART_COLORS.success} 
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke={CHART_COLORS.success}
                     fill={CHART_COLORS.success}
                     fillOpacity={0.3}
                   />
@@ -868,7 +1126,9 @@ export default function AdminAnalyticsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Impact Equivalents</CardTitle>
-          <CardDescription>Real-world equivalent measurements of carbon impact</CardDescription>
+          <CardDescription>
+            Real-world equivalent measurements of carbon impact
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-5">
@@ -891,21 +1151,27 @@ export default function AdminAnalyticsPage() {
               <div className="text-2xl font-bold text-emerald-600">
                 {impactData?.equivalentMetrics.treesEquivalent?.toLocaleString()}
               </div>
-              <div className="text-sm text-muted-foreground">Tree equivalent</div>
+              <div className="text-sm text-muted-foreground">
+                Tree equivalent
+              </div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <Plane className="h-8 w-8 mx-auto mb-2 text-purple-600" />
               <div className="text-2xl font-bold text-purple-600">
                 {impactData?.equivalentMetrics.flightsOffset?.toLocaleString()}
               </div>
-              <div className="text-sm text-muted-foreground">Flights offset</div>
+              <div className="text-sm text-muted-foreground">
+                Flights offset
+              </div>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <Factory className="h-8 w-8 mx-auto mb-2 text-orange-600" />
               <div className="text-2xl font-bold text-orange-600">
                 {impactData?.equivalentMetrics.fuelSaved?.toLocaleString()}
               </div>
-              <div className="text-sm text-muted-foreground">Gallons fuel saved</div>
+              <div className="text-sm text-muted-foreground">
+                Gallons fuel saved
+              </div>
             </div>
           </div>
         </CardContent>
@@ -919,18 +1185,29 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {impactData?.impactByRegion?.slice(0, 6).map((region: ImpactByRegion) => (
-                <div key={`${region.country}-${region.region}`} className="flex justify-between items-center">
-                  <div>
-                    <span className="font-medium">{region.country}</span>
-                    <span className="text-sm text-muted-foreground ml-2">({region.region})</span>
+              {impactData?.impactByRegion
+                ?.slice(0, 6)
+                .map((region: ImpactByRegion) => (
+                  <div
+                    key={`${region.country}-${region.region}`}
+                    className="flex justify-between items-center"
+                  >
+                    <div>
+                      <span className="font-medium">{region.country}</span>
+                      <span className="text-sm text-muted-foreground ml-2">
+                        ({region.region})
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">
+                        {region.totalImpact.toLocaleString()} tCO₂
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {region.projectCount} projects
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold">{region.totalImpact.toLocaleString()} tCO₂</div>
-                    <div className="text-sm text-muted-foreground">{region.projectCount} projects</div>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           </CardContent>
         </Card>
@@ -938,39 +1215,62 @@ export default function AdminAnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Impact Summary</CardTitle>
-            <CardDescription>Total environmental impact metrics</CardDescription>
+            <CardDescription>
+              Total environmental impact metrics
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Total Carbon Offset</span>
-              <span className="font-semibold">{impactData?.totalCarbonOffset?.toLocaleString()} tCO₂</span>
+              <span className="text-sm text-muted-foreground">
+                Total Carbon Offset
+              </span>
+              <span className="font-semibold">
+                {impactData?.totalCarbonOffset?.toLocaleString()} tCO₂
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Trees Planted</span>
-              <span className="font-semibold">{impactData?.totalTreesPlanted?.toLocaleString()}</span>
+              <span className="text-sm text-muted-foreground">
+                Trees Planted
+              </span>
+              <span className="font-semibold">
+                {impactData?.totalTreesPlanted?.toLocaleString()}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Energy Generated</span>
-              <span className="font-semibold">{impactData?.totalEnergyGenerated?.toLocaleString()} kWh</span>
+              <span className="text-sm text-muted-foreground">
+                Energy Generated
+              </span>
+              <span className="font-semibold">
+                {impactData?.totalEnergyGenerated?.toLocaleString()} kWh
+              </span>
             </div>
             <Separator />
             <div className="pt-2">
-              <div className="text-sm text-muted-foreground mb-2">Impact Growth</div>
-              {impactData?.impactTrends?.map((trend: TrendData, index: number) => (
-                <div key={index} className="flex justify-between items-center">
-                  <span className="text-sm">{trend.metric}</span>
-                  <div className="flex items-center gap-1">
-                    {trend.direction === 'increasing' ? (
-                      <TrendingUp className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-500" />
-                    )}
-                    <span className={`text-sm font-medium ${trend.direction === 'increasing' ? 'text-green-600' : 'text-red-600'}`}>
-                      {trend.magnitude.toFixed(1)}%
-                    </span>
+              <div className="text-sm text-muted-foreground mb-2">
+                Impact Growth
+              </div>
+              {impactData?.impactTrends?.map(
+                (trend: TrendData, index: number) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center"
+                  >
+                    <span className="text-sm">{trend.metric}</span>
+                    <div className="flex items-center gap-1">
+                      {trend.direction === 'increasing' ? (
+                        <TrendingUp className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3 text-red-500" />
+                      )}
+                      <span
+                        className={`text-sm font-medium ${trend.direction === 'increasing' ? 'text-green-600' : 'text-red-600'}`}
+                      >
+                        {trend.magnitude.toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           </CardContent>
         </Card>
@@ -993,36 +1293,50 @@ export default function AdminAnalyticsPage() {
                 <span className="text-sm font-medium">System Uptime</span>
                 <div className="flex items-center gap-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-600 h-2 rounded-full" 
-                      style={{ width: `${platformPerformance?.systemUptime || 0}%` }}
+                    <div
+                      className="bg-green-600 h-2 rounded-full"
+                      style={{
+                        width: `${platformPerformance?.systemUptime || 0}%`,
+                      }}
                     />
                   </div>
-                  <span className="text-sm font-medium">{platformPerformance?.systemUptime?.toFixed(1)}%</span>
+                  <span className="text-sm font-medium">
+                    {platformPerformance?.systemUptime?.toFixed(1)}%
+                  </span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Response Time</span>
-                <span className="font-semibold">{platformPerformance?.responseTime}ms</span>
+                <span className="font-semibold">
+                  {platformPerformance?.responseTime}ms
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Throughput</span>
-                <span className="font-semibold">{platformPerformance?.throughput} req/hr</span>
+                <span className="font-semibold">
+                  {platformPerformance?.throughput} req/hr
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Error Rate</span>
-                <span className="font-semibold">{(platformPerformance?.errorRate || 0) * 100}%</span>
+                <span className="font-semibold">
+                  {(platformPerformance?.errorRate || 0) * 100}%
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">User Satisfaction</span>
                 <div className="flex items-center gap-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
-                      style={{ width: `${(platformPerformance?.userSatisfaction || 0) * 20}%` }}
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{
+                        width: `${(platformPerformance?.userSatisfaction || 0) * 20}%`,
+                      }}
                     />
                   </div>
-                  <span className="text-sm font-medium">{platformPerformance?.userSatisfaction}/5</span>
+                  <span className="text-sm font-medium">
+                    {platformPerformance?.userSatisfaction}/5
+                  </span>
                 </div>
               </div>
             </div>
@@ -1040,36 +1354,48 @@ export default function AdminAnalyticsPage() {
                 <span className="text-sm font-medium">Security Score</span>
                 <div className="flex items-center gap-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-red-600 h-2 rounded-full" 
-                      style={{ width: `${platformPerformance?.securityScore || 0}%` }}
+                    <div
+                      className="bg-red-600 h-2 rounded-full"
+                      style={{
+                        width: `${platformPerformance?.securityScore || 0}%`,
+                      }}
                     />
                   </div>
-                  <span className="text-sm font-medium">{platformPerformance?.securityScore?.toFixed(1)}/100</span>
+                  <span className="text-sm font-medium">
+                    {platformPerformance?.securityScore?.toFixed(1)}/100
+                  </span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Reliability Score</span>
                 <div className="flex items-center gap-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-600 h-2 rounded-full" 
-                      style={{ width: `${platformPerformance?.reliabilityScore || 0}%` }}
+                    <div
+                      className="bg-green-600 h-2 rounded-full"
+                      style={{
+                        width: `${platformPerformance?.reliabilityScore || 0}%`,
+                      }}
                     />
                   </div>
-                  <span className="text-sm font-medium">{platformPerformance?.reliabilityScore?.toFixed(1)}/100</span>
+                  <span className="text-sm font-medium">
+                    {platformPerformance?.reliabilityScore?.toFixed(1)}/100
+                  </span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Scalability Index</span>
                 <div className="flex items-center gap-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-purple-600 h-2 rounded-full" 
-                      style={{ width: `${platformPerformance?.scalabilityIndex || 0}%` }}
+                    <div
+                      className="bg-purple-600 h-2 rounded-full"
+                      style={{
+                        width: `${platformPerformance?.scalabilityIndex || 0}%`,
+                      }}
                     />
                   </div>
-                  <span className="text-sm font-medium">{platformPerformance?.scalabilityIndex?.toFixed(1)}/100</span>
+                  <span className="text-sm font-medium">
+                    {platformPerformance?.scalabilityIndex?.toFixed(1)}/100
+                  </span>
                 </div>
               </div>
             </div>
@@ -1085,35 +1411,42 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {platformPerformance.performanceTrends.map((trend: TrendData, index: number) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <span className="font-medium">{trend.metric}</span>
-                    <span className="text-sm text-muted-foreground ml-2">
-                      ({trend.timeframe.replace('_', ' ')})
-                    </span>
+              {platformPerformance.performanceTrends.map(
+                (trend: TrendData, index: number) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div>
+                      <span className="font-medium">{trend.metric}</span>
+                      <span className="text-sm text-muted-foreground ml-2">
+                        ({trend.timeframe.replace('_', ' ')})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {trend.direction === 'increasing' ? (
+                        <TrendingUp className="h-4 w-4 text-green-500" />
+                      ) : trend.direction === 'decreasing' ? (
+                        <TrendingDown className="h-4 w-4 text-red-500" />
+                      ) : null}
+                      <span
+                        className={`font-medium ${
+                          trend.direction === 'increasing'
+                            ? 'text-green-600'
+                            : trend.direction === 'decreasing'
+                              ? 'text-red-600'
+                              : 'text-gray-600'
+                        }`}
+                      >
+                        {Math.abs(trend.magnitude).toFixed(1)}%
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {(trend.confidence * 100).toFixed(0)}% confidence
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {trend.direction === 'increasing' ? (
-                      <TrendingUp className="h-4 w-4 text-green-500" />
-                    ) : trend.direction === 'decreasing' ? (
-                      <TrendingDown className="h-4 w-4 text-red-500" />
-                    ) : null}
-                    <span className={`font-medium ${
-                      trend.direction === 'increasing'
-                        ? 'text-green-600'
-                        : trend.direction === 'decreasing'
-                        ? 'text-red-600'
-                        : 'text-gray-600'
-                    }`}>
-                      {Math.abs(trend.magnitude).toFixed(1)}%
-                    </span>
-                    <Badge variant="outline" className="text-xs">
-                      {(trend.confidence * 100).toFixed(0)}% confidence
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           </CardContent>
         </Card>
@@ -1137,7 +1470,9 @@ export default function AdminAnalyticsPage() {
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Analytics Dashboard
+          </h1>
           <p className="text-muted-foreground">
             Comprehensive analytics and insights for the EcoSprout platform
           </p>
@@ -1149,7 +1484,9 @@ export default function AdminAnalyticsPage() {
             onClick={handleRefresh}
             disabled={isRefreshing}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
+            />
             Refresh
           </Button>
           <Button variant="outline" size="sm">
@@ -1165,7 +1502,10 @@ export default function AdminAnalyticsPage() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
+              <Select
+                value={selectedTimeRange}
+                onValueChange={setSelectedTimeRange}
+              >
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
@@ -1178,10 +1518,15 @@ export default function AdminAnalyticsPage() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              <Select value={chartType} onValueChange={(value: 'bar' | 'line' | 'pie') => setChartType(value)}>
+              <Select
+                value={chartType}
+                onValueChange={(value: 'bar' | 'line' | 'pie') =>
+                  setChartType(value)
+                }
+              >
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -1237,24 +1582,30 @@ export default function AdminAnalyticsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Platform Overview</CardTitle>
-                <CardDescription>Key platform metrics and trends</CardDescription>
+                <CardDescription>
+                  Key platform metrics and trends
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={projectData?.timeSeriesData || []}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="timestamp" 
-                      tickFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
+                    <XAxis
+                      dataKey="timestamp"
+                      tickFormatter={(timestamp) =>
+                        new Date(timestamp).toLocaleDateString()
+                      }
                     />
                     <YAxis />
-                    <Tooltip 
-                      labelFormatter={(timestamp) => new Date(timestamp as number).toLocaleDateString()}
+                    <Tooltip
+                      labelFormatter={(timestamp) =>
+                        new Date(timestamp as number).toLocaleDateString()
+                      }
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke={CHART_COLORS.primary} 
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke={CHART_COLORS.primary}
                       fill={CHART_COLORS.primary}
                       fillOpacity={0.3}
                     />
