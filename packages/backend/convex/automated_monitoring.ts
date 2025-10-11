@@ -138,7 +138,9 @@ export const getMonitoringStats = internalQuery({
     // Get overdue progress reports (no update in 30+ days)
     const projectsWithRecentUpdates = await ctx.db
       .query('progressUpdates')
-      .withIndex('by_reporting_date', (q) => q.gte('reportingDate', thirtyDaysAgo))
+      .withIndex('by_reporting_date', (q) =>
+        q.gte('reportingDate', thirtyDaysAgo)
+      )
       .collect();
 
     const projectsWithRecentUpdatesSet = new Set(

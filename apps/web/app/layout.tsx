@@ -34,7 +34,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable}`}
+        suppressHydrationWarning
+      >
         <ClerkProvider>
           <ConvexClientProvider>
             <div className="min-h-screen flex flex-col">

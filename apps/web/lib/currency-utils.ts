@@ -8,7 +8,7 @@
 // Base currency: USD
 const EXCHANGE_RATES = {
   USD_TO_INR: 83.25, // 1 USD = 83.25 INR (approximate rate)
-  USD_TO_LKR: 326.50, // 1 USD = 326.50 LKR (approximate rate)
+  USD_TO_LKR: 326.5, // 1 USD = 326.50 LKR (approximate rate)
   INR_TO_LKR: 3.92, // 1 INR = 3.92 LKR (approximate rate)
 } as const;
 
@@ -105,7 +105,7 @@ export function getExchangeRateInfo() {
     usdToInr: EXCHANGE_RATES.USD_TO_INR,
     usdToLkr: EXCHANGE_RATES.USD_TO_LKR,
     inrToLkr: EXCHANGE_RATES.INR_TO_LKR,
-    lastUpdated: 'Static rates - typically updated daily from forex APIs'
+    lastUpdated: 'Static rates - typically updated daily from forex APIs',
   };
 }
 
@@ -120,7 +120,10 @@ export function calculateTotalLKR(amounts: number[]): CurrencyAmount {
 /**
  * Format large amounts with appropriate units (K, M, B)
  */
-export function formatLargeCurrency(amount: number, currency: Currency): string {
+export function formatLargeCurrency(
+  amount: number,
+  currency: Currency
+): string {
   const symbol = getCurrencySymbol(currency);
 
   if (amount >= 1_000_000_000) {

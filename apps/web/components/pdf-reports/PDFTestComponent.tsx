@@ -5,8 +5,14 @@ import { Download, FileText, TestTube } from 'lucide-react';
 
 // Import PDF generation utilities
 import { PDFGenerationService, PDFTemplateData } from '@/lib/pdf-generator';
-import { AnalyticsPDFTemplates, AnalyticsData } from '@packages/backend/lib/analytics-pdf-templates';
-import { MonitoringPDFTemplates, MonitoringData } from '@packages/backend/lib/monitoring-pdf-templates';
+import {
+  AnalyticsPDFTemplates,
+  AnalyticsData,
+} from '@packages/backend/lib/analytics-pdf-templates';
+import {
+  MonitoringPDFTemplates,
+  MonitoringData,
+} from '@packages/backend/lib/monitoring-pdf-templates';
 
 export default function PDFTestComponent() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -71,9 +77,13 @@ export default function PDFTestComponent() {
       {
         type: 'positive',
         title: 'Strong Growth',
-        description: 'Platform revenue increased by 15.7% compared to the previous period',
+        description:
+          'Platform revenue increased by 15.7% compared to the previous period',
         metrics: ['total_revenue'],
-        recommendations: ['Continue current growth strategies', 'Expand marketing efforts'],
+        recommendations: [
+          'Continue current growth strategies',
+          'Expand marketing efforts',
+        ],
       },
     ],
     timeframe: {
@@ -164,7 +174,10 @@ export default function PDFTestComponent() {
   };
 
   const addTestResult = (message: string) => {
-    setTestResults(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+    setTestResults((prev) => [
+      ...prev,
+      `${new Date().toLocaleTimeString()}: ${message}`,
+    ]);
   };
 
   const testAnalyticsPDFGeneration = async () => {
@@ -172,30 +185,43 @@ export default function PDFTestComponent() {
       addTestResult('Starting analytics PDF generation test...');
 
       // Test comprehensive report
-      const comprehensiveTemplate = AnalyticsPDFTemplates.generateComprehensiveReport(
-        mockAnalyticsData,
-        mockUserInfo
+      const comprehensiveTemplate =
+        AnalyticsPDFTemplates.generateComprehensiveReport(
+          mockAnalyticsData,
+          mockUserInfo
+        );
+
+      addTestResult(
+        '✅ Comprehensive analytics template generated successfully'
       );
 
-      addTestResult('✅ Comprehensive analytics template generated successfully');
-
       // Validate template data
-      const validation = PDFGenerationService.validateTemplateData(comprehensiveTemplate);
+      const validation = PDFGenerationService.validateTemplateData(
+        comprehensiveTemplate
+      );
       if (validation.isValid) {
         addTestResult('✅ Template data validation passed');
       } else {
-        addTestResult(`❌ Template validation failed: ${validation.errors.join(', ')}`);
+        addTestResult(
+          `❌ Template validation failed: ${validation.errors.join(', ')}`
+        );
         return;
       }
 
       // Generate PDF
-      const pdfBlob = await PDFGenerationService.generatePDF(comprehensiveTemplate);
-      addTestResult(`✅ PDF generated successfully (${(pdfBlob.size / 1024).toFixed(2)} KB)`);
+      const pdfBlob = await PDFGenerationService.generatePDF(
+        comprehensiveTemplate
+      );
+      addTestResult(
+        `✅ PDF generated successfully (${(pdfBlob.size / 1024).toFixed(2)} KB)`
+      );
 
       // Test download
-      await PDFGenerationService.downloadPDF(comprehensiveTemplate, 'test-analytics-report.pdf');
+      await PDFGenerationService.downloadPDF(
+        comprehensiveTemplate,
+        'test-analytics-report.pdf'
+      );
       addTestResult('✅ PDF download triggered successfully');
-
     } catch (error) {
       addTestResult(`❌ Analytics PDF test failed: ${error}`);
     }
@@ -206,30 +232,38 @@ export default function PDFTestComponent() {
       addTestResult('Starting monitoring PDF generation test...');
 
       // Test system monitoring report
-      const systemTemplate = MonitoringPDFTemplates.generateSystemMonitoringReport(
-        mockMonitoringData,
-        mockUserInfo
-      );
+      const systemTemplate =
+        MonitoringPDFTemplates.generateSystemMonitoringReport(
+          mockMonitoringData,
+          mockUserInfo
+        );
 
       addTestResult('✅ System monitoring template generated successfully');
 
       // Validate template data
-      const validation = PDFGenerationService.validateTemplateData(systemTemplate);
+      const validation =
+        PDFGenerationService.validateTemplateData(systemTemplate);
       if (validation.isValid) {
         addTestResult('✅ Template data validation passed');
       } else {
-        addTestResult(`❌ Template validation failed: ${validation.errors.join(', ')}`);
+        addTestResult(
+          `❌ Template validation failed: ${validation.errors.join(', ')}`
+        );
         return;
       }
 
       // Generate PDF
       const pdfBlob = await PDFGenerationService.generatePDF(systemTemplate);
-      addTestResult(`✅ PDF generated successfully (${(pdfBlob.size / 1024).toFixed(2)} KB)`);
+      addTestResult(
+        `✅ PDF generated successfully (${(pdfBlob.size / 1024).toFixed(2)} KB)`
+      );
 
       // Test download
-      await PDFGenerationService.downloadPDF(systemTemplate, 'test-monitoring-report.pdf');
+      await PDFGenerationService.downloadPDF(
+        systemTemplate,
+        'test-monitoring-report.pdf'
+      );
       addTestResult('✅ PDF download triggered successfully');
-
     } catch (error) {
       addTestResult(`❌ Monitoring PDF test failed: ${error}`);
     }
@@ -243,29 +277,49 @@ export default function PDFTestComponent() {
       addTestResult('🚀 Starting comprehensive PDF generation tests...');
 
       // Test all analytics report types
-      const analyticsTypes = ['comprehensive', 'platform', 'environmental', 'financial'] as const;
+      const analyticsTypes = [
+        'comprehensive',
+        'platform',
+        'environmental',
+        'financial',
+      ] as const;
       for (const type of analyticsTypes) {
         try {
           let template;
           switch (type) {
             case 'comprehensive':
-              template = AnalyticsPDFTemplates.generateComprehensiveReport(mockAnalyticsData, mockUserInfo);
+              template = AnalyticsPDFTemplates.generateComprehensiveReport(
+                mockAnalyticsData,
+                mockUserInfo
+              );
               break;
             case 'platform':
-              template = AnalyticsPDFTemplates.generatePlatformReport(mockAnalyticsData, mockUserInfo);
+              template = AnalyticsPDFTemplates.generatePlatformReport(
+                mockAnalyticsData,
+                mockUserInfo
+              );
               break;
             case 'environmental':
-              template = AnalyticsPDFTemplates.generateEnvironmentalReport(mockAnalyticsData, mockUserInfo);
+              template = AnalyticsPDFTemplates.generateEnvironmentalReport(
+                mockAnalyticsData,
+                mockUserInfo
+              );
               break;
             case 'financial':
-              template = AnalyticsPDFTemplates.generateFinancialReport(mockAnalyticsData, mockUserInfo);
+              template = AnalyticsPDFTemplates.generateFinancialReport(
+                mockAnalyticsData,
+                mockUserInfo
+              );
               break;
           }
 
-          const validation = PDFGenerationService.validateTemplateData(template);
+          const validation =
+            PDFGenerationService.validateTemplateData(template);
           if (validation.isValid) {
             const pdfBlob = await PDFGenerationService.generatePDF(template);
-            addTestResult(`✅ ${type} analytics report: ${(pdfBlob.size / 1024).toFixed(2)} KB`);
+            addTestResult(
+              `✅ ${type} analytics report: ${(pdfBlob.size / 1024).toFixed(2)} KB`
+            );
           } else {
             addTestResult(`❌ ${type} analytics report validation failed`);
           }
@@ -275,29 +329,49 @@ export default function PDFTestComponent() {
       }
 
       // Test all monitoring report types
-      const monitoringTypes = ['system', 'project', 'alerts', 'performance'] as const;
+      const monitoringTypes = [
+        'system',
+        'project',
+        'alerts',
+        'performance',
+      ] as const;
       for (const type of monitoringTypes) {
         try {
           let template;
           switch (type) {
             case 'system':
-              template = MonitoringPDFTemplates.generateSystemMonitoringReport(mockMonitoringData, mockUserInfo);
+              template = MonitoringPDFTemplates.generateSystemMonitoringReport(
+                mockMonitoringData,
+                mockUserInfo
+              );
               break;
             case 'project':
-              template = MonitoringPDFTemplates.generateProjectMonitoringReport(mockMonitoringData, mockUserInfo);
+              template = MonitoringPDFTemplates.generateProjectMonitoringReport(
+                mockMonitoringData,
+                mockUserInfo
+              );
               break;
             case 'alerts':
-              template = MonitoringPDFTemplates.generateAlertReport(mockMonitoringData, mockUserInfo);
+              template = MonitoringPDFTemplates.generateAlertReport(
+                mockMonitoringData,
+                mockUserInfo
+              );
               break;
             case 'performance':
-              template = MonitoringPDFTemplates.generatePerformanceReport(mockMonitoringData, mockUserInfo);
+              template = MonitoringPDFTemplates.generatePerformanceReport(
+                mockMonitoringData,
+                mockUserInfo
+              );
               break;
           }
 
-          const validation = PDFGenerationService.validateTemplateData(template);
+          const validation =
+            PDFGenerationService.validateTemplateData(template);
           if (validation.isValid) {
             const pdfBlob = await PDFGenerationService.generatePDF(template);
-            addTestResult(`✅ ${type} monitoring report: ${(pdfBlob.size / 1024).toFixed(2)} KB`);
+            addTestResult(
+              `✅ ${type} monitoring report: ${(pdfBlob.size / 1024).toFixed(2)} KB`
+            );
           } else {
             addTestResult(`❌ ${type} monitoring report validation failed`);
           }
@@ -307,7 +381,6 @@ export default function PDFTestComponent() {
       }
 
       addTestResult('🎉 All PDF generation tests completed!');
-
     } catch (error) {
       addTestResult(`💥 Test suite failed: ${error}`);
     } finally {
@@ -326,8 +399,13 @@ export default function PDFTestComponent() {
           <div className="flex items-center space-x-3">
             <TestTube className="h-8 w-8 text-blue-600" />
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">PDF Generation Test Suite</h2>
-              <p className="text-gray-600">Test the PDF generation functionality for analytics and monitoring systems</p>
+              <h2 className="text-2xl font-bold text-gray-800">
+                PDF Generation Test Suite
+              </h2>
+              <p className="text-gray-600">
+                Test the PDF generation functionality for analytics and
+                monitoring systems
+              </p>
             </div>
           </div>
         </div>
@@ -357,7 +435,9 @@ export default function PDFTestComponent() {
             className="flex items-center justify-center space-x-2 p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <TestTube className="h-5 w-5" />
-            <span>{isGenerating ? 'Running Tests...' : 'Test All Report Types'}</span>
+            <span>
+              {isGenerating ? 'Running Tests...' : 'Test All Report Types'}
+            </span>
           </button>
 
           <button
@@ -372,7 +452,9 @@ export default function PDFTestComponent() {
         {/* Test Results */}
         {testResults.length > 0 && (
           <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Test Results:</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              Test Results:
+            </h3>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {testResults.map((result, index) => (
                 <div
@@ -381,10 +463,10 @@ export default function PDFTestComponent() {
                     result.includes('✅')
                       ? 'bg-green-100 text-green-800'
                       : result.includes('❌') || result.includes('💥')
-                      ? 'bg-red-100 text-red-800'
-                      : result.includes('🚀') || result.includes('🎉')
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
+                        ? 'bg-red-100 text-red-800'
+                        : result.includes('🚀') || result.includes('🎉')
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-800'
                   }`}
                 >
                   {result}
@@ -396,13 +478,27 @@ export default function PDFTestComponent() {
 
         {/* Instructions */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h4 className="font-semibold text-blue-800 mb-2">Test Instructions:</h4>
+          <h4 className="font-semibold text-blue-800 mb-2">
+            Test Instructions:
+          </h4>
           <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Click "Test Analytics PDF" to test analytics report generation</li>
-            <li>• Click "Test Monitoring PDF" to test monitoring report generation</li>
-            <li>• Click "Test All Report Types" to run comprehensive tests on all report types</li>
-            <li>• Generated PDFs will automatically download to your Downloads folder</li>
-            <li>• Check the console for detailed error messages if tests fail</li>
+            <li>
+              • Click "Test Analytics PDF" to test analytics report generation
+            </li>
+            <li>
+              • Click "Test Monitoring PDF" to test monitoring report generation
+            </li>
+            <li>
+              • Click "Test All Report Types" to run comprehensive tests on all
+              report types
+            </li>
+            <li>
+              • Generated PDFs will automatically download to your Downloads
+              folder
+            </li>
+            <li>
+              • Check the console for detailed error messages if tests fail
+            </li>
           </ul>
         </div>
       </div>

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       id: charge.id,
       receipt_url: charge.receipt_url,
       receipt_number: charge.receipt_number,
-      status: charge.status
+      status: charge.status,
     });
 
     if (!charge.receipt_url) {

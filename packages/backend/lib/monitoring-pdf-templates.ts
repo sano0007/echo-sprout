@@ -138,7 +138,9 @@ export class MonitoringPDFTemplates {
       userInfo,
       content: {
         sections,
-        metrics: this.convertSystemMetricsToMetricData(monitoringData.systemMetrics),
+        metrics: this.convertSystemMetricsToMetricData(
+          monitoringData.systemMetrics
+        ),
       },
       branding: {
         primaryColor: '#dc2626',
@@ -161,7 +163,9 @@ export class MonitoringPDFTemplates {
         title: 'Project Portfolio Status',
         type: 'text',
         order: 1,
-        data: this.generateProjectPortfolioOverview(monitoringData.projectMonitoring),
+        data: this.generateProjectPortfolioOverview(
+          monitoringData.projectMonitoring
+        ),
       },
       {
         title: 'Project Status Summary',
@@ -173,13 +177,17 @@ export class MonitoringPDFTemplates {
         title: 'Project Progress Details',
         type: 'table',
         order: 3,
-        data: this.generateProjectProgressTable(monitoringData.projectMonitoring),
+        data: this.generateProjectProgressTable(
+          monitoringData.projectMonitoring
+        ),
       },
       {
         title: 'Verification Status Overview',
         type: 'table',
         order: 4,
-        data: this.generateVerificationStatusTable(monitoringData.projectMonitoring),
+        data: this.generateVerificationStatusTable(
+          monitoringData.projectMonitoring
+        ),
       },
       {
         title: 'Project Issues and Risks',
@@ -207,7 +215,8 @@ export class MonitoringPDFTemplates {
         primaryColor: '#7c3aed',
         secondaryColor: '#5b21b6',
         companyName: 'EcoSprout',
-        footer: 'EcoSprout Project Monitoring • Project Health & Progress Tracking',
+        footer:
+          'EcoSprout Project Monitoring • Project Health & Progress Tracking',
       },
     };
   }
@@ -287,37 +296,49 @@ export class MonitoringPDFTemplates {
         title: 'Performance Overview',
         type: 'text',
         order: 1,
-        data: this.generatePerformanceOverview(monitoringData.performanceMetrics),
+        data: this.generatePerformanceOverview(
+          monitoringData.performanceMetrics
+        ),
       },
       {
         title: 'System Performance Metrics',
         type: 'table',
         order: 2,
-        data: this.generatePerformanceMetricsTable(monitoringData.performanceMetrics),
+        data: this.generatePerformanceMetricsTable(
+          monitoringData.performanceMetrics
+        ),
       },
       {
         title: 'Performance Targets vs Actual',
         type: 'table',
         order: 3,
-        data: this.generatePerformanceTargetsTable(monitoringData.performanceMetrics),
+        data: this.generatePerformanceTargetsTable(
+          monitoringData.performanceMetrics
+        ),
       },
       {
         title: 'Performance Trends',
         type: 'table',
         order: 4,
-        data: this.generatePerformanceTrendsTable(monitoringData.performanceMetrics),
+        data: this.generatePerformanceTrendsTable(
+          monitoringData.performanceMetrics
+        ),
       },
       {
         title: 'Performance Insights',
         type: 'list',
         order: 5,
-        data: this.generatePerformanceInsights(monitoringData.performanceMetrics),
+        data: this.generatePerformanceInsights(
+          monitoringData.performanceMetrics
+        ),
       },
       {
         title: 'Optimization Recommendations',
         type: 'list',
         order: 6,
-        data: this.generateOptimizationRecommendations(monitoringData.performanceMetrics),
+        data: this.generateOptimizationRecommendations(
+          monitoringData.performanceMetrics
+        ),
       },
     ];
 
@@ -328,13 +349,16 @@ export class MonitoringPDFTemplates {
       userInfo,
       content: {
         sections,
-        metrics: this.convertPerformanceMetricsToMetricData(monitoringData.performanceMetrics),
+        metrics: this.convertPerformanceMetricsToMetricData(
+          monitoringData.performanceMetrics
+        ),
       },
       branding: {
         primaryColor: '#059669',
         secondaryColor: '#047857',
         companyName: 'EcoSprout',
-        footer: 'EcoSprout Performance Monitoring • System Optimization Analysis',
+        footer:
+          'EcoSprout Performance Monitoring • System Optimization Analysis',
       },
     };
   }
@@ -342,18 +366,28 @@ export class MonitoringPDFTemplates {
   // Helper methods for generating content
 
   private static generateSystemHealthOverview(data: MonitoringData): string {
-    const healthyCount = data.systemMetrics.filter(m => m.status === 'healthy').length;
-    const warningCount = data.systemMetrics.filter(m => m.status === 'warning').length;
-    const criticalCount = data.systemMetrics.filter(m => m.status === 'critical').length;
+    const healthyCount = data.systemMetrics.filter(
+      (m) => m.status === 'healthy'
+    ).length;
+    const warningCount = data.systemMetrics.filter(
+      (m) => m.status === 'warning'
+    ).length;
+    const criticalCount = data.systemMetrics.filter(
+      (m) => m.status === 'critical'
+    ).length;
     const totalMetrics = data.systemMetrics.length;
 
-    const activeAlerts = data.alerts.filter(a => a.status === 'active').length;
-    const criticalAlerts = data.alerts.filter(a => a.type === 'critical' && a.status === 'active').length;
+    const activeAlerts = data.alerts.filter(
+      (a) => a.status === 'active'
+    ).length;
+    const criticalAlerts = data.alerts.filter(
+      (a) => a.type === 'critical' && a.status === 'active'
+    ).length;
 
     return `System health overview for the period from ${data.timeframe.start.toLocaleDateString()} to ${data.timeframe.end.toLocaleDateString()}.
 
 Overall System Status:
-- ${healthyCount}/${totalMetrics} metrics in healthy state (${((healthyCount/totalMetrics)*100).toFixed(1)}%)
+- ${healthyCount}/${totalMetrics} metrics in healthy state (${((healthyCount / totalMetrics) * 100).toFixed(1)}%)
 - ${warningCount} metrics in warning state
 - ${criticalCount} metrics in critical state
 - ${activeAlerts} active alerts requiring attention
@@ -365,7 +399,7 @@ The system demonstrates ${healthyCount > totalMetrics * 0.8 ? 'excellent' : heal
   private static generateSystemMetricsTable(metrics: SystemMetric[]) {
     return {
       headers: ['Metric', 'Value', 'Threshold', 'Status', 'Category'],
-      rows: metrics.map(metric => [
+      rows: metrics.map((metric) => [
         metric.name,
         `${metric.value} ${metric.unit}`,
         `${metric.threshold} ${metric.unit}`,
@@ -376,11 +410,13 @@ The system demonstrates ${healthyCount > totalMetrics * 0.8 ? 'excellent' : heal
   }
 
   private static generateAlertsTable(alerts: AlertData[]) {
-    const activeAlerts = alerts.filter(a => a.status === 'active').slice(0, 10); // Show top 10
+    const activeAlerts = alerts
+      .filter((a) => a.status === 'active')
+      .slice(0, 10); // Show top 10
 
     return {
       headers: ['Alert', 'Type', 'Severity', 'Category', 'Created'],
-      rows: activeAlerts.map(alert => [
+      rows: activeAlerts.map((alert) => [
         alert.title,
         alert.type.toUpperCase(),
         alert.severity.toString(),
@@ -393,7 +429,7 @@ The system demonstrates ${healthyCount > totalMetrics * 0.8 ? 'excellent' : heal
   private static generatePerformanceTable(metrics: PerformanceMetric[]) {
     return {
       headers: ['Metric', 'Current', 'Target', 'Trend', 'Status'],
-      rows: metrics.map(metric => [
+      rows: metrics.map((metric) => [
         metric.name,
         `${metric.value} ${metric.unit}`,
         `${metric.target} ${metric.unit}`,
@@ -407,13 +443,17 @@ The system demonstrates ${healthyCount > totalMetrics * 0.8 ? 'excellent' : heal
     const statusItems: string[] = [];
 
     // Group by category
-    const categories = [...new Set(metrics.map(m => m.category))];
-    categories.forEach(category => {
-      const categoryMetrics = metrics.filter(m => m.category === category);
-      const healthyCount = categoryMetrics.filter(m => m.status === 'healthy').length;
+    const categories = [...new Set(metrics.map((m) => m.category))];
+    categories.forEach((category) => {
+      const categoryMetrics = metrics.filter((m) => m.category === category);
+      const healthyCount = categoryMetrics.filter(
+        (m) => m.status === 'healthy'
+      ).length;
       const total = categoryMetrics.length;
 
-      statusItems.push(`${category.replace('_', ' ').toUpperCase()}: ${healthyCount}/${total} metrics healthy`);
+      statusItems.push(
+        `${category.replace('_', ' ').toUpperCase()}: ${healthyCount}/${total} metrics healthy`
+      );
     });
 
     return statusItems;
@@ -422,39 +462,58 @@ The system demonstrates ${healthyCount > totalMetrics * 0.8 ? 'excellent' : heal
   private static generateSystemRecommendations(data: MonitoringData): string[] {
     const recommendations: string[] = [];
 
-    const criticalMetrics = data.systemMetrics.filter(m => m.status === 'critical');
-    const warningMetrics = data.systemMetrics.filter(m => m.status === 'warning');
+    const criticalMetrics = data.systemMetrics.filter(
+      (m) => m.status === 'critical'
+    );
+    const warningMetrics = data.systemMetrics.filter(
+      (m) => m.status === 'warning'
+    );
 
     if (criticalMetrics.length > 0) {
-      recommendations.push(`Address ${criticalMetrics.length} critical system metrics immediately`);
+      recommendations.push(
+        `Address ${criticalMetrics.length} critical system metrics immediately`
+      );
     }
 
     if (warningMetrics.length > 0) {
-      recommendations.push(`Monitor ${warningMetrics.length} warning-level metrics closely`);
+      recommendations.push(
+        `Monitor ${warningMetrics.length} warning-level metrics closely`
+      );
     }
 
-    recommendations.push('Implement automated alerting for threshold violations');
+    recommendations.push(
+      'Implement automated alerting for threshold violations'
+    );
     recommendations.push('Schedule regular system health reviews');
     recommendations.push('Consider capacity planning for trending metrics');
 
     return recommendations;
   }
 
-  private static generateProjectPortfolioOverview(projects: ProjectMonitoringData[]): string {
-    const onTrack = projects.filter(p => p.status === 'on_track').length;
-    const delayed = projects.filter(p => p.status === 'delayed').length;
-    const atRisk = projects.filter(p => p.status === 'at_risk').length;
-    const completed = projects.filter(p => p.status === 'completed').length;
+  private static generateProjectPortfolioOverview(
+    projects: ProjectMonitoringData[]
+  ): string {
+    const onTrack = projects.filter((p) => p.status === 'on_track').length;
+    const delayed = projects.filter((p) => p.status === 'delayed').length;
+    const atRisk = projects.filter((p) => p.status === 'at_risk').length;
+    const completed = projects.filter((p) => p.status === 'completed').length;
     const total = projects.length;
 
-    const avgProgress = projects.reduce((sum, p) => sum + p.progress, 0) / total;
-    const totalCarbonOffset = projects.reduce((sum, p) => sum + p.metrics.carbonOffset, 0);
-    const totalTreesPlanted = projects.reduce((sum, p) => sum + p.metrics.treesPlanted, 0);
+    const avgProgress =
+      projects.reduce((sum, p) => sum + p.progress, 0) / total;
+    const totalCarbonOffset = projects.reduce(
+      (sum, p) => sum + p.metrics.carbonOffset,
+      0
+    );
+    const totalTreesPlanted = projects.reduce(
+      (sum, p) => sum + p.metrics.treesPlanted,
+      0
+    );
 
     return `Project portfolio overview covering ${total} projects in the monitoring system.
 
 Project Status Distribution:
-- ${onTrack} projects on track (${((onTrack/total)*100).toFixed(1)}%)
+- ${onTrack} projects on track (${((onTrack / total) * 100).toFixed(1)}%)
 - ${delayed} projects delayed
 - ${atRisk} projects at risk
 - ${completed} projects completed
@@ -469,8 +528,14 @@ The portfolio demonstrates ${onTrack > total * 0.7 ? 'strong' : onTrack > total 
 
   private static generateProjectStatusTable(projects: ProjectMonitoringData[]) {
     return {
-      headers: ['Project', 'Status', 'Progress', 'Next Milestone', 'Last Update'],
-      rows: projects.map(project => [
+      headers: [
+        'Project',
+        'Status',
+        'Progress',
+        'Next Milestone',
+        'Last Update',
+      ],
+      rows: projects.map((project) => [
         project.projectName,
         project.status.replace('_', ' ').toUpperCase(),
         `${project.progress}%`,
@@ -480,10 +545,18 @@ The portfolio demonstrates ${onTrack > total * 0.7 ? 'strong' : onTrack > total 
     };
   }
 
-  private static generateProjectProgressTable(projects: ProjectMonitoringData[]) {
+  private static generateProjectProgressTable(
+    projects: ProjectMonitoringData[]
+  ) {
     return {
-      headers: ['Project', 'Carbon Offset (tons)', 'Trees Planted', 'Area (hectares)', 'Budget Used'],
-      rows: projects.map(project => [
+      headers: [
+        'Project',
+        'Carbon Offset (tons)',
+        'Trees Planted',
+        'Area (hectares)',
+        'Budget Used',
+      ],
+      rows: projects.map((project) => [
         project.projectName,
         project.metrics.carbonOffset.toLocaleString(),
         project.metrics.treesPlanted.toLocaleString(),
@@ -493,10 +566,12 @@ The portfolio demonstrates ${onTrack > total * 0.7 ? 'strong' : onTrack > total 
     };
   }
 
-  private static generateVerificationStatusTable(projects: ProjectMonitoringData[]) {
+  private static generateVerificationStatusTable(
+    projects: ProjectMonitoringData[]
+  ) {
     return {
       headers: ['Project', 'Verification Status', 'Progress', 'Issues'],
-      rows: projects.map(project => [
+      rows: projects.map((project) => [
         project.projectName,
         project.verificationStatus.replace('_', ' ').toUpperCase(),
         `${project.progress}%`,
@@ -505,30 +580,42 @@ The portfolio demonstrates ${onTrack > total * 0.7 ? 'strong' : onTrack > total 
     };
   }
 
-  private static generateProjectIssuesList(projects: ProjectMonitoringData[]): string[] {
+  private static generateProjectIssuesList(
+    projects: ProjectMonitoringData[]
+  ): string[] {
     const allIssues: string[] = [];
 
-    projects.forEach(project => {
-      project.issues.forEach(issue => {
-        allIssues.push(`${project.projectName}: ${issue.title} (${issue.severity})`);
+    projects.forEach((project) => {
+      project.issues.forEach((issue) => {
+        allIssues.push(
+          `${project.projectName}: ${issue.title} (${issue.severity})`
+        );
       });
     });
 
-    return allIssues.length > 0 ? allIssues.slice(0, 20) : ['No critical issues reported'];
+    return allIssues.length > 0
+      ? allIssues.slice(0, 20)
+      : ['No critical issues reported'];
   }
 
-  private static generateProjectActionItems(projects: ProjectMonitoringData[]): string[] {
+  private static generateProjectActionItems(
+    projects: ProjectMonitoringData[]
+  ): string[] {
     const actionItems: string[] = [];
 
-    const delayedProjects = projects.filter(p => p.status === 'delayed');
-    const atRiskProjects = projects.filter(p => p.status === 'at_risk');
+    const delayedProjects = projects.filter((p) => p.status === 'delayed');
+    const atRiskProjects = projects.filter((p) => p.status === 'at_risk');
 
     if (delayedProjects.length > 0) {
-      actionItems.push(`Review and address delays in ${delayedProjects.length} projects`);
+      actionItems.push(
+        `Review and address delays in ${delayedProjects.length} projects`
+      );
     }
 
     if (atRiskProjects.length > 0) {
-      actionItems.push(`Implement risk mitigation for ${atRiskProjects.length} at-risk projects`);
+      actionItems.push(
+        `Implement risk mitigation for ${atRiskProjects.length} at-risk projects`
+      );
     }
 
     actionItems.push('Schedule quarterly project review meetings');
@@ -539,12 +626,13 @@ The portfolio demonstrates ${onTrack > total * 0.7 ? 'strong' : onTrack > total 
   }
 
   private static generateAlertSummary(alerts: AlertData[]): string {
-    const activeAlerts = alerts.filter(a => a.status === 'active');
-    const criticalAlerts = activeAlerts.filter(a => a.type === 'critical');
-    const warningAlerts = activeAlerts.filter(a => a.type === 'warning');
-    const resolvedAlerts = alerts.filter(a => a.status === 'resolved');
+    const activeAlerts = alerts.filter((a) => a.status === 'active');
+    const criticalAlerts = activeAlerts.filter((a) => a.type === 'critical');
+    const warningAlerts = activeAlerts.filter((a) => a.type === 'warning');
+    const resolvedAlerts = alerts.filter((a) => a.status === 'resolved');
 
-    const avgResolutionTime = this.calculateAverageResolutionTime(resolvedAlerts);
+    const avgResolutionTime =
+      this.calculateAverageResolutionTime(resolvedAlerts);
 
     return `Alert management summary showing current system alert status.
 
@@ -562,11 +650,19 @@ The alert system is functioning effectively with most alerts being addressed wit
   }
 
   private static generateCriticalAlertsTable(alerts: AlertData[]) {
-    const criticalAlerts = alerts.filter(a => a.type === 'critical' && a.status === 'active');
+    const criticalAlerts = alerts.filter(
+      (a) => a.type === 'critical' && a.status === 'active'
+    );
 
     return {
-      headers: ['Alert', 'Severity', 'Category', 'Affected Projects', 'Duration'],
-      rows: criticalAlerts.map(alert => [
+      headers: [
+        'Alert',
+        'Severity',
+        'Category',
+        'Affected Projects',
+        'Duration',
+      ],
+      rows: criticalAlerts.map((alert) => [
         alert.title,
         alert.severity.toString(),
         alert.category.replace('_', ' '),
@@ -581,11 +677,17 @@ The alert system is functioning effectively with most alerts being addressed wit
 
     return {
       headers: ['Category', 'Active', 'Critical', 'Resolved', 'Total'],
-      rows: categories.map(category => {
-        const categoryAlerts = alerts.filter(a => a.category === category);
-        const active = categoryAlerts.filter(a => a.status === 'active').length;
-        const critical = categoryAlerts.filter(a => a.type === 'critical' && a.status === 'active').length;
-        const resolved = categoryAlerts.filter(a => a.status === 'resolved').length;
+      rows: categories.map((category) => {
+        const categoryAlerts = alerts.filter((a) => a.category === category);
+        const active = categoryAlerts.filter(
+          (a) => a.status === 'active'
+        ).length;
+        const critical = categoryAlerts.filter(
+          (a) => a.type === 'critical' && a.status === 'active'
+        ).length;
+        const resolved = categoryAlerts.filter(
+          (a) => a.status === 'resolved'
+        ).length;
 
         return [
           category.replace('_', ' ').toUpperCase(),
@@ -599,11 +701,13 @@ The alert system is functioning effectively with most alerts being addressed wit
   }
 
   private static generateAlertResolutionTable(alerts: AlertData[]) {
-    const resolvedAlerts = alerts.filter(a => a.status === 'resolved').slice(0, 10);
+    const resolvedAlerts = alerts
+      .filter((a) => a.status === 'resolved')
+      .slice(0, 10);
 
     return {
       headers: ['Alert', 'Type', 'Created', 'Resolved', 'Resolution Time'],
-      rows: resolvedAlerts.map(alert => [
+      rows: resolvedAlerts.map((alert) => [
         alert.title,
         alert.type.toUpperCase(),
         alert.createdAt.toLocaleDateString(),
@@ -617,13 +721,19 @@ The alert system is functioning effectively with most alerts being addressed wit
     const trends: string[] = [];
 
     const totalAlerts = alerts.length;
-    const criticalAlerts = alerts.filter(a => a.type === 'critical').length;
-    const systemAlerts = alerts.filter(a => a.category === 'system').length;
+    const criticalAlerts = alerts.filter((a) => a.type === 'critical').length;
+    const systemAlerts = alerts.filter((a) => a.category === 'system').length;
 
     trends.push(`Total alerts generated: ${totalAlerts}`);
-    trends.push(`Critical alert rate: ${((criticalAlerts / totalAlerts) * 100).toFixed(1)}%`);
-    trends.push(`System alerts account for ${((systemAlerts / totalAlerts) * 100).toFixed(1)}% of all alerts`);
-    trends.push('Alert frequency has remained stable over the monitoring period');
+    trends.push(
+      `Critical alert rate: ${((criticalAlerts / totalAlerts) * 100).toFixed(1)}%`
+    );
+    trends.push(
+      `System alerts account for ${((systemAlerts / totalAlerts) * 100).toFixed(1)}% of all alerts`
+    );
+    trends.push(
+      'Alert frequency has remained stable over the monitoring period'
+    );
     trends.push('Most alerts are resolved within established SLA timeframes');
 
     return trends;
@@ -640,21 +750,27 @@ The alert system is functioning effectively with most alerts being addressed wit
     ];
   }
 
-  private static generatePerformanceOverview(metrics: PerformanceMetric[]): string {
-    const improvingCount = metrics.filter(m => m.trend === 'improving').length;
-    const stableCount = metrics.filter(m => m.trend === 'stable').length;
-    const decliningCount = metrics.filter(m => m.trend === 'declining').length;
+  private static generatePerformanceOverview(
+    metrics: PerformanceMetric[]
+  ): string {
+    const improvingCount = metrics.filter(
+      (m) => m.trend === 'improving'
+    ).length;
+    const stableCount = metrics.filter((m) => m.trend === 'stable').length;
+    const decliningCount = metrics.filter(
+      (m) => m.trend === 'declining'
+    ).length;
     const total = metrics.length;
 
-    const targetsMetCount = metrics.filter(m => m.value >= m.target).length;
+    const targetsMetCount = metrics.filter((m) => m.value >= m.target).length;
 
     return `Performance monitoring overview covering ${total} key performance indicators.
 
 Performance Trends:
-- ${improvingCount} metrics showing improvement (${((improvingCount/total)*100).toFixed(1)}%)
+- ${improvingCount} metrics showing improvement (${((improvingCount / total) * 100).toFixed(1)}%)
 - ${stableCount} metrics remaining stable
 - ${decliningCount} metrics showing decline
-- ${targetsMetCount}/${total} metrics meeting targets (${((targetsMetCount/total)*100).toFixed(1)}%)
+- ${targetsMetCount}/${total} metrics meeting targets (${((targetsMetCount / total) * 100).toFixed(1)}%)
 
 Overall system performance is ${improvingCount > decliningCount ? 'positive' : 'stable'} with most metrics trending in the right direction.`;
   }
@@ -662,7 +778,7 @@ Overall system performance is ${improvingCount > decliningCount ? 'positive' : '
   private static generatePerformanceMetricsTable(metrics: PerformanceMetric[]) {
     return {
       headers: ['Metric', 'Current Value', 'Unit', 'Target', 'Performance'],
-      rows: metrics.map(metric => [
+      rows: metrics.map((metric) => [
         metric.name,
         metric.value.toString(),
         metric.unit,
@@ -675,29 +791,45 @@ Overall system performance is ${improvingCount > decliningCount ? 'positive' : '
   private static generatePerformanceTargetsTable(metrics: PerformanceMetric[]) {
     return {
       headers: ['Metric', 'Target', 'Actual', 'Variance', 'Status'],
-      rows: metrics.map(metric => [
+      rows: metrics.map((metric) => [
         metric.name,
         `${metric.target} ${metric.unit}`,
         `${metric.value} ${metric.unit}`,
-        `${((metric.value - metric.target) / metric.target * 100).toFixed(1)}%`,
+        `${(((metric.value - metric.target) / metric.target) * 100).toFixed(1)}%`,
         metric.value >= metric.target ? '✅ Met' : '❌ Below',
       ]),
     };
   }
 
   private static generatePerformanceTrendsTable(metrics: PerformanceMetric[]) {
-    const categories = [...new Set(metrics.map(m => m.category))];
+    const categories = [...new Set(metrics.map((m) => m.category))];
 
     return {
-      headers: ['Category', 'Improving', 'Stable', 'Declining', 'Overall Trend'],
-      rows: categories.map(category => {
-        const categoryMetrics = metrics.filter(m => m.category === category);
-        const improving = categoryMetrics.filter(m => m.trend === 'improving').length;
-        const stable = categoryMetrics.filter(m => m.trend === 'stable').length;
-        const declining = categoryMetrics.filter(m => m.trend === 'declining').length;
+      headers: [
+        'Category',
+        'Improving',
+        'Stable',
+        'Declining',
+        'Overall Trend',
+      ],
+      rows: categories.map((category) => {
+        const categoryMetrics = metrics.filter((m) => m.category === category);
+        const improving = categoryMetrics.filter(
+          (m) => m.trend === 'improving'
+        ).length;
+        const stable = categoryMetrics.filter(
+          (m) => m.trend === 'stable'
+        ).length;
+        const declining = categoryMetrics.filter(
+          (m) => m.trend === 'declining'
+        ).length;
 
-        const overallTrend = improving > declining ? '↗️ Positive' :
-                           improving === declining ? '→ Stable' : '↘️ Negative';
+        const overallTrend =
+          improving > declining
+            ? '↗️ Positive'
+            : improving === declining
+              ? '→ Stable'
+              : '↘️ Negative';
 
         return [
           category.replace('_', ' ').toUpperCase(),
@@ -710,19 +842,27 @@ Overall system performance is ${improvingCount > decliningCount ? 'positive' : '
     };
   }
 
-  private static generatePerformanceInsights(metrics: PerformanceMetric[]): string[] {
+  private static generatePerformanceInsights(
+    metrics: PerformanceMetric[]
+  ): string[] {
     const insights: string[] = [];
 
-    const uptimeMetrics = metrics.filter(m => m.category === 'uptime');
-    const responseTimeMetrics = metrics.filter(m => m.category === 'response_time');
+    const uptimeMetrics = metrics.filter((m) => m.category === 'uptime');
+    const responseTimeMetrics = metrics.filter(
+      (m) => m.category === 'response_time'
+    );
 
     if (uptimeMetrics.length > 0) {
-      const avgUptime = uptimeMetrics.reduce((sum, m) => sum + m.value, 0) / uptimeMetrics.length;
+      const avgUptime =
+        uptimeMetrics.reduce((sum, m) => sum + m.value, 0) /
+        uptimeMetrics.length;
       insights.push(`System uptime averaging ${avgUptime.toFixed(2)}%`);
     }
 
     if (responseTimeMetrics.length > 0) {
-      const avgResponseTime = responseTimeMetrics.reduce((sum, m) => sum + m.value, 0) / responseTimeMetrics.length;
+      const avgResponseTime =
+        responseTimeMetrics.reduce((sum, m) => sum + m.value, 0) /
+        responseTimeMetrics.length;
       insights.push(`Average response time: ${avgResponseTime.toFixed(0)}ms`);
     }
 
@@ -732,23 +872,33 @@ Overall system performance is ${improvingCount > decliningCount ? 'positive' : '
     return insights;
   }
 
-  private static generateOptimizationRecommendations(metrics: PerformanceMetric[]): string[] {
+  private static generateOptimizationRecommendations(
+    metrics: PerformanceMetric[]
+  ): string[] {
     const recommendations: string[] = [];
 
-    const belowTargetMetrics = metrics.filter(m => m.value < m.target);
-    const decliningMetrics = metrics.filter(m => m.trend === 'declining');
+    const belowTargetMetrics = metrics.filter((m) => m.value < m.target);
+    const decliningMetrics = metrics.filter((m) => m.trend === 'declining');
 
     if (belowTargetMetrics.length > 0) {
-      recommendations.push(`Focus on improving ${belowTargetMetrics.length} metrics below target`);
+      recommendations.push(
+        `Focus on improving ${belowTargetMetrics.length} metrics below target`
+      );
     }
 
     if (decliningMetrics.length > 0) {
-      recommendations.push(`Investigate and address ${decliningMetrics.length} declining metrics`);
+      recommendations.push(
+        `Investigate and address ${decliningMetrics.length} declining metrics`
+      );
     }
 
-    recommendations.push('Implement automated performance tuning where possible');
+    recommendations.push(
+      'Implement automated performance tuning where possible'
+    );
     recommendations.push('Review and update performance targets quarterly');
-    recommendations.push('Consider load balancing optimization for response times');
+    recommendations.push(
+      'Consider load balancing optimization for response times'
+    );
     recommendations.push('Enhance caching strategies to improve throughput');
 
     return recommendations;
@@ -758,19 +908,27 @@ Overall system performance is ${improvingCount > decliningCount ? 'positive' : '
 
   private static getStatusIcon(status: string): string {
     switch (status) {
-      case 'healthy': return '✅ Healthy';
-      case 'warning': return '⚠️ Warning';
-      case 'critical': return '🚨 Critical';
-      default: return '❓ Unknown';
+      case 'healthy':
+        return '✅ Healthy';
+      case 'warning':
+        return '⚠️ Warning';
+      case 'critical':
+        return '🚨 Critical';
+      default:
+        return '❓ Unknown';
     }
   }
 
   private static getTrendIcon(trend: string): string {
     switch (trend) {
-      case 'improving': return '↗️ Improving';
-      case 'stable': return '→ Stable';
-      case 'declining': return '↘️ Declining';
-      default: return '→ Unknown';
+      case 'improving':
+        return '↗️ Improving';
+      case 'stable':
+        return '→ Stable';
+      case 'declining':
+        return '↘️ Declining';
+      default:
+        return '→ Unknown';
     }
   }
 
@@ -782,7 +940,9 @@ Overall system performance is ${improvingCount > decliningCount ? 'positive' : '
     return '❌ Poor';
   }
 
-  private static calculateAverageResolutionTime(resolvedAlerts: AlertData[]): string {
+  private static calculateAverageResolutionTime(
+    resolvedAlerts: AlertData[]
+  ): string {
     if (resolvedAlerts.length === 0) return 'N/A';
 
     const totalTime = resolvedAlerts.reduce((sum, alert) => {
@@ -808,7 +968,10 @@ Overall system performance is ${improvingCount > decliningCount ? 'positive' : '
     return `${hours} hours`;
   }
 
-  private static calculateResolutionTime(createdAt: Date, resolvedAt?: Date): string {
+  private static calculateResolutionTime(
+    createdAt: Date,
+    resolvedAt?: Date
+  ): string {
     if (!resolvedAt) return 'N/A';
 
     const duration = resolvedAt.getTime() - createdAt.getTime();
@@ -819,8 +982,10 @@ Overall system performance is ${improvingCount > decliningCount ? 'positive' : '
     return `${hours} hours`;
   }
 
-  private static convertSystemMetricsToMetricData(metrics: SystemMetric[]): MetricData[] {
-    return metrics.map(metric => ({
+  private static convertSystemMetricsToMetricData(
+    metrics: SystemMetric[]
+  ): MetricData[] {
+    return metrics.map((metric) => ({
       id: metric.id,
       name: metric.name,
       value: metric.value,
@@ -830,8 +995,10 @@ Overall system performance is ${improvingCount > decliningCount ? 'positive' : '
     }));
   }
 
-  private static convertPerformanceMetricsToMetricData(metrics: PerformanceMetric[]): MetricData[] {
-    return metrics.map(metric => ({
+  private static convertPerformanceMetricsToMetricData(
+    metrics: PerformanceMetric[]
+  ): MetricData[] {
+    return metrics.map((metric) => ({
       id: metric.id,
       name: metric.name,
       value: metric.value,

@@ -137,7 +137,9 @@ export default function ProjectDetail() {
             {/* Placeholder for project images - images field not yet implemented in schema */}
             <div className="w-full h-96 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg mb-4 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-2xl font-semibold text-gray-700 mb-2">{project.title}</p>
+                <p className="text-2xl font-semibold text-gray-700 mb-2">
+                  {project.title}
+                </p>
                 <p className="text-gray-600">{project.projectType}</p>
               </div>
             </div>

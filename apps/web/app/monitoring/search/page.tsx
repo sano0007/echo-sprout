@@ -22,7 +22,8 @@ export default function MonitoringSearchPage() {
                   Monitoring System Search
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Search across progress updates, milestones, alerts, and projects
+                  Search across progress updates, milestones, alerts, and
+                  projects
                 </p>
               </div>
             </div>
@@ -39,7 +40,9 @@ export default function MonitoringSearchPage() {
                 <Database className="h-8 w-8 text-blue-600" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Total Records</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Total Records
+                </p>
                 <p className="text-lg font-semibold text-gray-900">1,247</p>
               </div>
             </div>
@@ -75,7 +78,9 @@ export default function MonitoringSearchPage() {
                 <Search className="h-8 w-8 text-orange-600" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Avg Response</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Avg Response
+                </p>
                 <p className="text-lg font-semibold text-gray-900">0.3s</p>
               </div>
             </div>

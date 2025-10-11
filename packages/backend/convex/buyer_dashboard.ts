@@ -11,13 +11,16 @@ export const getBuyerPurchaseHistory = query({
       .first();
 
     if (!user) {
-      return { purchases: [], totalImpact: {
-        totalCredits: 0,
-        totalSpent: 0,
-        totalCO2Offset: 0,
-        equivalentTrees: 0,
-        equivalentCarsOff: 0,
-      }};
+      return {
+        purchases: [],
+        totalImpact: {
+          totalCredits: 0,
+          totalSpent: 0,
+          totalCO2Offset: 0,
+          equivalentTrees: 0,
+          equivalentCarsOff: 0,
+        },
+      };
     }
 
     // Get all transactions for this buyer
@@ -45,13 +48,16 @@ export const getBuyerPurchaseHistory = query({
           status: 'Active',
           impact: {
             co2Offset: transaction.creditAmount * 1.2, // Approximate calculation
-          }
+          },
         };
       })
     );
 
     // Calculate total impact
-    const totalCredits = transactions.reduce((sum, t) => sum + t.creditAmount, 0);
+    const totalCredits = transactions.reduce(
+      (sum, t) => sum + t.creditAmount,
+      0
+    );
     const totalSpent = transactions.reduce((sum, t) => sum + t.totalAmount, 0);
     const totalCO2Offset = totalCredits * 1.2; // Approximate calculation
     const equivalentTrees = Math.round(totalCO2Offset * 15); // ~15 trees per ton CO2
@@ -65,7 +71,7 @@ export const getBuyerPurchaseHistory = query({
         totalCO2Offset,
         equivalentTrees,
         equivalentCarsOff,
-      }
+      },
     };
   },
 });
@@ -140,7 +146,10 @@ export const getBuyerDashboardSummary = query({
       .filter((q) => q.eq(q.field('isValid'), true))
       .collect();
 
-    const totalCredits = transactions.reduce((sum, t) => sum + t.creditAmount, 0);
+    const totalCredits = transactions.reduce(
+      (sum, t) => sum + t.creditAmount,
+      0
+    );
     const totalSpent = transactions.reduce((sum, t) => sum + t.totalAmount, 0);
     const totalCO2Offset = totalCredits * 1.2; // Approximate calculation
 
@@ -207,7 +216,9 @@ export const getBuyerProjectTracking = query({
           projectId: project._id,
           projectTitle: project.title,
           projectType: project.projectType,
-          creatorName: creator ? `${creator.firstName} ${creator.lastName}` : 'Unknown',
+          creatorName: creator
+            ? `${creator.firstName} ${creator.lastName}`
+            : 'Unknown',
           location: {
             region: project.location.name,
             country: 'Sri Lanka', // Default for now
@@ -226,21 +237,21 @@ export const getBuyerProjectTracking = query({
           impact: {
             carbonOffset: transaction.creditAmount * 1.2, // Approximate
           },
-          alerts: alerts.map(alert => ({
+          alerts: alerts.map((alert) => ({
             id: alert._id,
             message: alert.message,
             severity: alert.severity,
             date: alert._creationTime,
             isResolved: alert.isResolved,
           })),
-          recentUpdates: progressUpdates.map(update => ({
+          recentUpdates: progressUpdates.map((update) => ({
             id: update._id,
             title: update.title,
             description: update.description,
             date: update.submittedAt || update.reportingDate,
             photos: update.photoUrls || [],
           })),
-          milestones: milestones.map(milestone => ({
+          milestones: milestones.map((milestone) => ({
             id: milestone._id,
             title: milestone.title,
             description: milestone.description,
@@ -274,11 +285,15 @@ function getProjectPhase(status: string): string {
 }
 
 function getNextMilestone(milestones: any[]): string {
-  const nextMilestone = milestones.find(m => m.status === 'pending' || m.status === 'in_progress');
+  const nextMilestone = milestones.find(
+    (m) => m.status === 'pending' || m.status === 'in_progress'
+  );
   return nextMilestone?.title || 'Project Completion';
 }
 
 function getNextMilestoneDate(milestones: any[]): number {
-  const nextMilestone = milestones.find(m => m.status === 'pending' || m.status === 'in_progress');
-  return nextMilestone?.plannedDate || Date.now() + (30 * 24 * 60 * 60 * 1000); // Default to 30 days from now
+  const nextMilestone = milestones.find(
+    (m) => m.status === 'pending' || m.status === 'in_progress'
+  );
+  return nextMilestone?.plannedDate || Date.now() + 30 * 24 * 60 * 60 * 1000; // Default to 30 days from now
 }

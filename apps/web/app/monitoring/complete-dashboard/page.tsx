@@ -25,7 +25,7 @@ import {
   Activity,
   Loader2,
   X,
-  Save
+  Save,
 } from 'lucide-react';
 import { api } from '@packages/backend/convex/_generated/api';
 import WorkingPDFGenerator from '../../../components/monitoring/WorkingPDFGenerator';
@@ -33,41 +33,78 @@ import WorkingPDFGenerator from '../../../components/monitoring/WorkingPDFGenera
 // Validation schemas
 const progressUpdateSchema = z.object({
   projectId: z.string().min(1, 'Project is required'),
-  title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title too long'),
-  description: z.string().min(10, 'Description must be at least 10 characters').max(1000, 'Description too long'),
-  updateType: z.enum(['milestone', 'measurement', 'photo', 'issue', 'completion']),
-  progressPercentage: z.number().min(0, 'Progress cannot be negative').max(100, 'Progress cannot exceed 100%'),
-  measurementData: z.object({
-    carbonImpactToDate: z.number().min(0).optional(),
-    treesPlanted: z.number().min(0).optional(),
-    energyGenerated: z.number().min(0).optional(),
-    wasteProcessed: z.number().min(0).optional(),
-  }).optional(),
+  title: z
+    .string()
+    .min(3, 'Title must be at least 3 characters')
+    .max(100, 'Title too long'),
+  description: z
+    .string()
+    .min(10, 'Description must be at least 10 characters')
+    .max(1000, 'Description too long'),
+  updateType: z.enum([
+    'milestone',
+    'measurement',
+    'photo',
+    'issue',
+    'completion',
+  ]),
+  progressPercentage: z
+    .number()
+    .min(0, 'Progress cannot be negative')
+    .max(100, 'Progress cannot exceed 100%'),
+  measurementData: z
+    .object({
+      carbonImpactToDate: z.number().min(0).optional(),
+      treesPlanted: z.number().min(0).optional(),
+      energyGenerated: z.number().min(0).optional(),
+      wasteProcessed: z.number().min(0).optional(),
+    })
+    .optional(),
   nextSteps: z.string().max(500, 'Next steps too long').optional(),
   challenges: z.string().max(500, 'Challenges too long').optional(),
 });
 
 const alertSchema = z.object({
   projectId: z.string().optional(),
-  alertType: z.enum(['overdue_warning', 'milestone_delay', 'impact_shortfall', 'quality_concern', 'verification_required']),
+  alertType: z.enum([
+    'overdue_warning',
+    'milestone_delay',
+    'impact_shortfall',
+    'quality_concern',
+    'verification_required',
+  ]),
   severity: z.enum(['low', 'medium', 'high', 'critical']),
-  message: z.string().min(5, 'Message must be at least 5 characters').max(200, 'Message too long'),
-  description: z.string().min(10, 'Description must be at least 10 characters').max(500, 'Description too long'),
+  message: z
+    .string()
+    .min(5, 'Message must be at least 5 characters')
+    .max(200, 'Message too long'),
+  description: z
+    .string()
+    .min(10, 'Description must be at least 10 characters')
+    .max(500, 'Description too long'),
   assignedTo: z.string().optional(),
 });
 
 const milestoneSchema = z.object({
   projectId: z.string().min(1, 'Project is required'),
-  title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title too long'),
-  description: z.string().min(10, 'Description must be at least 10 characters').max(500, 'Description too long'),
+  title: z
+    .string()
+    .min(3, 'Title must be at least 3 characters')
+    .max(100, 'Title too long'),
+  description: z
+    .string()
+    .min(10, 'Description must be at least 10 characters')
+    .max(500, 'Description too long'),
   category: z.enum(['setup', 'progress', 'impact', 'verification']),
   plannedDate: z.date(),
-  targetMetrics: z.object({
-    carbonImpact: z.number().min(0).optional(),
-    treesPlanted: z.number().min(0).optional(),
-    energyGenerated: z.number().min(0).optional(),
-    wasteProcessed: z.number().min(0).optional(),
-  }).optional(),
+  targetMetrics: z
+    .object({
+      carbonImpact: z.number().min(0).optional(),
+      treesPlanted: z.number().min(0).optional(),
+      energyGenerated: z.number().min(0).optional(),
+      wasteProcessed: z.number().min(0).optional(),
+    })
+    .optional(),
 });
 
 type ProgressUpdateForm = z.infer<typeof progressUpdateSchema>;
@@ -84,25 +121,36 @@ export default function CompleteMonitoringDashboard() {
 
   // Data fetching
   const stats = useQuery(api.monitoring_crud.getMonitoringStats);
-  const progressUpdates = useQuery(api.monitoring_crud.getProgressUpdates, { 
+  const progressUpdates = useQuery(api.monitoring_crud.getProgressUpdates, {
     searchTerm: searchTerm || undefined,
-    limit: 50 
+    limit: 50,
   });
-  const alerts = useQuery(api.monitoring_crud.getAlerts, { 
-    isResolved: filterStatus === 'resolved' ? true : filterStatus === 'unresolved' ? false : undefined,
-    searchTerm: searchTerm || undefined
+  const alerts = useQuery(api.monitoring_crud.getAlerts, {
+    isResolved:
+      filterStatus === 'resolved'
+        ? true
+        : filterStatus === 'unresolved'
+          ? false
+          : undefined,
+    searchTerm: searchTerm || undefined,
   });
   const milestones = useQuery(api.monitoring_crud.getMilestones, {});
 
   // Mutations
-  const createProgressUpdate = useMutation(api.monitoring_crud.createProgressUpdate);
-  const updateProgressUpdate = useMutation(api.monitoring_crud.updateProgressUpdate);
-  const deleteProgressUpdate = useMutation(api.monitoring_crud.deleteProgressUpdate);
-  
+  const createProgressUpdate = useMutation(
+    api.monitoring_crud.createProgressUpdate
+  );
+  const updateProgressUpdate = useMutation(
+    api.monitoring_crud.updateProgressUpdate
+  );
+  const deleteProgressUpdate = useMutation(
+    api.monitoring_crud.deleteProgressUpdate
+  );
+
   const createAlert = useMutation(api.monitoring_crud.createAlert);
   const resolveAlert = useMutation(api.monitoring_crud.resolveAlert);
   const deleteAlert = useMutation(api.monitoring_crud.deleteAlert);
-  
+
   const createMilestone = useMutation(api.monitoring_crud.createMilestone);
   const updateMilestone = useMutation(api.monitoring_crud.updateMilestone);
   const deleteMilestone = useMutation(api.monitoring_crud.deleteMilestone);
@@ -119,7 +167,7 @@ export default function CompleteMonitoringDashboard() {
       measurementData: {},
       nextSteps: '',
       challenges: '',
-    }
+    },
   });
 
   const alertForm = useForm<AlertForm>({
@@ -129,7 +177,7 @@ export default function CompleteMonitoringDashboard() {
       severity: 'medium',
       message: '',
       description: '',
-    }
+    },
   });
 
   const milestoneForm = useForm<MilestoneForm>({
@@ -141,7 +189,7 @@ export default function CompleteMonitoringDashboard() {
       category: 'progress',
       plannedDate: new Date(),
       targetMetrics: {},
-    }
+    },
   });
 
   // Event handlers
@@ -179,10 +227,10 @@ export default function CompleteMonitoringDashboard() {
     try {
       // Map form category to milestoneType enum values
       const milestoneTypeMap: Record<string, any> = {
-        'setup': 'setup',
-        'progress': 'progress_25', // Default to progress_25 for generic progress
-        'impact': 'impact_first',
-        'verification': 'verification',
+        setup: 'setup',
+        progress: 'progress_25', // Default to progress_25 for generic progress
+        impact: 'impact_first',
+        verification: 'verification',
       };
 
       await createMilestone({
@@ -217,7 +265,9 @@ export default function CompleteMonitoringDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">Active Projects</p>
-            <p className="text-3xl font-bold text-blue-600">{stats?.projects.active || 0}</p>
+            <p className="text-3xl font-bold text-blue-600">
+              {stats?.projects.active || 0}
+            </p>
           </div>
           <Activity className="h-10 w-10 text-blue-500" />
         </div>
@@ -229,21 +279,25 @@ export default function CompleteMonitoringDashboard() {
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-600">Progress Updates</p>
-            <p className="text-3xl font-bold text-green-600">{stats?.progressUpdates.thisMonth || 0}</p>
+            <p className="text-sm font-medium text-gray-600">
+              Progress Updates
+            </p>
+            <p className="text-3xl font-bold text-green-600">
+              {stats?.progressUpdates.thisMonth || 0}
+            </p>
           </div>
           <TrendingUp className="h-10 w-10 text-green-500" />
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          This month
-        </p>
+        <p className="text-xs text-gray-500 mt-2">This month</p>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">Active Alerts</p>
-            <p className="text-3xl font-bold text-red-600">{stats?.alerts.unresolved || 0}</p>
+            <p className="text-3xl font-bold text-red-600">
+              {stats?.alerts.unresolved || 0}
+            </p>
           </div>
           <AlertCircle className="h-10 w-10 text-red-500" />
         </div>
@@ -256,7 +310,9 @@ export default function CompleteMonitoringDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">Milestones</p>
-            <p className="text-3xl font-bold text-purple-600">{stats?.milestones.completed || 0}</p>
+            <p className="text-3xl font-bold text-purple-600">
+              {stats?.milestones.completed || 0}
+            </p>
           </div>
           <CheckCircle className="h-10 w-10 text-purple-500" />
         </div>
@@ -271,7 +327,9 @@ export default function CompleteMonitoringDashboard() {
   const ProgressUpdatesTab = () => (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <h3 className="text-xl font-semibold text-gray-900">Progress Updates</h3>
+        <h3 className="text-xl font-semibold text-gray-900">
+          Progress Updates
+        </h3>
         <div className="flex gap-2">
           <button
             onClick={() => setShowModal('progress')}
@@ -285,28 +343,42 @@ export default function CompleteMonitoringDashboard() {
 
       <div className="grid gap-4">
         {progressUpdates?.map((update: any) => (
-          <div key={update._id} className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow">
+          <div
+            key={update._id}
+            className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow"
+          >
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900 text-lg mb-2">{update.title}</h4>
+                <h4 className="font-semibold text-gray-900 text-lg mb-2">
+                  {update.title}
+                </h4>
                 <p className="text-gray-600 mb-3">{update.description}</p>
                 <div className="flex flex-wrap items-center gap-4 mb-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    update.updateType === 'milestone' ? 'bg-blue-100 text-blue-800' :
-                    update.updateType === 'measurement' ? 'bg-green-100 text-green-800' :
-                    update.updateType === 'issue' ? 'bg-red-100 text-red-800' :
-                    update.updateType === 'completion' ? 'bg-purple-100 text-purple-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {update.updateType.charAt(0).toUpperCase() + update.updateType.slice(1)}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      update.updateType === 'milestone'
+                        ? 'bg-blue-100 text-blue-800'
+                        : update.updateType === 'measurement'
+                          ? 'bg-green-100 text-green-800'
+                          : update.updateType === 'issue'
+                            ? 'bg-red-100 text-red-800'
+                            : update.updateType === 'completion'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {update.updateType.charAt(0).toUpperCase() +
+                      update.updateType.slice(1)}
                   </span>
                   <span className="text-sm text-gray-500">
                     {new Date(update.reportingDate).toLocaleDateString()}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">Progress:</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Progress:
+                    </span>
                     <div className="bg-gray-200 rounded-full h-2 w-24">
-                      <div 
+                      <div
                         className="bg-blue-600 h-2 rounded-full transition-all"
                         style={{ width: `${update.progressPercentage}%` }}
                       />
@@ -316,47 +388,64 @@ export default function CompleteMonitoringDashboard() {
                     </span>
                   </div>
                 </div>
-                
-                {update.measurementData && Object.keys(update.measurementData).length > 0 && (
-                  <div className="bg-gray-50 rounded-lg p-4 mb-3">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Measurement Data</h5>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {Object.entries(update.measurementData).map(([key, value]: [string, any]) => (
-                        <div key={key} className="text-center">
-                          <p className="text-xs text-gray-600 capitalize mb-1">
-                            {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
-                          </p>
-                          <p className="font-semibold text-gray-900">{value}</p>
-                        </div>
-                      ))}
+
+                {update.measurementData &&
+                  Object.keys(update.measurementData).length > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4 mb-3">
+                      <h5 className="text-sm font-medium text-gray-700 mb-2">
+                        Measurement Data
+                      </h5>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {Object.entries(update.measurementData).map(
+                          ([key, value]: [string, any]) => (
+                            <div key={key} className="text-center">
+                              <p className="text-xs text-gray-600 capitalize mb-1">
+                                {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {value}
+                              </p>
+                            </div>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {(update.nextSteps || update.challenges) && (
                   <div className="space-y-2">
                     {update.nextSteps && (
                       <div>
-                        <span className="text-sm font-medium text-gray-700">Next Steps: </span>
-                        <span className="text-sm text-gray-600">{update.nextSteps}</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          Next Steps:{' '}
+                        </span>
+                        <span className="text-sm text-gray-600">
+                          {update.nextSteps}
+                        </span>
                       </div>
                     )}
                     {update.challenges && (
                       <div>
-                        <span className="text-sm font-medium text-gray-700">Challenges: </span>
-                        <span className="text-sm text-gray-600">{update.challenges}</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          Challenges:{' '}
+                        </span>
+                        <span className="text-sm text-gray-600">
+                          {update.challenges}
+                        </span>
                       </div>
                     )}
                   </div>
                 )}
               </div>
               <div className="flex gap-2 ml-4">
-                <button 
+                <button
                   onClick={() => {
                     setEditingItem(update);
                     progressForm.reset({
                       ...update,
-                      plannedDate: update.plannedDate ? new Date(update.plannedDate) : new Date()
+                      plannedDate: update.plannedDate
+                        ? new Date(update.plannedDate)
+                        : new Date(),
                     });
                     setShowModal('progress');
                   }}
@@ -365,7 +454,7 @@ export default function CompleteMonitoringDashboard() {
                 >
                   <Edit className="h-4 w-4" />
                 </button>
-                <button 
+                <button
                   onClick={() => deleteProgressUpdate({ updateId: update._id })}
                   className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                   title="Delete"
@@ -376,12 +465,14 @@ export default function CompleteMonitoringDashboard() {
             </div>
           </div>
         ))}
-        
+
         {(!progressUpdates || progressUpdates.length === 0) && (
           <div className="text-center py-12">
             <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 mb-2">No progress updates found</p>
-            <p className="text-sm text-gray-400">Create your first progress update to get started</p>
+            <p className="text-sm text-gray-400">
+              Create your first progress update to get started
+            </p>
           </div>
         )}
       </div>
@@ -415,55 +506,80 @@ export default function CompleteMonitoringDashboard() {
 
       <div className="grid gap-4">
         {alerts?.map((alert: any) => (
-          <div key={alert._id} className={`border-l-4 p-6 rounded-lg bg-white hover:shadow-md transition-shadow ${
-            alert.severity === 'critical' ? 'border-red-500 bg-red-50' :
-            alert.severity === 'high' ? 'border-orange-500 bg-orange-50' :
-            alert.severity === 'medium' ? 'border-yellow-500 bg-yellow-50' :
-            'border-blue-500 bg-blue-50'
-          }`}>
+          <div
+            key={alert._id}
+            className={`border-l-4 p-6 rounded-lg bg-white hover:shadow-md transition-shadow ${
+              alert.severity === 'critical'
+                ? 'border-red-500 bg-red-50'
+                : alert.severity === 'high'
+                  ? 'border-orange-500 bg-orange-50'
+                  : alert.severity === 'medium'
+                    ? 'border-yellow-500 bg-yellow-50'
+                    : 'border-blue-500 bg-blue-50'
+            }`}
+          >
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    alert.severity === 'critical' ? 'bg-red-100 text-red-800' :
-                    alert.severity === 'high' ? 'bg-orange-100 text-orange-800' :
-                    alert.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      alert.severity === 'critical'
+                        ? 'bg-red-100 text-red-800'
+                        : alert.severity === 'high'
+                          ? 'bg-orange-100 text-orange-800'
+                          : alert.severity === 'medium'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-blue-100 text-blue-800'
+                    }`}
+                  >
                     {alert.severity.toUpperCase()}
                   </span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    alert.isResolved ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      alert.isResolved
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
                     {alert.isResolved ? 'Resolved' : 'Active'}
                   </span>
                   <span className="text-xs text-gray-500">
                     {alert.alertType.replace('_', ' ').toUpperCase()}
                   </span>
                 </div>
-                <h4 className="font-semibold text-gray-900 text-lg mb-2">{alert.message}</h4>
+                <h4 className="font-semibold text-gray-900 text-lg mb-2">
+                  {alert.message}
+                </h4>
                 <p className="text-gray-600 mb-3">{alert.description}</p>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
-                  <span>Created: {new Date(alert._creationTime).toLocaleDateString()}</span>
+                  <span>
+                    Created:{' '}
+                    {new Date(alert._creationTime).toLocaleDateString()}
+                  </span>
                   {alert.resolvedAt && (
-                    <span>Resolved: {new Date(alert.resolvedAt).toLocaleDateString()}</span>
+                    <span>
+                      Resolved:{' '}
+                      {new Date(alert.resolvedAt).toLocaleDateString()}
+                    </span>
                   )}
                 </div>
               </div>
               <div className="flex gap-2 ml-4">
                 {!alert.isResolved && (
-                  <button 
-                    onClick={() => resolveAlert({ 
-                      alertId: alert._id, 
-                      resolutionNotes: 'Resolved via dashboard' 
-                    })}
+                  <button
+                    onClick={() =>
+                      resolveAlert({
+                        alertId: alert._id,
+                        resolutionNotes: 'Resolved via dashboard',
+                      })
+                    }
                     className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
                   >
                     <CheckCircle className="h-4 w-4 inline mr-1" />
                     Resolve
                   </button>
                 )}
-                <button 
+                <button
                   onClick={() => deleteAlert({ alertId: alert._id })}
                   className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                   title="Delete"
@@ -474,7 +590,7 @@ export default function CompleteMonitoringDashboard() {
             </div>
           </div>
         ))}
-        
+
         {(!alerts || alerts.length === 0) && (
           <div className="text-center py-12">
             <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -490,7 +606,9 @@ export default function CompleteMonitoringDashboard() {
   const MilestonesTab = () => (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <h3 className="text-xl font-semibold text-gray-900">Project Milestones</h3>
+        <h3 className="text-xl font-semibold text-gray-900">
+          Project Milestones
+        </h3>
         <button
           onClick={() => setShowModal('milestone')}
           className="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors"
@@ -502,26 +620,42 @@ export default function CompleteMonitoringDashboard() {
 
       <div className="grid gap-4">
         {milestones?.map((milestone: any) => (
-          <div key={milestone._id} className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow">
+          <div
+            key={milestone._id}
+            className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow"
+          >
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900 text-lg mb-2">{milestone.title}</h4>
+                <h4 className="font-semibold text-gray-900 text-lg mb-2">
+                  {milestone.title}
+                </h4>
                 <p className="text-gray-600 mb-3">{milestone.description}</p>
                 <div className="flex flex-wrap items-center gap-4 mb-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    milestone.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    milestone.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                    milestone.status === 'delayed' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {milestone.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      milestone.status === 'completed'
+                        ? 'bg-green-100 text-green-800'
+                        : milestone.status === 'in_progress'
+                          ? 'bg-blue-100 text-blue-800'
+                          : milestone.status === 'delayed'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {milestone.status?.replace('_', ' ').toUpperCase() ||
+                      'PENDING'}
                   </span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    milestone.category === 'setup' ? 'bg-purple-100 text-purple-800' :
-                    milestone.category === 'progress' ? 'bg-blue-100 text-blue-800' :
-                    milestone.category === 'impact' ? 'bg-green-100 text-green-800' :
-                    'bg-orange-100 text-orange-800'
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      milestone.category === 'setup'
+                        ? 'bg-purple-100 text-purple-800'
+                        : milestone.category === 'progress'
+                          ? 'bg-blue-100 text-blue-800'
+                          : milestone.category === 'impact'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-orange-100 text-orange-800'
+                    }`}
+                  >
                     {milestone.category?.replace('_', ' ').toUpperCase()}
                   </span>
                   <span className="text-sm text-gray-500">
@@ -529,34 +663,42 @@ export default function CompleteMonitoringDashboard() {
                   </span>
                   {milestone.actualDate && (
                     <span className="text-sm text-gray-500">
-                      Completed: {new Date(milestone.actualDate).toLocaleDateString()}
+                      Completed:{' '}
+                      {new Date(milestone.actualDate).toLocaleDateString()}
                     </span>
                   )}
                 </div>
-                
-                {milestone.targetMetrics && Object.keys(milestone.targetMetrics).length > 0 && (
-                  <div className="bg-gray-50 rounded-lg p-4 mb-3">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Target Metrics</h5>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {Object.entries(milestone.targetMetrics).map(([key, value]: [string, any]) => (
-                        <div key={key} className="text-center">
-                          <p className="text-xs text-gray-600 capitalize mb-1">
-                            {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
-                          </p>
-                          <p className="font-semibold text-gray-900">{value}</p>
-                        </div>
-                      ))}
+
+                {milestone.targetMetrics &&
+                  Object.keys(milestone.targetMetrics).length > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4 mb-3">
+                      <h5 className="text-sm font-medium text-gray-700 mb-2">
+                        Target Metrics
+                      </h5>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {Object.entries(milestone.targetMetrics).map(
+                          ([key, value]: [string, any]) => (
+                            <div key={key} className="text-center">
+                              <p className="text-xs text-gray-600 capitalize mb-1">
+                                {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {value}
+                              </p>
+                            </div>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
               <div className="flex gap-2 ml-4">
-                <button 
+                <button
                   onClick={() => {
                     setEditingItem(milestone);
                     milestoneForm.reset({
                       ...milestone,
-                      plannedDate: new Date(milestone.plannedDate)
+                      plannedDate: new Date(milestone.plannedDate),
                     });
                     setShowModal('milestone');
                   }}
@@ -565,8 +707,10 @@ export default function CompleteMonitoringDashboard() {
                 >
                   <Edit className="h-4 w-4" />
                 </button>
-                <button 
-                  onClick={() => deleteMilestone({ milestoneId: milestone._id })}
+                <button
+                  onClick={() =>
+                    deleteMilestone({ milestoneId: milestone._id })
+                  }
                   className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                   title="Delete"
                 >
@@ -576,12 +720,14 @@ export default function CompleteMonitoringDashboard() {
             </div>
           </div>
         ))}
-        
+
         {(!milestones || milestones.length === 0) && (
           <div className="text-center py-12">
             <CheckCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 mb-2">No milestones found</p>
-            <p className="text-sm text-gray-400">Create your first milestone to track progress</p>
+            <p className="text-sm text-gray-400">
+              Create your first milestone to track progress
+            </p>
           </div>
         )}
       </div>
@@ -593,9 +739,12 @@ export default function CompleteMonitoringDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Complete Monitoring Dashboard</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Complete Monitoring Dashboard
+          </h1>
           <p className="text-lg text-gray-600">
-            Comprehensive monitoring system with CRUD operations, validation, and PDF reporting
+            Comprehensive monitoring system with CRUD operations, validation,
+            and PDF reporting
           </p>
         </div>
 
@@ -628,7 +777,11 @@ export default function CompleteMonitoringDashboard() {
             <nav className="flex">
               {[
                 { key: 'overview', label: 'Overview', icon: BarChart3 },
-                { key: 'progress', label: 'Progress Updates', icon: TrendingUp },
+                {
+                  key: 'progress',
+                  label: 'Progress Updates',
+                  icon: TrendingUp,
+                },
                 { key: 'alerts', label: 'Alerts', icon: AlertCircle },
                 { key: 'milestones', label: 'Milestones', icon: CheckCircle },
                 { key: 'reports', label: 'PDF Reports', icon: FileText },
@@ -664,7 +817,9 @@ export default function CompleteMonitoringDashboard() {
             <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-semibold">
-                  {editingItem ? 'Edit Progress Update' : 'Create Progress Update'}
+                  {editingItem
+                    ? 'Edit Progress Update'
+                    : 'Create Progress Update'}
                 </h3>
                 <button
                   onClick={resetModal}
@@ -674,7 +829,10 @@ export default function CompleteMonitoringDashboard() {
                 </button>
               </div>
 
-              <form onSubmit={progressForm.handleSubmit(handleCreateProgressUpdate)} className="space-y-4">
+              <form
+                onSubmit={progressForm.handleSubmit(handleCreateProgressUpdate)}
+                className="space-y-4"
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -750,7 +908,9 @@ export default function CompleteMonitoringDashboard() {
                     type="number"
                     min="0"
                     max="100"
-                    {...progressForm.register('progressPercentage', { valueAsNumber: true })}
+                    {...progressForm.register('progressPercentage', {
+                      valueAsNumber: true,
+                    })}
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="0-100"
                   />

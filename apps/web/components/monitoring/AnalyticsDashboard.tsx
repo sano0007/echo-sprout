@@ -67,12 +67,12 @@ export default function AnalyticsDashboard({
     category: selectedCategory,
   });
 
-  const { generateAnalyticsReport, reports, hasProcessingReports } = useAnalyticsPDFReports();
+  const { generateAnalyticsReport, reports, hasProcessingReports } =
+    useAnalyticsPDFReports();
 
   // Get real data from the hook
   const analyticsMetrics = analyticsData?.metrics || [];
   const analyticsCharts = analyticsData?.charts || [];
-
 
   // Data is already filtered by the backend based on selectedCategory
   const filteredMetrics = analyticsMetrics;
@@ -126,7 +126,9 @@ export default function AnalyticsDashboard({
   // Using imported getCategoryColor utility function
 
   // Handle PDF generation
-  const handleGeneratePDF = async (reportType: 'comprehensive' | 'platform' | 'environmental' | 'financial') => {
+  const handleGeneratePDF = async (
+    reportType: 'comprehensive' | 'platform' | 'environmental' | 'financial'
+  ) => {
     try {
       const startDate = new Date();
       const endDate = new Date();
@@ -363,7 +365,9 @@ export default function AnalyticsDashboard({
                 {showPDFReports && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                     <div className="p-3">
-                      <h4 className="text-sm font-semibold text-gray-800 mb-2">PDF Report Types</h4>
+                      <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                        PDF Report Types
+                      </h4>
                       <div className="space-y-2">
                         <button
                           onClick={() => {
@@ -567,7 +571,11 @@ export default function AnalyticsDashboard({
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>
                 Previous:{' '}
-                {formatMetricValue(metric.previousValue, metric.format, metric.unit)}
+                {formatMetricValue(
+                  metric.previousValue,
+                  metric.format,
+                  metric.unit
+                )}
               </span>
               <button className="flex items-center space-x-1 hover:text-blue-600">
                 <Eye className="h-3 w-3" />
@@ -681,7 +689,8 @@ export default function AnalyticsDashboard({
                       {report.title}
                     </h4>
                     <p className="text-xs text-gray-600">
-                      {new Date(report.requestedAt).toLocaleDateString()} • {report.reportType}
+                      {new Date(report.requestedAt).toLocaleDateString()} •{' '}
+                      {report.reportType}
                     </p>
                   </div>
                 </div>
@@ -691,10 +700,10 @@ export default function AnalyticsDashboard({
                       report.status === 'completed'
                         ? 'bg-green-100 text-green-800'
                         : report.status === 'processing'
-                        ? 'bg-blue-100 text-blue-800'
-                        : report.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
+                          ? 'bg-blue-100 text-blue-800'
+                          : report.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
                     }`}
                   >
                     {report.status}

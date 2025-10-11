@@ -59,7 +59,9 @@ export default function VerificationDashboard() {
 
   const allVerifications = myVerifications.page || [];
   const projects = {
-    pendingAcceptance: allVerifications.filter((v: any) => v.status === 'assigned'),
+    pendingAcceptance: allVerifications.filter(
+      (v: any) => v.status === 'assigned'
+    ),
     accepted: allVerifications.filter((v: any) => v.status === 'accepted'),
     inProgress: allVerifications.filter((v: any) => v.status === 'in_progress'),
     completed: allVerifications.filter((v: any) =>
