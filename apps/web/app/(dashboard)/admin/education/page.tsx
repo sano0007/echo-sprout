@@ -4,10 +4,11 @@ import { api } from '@packages/backend';
 import { useMutation, useQuery } from 'convex/react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { Check, Edit, Eye, MoreHorizontal, Plus, X } from 'lucide-react';
+import { Check, Eye, X } from 'lucide-react';
 import Link from 'next/link';
-import { useCallback, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import * as Recharts from 'recharts';
 
 import { Badge } from '@/components/ui/badge';
@@ -19,12 +20,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -51,6 +46,7 @@ interface LearningPath {
 }
 
 const LearningPathsTable = () => {
+  const router = useRouter();
   const learningPaths = useQuery(api.learn.listLearningPaths) || [];
   const updateLearningPath = useMutation(api.learn.updateLearningPath);
   const deleteLearningPath = useMutation(api.learn.deleteLearningPath);
@@ -191,29 +187,17 @@ const LearningPathsTable = () => {
                         <X className="w-4 h-4" />
                       </Button>
                     )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleDelete(path.id)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                      onClick={() =>
+                        router.push(`/learn/paths/${String(path.id)}`)
+                      }
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
