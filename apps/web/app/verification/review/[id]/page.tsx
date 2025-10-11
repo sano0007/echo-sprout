@@ -1534,28 +1534,60 @@ export default function ProjectReview() {
                     );
                     if (!selectedDoc) return null;
 
+                    // Determine if document is an image based on file extension or mime type
+                    const fileExtension = selectedDoc.originalName
+                      ?.split('.')
+                      .pop()
+                      ?.toLowerCase();
+                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(
+                      fileExtension || ''
+                    );
+
                     return (
                       <>
-                        {/* PDF Viewer */}
+                        {/* Document Viewer (PDF or Image) */}
                         <div className="flex-1">
-                          <PDFViewerWrapper
-                            url={selectedDoc.media.cloudinary_url || ''}
-                            fileName={selectedDoc.originalName}
-                            annotations={
-                              documentAnnotations[selectedDoc._id] || []
-                            }
-                            onAnnotationChange={(annotations) =>
-                              handleAnnotationChange(
-                                selectedDoc._id,
-                                annotations
-                              )
-                            }
-                            readOnly={verification.status !== 'in_progress'}
-                          />
+                          {isImage ? (
+                            // Image Viewer
+                            <div className="h-full bg-gray-100 overflow-auto flex items-center justify-center p-4">
+                              <div className="max-w-full max-h-full">
+                                <img
+                                  src={selectedDoc.media.fileUrl || ''}
+                                  alt={selectedDoc.originalName}
+                                  className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                                  style={{ maxHeight: '550px' }}
+                                />
+                                <div className="mt-4 text-center">
+                                  <p className="text-sm text-gray-600 font-medium">
+                                    {selectedDoc.originalName}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {selectedDoc.fileSizeFormatted} • {fileExtension?.toUpperCase()}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            // PDF Viewer
+                            <PDFViewerWrapper
+                              url={selectedDoc.media.fileUrl || ''}
+                              fileName={selectedDoc.originalName}
+                              annotations={
+                                documentAnnotations[selectedDoc._id] || []
+                              }
+                              onAnnotationChange={(annotations) =>
+                                handleAnnotationChange(
+                                  selectedDoc._id,
+                                  annotations
+                                )
+                              }
+                              readOnly={verification.status !== 'in_progress'}
+                            />
+                          )}
                         </div>
 
-                        {/* Collaborative Annotations Panel */}
-                        {verification.status === 'in_progress' && (
+                        {/* Collaborative Annotations Panel (PDF only) */}
+                        {!isImage && verification.status === 'in_progress' && (
                           <CollaborativeAnnotations
                             annotations={
                               documentAnnotations[selectedDoc._id] || []
@@ -1610,11 +1642,10 @@ export default function ProjectReview() {
                       </h3>
                       <p className="text-gray-600 mb-4">
                         Choose a document from the list above to view and
-                        annotate
+                        review
                       </p>
                       <div className="text-sm text-gray-500">
-                        Enhanced PDF viewer with text highlighting, annotations,
-                        and collaborative review features
+                        Supports PDFs (with annotations) and images (JPG, PNG, GIF, WebP, etc.)
                       </div>
                     </div>
                   </div>
