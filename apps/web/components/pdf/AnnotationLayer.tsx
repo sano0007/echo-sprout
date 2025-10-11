@@ -92,7 +92,6 @@ export default function AnnotationLayer({
     const width = Math.abs(selectionEnd.x - selectionStart.x);
     const height = Math.abs(selectionEnd.y - selectionStart.y);
 
-    // Only create annotation if selection is large enough
     if (width > 10 && height > 10) {
       const newAnnotation: Omit<Annotation, 'id' | 'timestamp'> = {
         type: activeMode as 'highlight' | 'note' | 'issue',
@@ -100,7 +99,7 @@ export default function AnnotationLayer({
         position: { x: minX, y: minY, width, height },
         content: activeMode === 'highlight' ? 'Highlighted text' : '',
         color: getAnnotationColor(activeMode as 'highlight' | 'note' | 'issue'),
-        author: 'Current User', // This should come from auth context
+        author: 'Current User',
       };
 
       onAnnotationAdd(newAnnotation);
@@ -121,26 +120,26 @@ export default function AnnotationLayer({
   const getAnnotationColor = (type: 'highlight' | 'note' | 'issue') => {
     switch (type) {
       case 'highlight':
-        return '#fef08a'; // yellow-200
+        return '#fef08a';
       case 'note':
-        return '#bfdbfe'; // blue-200
+        return '#bfdbfe';
       case 'issue':
-        return '#fecaca'; // red-200
+        return '#fecaca';
       default:
-        return '#e5e7eb'; // gray-200
+        return '#e5e7eb';
     }
   };
 
   const getAnnotationBorderColor = (type: 'highlight' | 'note' | 'issue') => {
     switch (type) {
       case 'highlight':
-        return '#eab308'; // yellow-500
+        return '#eab308';
       case 'note':
-        return '#3b82f6'; // blue-500
+        return '#3b82f6';
       case 'issue':
-        return '#ef4444'; // red-500
+        return '#ef4444';
       default:
-        return '#6b7280'; // gray-500
+        return '#6b7280';
     }
   };
 

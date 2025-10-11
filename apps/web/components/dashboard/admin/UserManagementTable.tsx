@@ -1,20 +1,17 @@
 'use client';
 
+import { api } from '@packages/backend';
+import { useQuery } from 'convex/react';
 import {
-  ChevronDown,
-  ChevronUp,
-  Download,
   Edit,
-  Filter,
   Mail,
   MoreHorizontal,
-  Plus,
   Search,
   Trash2,
   UserCheck,
   UserX,
 } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -48,286 +45,112 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { User, UserRole } from '@/types/global.types';
-
-interface UserWithDetails extends User {
-  registrationDate: Date;
-  lastActive: Date;
-  totalPurchases?: number;
-  totalProjects?: number;
-  verificationCount?: number;
-  status: 'active' | 'inactive' | 'suspended';
-}
-
 interface UserManagementTableProps {
-  users?: UserWithDetails[];
   loading?: boolean;
   onUserAction?: (userId: string, action: string) => void;
   className?: string;
 }
 
-const roleColors: Record<UserRole, string> = {
-  'project-creator': 'text-info-primary bg-info-light border-info-border',
-  'credit-buyer': 'text-success-primary bg-success-light border-success-border',
-  verifier: 'text-bangladesh-green bg-mint-green border-sage-green',
-  admin: 'text-error-primary bg-error-light border-error-border',
+const roleColors = {
+  project_creator: 'text-blue-800 bg-blue-100 border-blue-200',
+  credit_buyer: 'text-green-800 bg-green-100 border-green-200',
+  verifier: 'text-purple-800 bg-purple-100 border-purple-200',
+  admin: 'text-red-800 bg-red-100 border-red-200',
 };
 
 const statusColors = {
-  active: 'text-success-primary bg-success-light border-success-border',
-  inactive: 'text-slate-gray bg-whisper-gray border-cloud-gray',
-  suspended: 'text-error-primary bg-error-light border-error-border',
+  active: 'text-green-800 bg-green-100 border-green-200',
+  inactive: 'text-gray-800 bg-gray-100 border-gray-200',
 };
 
-// Mock data for demo purposes
-const mockUsers: UserWithDetails[] = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@email.com',
-    role: 'project-creator',
-    avatar: '',
-    status: 'active',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-09-25'),
-    lastActiveAt: new Date('2024-09-25'),
-    profile: {
-      firstName: 'John',
-      lastName: 'Smith',
-      company: 'Green Energy Corp',
-      location: 'California, USA',
-      preferences: {
-        theme: 'light' as const,
-        language: 'en',
-        notifications: {
-          email: true,
-          push: true,
-          inApp: true,
-          marketing: false,
-        },
-        dashboard: {
-          defaultView: 'table' as const,
-          itemsPerPage: 10,
-          showWelcome: true,
-          compactMode: false,
-        },
-      },
-    },
-    registrationDate: new Date('2024-01-15'),
-    lastActive: new Date('2024-09-25'),
-    totalProjects: 3,
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@company.com',
-    role: 'credit-buyer',
-    avatar: '',
-    status: 'active',
-    createdAt: new Date('2024-02-20'),
-    updatedAt: new Date('2024-09-26'),
-    lastActiveAt: new Date('2024-09-26'),
-    profile: {
-      firstName: 'Sarah',
-      lastName: 'Johnson',
-      company: 'Tech Solutions Inc',
-      location: 'New York, USA',
-      preferences: {
-        theme: 'dark' as const,
-        language: 'en',
-        notifications: {
-          email: true,
-          push: false,
-          inApp: true,
-          marketing: true,
-        },
-        dashboard: {
-          defaultView: 'grid' as const,
-          itemsPerPage: 20,
-          showWelcome: false,
-          compactMode: true,
-        },
-      },
-    },
-    registrationDate: new Date('2024-02-20'),
-    lastActive: new Date('2024-09-26'),
-    totalPurchases: 150,
-  },
-  {
-    id: '3',
-    name: 'Dr. Michael Chen',
-    email: 'm.chen@verification.org',
-    role: 'verifier',
-    avatar: '',
-    status: 'active',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-09-24'),
-    lastActiveAt: new Date('2024-09-24'),
-    profile: {
-      firstName: 'Michael',
-      lastName: 'Chen',
-      company: 'Environmental Verification Org',
-      location: 'Oregon, USA',
-      preferences: {
-        theme: 'system' as const,
-        language: 'en',
-        notifications: {
-          email: true,
-          push: true,
-          inApp: false,
-          marketing: false,
-        },
-        dashboard: {
-          defaultView: 'list' as const,
-          itemsPerPage: 15,
-          showWelcome: true,
-          compactMode: false,
-        },
-      },
-    },
-    registrationDate: new Date('2024-01-10'),
-    lastActive: new Date('2024-09-24'),
-    verificationCount: 45,
-  },
-  {
-    id: '4',
-    name: 'Emma Williams',
-    email: 'emma.w@email.com',
-    role: 'project-creator',
-    avatar: '',
-    status: 'inactive',
-    createdAt: new Date('2024-03-05'),
-    updatedAt: new Date('2024-09-20'),
-    lastActiveAt: new Date('2024-09-20'),
-    profile: {
-      firstName: 'Emma',
-      lastName: 'Williams',
-      company: 'EcoStartup Ltd',
-      location: 'London, UK',
-      preferences: {
-        theme: 'light' as const,
-        language: 'en',
-        notifications: {
-          email: false,
-          push: false,
-          inApp: true,
-          marketing: false,
-        },
-        dashboard: {
-          defaultView: 'table' as const,
-          itemsPerPage: 5,
-          showWelcome: false,
-          compactMode: true,
-        },
-      },
-    },
-    registrationDate: new Date('2024-03-05'),
-    lastActive: new Date('2024-09-20'),
-    totalProjects: 1,
-  },
-  {
-    id: '5',
-    name: 'Robert Brown',
-    email: 'r.brown@suspended.com',
-    role: 'credit-buyer',
-    avatar: '',
-    status: 'suspended',
-    createdAt: new Date('2024-02-15'),
-    updatedAt: new Date('2024-08-15'),
-    lastActiveAt: new Date('2024-08-15'),
-    profile: {
-      firstName: 'Robert',
-      lastName: 'Brown',
-      company: 'Suspended Corp',
-      location: 'Texas, USA',
-      preferences: {
-        theme: 'dark' as const,
-        language: 'en',
-        notifications: {
-          email: false,
-          push: false,
-          inApp: false,
-          marketing: false,
-        },
-        dashboard: {
-          defaultView: 'grid' as const,
-          itemsPerPage: 25,
-          showWelcome: false,
-          compactMode: false,
-        },
-      },
-    },
-    registrationDate: new Date('2024-02-15'),
-    lastActive: new Date('2024-08-15'),
-    totalPurchases: 25,
-  },
-];
-
 export const UserManagementTable: React.FC<UserManagementTableProps> = ({
-  users = mockUsers,
-  loading = false,
+  loading: externalLoading = false,
   onUserAction = () => {},
   className,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortField, setSortField] =
-    useState<keyof UserWithDetails>('registrationDate');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const filteredAndSortedUsers = useMemo(() => {
-    const filtered = users.filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-      const matchesStatus =
-        statusFilter === 'all' || user.status === statusFilter;
+  // Debounce search query to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
 
-      return matchesSearch && matchesRole && matchesStatus;
-    });
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-    return filtered.sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
+  // Use Convex query with manual pagination
+  const paginationResult = useQuery(api.users.getAllUsersForAdmin, {
+    paginationOpts: {
+      numItems: 20,
+      cursor: currentPage > 0 ? currentPage.toString() : null,
+    },
+    searchTerm: debouncedSearchQuery || undefined,
+    roleFilter: roleFilter !== 'all' ? (roleFilter as any) : undefined,
+    statusFilter:
+      statusFilter !== 'all'
+        ? (statusFilter as 'active' | 'inactive')
+        : undefined,
+  });
 
-      if (aValue == null && bValue == null) return 0;
-      if (aValue == null) return sortDirection === 'asc' ? -1 : 1;
-      if (bValue == null) return sortDirection === 'asc' ? 1 : -1;
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [users, searchQuery, roleFilter, statusFilter, sortField, sortDirection]);
+  const users = paginationResult?.page || [];
+  const canLoadMore = paginationResult ? !paginationResult.isDone : false;
+  const loading = externalLoading || !paginationResult;
 
-  const handleSort = (field: keyof UserWithDetails) => {
-    if (sortField === field) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
+  const loadMore = async () => {
+    if (canLoadMore && !isLoadingMore) {
+      setIsLoadingMore(true);
+      setCurrentPage((prev) => prev + 1);
+      // Reset loading state after a brief delay to allow for data fetching
+      setTimeout(() => setIsLoadingMore(false), 500);
     }
   };
 
-  const formatDate = (date: Date) => {
+  // Reset pagination when search or filters change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [debouncedSearchQuery, roleFilter, statusFilter]);
+
+  const formatDate = (timestamp: number) => {
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-    }).format(date);
+    }).format(new Date(timestamp));
   };
 
-  const getActivityMetric = (user: UserWithDetails) => {
+  const getActivityMetric = (user: any) => {
     switch (user.role) {
-      case 'project-creator':
-        return `${user.totalProjects || 0} projects`;
-      case 'credit-buyer':
-        return `${user.totalPurchases || 0} credits`;
+      case 'project_creator':
+        return 'Project Creator';
+      case 'credit_buyer':
+        return 'Credit Buyer';
       case 'verifier':
-        return `${user.verificationCount || 0} reviews`;
+        return 'Verifier';
+      case 'admin':
+        return 'Administrator';
       default:
         return '-';
+    }
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'project_creator':
+        return 'Project Creator';
+      case 'credit_buyer':
+        return 'Credit Buyer';
+      case 'verifier':
+        return 'Verifier';
+      case 'admin':
+        return 'Admin';
+      default:
+        return role;
     }
   };
 
@@ -388,10 +211,10 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
               Manage platform users and their permissions
             </p>
           </div>
-          <Button className="bg-bangladesh-green hover:bg-forest-green shadow-soft hover:shadow-medium transition-all duration-200">
-            <Plus className="h-4 w-4 mr-2" />
-            Add User
-          </Button>
+          {/*<Button className="bg-bangladesh-green hover:bg-forest-green shadow-soft hover:shadow-medium transition-all duration-200">*/}
+          {/*  <Plus className="h-4 w-4 mr-2" />*/}
+          {/*  Add User*/}
+          {/*</Button>*/}
         </div>
       </CardHeader>
 
@@ -408,35 +231,30 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
             />
           </div>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-full sm:w-40 bg-pure-white border-cloud-gray text-slate-gray hover:border-slate-gray">
+            <SelectTrigger className="w-full sm:w-40 bg-white border-gray-300 text-gray-900 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="project-creator">Creator</SelectItem>
-              <SelectItem value="credit-buyer">Buyer</SelectItem>
-              <SelectItem value="verifier">Verifier</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md">
+              <SelectItem value="all" className="hover:bg-gray-50 focus:bg-gray-50">All Roles</SelectItem>
+              <SelectItem value="project_creator" className="hover:bg-gray-50 focus:bg-gray-50">Project Creator</SelectItem>
+              <SelectItem value="credit_buyer" className="hover:bg-gray-50 focus:bg-gray-50">Credit Buyer</SelectItem>
+              <SelectItem value="verifier" className="hover:bg-gray-50 focus:bg-gray-50">Verifier</SelectItem>
+              <SelectItem value="admin" className="hover:bg-gray-50 focus:bg-gray-50">Admin</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40 bg-pure-white border-cloud-gray text-slate-gray hover:border-slate-gray">
+            <SelectTrigger className="w-full sm:w-40 bg-white border-gray-300 text-gray-900 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="suspended">Suspended</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md">
+              <SelectItem value="all" className="hover:bg-gray-50 focus:bg-gray-50">All Status</SelectItem>
+              <SelectItem value="active" className="hover:bg-gray-50 focus:bg-gray-50">Active</SelectItem>
+              <SelectItem value="inactive" className="hover:bg-gray-50 focus:bg-gray-50">Inactive</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="icon"
-            className="border-cloud-gray text-slate-gray hover:bg-whisper-gray hover:text-rich-black"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
+          {/*<Button variant="outline" size="icon" className="border-cloud-gray text-slate-gray hover:bg-whisper-gray hover:text-rich-black">*/}
+          {/*  <Download className="h-4 w-4" />*/}
+          {/*</Button>*/}
         </div>
 
         {/* Table */}
@@ -448,64 +266,23 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                   User
                 </TableHead>
                 <TableHead className="text-slate-gray font-medium py-4 px-6">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('role')}
-                    className="h-auto p-0 font-medium text-slate-gray hover:text-rich-black"
-                  >
-                    Role
-                    {sortField === 'role' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp className="ml-1 h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="ml-1 h-3 w-3" />
-                      ))}
-                  </Button>
+                  Role
                 </TableHead>
                 <TableHead className="text-slate-gray font-medium py-4 px-6">
                   Status
                 </TableHead>
+                {/*<TableHead className="text-slate-gray font-medium py-4 px-6">Details</TableHead>*/}
                 <TableHead className="text-slate-gray font-medium py-4 px-6">
-                  Activity
+                  Joined
                 </TableHead>
                 <TableHead className="text-slate-gray font-medium py-4 px-6">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('registrationDate')}
-                    className="h-auto p-0 font-medium text-slate-gray hover:text-rich-black"
-                  >
-                    Joined
-                    {sortField === 'registrationDate' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp className="ml-1 h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="ml-1 h-3 w-3" />
-                      ))}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-slate-gray font-medium py-4 px-6">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('lastActive')}
-                    className="h-auto p-0 font-medium text-slate-gray hover:text-rich-black"
-                  >
-                    Last Active
-                    {sortField === 'lastActive' &&
-                      (sortDirection === 'asc' ? (
-                        <ChevronUp className="ml-1 h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="ml-1 h-3 w-3" />
-                      ))}
-                  </Button>
+                  Last Active
                 </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAndSortedUsers.length === 0 ? (
+              {!users || users.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={7}
@@ -515,21 +292,20 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredAndSortedUsers.map((user) => (
+                users.map((user) => (
                   <TableRow
-                    key={user.id}
+                    key={user._id}
                     className="border-cloud-gray hover:bg-whisper-gray transition-colors duration-150"
                   >
                     <TableCell className="py-4 px-6 first:pl-6 last:pr-6">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback className="bg-bangladesh-green text-white text-xs">
-                            {user.name
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')
-                              .slice(0, 2)}
+                          <AvatarImage
+                            src={user.profileImage}
+                            alt={user.name}
+                          />
+                          <AvatarFallback className="bg-green-500 text-white text-xs">
+                            {`${user.firstName[0]}${user.lastName[0]}`}
                           </AvatarFallback>
                         </Avatar>
                         <div>
@@ -539,6 +315,9 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                           <p className="text-xs text-light-gray">
                             {user.email}
                           </p>
+                          <p className="text-xs text-light-gray">
+                            {user.organizationName}
+                          </p>
                         </div>
                       </div>
                     </TableCell>
@@ -546,27 +325,34 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                       <Badge
                         variant="outline"
                         className={cn(
-                          'text-xs font-medium capitalize',
-                          roleColors[user.role]
+                          'text-xs font-medium',
+                          roleColors[user.role as keyof typeof roleColors]
                         )}
                       >
-                        {user.role}
+                        {getRoleDisplayName(user.role)}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-4 px-6">
                       <Badge
                         variant="outline"
                         className={cn(
-                          'text-xs font-medium capitalize',
-                          statusColors[user.status]
+                          'text-xs font-medium',
+                          statusColors[user.status as keyof typeof statusColors]
                         )}
                       >
                         {user.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="py-4 px-6 text-sm text-slate-gray">
-                      {getActivityMetric(user)}
-                    </TableCell>
+                    {/*<TableCell className="py-4 px-6 text-sm text-slate-gray">*/}
+                    {/*  <div>*/}
+                    {/*    <div className="text-xs">{user.city}, {user.country}</div>*/}
+                    {/*    {user.isVerified ? (*/}
+                    {/*      <div className="text-xs text-green-600">✓ Verified</div>*/}
+                    {/*    ) : (*/}
+                    {/*      <div className="text-xs text-orange-600">Pending verification</div>*/}
+                    {/*    )}*/}
+                    {/*  </div>*/}
+                    {/*</TableCell>*/}
                     <TableCell className="py-4 px-6 text-sm text-slate-gray">
                       {formatDate(user.registrationDate)}
                     </TableCell>
@@ -587,13 +373,13 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem
-                            onClick={() => onUserAction(user.id, 'view')}
+                            onClick={() => onUserAction(user._id, 'view')}
                           >
                             <Edit className="mr-2 h-4 w-4" />
                             Edit User
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => onUserAction(user.id, 'message')}
+                            onClick={() => onUserAction(user._id, 'message')}
                           >
                             <Mail className="mr-2 h-4 w-4" />
                             Send Message
@@ -601,14 +387,16 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                           <DropdownMenuSeparator />
                           {user.status === 'active' ? (
                             <DropdownMenuItem
-                              onClick={() => onUserAction(user.id, 'suspend')}
+                              onClick={() =>
+                                onUserAction(user._id, 'deactivate')
+                              }
                             >
                               <UserX className="mr-2 h-4 w-4" />
-                              Suspend User
+                              Deactivate User
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem
-                              onClick={() => onUserAction(user.id, 'activate')}
+                              onClick={() => onUserAction(user._id, 'activate')}
                             >
                               <UserCheck className="mr-2 h-4 w-4" />
                               Activate User
@@ -616,7 +404,7 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
                           )}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            onClick={() => onUserAction(user.id, 'delete')}
+                            onClick={() => onUserAction(user._id, 'delete')}
                             className="text-red-600 focus:text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -635,15 +423,21 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
         {/* Table Footer */}
         <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
           <div>
-            Showing {filteredAndSortedUsers.length} of {users.length} users
+            {users && users.length > 0
+              ? `Showing ${users.length} users`
+              : 'No users found'}
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled>
-              Previous
-            </Button>
-            <Button variant="outline" size="sm" disabled>
-              Next
-            </Button>
+            {canLoadMore && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadMore}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore ? 'Loading...' : 'Load More'}
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

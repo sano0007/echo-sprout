@@ -24,6 +24,8 @@ module.exports = {
     'unused-imports/no-unused-vars': 'off',
     'react-hooks/exhaustive-deps': 'off',
     '@typescript-eslint/no-var-requires': 'off',
+    '@next/next/no-img-element': 'off',
+    'jsx-a11y/alt-text': 'off',
 
     //#region  //*=========== Unused Import ===========
     '@typescript-eslint/no-unused-vars': 'off',

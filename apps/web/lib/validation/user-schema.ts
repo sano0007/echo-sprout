@@ -18,7 +18,6 @@ const userRoles = [
 ] as const;
 
 export const userDetailsSchema = z.object({
-  // Personal Information - Required
   firstName: z
     .string()
     .min(2, 'First name must be at least 2 characters')
@@ -50,7 +49,6 @@ export const userDetailsSchema = z.object({
     .max(20, 'Phone number must be less than 20 characters')
     .regex(/^[+]?[\s\d\-()]+$/, 'Please enter a valid phone number'),
 
-  // Address Information - Required
   address: z
     .string()
     .min(5, 'Address must be at least 5 characters')
@@ -74,7 +72,6 @@ export const userDetailsSchema = z.object({
       'Country can only contain letters, spaces, hyphens, and apostrophes'
     ),
 
-  // Organization Information - Optional
   organizationName: z
     .string()
     .max(200, 'Organization name must be less than 200 characters')
@@ -87,10 +84,8 @@ export const userDetailsSchema = z.object({
     .or(z.literal(''))
     .or(z.string()),
 
-  // Role Information
   role: z.enum(userRoles).default('credit_buyer'),
 
-  // Profile Information - Optional
   profileImage: z
     .string()
     .url('Profile image must be a valid URL')
@@ -109,22 +104,17 @@ export const userDetailsSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  // Backward compatibility
   location: z.string().optional().or(z.literal('')),
 });
 
-// Schema for user profile updates (excludes email field)
 export const userProfileUpdateSchema = userDetailsSchema
   .omit({ email: true })
   .extend({
-    // Allow email to be present but ignore changes
     email: z.string().optional(),
   });
 
-// Schema for registration (includes all fields)
 export const userRegistrationSchema = userDetailsSchema;
 
-// Schema for step-by-step validation
 export const registrationStep1Schema = z.object({
   firstName: userDetailsSchema.shape.firstName,
   lastName: userDetailsSchema.shape.lastName,
@@ -136,7 +126,6 @@ export const registrationStep1Schema = z.object({
 });
 
 export const registrationStep2Schema = z.object({
-  // Document upload validation can be added here
   documentsUploaded: z.boolean().optional(),
 });
 
@@ -146,7 +135,6 @@ export const registrationStep3Schema = z.object({
   }),
 });
 
-// Type exports
 export type UserDetailsFormData = z.infer<typeof userDetailsSchema>;
 export type UserProfileUpdateData = z.infer<typeof userProfileUpdateSchema>;
 export type UserRegistrationData = z.infer<typeof userRegistrationSchema>;
@@ -154,7 +142,6 @@ export type RegistrationStep1Data = z.infer<typeof registrationStep1Schema>;
 export type RegistrationStep2Data = z.infer<typeof registrationStep2Schema>;
 export type RegistrationStep3Data = z.infer<typeof registrationStep3Schema>;
 
-// Validation helper functions
 export const validateUserDetails = (data: unknown) => {
   return userDetailsSchema.safeParse(data);
 };

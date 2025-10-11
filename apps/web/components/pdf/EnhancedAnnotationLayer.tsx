@@ -69,7 +69,6 @@ export default function EnhancedAnnotationLayer({
     (ann) => ann.pageNumber === pageNumber
   );
 
-  // Debug logging
   console.log('EnhancedAnnotationLayer Debug:', {
     totalAnnotations: annotations.length,
     pageAnnotations: pageAnnotations.length,
@@ -80,7 +79,6 @@ export default function EnhancedAnnotationLayer({
     scale,
   });
 
-  // Enhanced text selection handler with better positioning and feedback
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
@@ -101,11 +99,9 @@ export default function EnhancedAnnotationLayer({
     const layerRect = layerRef.current?.getBoundingClientRect();
     if (!layerRect) return;
 
-    // Get all rects for the selection (handles multi-line selections)
     const rects = Array.from(range.getClientRects());
     if (rects.length === 0) return;
 
-    // Filter rects that are within the PDF page bounds
     const validRects = rects.filter((rect) => {
       const relativeX = (rect.x - layerRect.x) / scale;
       const relativeY = (rect.y - layerRect.y) / scale;
@@ -119,7 +115,6 @@ export default function EnhancedAnnotationLayer({
 
     if (validRects.length === 0) return;
 
-    // Convert to relative coordinates
     const adjustedRects = validRects.map((rect) => ({
       ...rect,
       x: (rect.x - layerRect.x) / scale,
@@ -134,16 +129,15 @@ export default function EnhancedAnnotationLayer({
       range,
     });
 
-    // Position the text menu at the end of the last selection rect
     const lastRect = validRects[validRects.length - 1];
     if (lastRect) {
       const menuX = Math.min(
         (lastRect.right - layerRect.x) / scale,
-        pageWidth - 200 // Ensure menu doesn't go off-page
+        pageWidth - 200
       );
       const menuY = Math.min(
         (lastRect.bottom - layerRect.y) / scale + 8,
-        pageHeight - 100 // Ensure menu doesn't go off-page
+        pageHeight - 100
       );
 
       setTextMenuPosition({ x: menuX, y: menuY });
@@ -151,12 +145,10 @@ export default function EnhancedAnnotationLayer({
     }
   }, [scale, pageWidth, pageHeight]);
 
-  // Handle mouse selection for shapes
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (activeMode === 'select') return;
 
-      // Clear text selection menu
       setShowTextMenu(false);
       setSelectedText(null);
 
@@ -201,7 +193,6 @@ export default function EnhancedAnnotationLayer({
     const width = Math.abs(selectionEnd.x - selectionStart.x);
     const height = Math.abs(selectionEnd.y - selectionStart.y);
 
-    // Only create annotation if selection is large enough
     if (width > 15 && height > 15) {
       const newAnnotation: Omit<Annotation, 'id' | 'timestamp'> = {
         type: activeMode as 'highlight' | 'note' | 'issue',
@@ -209,7 +200,7 @@ export default function EnhancedAnnotationLayer({
         position: { x: minX, y: minY, width, height },
         content: activeMode === 'highlight' ? 'Highlighted area' : '',
         color: getAnnotationColor(activeMode as 'highlight' | 'note' | 'issue'),
-        author: 'Current User', // This should come from auth context
+        author: 'Current User',
       };
 
       onAnnotationAdd(newAnnotation);
@@ -227,12 +218,10 @@ export default function EnhancedAnnotationLayer({
     onAnnotationAdd,
   ]);
 
-  // Create annotation from selected text
   const createTextAnnotation = useCallback(
     (type: 'highlight' | 'note' | 'issue') => {
       if (!selectedText) return;
 
-      // Calculate bounding box for all selected text rects
       const minX = Math.min(...selectedText.rects.map((r) => r.x));
       const minY = Math.min(...selectedText.rects.map((r) => r.y));
       const maxX = Math.max(...selectedText.rects.map((r) => r.x + r.width));
@@ -254,17 +243,15 @@ export default function EnhancedAnnotationLayer({
         color: getAnnotationColor(type),
         author: 'Current User',
         selectedText: selectedText.text,
-        textRects: selectedText.rects, // Store individual text rectangles for better highlighting
+        textRects: selectedText.rects,
       };
 
       onAnnotationAdd(newAnnotation);
       setShowTextMenu(false);
       setSelectedText(null);
 
-      // Clear the browser selection
       window.getSelection()?.removeAllRanges();
 
-      // Show success feedback
       const actionText = type === 'highlight' ? 'highlighted' : 'annotated';
       toast.success(`Text ${actionText} successfully`);
     },
@@ -274,26 +261,26 @@ export default function EnhancedAnnotationLayer({
   const getAnnotationColor = (type: 'highlight' | 'note' | 'issue') => {
     switch (type) {
       case 'highlight':
-        return '#fef08a'; // yellow-200
+        return '#fef08a';
       case 'note':
-        return '#bfdbfe'; // blue-200
+        return '#bfdbfe';
       case 'issue':
-        return '#fecaca'; // red-200
+        return '#fecaca';
       default:
-        return '#e5e7eb'; // gray-200
+        return '#e5e7eb';
     }
   };
 
   const getAnnotationBorderColor = (type: 'highlight' | 'note' | 'issue') => {
     switch (type) {
       case 'highlight':
-        return '#eab308'; // yellow-500
+        return '#eab308';
       case 'note':
-        return '#3b82f6'; // blue-500
+        return '#3b82f6';
       case 'issue':
-        return '#ef4444'; // red-500
+        return '#ef4444';
       default:
-        return '#6b7280'; // gray-500
+        return '#6b7280';
     }
   };
 
@@ -417,7 +404,7 @@ export default function EnhancedAnnotationLayer({
         key={`search-${index}`}
         className="absolute bg-orange-200 border border-orange-400 pointer-events-none"
         style={{
-          left: 0, // This would need proper positioning based on search result coordinates
+          left: 0,
           top: 0,
           width: '100%',
           height: 20 * scale,
@@ -427,10 +414,8 @@ export default function EnhancedAnnotationLayer({
     ));
   };
 
-  // Listen for text selection changes
   useEffect(() => {
     const handleSelectionChange = () => {
-      // Small delay to ensure selection is complete
       setTimeout(handleTextSelection, 10);
     };
 
@@ -439,7 +424,6 @@ export default function EnhancedAnnotationLayer({
       document.removeEventListener('selectionchange', handleSelectionChange);
   }, [handleTextSelection]);
 
-  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (!layerRef.current?.contains(e.target as Node)) {
@@ -466,10 +450,8 @@ export default function EnhancedAnnotationLayer({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      {/* Search Results Highlights */}
       {renderSearchHighlights()}
 
-      {/* Existing Annotations */}
       {pageAnnotations.map((annotation) => (
         <div
           key={annotation.id}
@@ -477,7 +459,6 @@ export default function EnhancedAnnotationLayer({
           onMouseEnter={() => setHoveredAnnotation(annotation.id)}
           onMouseLeave={() => setHoveredAnnotation(null)}
         >
-          {/* Enhanced Text Highlighting - Render individual text rectangles for better highlighting */}
           {annotation.textRects && annotation.textRects.length > 0 ? (
             annotation.textRects.map((rect, rectIndex) => (
               <div
@@ -495,7 +476,6 @@ export default function EnhancedAnnotationLayer({
               />
             ))
           ) : (
-            /* Fallback to single annotation box for non-text annotations */
             <div
               className="absolute border-2 cursor-pointer transition-all duration-200 hover:shadow-lg hover:z-20"
               style={{
@@ -510,7 +490,6 @@ export default function EnhancedAnnotationLayer({
             />
           )}
 
-          {/* Annotation Popup - Enhanced with better positioning and content */}
           {hoveredAnnotation === annotation.id && (
             <div
               className="absolute z-40 bg-white border border-gray-200 rounded-lg shadow-xl p-4 min-w-[300px] max-w-[400px]"
@@ -518,16 +497,15 @@ export default function EnhancedAnnotationLayer({
                 left: Math.min(
                   (annotation.position.x + annotation.position.width) * scale +
                     10,
-                  pageWidth * scale - 420 // Ensure popup doesn't go off-page
+                  pageWidth * scale - 420
                 ),
                 top: Math.max(
                   annotation.position.y * scale - 10,
-                  10 // Ensure popup doesn't go above page
+                  10
                 ),
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header with annotation type and controls */}
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <div
@@ -573,7 +551,6 @@ export default function EnhancedAnnotationLayer({
                 </div>
               </div>
 
-              {/* Selected Text Preview - Enhanced display */}
               {annotation.selectedText && (
                 <div className="mb-3 p-3 bg-gray-50 rounded-md border-l-4 border-blue-200">
                   <div className="text-xs text-gray-500 mb-2 font-medium">
@@ -585,7 +562,6 @@ export default function EnhancedAnnotationLayer({
                 </div>
               )}
 
-              {/* Annotation Content */}
               {editingAnnotation === annotation.id ? (
                 <div className="space-y-3">
                   <textarea

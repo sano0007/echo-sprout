@@ -341,19 +341,19 @@ a {
   }
 
   .status-verified {
-    @apply bg-success-primary text-white border border-success-border;
+      @apply bg-success text-white border border-success-border;
   }
 
   .status-pending {
-    @apply bg-warning-primary text-white border border-warning-border;
+      @apply bg-warning text-white border border-warning-border;
   }
 
   .status-rejected {
-    @apply bg-error-primary text-white border border-error-border;
+      @apply bg-error text-white border border-error-border;
   }
 
   .status-info {
-    @apply bg-info-primary text-white border border-info-border;
+      @apply bg-gray-500 text-white border border-gray-300;
   }
 
   .metric-card {

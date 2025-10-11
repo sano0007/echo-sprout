@@ -5,7 +5,6 @@ import { UserService } from '../services/user-service';
 import { WorkflowService } from '../services/workflow-service';
 import { VerificationService } from '../services/verification-service';
 
-// Get optimal verifier for a project
 export const getOptimalVerifier = query({
   args: {
     projectId: v.id('projects'),
@@ -35,7 +34,6 @@ export const getOptimalVerifier = query({
   },
 });
 
-// Get ranked verifiers for a project
 export const getRankedVerifiers = query({
   args: {
     projectId: v.id('projects'),
@@ -67,7 +65,6 @@ export const getRankedVerifiers = query({
   },
 });
 
-// Auto-assign verifier to project
 export const autoAssignVerifier = mutation({
   args: {
     projectId: v.id('projects'),
@@ -107,7 +104,6 @@ export const autoAssignVerifier = mutation({
     );
 
     if (verificationId) {
-      // Trigger workflow assignment
       await WorkflowService.handleVerificationAssignment(
         ctx,
         verificationId,
@@ -119,7 +115,6 @@ export const autoAssignVerifier = mutation({
   },
 });
 
-// Manually assign verifier to project
 export const manualAssignVerifier = mutation({
   args: {
     projectId: v.id('projects'),
@@ -140,16 +135,13 @@ export const manualAssignVerifier = mutation({
       throw new Error('Unauthorized: Admin access required');
     }
 
-    // Verify verifier exists and is active
     const verifier = await ctx.db.get(args.verifierId);
     if (!verifier || verifier.role !== 'verifier' || !verifier.isActive) {
       throw new Error('Invalid verifier selection');
     }
 
-    // Calculate due date if not provided
-    const dueDate = args.dueDate || Date.now() + 14 * 24 * 60 * 60 * 1000; // 2 weeks default
+    const dueDate = args.dueDate || Date.now() + 14 * 24 * 60 * 60 * 1000;
 
-    // Create verification using the standard service
     const verificationId = await VerificationService.createVerification(ctx, {
       projectId: args.projectId,
       verifierId: args.verifierId,
@@ -157,7 +149,6 @@ export const manualAssignVerifier = mutation({
       priority: args.priority || 'normal',
     });
 
-    // Trigger workflow assignment
     await WorkflowService.handleVerificationAssignment(
       ctx,
       verificationId,
@@ -168,7 +159,6 @@ export const manualAssignVerifier = mutation({
   },
 });
 
-// Get workload distribution across verifiers
 export const getWorkloadDistribution = query({
   args: {},
   handler: async (ctx) => {
@@ -181,7 +171,6 @@ export const getWorkloadDistribution = query({
   },
 });
 
-// Rebalance workload across verifiers
 export const rebalanceWorkload = mutation({
   args: {
     maxWorkloadDifference: v.optional(v.number()),
@@ -197,9 +186,7 @@ export const rebalanceWorkload = mutation({
       args.maxWorkloadDifference || 3
     );
 
-    // Log the rebalancing action
     if (result.reassignments > 0) {
-      // Log audit trail for each reassignment
       for (const detail of result.details) {
         await ctx.db.insert('auditLogs', {
           entityType: 'verification',
@@ -220,7 +207,6 @@ export const rebalanceWorkload = mutation({
   },
 });
 
-// Get assignment recommendations
 export const getAssignmentRecommendations = query({
   args: {
     limit: v.optional(v.number()),
@@ -238,7 +224,6 @@ export const getAssignmentRecommendations = query({
   },
 });
 
-// Batch assign multiple projects
 export const batchAssignProjects = mutation({
   args: {
     assignments: v.array(
@@ -266,7 +251,6 @@ export const batchAssignProjects = mutation({
 
     for (const assignment of args.assignments) {
       try {
-        // Verify verifier
         const verifier = await ctx.db.get(assignment.verifierId);
         if (!verifier || verifier.role !== 'verifier' || !verifier.isActive) {
           results.push({
@@ -277,7 +261,6 @@ export const batchAssignProjects = mutation({
           continue;
         }
 
-        // Calculate due date based on priority
         const priority = assignment.priority || 'normal';
         const dueDateMap = {
           urgent: 3 * 24 * 60 * 60 * 1000,
@@ -287,7 +270,6 @@ export const batchAssignProjects = mutation({
         };
         const dueDate = Date.now() + dueDateMap[priority];
 
-        // Create verification
         const verificationId = await VerificationService.createVerification(
           ctx,
           {
@@ -298,7 +280,6 @@ export const batchAssignProjects = mutation({
           }
         );
 
-        // Trigger workflow
         await WorkflowService.handleVerificationAssignment(
           ctx,
           verificationId,
@@ -328,7 +309,6 @@ export const batchAssignProjects = mutation({
   },
 });
 
-// Get verifier availability and capacity
 export const getVerifierCapacity = query({
   args: {
     verifierId: v.optional(v.id('users')),
@@ -341,7 +321,6 @@ export const getVerifierCapacity = query({
 
     const targetVerifierId = args.verifierId || currentUser._id;
 
-    // Verify access permissions
     if (
       currentUser.role === 'verifier' &&
       targetVerifierId !== currentUser._id
@@ -361,7 +340,7 @@ export const getVerifierCapacity = query({
 
     const currentWorkload =
       stats.pendingVerifications + stats.inProgressVerifications;
-    const maxCapacity = 10; // Could be configurable per verifier
+    const maxCapacity = 10;
     const availableCapacity = Math.max(0, maxCapacity - currentWorkload);
 
     return {
