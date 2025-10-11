@@ -14,8 +14,16 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { usePDFReports, useMonitoringPDFReports, useAnalyticsPDFReports } from '../../hooks/usePDFReports';
-import { validateForm, pdfReportSchema, FormValidator } from '../../utils/validation';
+import {
+  usePDFReports,
+  useMonitoringPDFReports,
+  useAnalyticsPDFReports,
+} from '../../hooks/usePDFReports';
+import {
+  validateForm,
+  pdfReportSchema,
+  FormValidator,
+} from '../../utils/validation';
 
 interface PDFReportFormData {
   title: string;
@@ -37,7 +45,9 @@ export default function EnhancedPDFReportGenerator() {
     period: 'custom',
   });
 
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
   const [isGenerating, setIsGenerating] = useState(false);
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [validator] = useState(() => new FormValidator(pdfReportSchema));
@@ -62,16 +72,48 @@ export default function EnhancedPDFReportGenerator() {
   // Report type options based on template
   const reportTypeOptions = {
     analytics: [
-      { value: 'comprehensive', label: 'Comprehensive Analytics', description: 'Complete platform analytics with all metrics' },
-      { value: 'platform', label: 'Platform Performance', description: 'Platform usage and performance metrics' },
-      { value: 'environmental', label: 'Environmental Impact', description: 'Environmental metrics and carbon tracking' },
-      { value: 'financial', label: 'Financial Analytics', description: 'Revenue, transactions, and financial data' },
+      {
+        value: 'comprehensive',
+        label: 'Comprehensive Analytics',
+        description: 'Complete platform analytics with all metrics',
+      },
+      {
+        value: 'platform',
+        label: 'Platform Performance',
+        description: 'Platform usage and performance metrics',
+      },
+      {
+        value: 'environmental',
+        label: 'Environmental Impact',
+        description: 'Environmental metrics and carbon tracking',
+      },
+      {
+        value: 'financial',
+        label: 'Financial Analytics',
+        description: 'Revenue, transactions, and financial data',
+      },
     ],
     monitoring: [
-      { value: 'system', label: 'System Health', description: 'System performance and health metrics' },
-      { value: 'project', label: 'Project Monitoring', description: 'Project progress and status reports' },
-      { value: 'alerts', label: 'Alert Summary', description: 'System alerts and incident reports' },
-      { value: 'performance', label: 'Performance Metrics', description: 'Platform and system performance data' },
+      {
+        value: 'system',
+        label: 'System Health',
+        description: 'System performance and health metrics',
+      },
+      {
+        value: 'project',
+        label: 'Project Monitoring',
+        description: 'Project progress and status reports',
+      },
+      {
+        value: 'alerts',
+        label: 'Alert Summary',
+        description: 'System alerts and incident reports',
+      },
+      {
+        value: 'performance',
+        label: 'Performance Metrics',
+        description: 'Platform and system performance data',
+      },
     ],
   };
 
@@ -165,21 +207,31 @@ export default function EnhancedPDFReportGenerator() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">PDF Report Generator</h2>
-          <p className="text-gray-600">Generate comprehensive monitoring and analytics reports</p>
+          <h2 className="text-2xl font-bold text-gray-900">
+            PDF Report Generator
+          </h2>
+          <p className="text-gray-600">
+            Generate comprehensive monitoring and analytics reports
+          </p>
         </div>
         {statistics && (
           <div className="flex space-x-4 text-sm">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{statistics.total}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {statistics.total}
+              </div>
               <div className="text-gray-500">Total Reports</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{statistics.completed}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {statistics.completed}
+              </div>
               <div className="text-gray-500">Completed</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">{statistics.processing}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {statistics.processing}
+              </div>
               <div className="text-gray-500">Processing</div>
             </div>
           </div>
@@ -206,11 +258,15 @@ export default function EnhancedPDFReportGenerator() {
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 placeholder="e.g., Monthly Monitoring Report - January 2024"
                 className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  validationErrors.title ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  validationErrors.title
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-300'
                 }`}
               />
               {validationErrors.title && (
-                <p className="mt-1 text-sm text-red-600">{validationErrors.title}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {validationErrors.title}
+                </p>
               )}
             </div>
 
@@ -222,7 +278,9 @@ export default function EnhancedPDFReportGenerator() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => handleInputChange('templateType', 'monitoring')}
+                  onClick={() =>
+                    handleInputChange('templateType', 'monitoring')
+                  }
                   className={`p-3 border rounded-lg text-left transition-colors ${
                     formData.templateType === 'monitoring'
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -231,7 +289,9 @@ export default function EnhancedPDFReportGenerator() {
                 >
                   <BarChart3 className="h-5 w-5 mb-1" />
                   <div className="font-medium">Monitoring</div>
-                  <div className="text-xs text-gray-500">System & project monitoring</div>
+                  <div className="text-xs text-gray-500">
+                    System & project monitoring
+                  </div>
                 </button>
                 <button
                   type="button"
@@ -244,7 +304,9 @@ export default function EnhancedPDFReportGenerator() {
                 >
                   <Settings className="h-5 w-5 mb-1" />
                   <div className="font-medium">Analytics</div>
-                  <div className="text-xs text-gray-500">Platform analytics & insights</div>
+                  <div className="text-xs text-gray-500">
+                    Platform analytics & insights
+                  </div>
                 </button>
               </div>
             </div>
@@ -256,9 +318,13 @@ export default function EnhancedPDFReportGenerator() {
               </label>
               <select
                 value={formData.reportType}
-                onChange={(e) => handleInputChange('reportType', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('reportType', e.target.value)
+                }
                 className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  validationErrors.reportType ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  validationErrors.reportType
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-300'
                 }`}
               >
                 <option value="">Select report type...</option>
@@ -269,7 +335,9 @@ export default function EnhancedPDFReportGenerator() {
                 ))}
               </select>
               {validationErrors.reportType && (
-                <p className="mt-1 text-sm text-red-600">{validationErrors.reportType}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {validationErrors.reportType}
+                </p>
               )}
             </div>
 
@@ -301,13 +369,19 @@ export default function EnhancedPDFReportGenerator() {
                 <input
                   type="date"
                   value={formData.startDate}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange('startDate', e.target.value)
+                  }
                   className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                    validationErrors.startDate ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    validationErrors.startDate
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-300'
                   }`}
                 />
                 {validationErrors.startDate && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.startDate}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {validationErrors.startDate}
+                  </p>
                 )}
               </div>
               <div>
@@ -319,11 +393,15 @@ export default function EnhancedPDFReportGenerator() {
                   value={formData.endDate}
                   onChange={(e) => handleInputChange('endDate', e.target.value)}
                   className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                    validationErrors.endDate ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    validationErrors.endDate
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-300'
                   }`}
                 />
                 {validationErrors.endDate && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.endDate}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {validationErrors.endDate}
+                  </p>
                 )}
               </div>
             </div>
@@ -331,7 +409,9 @@ export default function EnhancedPDFReportGenerator() {
             {/* Generate Button */}
             <button
               onClick={handleGenerateReport}
-              disabled={isGenerating || Object.keys(validationErrors).length > 0}
+              disabled={
+                isGenerating || Object.keys(validationErrors).length > 0
+              }
               className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isGenerating ? (
@@ -370,13 +450,21 @@ export default function EnhancedPDFReportGenerator() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{report.title}</h4>
+                      <h4 className="font-medium text-gray-900">
+                        {report.title}
+                      </h4>
                       <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-                        <span className="capitalize">{report.templateType}</span>
+                        <span className="capitalize">
+                          {report.templateType}
+                        </span>
                         <span>•</span>
-                        <span className="capitalize">{report.reportType.replace('_', ' ')}</span>
+                        <span className="capitalize">
+                          {report.reportType.replace('_', ' ')}
+                        </span>
                         <span>•</span>
-                        <span>{new Date(report.requestedAt).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(report.requestedAt).toLocaleDateString()}
+                        </span>
                       </div>
                       {report.fileSize && (
                         <div className="text-sm text-gray-500 mt-1">
@@ -385,7 +473,9 @@ export default function EnhancedPDFReportGenerator() {
                       )}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(report.status)}`}>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(report.status)}`}
+                      >
                         {report.status}
                       </span>
                       {report.status === 'completed' && (
@@ -415,7 +505,9 @@ export default function EnhancedPDFReportGenerator() {
                           style={{ width: `${report.progress}%` }}
                         />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{report.progress}% complete</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {report.progress}% complete
+                      </p>
                     </div>
                   )}
 
@@ -423,7 +515,9 @@ export default function EnhancedPDFReportGenerator() {
                     <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
                       <div className="flex items-start space-x-2">
                         <AlertCircle className="h-4 w-4 text-red-500 mt-0.5" />
-                        <p className="text-sm text-red-700">{report.errorMessage}</p>
+                        <p className="text-sm text-red-700">
+                          {report.errorMessage}
+                        </p>
                       </div>
                     </div>
                   )}

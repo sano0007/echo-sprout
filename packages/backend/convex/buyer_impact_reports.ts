@@ -1542,7 +1542,10 @@ export const getBuyerProjectTracking = query({
           title: update.title,
           description: update.description,
           date: update.reportingDate || update._creationTime,
-          photos: update.photoUrls || update.photos?.map((p) => p.cloudinary_url) || [],
+          photos:
+            update.photoUrls ||
+            update.photos?.map((p) => p.cloudinary_url) ||
+            [],
           metrics: update.measurementData,
         })),
         impact: {
@@ -1688,7 +1691,8 @@ export const getDetailedProjectTracking = query({
         title: update.title,
         description: update.description,
         date: update.reportingDate || update._creationTime,
-        photos: update.photoUrls || update.photos?.map((p) => p.cloudinary_url) || [],
+        photos:
+          update.photoUrls || update.photos?.map((p) => p.cloudinary_url) || [],
         metrics: update.measurementData,
       })),
       impact: {

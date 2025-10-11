@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 export default function VerificationDashboard() {
-  const [activeTab, setActiveTab] = useState('pendingAcceptance');
+  const [activeTab, setActiveTab] = useState<'pendingAcceptance' | 'accepted' | 'inProgress' | 'completed' | 'upgradeRequests'>('pendingAcceptance');
 
   const permissions = useQuery(api.permissions.getCurrentUserPermissions);
 
@@ -28,6 +28,13 @@ export default function VerificationDashboard() {
       ? { paginationOpts: { numItems: 50, cursor: null } }
       : 'skip'
   );
+
+  const upgradeRequests = useQuery(api.users.getMyAssignedUpgradeRequests, {
+    paginationOpts: { numItems: 50, cursor: null },
+  });
+
+  const approveRequest = useMutation(api.users.approveRoleUpgradeRequest);
+  const rejectRequest = useMutation(api.users.rejectRoleUpgradeRequest);
 
   if (!permissions || !verifierStats || !acceptanceStats || !myVerifications) {
     return (
@@ -59,7 +66,9 @@ export default function VerificationDashboard() {
 
   const allVerifications = myVerifications.page || [];
   const projects = {
-    pendingAcceptance: allVerifications.filter((v: any) => v.status === 'assigned'),
+    pendingAcceptance: allVerifications.filter(
+      (v: any) => v.status === 'assigned'
+    ),
     accepted: allVerifications.filter((v: any) => v.status === 'accepted'),
     inProgress: allVerifications.filter((v: any) => v.status === 'in_progress'),
     completed: allVerifications.filter((v: any) =>
@@ -80,6 +89,24 @@ export default function VerificationDashboard() {
     averageScore: verifierStats.averageScore
       ? verifierStats.averageScore.toFixed(1)
       : 'N/A',
+  };
+
+  const handleApproveRequest = async (requestId: any, reviewNotes?: string) => {
+    try {
+      await approveRequest({ requestId, reviewNotes });
+      toast.success('Role upgrade request approved successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to approve request');
+    }
+  };
+
+  const handleRejectRequest = async (requestId: any, rejectionReason: string) => {
+    try {
+      await rejectRequest({ requestId, rejectionReason });
+      toast.success('Role upgrade request rejected');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reject request');
+    }
   };
 
   return (
@@ -166,6 +193,12 @@ export default function VerificationDashboard() {
             >
               Completed ({projects.completed.length})
             </button>
+            <button
+              onClick={() => setActiveTab('upgradeRequests')}
+              className={`px-6 py-4 text-sm font-medium ${activeTab === 'upgradeRequests' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+            >
+              Role Upgrades ({upgradeRequests?.page?.length || 0})
+            </button>
           </nav>
         </div>
 
@@ -240,6 +273,27 @@ export default function VerificationDashboard() {
                     key={verification._id}
                     verification={verification}
                     type="completed"
+                  />
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Role Upgrade Requests */}
+          {activeTab === 'upgradeRequests' && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Role Upgrade Requests</h2>
+              {!upgradeRequests?.page || upgradeRequests.page.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <p>No role upgrade requests assigned to you.</p>
+                </div>
+              ) : (
+                upgradeRequests.page.map((request: any) => (
+                  <UpgradeRequestCard
+                    key={request._id}
+                    request={request}
+                    onApprove={handleApproveRequest}
+                    onReject={handleRejectRequest}
                   />
                 ))
               )}
@@ -479,5 +533,192 @@ function StartVerificationButton({ verification }: { verification: any }) {
     >
       {isStarting ? 'Starting...' : 'Start Verification'}
     </button>
+  );
+}
+
+function UpgradeRequestCard({
+  request,
+  onApprove,
+  onReject,
+}: {
+  request: any;
+  onApprove: (requestId: any, reviewNotes?: string) => Promise<void>;
+  onReject: (requestId: any, rejectionReason: string) => Promise<void>;
+}) {
+  const [showDetails, setShowDetails] = useState(false);
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleApprove = async () => {
+    setIsProcessing(true);
+    try {
+      await onApprove(request._id, reviewNotes || undefined);
+      setShowDetails(false);
+      setReviewNotes('');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      toast.error('Please provide a rejection reason');
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      await onReject(request._id, rejectionReason);
+      setShowRejectModal(false);
+      setShowDetails(false);
+      setRejectionReason('');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <div className="bg-white border rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {request.applicationData.firstName} {request.applicationData.lastName}
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            {request.applicationData.email}
+          </p>
+          {request.applicationData.organizationName && (
+            <p className="text-sm text-gray-500 mt-1">
+              {request.applicationData.organizationName}
+              {request.applicationData.organizationType &&
+                ` (${request.applicationData.organizationType})`}
+            </p>
+          )}
+          <p className="text-xs text-gray-400 mt-2">
+            Submitted on {new Date(request.createdAt).toLocaleDateString()} at{' '}
+            {new Date(request.createdAt).toLocaleTimeString()}
+          </p>
+        </div>
+        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+          {request.status}
+        </span>
+      </div>
+
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="mt-4 text-blue-600 hover:text-blue-800 font-medium text-sm"
+      >
+        {showDetails ? 'Hide' : 'Show'} Details →
+      </button>
+
+      {showDetails && (
+        <div className="mt-4 space-y-4 border-t pt-4">
+          <div>
+            <p className="font-medium text-gray-900 mb-1">
+              Reason for Upgrade:
+            </p>
+            <p className="text-gray-700 bg-gray-50 p-3 rounded">
+              {request.applicationData.reasonForUpgrade}
+            </p>
+          </div>
+
+          {request.applicationData.experienceDescription && (
+            <div>
+              <p className="font-medium text-gray-900 mb-1">
+                Relevant Experience:
+              </p>
+              <p className="text-gray-700 bg-gray-50 p-3 rounded">
+                {request.applicationData.experienceDescription}
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="font-medium text-gray-700">Location:</p>
+              <p className="text-gray-600">
+                {request.applicationData.city}, {request.applicationData.country}
+              </p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-700">Phone:</p>
+              <p className="text-gray-600">
+                {request.applicationData.phoneNumber}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Review Notes (Optional)
+            </label>
+            <textarea
+              value={reviewNotes}
+              onChange={(e) => setReviewNotes(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={3}
+              placeholder="Add any notes about your decision..."
+            />
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={handleApprove}
+              disabled={isProcessing}
+              className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+              {isProcessing ? 'Processing...' : 'Approve & Upgrade User'}
+            </button>
+            <button
+              onClick={() => setShowRejectModal(true)}
+              disabled={isProcessing}
+              className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            >
+              Reject Request
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Reject Upgrade Request</h3>
+            <p className="text-gray-600 mb-4">
+              Please provide a reason for rejecting this request. The applicant
+              will receive your explanation.
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
+              rows={4}
+              placeholder="Explain why this request is being rejected..."
+              required
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason('');
+                }}
+                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={isProcessing || !rejectionReason.trim()}
+                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isProcessing ? 'Rejecting...' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

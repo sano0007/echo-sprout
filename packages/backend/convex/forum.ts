@@ -170,6 +170,7 @@ export const listAllTopics = query({
         replyCount: t.replyCount,
         views: t.viewCount,
         author: name,
+        createdAt: t._creationTime,
       });
     }
     return result;

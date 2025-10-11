@@ -32,7 +32,10 @@ export interface FieldValidation {
 /**
  * Validates a single field against multiple rules
  */
-export function validateField(value: any, rules: ValidationRule[]): string | null {
+export function validateField(
+  value: any,
+  rules: ValidationRule[]
+): string | null {
   for (const rule of rules) {
     // Required validation
     if (rule.required && (!value || value.toString().trim() === '')) {
@@ -63,7 +66,11 @@ export function validateField(value: any, rules: ValidationRule[]): string | nul
     }
 
     // Pattern validation
-    if (rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
+    if (
+      rule.pattern &&
+      typeof value === 'string' &&
+      !rule.pattern.test(value)
+    ) {
       return rule.message || 'Invalid format';
     }
 
@@ -79,7 +86,10 @@ export function validateField(value: any, rules: ValidationRule[]): string | nul
 /**
  * Validates an entire form object
  */
-export function validateForm(data: Record<string, any>, schema: FieldValidation): ValidationResult {
+export function validateForm(
+  data: Record<string, any>,
+  schema: FieldValidation
+): ValidationResult {
   const errors: Record<string, string> = {};
   const warnings: Record<string, string> = {};
 
@@ -123,8 +133,11 @@ export const progressUpdateSchema: FieldValidation = {
   updateType: [
     { required: true, message: 'Update type is required' },
     {
-      custom: (value) => ['milestone', 'measurement', 'photo', 'issue', 'completion'].includes(value),
-      message: 'Invalid update type'
+      custom: (value) =>
+        ['milestone', 'measurement', 'photo', 'issue', 'completion'].includes(
+          value
+        ),
+      message: 'Invalid update type',
     },
   ],
   nextSteps: [
@@ -139,14 +152,12 @@ export const progressUpdateSchema: FieldValidation = {
  * Alert Creation Form Validation Schema
  */
 export const alertCreationSchema: FieldValidation = {
-  alertType: [
-    { required: true, message: 'Alert type is required' },
-  ],
+  alertType: [{ required: true, message: 'Alert type is required' }],
   severity: [
     { required: true, message: 'Severity level is required' },
     {
       custom: (value) => ['low', 'medium', 'high', 'critical'].includes(value),
-      message: 'Invalid severity level'
+      message: 'Invalid severity level',
     },
   ],
   message: [
@@ -172,22 +183,18 @@ export const pdfReportSchema: FieldValidation = {
     { required: true, message: 'Template type is required' },
     {
       custom: (value) => ['analytics', 'monitoring'].includes(value),
-      message: 'Invalid template type'
+      message: 'Invalid template type',
     },
   ],
-  reportType: [
-    { required: true, message: 'Report type is required' },
-  ],
+  reportType: [{ required: true, message: 'Report type is required' }],
   startDate: [
     { required: true, message: 'Start date is required' },
     {
       custom: (value) => new Date(value) <= new Date(),
-      message: 'Start date cannot be in the future'
+      message: 'Start date cannot be in the future',
     },
   ],
-  endDate: [
-    { required: true, message: 'End date is required' },
-  ],
+  endDate: [{ required: true, message: 'End date is required' }],
 };
 
 /**
@@ -207,8 +214,16 @@ export const projectCreationSchema: FieldValidation = {
   projectType: [
     { required: true, message: 'Project type is required' },
     {
-      custom: (value) => ['reforestation', 'solar', 'wind', 'biogas', 'waste_management', 'mangrove_restoration'].includes(value),
-      message: 'Invalid project type'
+      custom: (value) =>
+        [
+          'reforestation',
+          'solar',
+          'wind',
+          'biogas',
+          'waste_management',
+          'mangrove_restoration',
+        ].includes(value),
+      message: 'Invalid project type',
     },
   ],
   budget: [

@@ -235,11 +235,36 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>
             <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md">
-              <SelectItem value="all" className="hover:bg-gray-50 focus:bg-gray-50">All Roles</SelectItem>
-              <SelectItem value="project_creator" className="hover:bg-gray-50 focus:bg-gray-50">Project Creator</SelectItem>
-              <SelectItem value="credit_buyer" className="hover:bg-gray-50 focus:bg-gray-50">Credit Buyer</SelectItem>
-              <SelectItem value="verifier" className="hover:bg-gray-50 focus:bg-gray-50">Verifier</SelectItem>
-              <SelectItem value="admin" className="hover:bg-gray-50 focus:bg-gray-50">Admin</SelectItem>
+              <SelectItem
+                value="all"
+                className="hover:bg-gray-50 focus:bg-gray-50"
+              >
+                All Roles
+              </SelectItem>
+              <SelectItem
+                value="project_creator"
+                className="hover:bg-gray-50 focus:bg-gray-50"
+              >
+                Project Creator
+              </SelectItem>
+              <SelectItem
+                value="credit_buyer"
+                className="hover:bg-gray-50 focus:bg-gray-50"
+              >
+                Credit Buyer
+              </SelectItem>
+              <SelectItem
+                value="verifier"
+                className="hover:bg-gray-50 focus:bg-gray-50"
+              >
+                Verifier
+              </SelectItem>
+              <SelectItem
+                value="admin"
+                className="hover:bg-gray-50 focus:bg-gray-50"
+              >
+                Admin
+              </SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -247,9 +272,24 @@ export const UserManagementTable: React.FC<UserManagementTableProps> = ({
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md">
-              <SelectItem value="all" className="hover:bg-gray-50 focus:bg-gray-50">All Status</SelectItem>
-              <SelectItem value="active" className="hover:bg-gray-50 focus:bg-gray-50">Active</SelectItem>
-              <SelectItem value="inactive" className="hover:bg-gray-50 focus:bg-gray-50">Inactive</SelectItem>
+              <SelectItem
+                value="all"
+                className="hover:bg-gray-50 focus:bg-gray-50"
+              >
+                All Status
+              </SelectItem>
+              <SelectItem
+                value="active"
+                className="hover:bg-gray-50 focus:bg-gray-50"
+              >
+                Active
+              </SelectItem>
+              <SelectItem
+                value="inactive"
+                className="hover:bg-gray-50 focus:bg-gray-50"
+              >
+                Inactive
+              </SelectItem>
             </SelectContent>
           </Select>
           {/*<Button variant="outline" size="icon" className="border-cloud-gray text-slate-gray hover:bg-whisper-gray hover:text-rich-black">*/}

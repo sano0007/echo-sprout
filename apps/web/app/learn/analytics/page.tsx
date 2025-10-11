@@ -251,13 +251,6 @@ export default function LearnAnalyticsPage() {
       >
         <h1 className="text-3xl font-bold">Education & Forum Analytics</h1>
         <div className={'flex justify-between items-center gap-4 flex-wrap'}>
-          <button
-            data-report-exclude
-            className={'px-4 py-2 bg-blue-500 text-white text-bold rounded-md'}
-            onClick={handleGeneratePdf}
-          >
-            Generate Report
-          </button>
           <Link
             data-report-exclude
             href="/learn"

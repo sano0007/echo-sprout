@@ -1,4 +1,9 @@
-import { mutation, query, internalMutation, internalQuery } from './_generated/server';
+import {
+  mutation,
+  query,
+  internalMutation,
+  internalQuery,
+} from './_generated/server';
 import { v } from 'convex/values';
 import { UserService } from '../services/user-service';
 
@@ -31,21 +36,25 @@ export const createProgressUpdate = mutation({
       v.literal('completion')
     ),
     progressPercentage: v.number(),
-    measurementData: v.optional(v.object({
-      carbonImpactToDate: v.optional(v.number()),
-      treesPlanted: v.optional(v.number()),
-      energyGenerated: v.optional(v.number()),
-      wasteProcessed: v.optional(v.number()),
-    })),
+    measurementData: v.optional(
+      v.object({
+        carbonImpactToDate: v.optional(v.number()),
+        treesPlanted: v.optional(v.number()),
+        energyGenerated: v.optional(v.number()),
+        wasteProcessed: v.optional(v.number()),
+      })
+    ),
     photoStorageIds: v.optional(v.array(v.id('_storage'))),
     photoUrls: v.optional(v.array(v.string())),
     nextSteps: v.optional(v.string()),
     challenges: v.optional(v.string()),
-    location: v.optional(v.object({
-      lat: v.number(),
-      long: v.number(),
-      name: v.string(),
-    })),
+    location: v.optional(
+      v.object({
+        lat: v.number(),
+        long: v.number(),
+        name: v.string(),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const user = await UserService.getCurrentUser(ctx);
@@ -64,7 +73,9 @@ export const createProgressUpdate = mutation({
       (user.role === 'project_creator' && project.creatorId === user._id);
 
     if (!canCreate) {
-      throw new Error('Access denied: Cannot create progress update for this project');
+      throw new Error(
+        'Access denied: Cannot create progress update for this project'
+      );
     }
 
     // Validate progress percentage
@@ -105,19 +116,23 @@ export const createProgressUpdate = mutation({
 export const getProgressUpdates = query({
   args: {
     projectId: v.optional(v.id('projects')),
-    updateType: v.optional(v.union(
-      v.literal('milestone'),
-      v.literal('measurement'),
-      v.literal('photo'),
-      v.literal('issue'),
-      v.literal('completion')
-    )),
-    status: v.optional(v.union(
-      v.literal('submitted'),
-      v.literal('under_review'),
-      v.literal('approved'),
-      v.literal('rejected')
-    )),
+    updateType: v.optional(
+      v.union(
+        v.literal('milestone'),
+        v.literal('measurement'),
+        v.literal('photo'),
+        v.literal('issue'),
+        v.literal('completion')
+      )
+    ),
+    status: v.optional(
+      v.union(
+        v.literal('submitted'),
+        v.literal('under_review'),
+        v.literal('approved'),
+        v.literal('rejected')
+      )
+    ),
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
     searchTerm: v.optional(v.string()),
@@ -132,7 +147,7 @@ export const getProgressUpdates = query({
 
     // Apply project filter
     if (args.projectId) {
-      query = query.filter(q => q.eq(q.field('projectId'), args.projectId));
+      query = query.filter((q) => q.eq(q.field('projectId'), args.projectId));
     }
 
     // Apply role-based filtering
@@ -140,34 +155,33 @@ export const getProgressUpdates = query({
       // Project creators can only see their own updates
       const userProjects = await ctx.db
         .query('projects')
-        .filter(q => q.eq(q.field('creatorId'), user._id))
+        .filter((q) => q.eq(q.field('creatorId'), user._id))
         .collect();
 
-      const projectIds = userProjects.map(p => p._id);
-      query = query.filter(q =>
-        projectIds.some(id => q.eq(q.field('projectId'), id))
+      const projectIds = userProjects.map((p) => p._id);
+      query = query.filter((q) =>
+        projectIds.some((id) => q.eq(q.field('projectId'), id))
       );
     }
 
-    let updates = await query
-      .order('desc')
-      .collect();
+    let updates = await query.order('desc').collect();
 
     // Apply additional filters
     if (args.updateType) {
-      updates = updates.filter(u => u.updateType === args.updateType);
+      updates = updates.filter((u) => u.updateType === args.updateType);
     }
 
     if (args.status) {
-      updates = updates.filter(u => u.status === args.status);
+      updates = updates.filter((u) => u.status === args.status);
     }
 
     // Apply search filter
     if (args.searchTerm) {
       const searchLower = args.searchTerm.toLowerCase();
-      updates = updates.filter(u =>
-        u.title.toLowerCase().includes(searchLower) ||
-        u.description.toLowerCase().includes(searchLower)
+      updates = updates.filter(
+        (u) =>
+          u.title.toLowerCase().includes(searchLower) ||
+          u.description.toLowerCase().includes(searchLower)
       );
     }
 
@@ -189,12 +203,14 @@ export const updateProgressUpdate = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     progressPercentage: v.optional(v.number()),
-    measurementData: v.optional(v.object({
-      carbonImpactToDate: v.optional(v.number()),
-      treesPlanted: v.optional(v.number()),
-      energyGenerated: v.optional(v.number()),
-      wasteProcessed: v.optional(v.number()),
-    })),
+    measurementData: v.optional(
+      v.object({
+        carbonImpactToDate: v.optional(v.number()),
+        treesPlanted: v.optional(v.number()),
+        energyGenerated: v.optional(v.number()),
+        wasteProcessed: v.optional(v.number()),
+      })
+    ),
     nextSteps: v.optional(v.string()),
     challenges: v.optional(v.string()),
   },
@@ -212,15 +228,18 @@ export const updateProgressUpdate = mutation({
     // Check permissions
     const canUpdate =
       user.role === 'admin' ||
-      (user.role === 'project_creator' && (update.submittedBy === user._id || update.reportedBy === user._id));
+      (user.role === 'project_creator' &&
+        (update.submittedBy === user._id || update.reportedBy === user._id));
 
     if (!canUpdate) {
       throw new Error('Access denied: Cannot update this progress update');
     }
 
     // Validate progress percentage if provided
-    if (args.progressPercentage !== undefined &&
-        (args.progressPercentage < 0 || args.progressPercentage > 100)) {
+    if (
+      args.progressPercentage !== undefined &&
+      (args.progressPercentage < 0 || args.progressPercentage > 100)
+    ) {
       throw new Error('Progress percentage must be between 0 and 100');
     }
 
@@ -230,9 +249,12 @@ export const updateProgressUpdate = mutation({
     };
 
     if (args.title !== undefined) updateData.title = args.title;
-    if (args.description !== undefined) updateData.description = args.description;
-    if (args.progressPercentage !== undefined) updateData.progressPercentage = args.progressPercentage;
-    if (args.measurementData !== undefined) updateData.measurementData = args.measurementData;
+    if (args.description !== undefined)
+      updateData.description = args.description;
+    if (args.progressPercentage !== undefined)
+      updateData.progressPercentage = args.progressPercentage;
+    if (args.measurementData !== undefined)
+      updateData.measurementData = args.measurementData;
     if (args.nextSteps !== undefined) updateData.nextSteps = args.nextSteps;
     if (args.challenges !== undefined) updateData.challenges = args.challenges;
 
@@ -263,7 +285,8 @@ export const deleteProgressUpdate = mutation({
     // Check permissions
     const canDelete =
       user.role === 'admin' ||
-      (user.role === 'project_creator' && (update.submittedBy === user._id || update.reportedBy === user._id));
+      (user.role === 'project_creator' &&
+        (update.submittedBy === user._id || update.reportedBy === user._id));
 
     if (!canDelete) {
       throw new Error('Access denied: Cannot delete this progress update');
@@ -314,7 +337,9 @@ export const createMilestone = mutation({
       (user.role === 'project_creator' && project.creatorId === user._id);
 
     if (!canCreate) {
-      throw new Error('Access denied: Cannot create milestone for this project');
+      throw new Error(
+        'Access denied: Cannot create milestone for this project'
+      );
     }
 
     const milestoneId = await ctx.db.insert('projectMilestones', {
@@ -338,22 +363,26 @@ export const createMilestone = mutation({
 export const getMilestones = query({
   args: {
     projectId: v.optional(v.id('projects')),
-    status: v.optional(v.union(
-      v.literal('pending'),
-      v.literal('in_progress'),
-      v.literal('completed'),
-      v.literal('delayed'),
-      v.literal('skipped')
-    )),
-    milestoneType: v.optional(v.union(
-      v.literal('setup'),
-      v.literal('progress_25'),
-      v.literal('progress_50'),
-      v.literal('progress_75'),
-      v.literal('impact_first'),
-      v.literal('verification'),
-      v.literal('completion')
-    )),
+    status: v.optional(
+      v.union(
+        v.literal('pending'),
+        v.literal('in_progress'),
+        v.literal('completed'),
+        v.literal('delayed'),
+        v.literal('skipped')
+      )
+    ),
+    milestoneType: v.optional(
+      v.union(
+        v.literal('setup'),
+        v.literal('progress_25'),
+        v.literal('progress_50'),
+        v.literal('progress_75'),
+        v.literal('impact_first'),
+        v.literal('verification'),
+        v.literal('completion')
+      )
+    ),
   },
   handler: async (ctx, args) => {
     const user = await UserService.getCurrentUser(ctx);
@@ -365,18 +394,20 @@ export const getMilestones = query({
 
     // Apply project filter
     if (args.projectId) {
-      query = query.filter(q => q.eq(q.field('projectId'), args.projectId));
+      query = query.filter((q) => q.eq(q.field('projectId'), args.projectId));
     }
 
     let milestones = await query.order('asc').collect();
 
     // Apply additional filters
     if (args.status) {
-      milestones = milestones.filter(m => m.status === args.status);
+      milestones = milestones.filter((m) => m.status === args.status);
     }
 
     if (args.milestoneType) {
-      milestones = milestones.filter(m => m.milestoneType === args.milestoneType);
+      milestones = milestones.filter(
+        (m) => m.milestoneType === args.milestoneType
+      );
     }
 
     return milestones;
@@ -389,13 +420,15 @@ export const getMilestones = query({
 export const updateMilestone = mutation({
   args: {
     milestoneId: v.id('projectMilestones'),
-    status: v.optional(v.union(
-      v.literal('pending'),
-      v.literal('in_progress'),
-      v.literal('completed'),
-      v.literal('delayed'),
-      v.literal('skipped')
-    )),
+    status: v.optional(
+      v.union(
+        v.literal('pending'),
+        v.literal('in_progress'),
+        v.literal('completed'),
+        v.literal('delayed'),
+        v.literal('skipped')
+      )
+    ),
     actualDate: v.optional(v.number()),
     delayReason: v.optional(v.string()),
     impactOnTimeline: v.optional(v.string()),
@@ -426,8 +459,10 @@ export const updateMilestone = mutation({
 
     if (args.status !== undefined) updateData.status = args.status;
     if (args.actualDate !== undefined) updateData.actualDate = args.actualDate;
-    if (args.delayReason !== undefined) updateData.delayReason = args.delayReason;
-    if (args.impactOnTimeline !== undefined) updateData.impactOnTimeline = args.impactOnTimeline;
+    if (args.delayReason !== undefined)
+      updateData.delayReason = args.delayReason;
+    if (args.impactOnTimeline !== undefined)
+      updateData.impactOnTimeline = args.impactOnTimeline;
 
     await ctx.db.patch(args.milestoneId, updateData);
 
@@ -529,12 +564,14 @@ export const createAlert = mutation({
 export const getAlerts = query({
   args: {
     projectId: v.optional(v.id('projects')),
-    severity: v.optional(v.union(
-      v.literal('low'),
-      v.literal('medium'),
-      v.literal('high'),
-      v.literal('critical')
-    )),
+    severity: v.optional(
+      v.union(
+        v.literal('low'),
+        v.literal('medium'),
+        v.literal('high'),
+        v.literal('critical')
+      )
+    ),
     isResolved: v.optional(v.boolean()),
     assignedTo: v.optional(v.id('users')),
     limit: v.optional(v.number()),
@@ -550,30 +587,31 @@ export const getAlerts = query({
 
     // Apply filters
     if (args.projectId) {
-      query = query.filter(q => q.eq(q.field('projectId'), args.projectId));
+      query = query.filter((q) => q.eq(q.field('projectId'), args.projectId));
     }
 
     if (args.assignedTo) {
-      query = query.filter(q => q.eq(q.field('assignedTo'), args.assignedTo));
+      query = query.filter((q) => q.eq(q.field('assignedTo'), args.assignedTo));
     }
 
     let alerts = await query.order('desc').collect();
 
     // Apply additional filters
     if (args.severity) {
-      alerts = alerts.filter(a => a.severity === args.severity);
+      alerts = alerts.filter((a) => a.severity === args.severity);
     }
 
     if (args.isResolved !== undefined) {
-      alerts = alerts.filter(a => a.isResolved === args.isResolved);
+      alerts = alerts.filter((a) => a.isResolved === args.isResolved);
     }
 
     // Apply search filter
     if (args.searchTerm) {
       const searchLower = args.searchTerm.toLowerCase();
-      alerts = alerts.filter(a =>
-        a.message.toLowerCase().includes(searchLower) ||
-        (a.description?.toLowerCase().includes(searchLower) ?? false)
+      alerts = alerts.filter(
+        (a) =>
+          a.message.toLowerCase().includes(searchLower) ||
+          (a.description?.toLowerCase().includes(searchLower) ?? false)
       );
     }
 
@@ -606,9 +644,7 @@ export const resolveAlert = mutation({
     }
 
     // Check permissions
-    const canResolve =
-      user.role === 'admin' ||
-      alert.assignedTo === user._id;
+    const canResolve = user.role === 'admin' || alert.assignedTo === user._id;
 
     if (!canResolve) {
       throw new Error('Access denied: Cannot resolve this alert');
@@ -709,22 +745,22 @@ export const getAnalytics = query({
     let query = ctx.db.query('analytics');
 
     if (args.metric) {
-      query = query.filter(q => q.eq(q.field('metric'), args.metric));
+      query = query.filter((q) => q.eq(q.field('metric'), args.metric));
     }
 
     if (args.projectId) {
-      query = query.filter(q => q.eq(q.field('projectId'), args.projectId));
+      query = query.filter((q) => q.eq(q.field('projectId'), args.projectId));
     }
 
     let analytics = await query.order('desc').collect();
 
     // Apply date range filter
     if (args.startDate) {
-      analytics = analytics.filter(a => a.date >= args.startDate!);
+      analytics = analytics.filter((a) => a.date >= args.startDate!);
     }
 
     if (args.endDate) {
-      analytics = analytics.filter(a => a.date <= args.endDate!);
+      analytics = analytics.filter((a) => a.date <= args.endDate!);
     }
 
     // Apply limit
@@ -744,12 +780,16 @@ export const getAnalytics = query({
 export const searchMonitoringData = query({
   args: {
     searchTerm: v.string(),
-    entityTypes: v.optional(v.array(v.union(
-      v.literal('progress_updates'),
-      v.literal('milestones'),
-      v.literal('alerts'),
-      v.literal('projects')
-    ))),
+    entityTypes: v.optional(
+      v.array(
+        v.union(
+          v.literal('progress_updates'),
+          v.literal('milestones'),
+          v.literal('alerts'),
+          v.literal('projects')
+        )
+      )
+    ),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -760,7 +800,12 @@ export const searchMonitoringData = query({
 
     const searchLower = args.searchTerm.toLowerCase();
     const limit = args.limit || 50;
-    const entityTypes = args.entityTypes || ['progress_updates', 'milestones', 'alerts', 'projects'];
+    const entityTypes = args.entityTypes || [
+      'progress_updates',
+      'milestones',
+      'alerts',
+      'projects',
+    ];
 
     const results: any[] = [];
 
@@ -768,12 +813,13 @@ export const searchMonitoringData = query({
     if (entityTypes.includes('progress_updates')) {
       const progressUpdates = await ctx.db.query('progressUpdates').collect();
       const filteredUpdates = progressUpdates
-        .filter(u =>
-          u.title.toLowerCase().includes(searchLower) ||
-          u.description.toLowerCase().includes(searchLower)
+        .filter(
+          (u) =>
+            u.title.toLowerCase().includes(searchLower) ||
+            u.description.toLowerCase().includes(searchLower)
         )
         .slice(0, Math.floor(limit / entityTypes.length))
-        .map(u => ({ ...u, entityType: 'progress_update' }));
+        .map((u) => ({ ...u, entityType: 'progress_update' }));
 
       results.push(...filteredUpdates);
     }
@@ -782,12 +828,13 @@ export const searchMonitoringData = query({
     if (entityTypes.includes('milestones')) {
       const milestones = await ctx.db.query('projectMilestones').collect();
       const filteredMilestones = milestones
-        .filter(m =>
-          m.title.toLowerCase().includes(searchLower) ||
-          m.description.toLowerCase().includes(searchLower)
+        .filter(
+          (m) =>
+            m.title.toLowerCase().includes(searchLower) ||
+            m.description.toLowerCase().includes(searchLower)
         )
         .slice(0, Math.floor(limit / entityTypes.length))
-        .map(m => ({ ...m, entityType: 'milestone' }));
+        .map((m) => ({ ...m, entityType: 'milestone' }));
 
       results.push(...filteredMilestones);
     }
@@ -796,12 +843,13 @@ export const searchMonitoringData = query({
     if (entityTypes.includes('alerts')) {
       const alerts = await ctx.db.query('systemAlerts').collect();
       const filteredAlerts = alerts
-        .filter(a =>
-          a.message.toLowerCase().includes(searchLower) ||
-          (a.description?.toLowerCase().includes(searchLower) ?? false)
+        .filter(
+          (a) =>
+            a.message.toLowerCase().includes(searchLower) ||
+            (a.description?.toLowerCase().includes(searchLower) ?? false)
         )
         .slice(0, Math.floor(limit / entityTypes.length))
-        .map(a => ({ ...a, entityType: 'alert' }));
+        .map((a) => ({ ...a, entityType: 'alert' }));
 
       results.push(...filteredAlerts);
     }
@@ -810,12 +858,13 @@ export const searchMonitoringData = query({
     if (entityTypes.includes('projects')) {
       const projects = await ctx.db.query('projects').collect();
       const filteredProjects = projects
-        .filter(p =>
-          p.title.toLowerCase().includes(searchLower) ||
-          p.description.toLowerCase().includes(searchLower)
+        .filter(
+          (p) =>
+            p.title.toLowerCase().includes(searchLower) ||
+            p.description.toLowerCase().includes(searchLower)
         )
         .slice(0, Math.floor(limit / entityTypes.length))
-        .map(p => ({ ...p, entityType: 'project' }));
+        .map((p) => ({ ...p, entityType: 'project' }));
 
       results.push(...filteredProjects);
     }
@@ -846,42 +895,48 @@ export const getMonitoringStats = query({
 
     // Get basic counts
     const totalProjects = await ctx.db.query('projects').collect();
-    const activeProjects = totalProjects.filter(p => p.status === 'active');
+    const activeProjects = totalProjects.filter((p) => p.status === 'active');
 
     const totalUpdates = await ctx.db.query('progressUpdates').collect();
-    const recentUpdates = totalUpdates.filter(u => u.reportingDate >= thirtyDaysAgo);
+    const recentUpdates = totalUpdates.filter(
+      (u) => u.reportingDate >= thirtyDaysAgo
+    );
 
     const totalAlerts = await ctx.db.query('systemAlerts').collect();
-    const unresolved = totalAlerts.filter(a => !a.isResolved);
-    const critical = totalAlerts.filter(a => a.severity === 'critical' && !a.isResolved);
+    const unresolved = totalAlerts.filter((a) => !a.isResolved);
+    const critical = totalAlerts.filter(
+      (a) => a.severity === 'critical' && !a.isResolved
+    );
 
     const totalMilestones = await ctx.db.query('projectMilestones').collect();
-    const overdue = totalMilestones.filter(m =>
-      m.status === 'pending' && m.plannedDate < now
+    const overdue = totalMilestones.filter(
+      (m) => m.status === 'pending' && m.plannedDate < now
     );
 
     return {
       projects: {
         total: totalProjects.length,
         active: activeProjects.length,
-        completed: totalProjects.filter(p => p.status === 'completed').length,
+        completed: totalProjects.filter((p) => p.status === 'completed').length,
       },
       progressUpdates: {
         total: totalUpdates.length,
         thisMonth: recentUpdates.length,
-        thisWeek: totalUpdates.filter(u => u.reportingDate >= sevenDaysAgo).length,
+        thisWeek: totalUpdates.filter((u) => u.reportingDate >= sevenDaysAgo)
+          .length,
       },
       alerts: {
         total: totalAlerts.length,
         unresolved: unresolved.length,
         critical: critical.length,
-        resolved: totalAlerts.filter(a => a.isResolved).length,
+        resolved: totalAlerts.filter((a) => a.isResolved).length,
       },
       milestones: {
         total: totalMilestones.length,
-        completed: totalMilestones.filter(m => m.status === 'completed').length,
+        completed: totalMilestones.filter((m) => m.status === 'completed')
+          .length,
         overdue: overdue.length,
-        pending: totalMilestones.filter(m => m.status === 'pending').length,
+        pending: totalMilestones.filter((m) => m.status === 'pending').length,
       },
     };
   },

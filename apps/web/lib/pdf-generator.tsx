@@ -1,8 +1,21 @@
 'use client';
 
-import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  pdf,
+} from '@react-pdf/renderer';
 import React from 'react';
-import { PDFTemplateData, PDFSection, MetricData, ChartData, BrandingConfig } from '@packages/backend/lib/pdf-types';
+import {
+  PDFTemplateData,
+  PDFSection,
+  MetricData,
+  ChartData,
+  BrandingConfig,
+} from '@packages/backend/lib/pdf-types';
 
 // PDF Styles
 const styles = StyleSheet.create({
@@ -180,7 +193,9 @@ export const PDFDocument: React.FC<{ data: PDFTemplateData }> = ({ data }) => (
       {/* Metadata */}
       <View style={styles.metadata}>
         <Text>Generated: {data.generatedAt.toLocaleString()}</Text>
-        <Text>User: {data.userInfo.name} ({data.userInfo.role})</Text>
+        <Text>
+          User: {data.userInfo.name} ({data.userInfo.role})
+        </Text>
       </View>
 
       {/* Content Sections */}
@@ -262,7 +277,9 @@ const renderSectionContent = (section: PDFSection) => {
         <View style={styles.chartPlaceholder}>
           <Text style={styles.text}>Chart: {section.data.title}</Text>
           <Text style={styles.text}>Type: {section.data.type}</Text>
-          <Text style={styles.text}>(Chart visualization would be rendered here)</Text>
+          <Text style={styles.text}>
+            (Chart visualization would be rendered here)
+          </Text>
         </View>
       );
 
@@ -280,7 +297,10 @@ const renderTable = (tableData: { headers: string[]; rows: string[][] }) => {
       {/* Header Row */}
       <View style={styles.tableRow}>
         {tableData.headers.map((header, index) => (
-          <View key={index} style={[styles.tableColHeader, { width: colWidth }]}>
+          <View
+            key={index}
+            style={[styles.tableColHeader, { width: colWidth }]}
+          >
             <Text style={styles.tableCellHeader}>{header}</Text>
           </View>
         ))}
@@ -290,7 +310,10 @@ const renderTable = (tableData: { headers: string[]; rows: string[][] }) => {
       {tableData.rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.tableRow}>
           {row.map((cell, cellIndex) => (
-            <View key={cellIndex} style={[styles.tableCol, { width: colWidth }]}>
+            <View
+              key={cellIndex}
+              style={[styles.tableCol, { width: colWidth }]}
+            >
               <Text style={styles.tableCell}>{cell}</Text>
             </View>
           ))}
@@ -301,7 +324,11 @@ const renderTable = (tableData: { headers: string[]; rows: string[][] }) => {
 };
 
 // Helper function to format metric values
-const formatMetricValue = (value: string | number, format: string, unit: string): string => {
+const formatMetricValue = (
+  value: string | number,
+  format: string,
+  unit: string
+): string => {
   if (typeof value === 'string') return value;
 
   switch (format) {
@@ -362,12 +389,16 @@ export class PDFGenerationService {
   /**
    * Generate PDF and trigger download
    */
-  static async downloadPDF(data: PDFTemplateData, filename?: string): Promise<void> {
+  static async downloadPDF(
+    data: PDFTemplateData,
+    filename?: string
+  ): Promise<void> {
     const blob = await this.generatePDF(data);
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename || `${data.title.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+    link.download =
+      filename || `${data.title.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -377,18 +408,30 @@ export class PDFGenerationService {
   /**
    * Validate template data
    */
-  static validateTemplateData(data: PDFTemplateData): { isValid: boolean; errors: string[] } {
+  static validateTemplateData(data: PDFTemplateData): {
+    isValid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!data.title || data.title.trim() === '') {
       errors.push('Title is required');
     }
 
-    if (!data.userInfo || !data.userInfo.name || !data.userInfo.email || !data.userInfo.role) {
+    if (
+      !data.userInfo ||
+      !data.userInfo.name ||
+      !data.userInfo.email ||
+      !data.userInfo.role
+    ) {
       errors.push('Complete user information is required');
     }
 
-    if (!data.content || !data.content.sections || data.content.sections.length === 0) {
+    if (
+      !data.content ||
+      !data.content.sections ||
+      data.content.sections.length === 0
+    ) {
       errors.push('At least one content section is required');
     }
 
@@ -414,4 +457,10 @@ export class PDFGenerationService {
 }
 
 // Export types for use in other modules
-export type { PDFTemplateData, PDFSection, ChartData, MetricData, BrandingConfig };
+export type {
+  PDFTemplateData,
+  PDFSection,
+  ChartData,
+  MetricData,
+  BrandingConfig,
+};

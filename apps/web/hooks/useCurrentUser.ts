@@ -5,7 +5,11 @@ import { Doc, Id } from '@packages/backend/convex/_generated/dataModel';
 /**
  * User role type
  */
-export type UserRole = 'project_creator' | 'credit_buyer' | 'verifier' | 'admin';
+export type UserRole =
+  | 'project_creator'
+  | 'credit_buyer'
+  | 'verifier'
+  | 'admin';
 
 /**
  * Current user type (includes all fields from the users table)

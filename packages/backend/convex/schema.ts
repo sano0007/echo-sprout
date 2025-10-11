@@ -91,14 +91,18 @@ export default defineSchema({
     startDate: v.string(),
     expectedCompletionDate: v.string(),
     actualCompletionDate: v.optional(v.string()),
-    milestone1: v.optional(v.object({
-      name: v.string(),
-      date: v.string(),
-    })),
-    milestone2: v.optional(v.object({
-      name: v.string(),
-      date: v.string(),
-    })),
+    milestone1: v.optional(
+      v.object({
+        name: v.string(),
+        date: v.string(),
+      })
+    ),
+    milestone2: v.optional(
+      v.object({
+        name: v.string(),
+        date: v.string(),
+      })
+    ),
     status: v.union(
       v.literal('draft'),
       v.literal('submitted'),
@@ -211,12 +215,14 @@ export default defineSchema({
     certificateUrl: v.optional(v.string()),
     impactDescription: v.string(),
     transactionReference: v.string(), // Unique transaction reference
-    refundDetails: v.optional(v.object({
-      refundReason: v.string(),
-      refundAmount: v.number(),
-      adminNotes: v.string(),
-      processedAt: v.number(),
-    })),
+    refundDetails: v.optional(
+      v.object({
+        refundReason: v.string(),
+        refundAmount: v.number(),
+        adminNotes: v.string(),
+        processedAt: v.number(),
+      })
+    ),
   })
     .index('by_buyer', ['buyerId'])
     .index('by_project', ['projectId'])
@@ -358,6 +364,44 @@ export default defineSchema({
     .index('by_priority', ['priority'])
     .index('by_accepted', ['verifierId', 'acceptedAt']),
 
+  // ============= ROLE UPGRADE REQUESTS =============
+  roleUpgradeRequests: defineTable({
+    userId: v.id('users'),
+    requestedRole: v.union(v.literal('project_creator')),
+    currentRole: v.union(v.literal('credit_buyer')),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('under_review'),
+      v.literal('approved'),
+      v.literal('rejected')
+    ),
+    // Application data (from existing user fields)
+    applicationData: v.object({
+      firstName: v.string(),
+      lastName: v.string(),
+      email: v.string(),
+      organizationName: v.optional(v.string()),
+      organizationType: v.optional(v.string()),
+      phoneNumber: v.string(),
+      address: v.string(),
+      city: v.string(),
+      country: v.string(),
+      reasonForUpgrade: v.string(), // Why they want to become creator
+      experienceDescription: v.optional(v.string()),
+    }),
+    verifierId: v.optional(v.id('users')),
+    assignedAt: v.optional(v.float64()),
+    reviewedAt: v.optional(v.float64()),
+    reviewNotes: v.optional(v.string()),
+    rejectionReason: v.optional(v.string()),
+    createdAt: v.float64(),
+    updatedAt: v.float64(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_status', ['status'])
+    .index('by_verifier', ['verifierId'])
+    .index('by_status_and_verifier', ['status', 'verifierId']),
+
   verificationMessages: defineTable({
     verificationId: v.id('verifications'),
     senderId: v.id('users'),
@@ -439,7 +483,6 @@ export default defineSchema({
     .index('by_type', ['documentType'])
     .index('by_verification_status', ['isVerified'])
     .index('by_required', ['entityType', 'isRequired']),
-
 
   // ============= EDUCATIONAL CONTENT =============
   educationalContent: defineTable({
@@ -1235,12 +1278,14 @@ export default defineSchema({
     photoStorageIds: v.optional(v.array(v.id('_storage'))),
     photoUrls: v.optional(v.array(v.string())), // Cached URLs for quick access
     // Old format (Cloudinary) - for backward compatibility
-    photos: v.optional(v.array(
-      v.object({
-        cloudinary_public_id: v.string(),
-        cloudinary_url: v.string(),
-      })
-    )),
+    photos: v.optional(
+      v.array(
+        v.object({
+          cloudinary_public_id: v.string(),
+          cloudinary_url: v.string(),
+        })
+      )
+    ),
     location: v.optional(
       v.object({
         lat: v.float64(),
@@ -1266,12 +1311,14 @@ export default defineSchema({
     challenges: v.optional(v.string()),
     submittedAt: v.optional(v.float64()),
     reportingDate: v.float64(),
-    status: v.optional(v.union(
-      v.literal('pending_review'),
-      v.literal('approved'),
-      v.literal('rejected'),
-      v.literal('needs_revision')
-    )),
+    status: v.optional(
+      v.union(
+        v.literal('pending_review'),
+        v.literal('approved'),
+        v.literal('rejected'),
+        v.literal('needs_revision')
+      )
+    ),
     isVerified: v.boolean(),
     verifiedBy: v.optional(v.id('users')),
     verifiedAt: v.optional(v.float64()),

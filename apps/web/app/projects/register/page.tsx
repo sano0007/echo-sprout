@@ -64,6 +64,7 @@ interface DocumentFiles {
   site_photographs: File[];
   legal_permits: File[];
   featured_images: File[];
+
   site_images: File[];
 }
 

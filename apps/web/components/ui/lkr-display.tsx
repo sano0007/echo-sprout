@@ -15,12 +15,12 @@ export interface LKRDisplayProps {
 export function LKRDisplay({
   usdAmount,
   className = '',
-  size = 'md'
+  size = 'md',
 }: LKRDisplayProps) {
   const sizeClasses = {
     sm: 'text-sm',
     md: 'text-base',
-    lg: 'text-lg font-semibold'
+    lg: 'text-lg font-semibold',
   };
 
   return (

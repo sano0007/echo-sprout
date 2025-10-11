@@ -11,7 +11,7 @@ import { internal } from './_generated/api';
 
 export const runMonitoringSeed: any = mutation({
   args: {
-    clearExisting: v.optional(v.boolean())
+    clearExisting: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     try {
@@ -28,18 +28,17 @@ export const runMonitoringSeed: any = mutation({
       return {
         success: false,
         message: 'Seeding function not implemented',
-        stats: {}
+        stats: {},
       };
-
     } catch (error) {
       console.error('❌ Seeding failed:', error);
       return {
         success: false,
         message: 'Seeding failed',
-        error: (error as Error).message
+        error: (error as Error).message,
       };
     }
-  }
+  },
 });
 
 export const checkSeedingStatus = mutation({
@@ -54,15 +53,36 @@ export const checkSeedingStatus = mutation({
         progressCount,
         alertCount,
         notificationCount,
-        transactionCount
+        transactionCount,
       ] = await Promise.all([
-        ctx.db.query('users').collect().then(docs => docs.length),
-        ctx.db.query('projects').collect().then(docs => docs.length),
-        ctx.db.query('projectMilestones').collect().then(docs => docs.length),
-        ctx.db.query('progressUpdates').collect().then(docs => docs.length),
-        ctx.db.query('systemAlerts').collect().then(docs => docs.length),
-        ctx.db.query('notifications').collect().then(docs => docs.length),
-        ctx.db.query('transactions').collect().then(docs => docs.length)
+        ctx.db
+          .query('users')
+          .collect()
+          .then((docs) => docs.length),
+        ctx.db
+          .query('projects')
+          .collect()
+          .then((docs) => docs.length),
+        ctx.db
+          .query('projectMilestones')
+          .collect()
+          .then((docs) => docs.length),
+        ctx.db
+          .query('progressUpdates')
+          .collect()
+          .then((docs) => docs.length),
+        ctx.db
+          .query('systemAlerts')
+          .collect()
+          .then((docs) => docs.length),
+        ctx.db
+          .query('notifications')
+          .collect()
+          .then((docs) => docs.length),
+        ctx.db
+          .query('transactions')
+          .collect()
+          .then((docs) => docs.length),
       ]);
 
       const stats = {
@@ -73,7 +93,14 @@ export const checkSeedingStatus = mutation({
         alerts: alertCount,
         notifications: notificationCount,
         transactions: transactionCount,
-        totalRecords: userCount + projectCount + milestoneCount + progressCount + alertCount + notificationCount + transactionCount
+        totalRecords:
+          userCount +
+          projectCount +
+          milestoneCount +
+          progressCount +
+          alertCount +
+          notificationCount +
+          transactionCount,
       };
 
       console.log('📊 Current database statistics:', stats);
@@ -81,17 +108,16 @@ export const checkSeedingStatus = mutation({
       return {
         success: true,
         isSeeded: stats.totalRecords > 0,
-        stats
+        stats,
       };
-
     } catch (error) {
       console.error('❌ Status check failed:', error);
       return {
         success: false,
-        error: (error as Error).message
+        error: (error as Error).message,
       };
     }
-  }
+  },
 });
 
 export const clearAllSeedData = mutation({
@@ -101,9 +127,17 @@ export const clearAllSeedData = mutation({
       console.log('🧹 Clearing all seed data...');
 
       const tables = [
-        'systemAlerts', 'projectMilestones', 'progressUpdates',
-        'notifications', 'auditLogs', 'transactions', 'projects',
-        'users', 'monitoringConfig', 'escalationConfig', 'analyticsSnapshots'
+        'systemAlerts',
+        'projectMilestones',
+        'progressUpdates',
+        'notifications',
+        'auditLogs',
+        'transactions',
+        'projects',
+        'users',
+        'monitoringConfig',
+        'escalationConfig',
+        'analyticsSnapshots',
       ];
 
       let totalDeleted = 0;
@@ -122,15 +156,14 @@ export const clearAllSeedData = mutation({
       return {
         success: true,
         message: `Cleared ${totalDeleted} records`,
-        totalDeleted
+        totalDeleted,
       };
-
     } catch (error) {
       console.error('❌ Clearing failed:', error);
       return {
         success: false,
-        error: (error as Error).message
+        error: (error as Error).message,
       };
     }
-  }
+  },
 });

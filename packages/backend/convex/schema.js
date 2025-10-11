@@ -262,6 +262,38 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_due_date', ['dueDate'])
         .index('by_priority', ['priority'])
         .index('by_accepted', ['verifierId', 'acceptedAt']),
+    // ============= ROLE UPGRADE REQUESTS =============
+    roleUpgradeRequests: (0, server_1.defineTable)({
+        userId: values_1.v.id('users'),
+        requestedRole: values_1.v.union(values_1.v.literal('project_creator')),
+        currentRole: values_1.v.union(values_1.v.literal('credit_buyer')),
+        status: values_1.v.union(values_1.v.literal('pending'), values_1.v.literal('under_review'), values_1.v.literal('approved'), values_1.v.literal('rejected')),
+        // Application data (from existing user fields)
+        applicationData: values_1.v.object({
+            firstName: values_1.v.string(),
+            lastName: values_1.v.string(),
+            email: values_1.v.string(),
+            organizationName: values_1.v.optional(values_1.v.string()),
+            organizationType: values_1.v.optional(values_1.v.string()),
+            phoneNumber: values_1.v.string(),
+            address: values_1.v.string(),
+            city: values_1.v.string(),
+            country: values_1.v.string(),
+            reasonForUpgrade: values_1.v.string(), // Why they want to become creator
+            experienceDescription: values_1.v.optional(values_1.v.string()),
+        }),
+        verifierId: values_1.v.optional(values_1.v.id('users')),
+        assignedAt: values_1.v.optional(values_1.v.float64()),
+        reviewedAt: values_1.v.optional(values_1.v.float64()),
+        reviewNotes: values_1.v.optional(values_1.v.string()),
+        rejectionReason: values_1.v.optional(values_1.v.string()),
+        createdAt: values_1.v.float64(),
+        updatedAt: values_1.v.float64(),
+    })
+        .index('by_user', ['userId'])
+        .index('by_status', ['status'])
+        .index('by_verifier', ['verifierId'])
+        .index('by_status_and_verifier', ['status', 'verifierId']),
     verificationMessages: (0, server_1.defineTable)({
         verificationId: values_1.v.id('verifications'),
         senderId: values_1.v.id('users'),

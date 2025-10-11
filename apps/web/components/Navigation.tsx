@@ -4,14 +4,14 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import {getDashboardRoute, useCurrentUser} from "@/hooks";
+import { getDashboardRoute, useCurrentUser } from '@/hooks';
 
 export default function Navigation() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const currentUser = useCurrentUser()
-  const dashboardRoute = getDashboardRoute(currentUser)
+  const currentUser = useCurrentUser();
+  const dashboardRoute = getDashboardRoute(currentUser);
 
   const isAdminDashboard =
     pathname === '/admin' || pathname?.startsWith('/admin/');

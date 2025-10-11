@@ -743,12 +743,12 @@ export const bulkDeleteResolvedAlerts = mutation({
       throw new Error('Access denied: Only admins can bulk delete alerts');
     }
 
-    const cutoffDate = Date.now() - (olderThanDays * 24 * 60 * 60 * 1000);
+    const cutoffDate = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
 
     // Find resolved alerts older than cutoff
     const alerts = await ctx.db
       .query('systemAlerts')
-      .filter(q =>
+      .filter((q) =>
         q.and(
           q.eq(q.field('isResolved'), true),
           q.lt(q.field('resolvedAt'), cutoffDate)
@@ -778,7 +778,7 @@ export const bulkDeleteResolvedAlerts = mutation({
     return {
       success: true,
       deletedCount,
-      message: `Successfully deleted ${deletedCount} resolved alerts`
+      message: `Successfully deleted ${deletedCount} resolved alerts`,
     };
   },
 });
