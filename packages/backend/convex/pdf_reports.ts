@@ -149,8 +149,9 @@ export const createPDFReportRequest = mutation({
       },
     });
 
-    // Schedule the PDF generation job
-    await ctx.scheduler.runAfter(0, api.pdf_reports.generatePDFReport, {
+    // Schedule the PDF generation job using the working implementation
+    // Use fixed_pdf_generation instead of the broken generatePDFReport
+    await ctx.scheduler.runAfter(0, api.fixed_pdf_generation.generateWorkingPDFReport, {
       reportId,
     });
 
