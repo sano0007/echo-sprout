@@ -55,7 +55,6 @@ import type * as third_party_validation from "../third_party_validation.js";
 import type * as transactions from "../transactions.js";
 import type * as trend_analysis from "../trend_analysis.js";
 import type * as users from "../users.js";
-import type * as validation_examples from "../validation_examples.js";
 import type * as verificationMessages from "../verificationMessages.js";
 import type * as verifications from "../verifications.js";
 import type * as verifier_assignment from "../verifier_assignment.js";
@@ -113,7 +112,6 @@ declare const fullApi: ApiFromModules<{
   transactions: typeof transactions;
   trend_analysis: typeof trend_analysis;
   users: typeof users;
-  validation_examples: typeof validation_examples;
   verificationMessages: typeof verificationMessages;
   verifications: typeof verifications;
   verifier_assignment: typeof verifier_assignment;
