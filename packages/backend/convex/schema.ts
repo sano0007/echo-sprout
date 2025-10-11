@@ -358,6 +358,44 @@ export default defineSchema({
     .index('by_priority', ['priority'])
     .index('by_accepted', ['verifierId', 'acceptedAt']),
 
+  // ============= ROLE UPGRADE REQUESTS =============
+  roleUpgradeRequests: defineTable({
+    userId: v.id('users'),
+    requestedRole: v.union(v.literal('project_creator')),
+    currentRole: v.union(v.literal('credit_buyer')),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('under_review'),
+      v.literal('approved'),
+      v.literal('rejected')
+    ),
+    // Application data (from existing user fields)
+    applicationData: v.object({
+      firstName: v.string(),
+      lastName: v.string(),
+      email: v.string(),
+      organizationName: v.optional(v.string()),
+      organizationType: v.optional(v.string()),
+      phoneNumber: v.string(),
+      address: v.string(),
+      city: v.string(),
+      country: v.string(),
+      reasonForUpgrade: v.string(), // Why they want to become creator
+      experienceDescription: v.optional(v.string()),
+    }),
+    verifierId: v.optional(v.id('users')),
+    assignedAt: v.optional(v.float64()),
+    reviewedAt: v.optional(v.float64()),
+    reviewNotes: v.optional(v.string()),
+    rejectionReason: v.optional(v.string()),
+    createdAt: v.float64(),
+    updatedAt: v.float64(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_status', ['status'])
+    .index('by_verifier', ['verifierId'])
+    .index('by_status_and_verifier', ['status', 'verifierId']),
+
   verificationMessages: defineTable({
     verificationId: v.id('verifications'),
     senderId: v.id('users'),

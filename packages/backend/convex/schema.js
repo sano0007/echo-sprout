@@ -262,6 +262,38 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_due_date', ['dueDate'])
         .index('by_priority', ['priority'])
         .index('by_accepted', ['verifierId', 'acceptedAt']),
+    // ============= ROLE UPGRADE REQUESTS =============
+    roleUpgradeRequests: (0, server_1.defineTable)({
+        userId: values_1.v.id('users'),
+        requestedRole: values_1.v.union(values_1.v.literal('project_creator')),
+        currentRole: values_1.v.union(values_1.v.literal('credit_buyer')),
+        status: values_1.v.union(values_1.v.literal('pending'), values_1.v.literal('under_review'), values_1.v.literal('approved'), values_1.v.literal('rejected')),
+        // Application data (from existing user fields)
+        applicationData: values_1.v.object({
+            firstName: values_1.v.string(),
+            lastName: values_1.v.string(),
+            email: values_1.v.string(),
+            organizationName: values_1.v.optional(values_1.v.string()),
+            organizationType: values_1.v.optional(values_1.v.string()),
+            phoneNumber: values_1.v.string(),
+            address: values_1.v.string(),
+            city: values_1.v.string(),
+            country: values_1.v.string(),
+            reasonForUpgrade: values_1.v.string(), // Why they want to become creator
+            experienceDescription: values_1.v.optional(values_1.v.string()),
+        }),
+        verifierId: values_1.v.optional(values_1.v.id('users')),
+        assignedAt: values_1.v.optional(values_1.v.float64()),
+        reviewedAt: values_1.v.optional(values_1.v.float64()),
+        reviewNotes: values_1.v.optional(values_1.v.string()),
+        rejectionReason: values_1.v.optional(values_1.v.string()),
+        createdAt: values_1.v.float64(),
+        updatedAt: values_1.v.float64(),
+    })
+        .index('by_user', ['userId'])
+        .index('by_status', ['status'])
+        .index('by_verifier', ['verifierId'])
+        .index('by_status_and_verifier', ['status', 'verifierId']),
     verificationMessages: (0, server_1.defineTable)({
         verificationId: values_1.v.id('verifications'),
         senderId: values_1.v.id('users'),
@@ -319,46 +351,6 @@ exports.default = (0, server_1.defineSchema)({
         .index('by_type', ['documentType'])
         .index('by_verification_status', ['isVerified'])
         .index('by_required', ['entityType', 'isRequired']),
-    // ============= PROGRESS TRACKING =============
-    progressUpdates: (0, server_1.defineTable)({
-        projectId: values_1.v.id('projects'),
-        reportedBy: values_1.v.id('users'),
-        updateType: values_1.v.union(values_1.v.literal('milestone'), values_1.v.literal('measurement'), values_1.v.literal('photo'), values_1.v.literal('issue'), values_1.v.literal('completion')),
-        title: values_1.v.string(),
-        description: values_1.v.string(),
-        progressPercentage: values_1.v.number(), // 0-100
-        measurementData: values_1.v.optional(values_1.v.any()), // JSON data for specific measurements
-        location: values_1.v.optional(values_1.v.object({
-            lat: values_1.v.float64(),
-            long: values_1.v.float64(),
-            name: values_1.v.string(),
-        })),
-        photos: values_1.v.array(values_1.v.object({
-            storageId: values_1.v.string(),
-            fileUrl: values_1.v.string(),
-        })),
-        reportingDate: values_1.v.float64(),
-        // Impact tracking
-        carbonImpactToDate: values_1.v.optional(values_1.v.number()), // CO2 reduction achieved so far
-        treesPlanted: values_1.v.optional(values_1.v.number()),
-        energyGenerated: values_1.v.optional(values_1.v.number()),
-        wasteProcessed: values_1.v.optional(values_1.v.number()),
-        // Verification
-        isVerified: values_1.v.boolean(),
-        verifiedBy: values_1.v.optional(values_1.v.id('users')),
-        verifiedAt: values_1.v.optional(values_1.v.float64()),
-        verificationNotes: values_1.v.optional(values_1.v.string()),
-    })
-        .index('by_project', ['projectId'])
-        .index('by_reporter', ['reportedBy'])
-        .index('by_date', ['reportingDate'])
-        .index('by_type', ['updateType'])
-        .index('by_verification', ['isVerified'])
-        // Enhanced indexes for monitoring
-        .index('by_project_date', ['projectId', 'reportingDate'])
-        .index('by_project_type', ['projectId', 'updateType'])
-        .index('by_project_verified', ['projectId', 'isVerified'])
-        .index('by_date_type', ['reportingDate', 'updateType']),
     // ============= EDUCATIONAL CONTENT =============
     educationalContent: (0, server_1.defineTable)({
         title: values_1.v.string(),

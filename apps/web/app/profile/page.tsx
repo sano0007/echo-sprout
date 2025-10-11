@@ -209,42 +209,6 @@ export default function ProfilePage() {
                       )}
                     </div>
                   </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">
-                      User Type & Role
-                    </h3>
-                    <div className="space-y-3">
-                      <label className="flex items-center p-3 border rounded">
-                        <input
-                          type="radio"
-                          checked={userType === 'creator'}
-                          onChange={() => setUserType('creator')}
-                          className="mr-3"
-                        />
-                        <div>
-                          <span className="font-medium">Project Creator</span>
-                          <p className="text-sm text-gray-600">
-                            Develop and manage carbon credit projects
-                          </p>
-                        </div>
-                      </label>
-                      <label className="flex items-center p-3 border rounded">
-                        <input
-                          type="radio"
-                          checked={userType === 'buyer'}
-                          onChange={() => setUserType('buyer')}
-                          className="mr-3"
-                        />
-                        <div>
-                          <span className="font-medium">Credit Buyer</span>
-                          <p className="text-sm text-gray-600">
-                            Purchase carbon credits for offset goals
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
                 </div>
 
                 <div>
