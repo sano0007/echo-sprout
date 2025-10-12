@@ -28,11 +28,13 @@ import {
   FileText,
   Monitor,
   Plus,
+  Search,
   Target,
   Trash2,
   TrendingUp,
   Upload,
   Users,
+  X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
@@ -56,6 +58,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -79,6 +82,7 @@ export default function CreatorDashboard() {
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [showPDFModal, setShowPDFModal] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch real data from backend
   const currentUser = useQuery(api.users.getCurrentUser, {});
@@ -215,6 +219,43 @@ export default function CreatorDashboard() {
             : 0,
       },
     })) || [];
+
+  // Filter projects based on search query
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return projects;
+    }
+
+    const query = searchQuery.toLowerCase();
+    return projects.filter((project: any) => {
+      const projectTypeLabels: Record<string, string> = {
+        reforestation: 'reforestation',
+        solar: 'solar',
+        wind: 'wind',
+        biogas: 'biogas',
+        waste_management: 'waste management',
+        mangrove_restoration: 'mangrove restoration',
+        renewable_energy: 'renewable energy',
+        water_conservation: 'water conservation',
+      };
+
+      const statusLabels: Record<string, string> = {
+        approved: 'active',
+        completed: 'completed',
+        pending: 'pending',
+        suspended: 'suspended',
+      };
+
+      const searchableFields = [
+        project.title?.toLowerCase() || '',
+        project.location?.toLowerCase() || '',
+        projectTypeLabels[project.type]?.toLowerCase() || project.type?.toLowerCase() || '',
+        statusLabels[project.status]?.toLowerCase() || project.status?.toLowerCase() || '',
+      ];
+
+      return searchableFields.some((field) => field.includes(query));
+    });
+  }, [projects, searchQuery]);
 
   // Generate pending tasks based on active projects and real milestones
   const pendingTasks = useMemo(() => {
@@ -1200,6 +1241,33 @@ export default function CreatorDashboard() {
               </div>
             </CardHeader>
             <CardContent>
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search projects by title, location, type, or status..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-10"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      title="Clear search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                {searchQuery && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Showing {filteredProjects.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {userProjects === undefined ? (
                   <div className="col-span-2 text-center py-8">
@@ -1212,8 +1280,24 @@ export default function CreatorDashboard() {
                       started!
                     </div>
                   </div>
+                ) : filteredProjects.length === 0 ? (
+                  <div className="col-span-2 text-center py-12">
+                    <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <p className="text-lg font-medium text-gray-600 mb-2">
+                      No projects found matching "{searchQuery}"
+                    </p>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Try adjusting your search terms or clear the search to view all projects
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSearchQuery('')}
+                    >
+                      Clear Search
+                    </Button>
+                  </div>
                 ) : (
-                  projects.map((project: any) => (
+                  filteredProjects.map((project: any) => (
                     <Card key={project.id} className="border">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
