@@ -54,21 +54,6 @@ export default function Navigation() {
       ],
     },
     {
-      label: 'Verification',
-      dropdown: [
-        {
-          label: 'Verification Dashboard',
-          href: '/verification/dashboard',
-          description: 'Review and verify projects',
-        },
-        // {
-        //   label: 'Review Projects',
-        //   href: '/verification/review/1',
-        //   description: 'Conduct project reviews',
-        // },
-      ],
-    },
-    {
       label: 'Community',
       dropdown: [
         {
@@ -155,12 +140,6 @@ export default function Navigation() {
                 className="hidden md:inline-flex text-gray-700 hover:text-blue-600 transition-colors"
               >
                 Dashboard
-              </Link>
-              <Link
-                href="/profile"
-                className="hidden md:inline-flex text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Profile
               </Link>
               <UserButton
                 appearance={{
