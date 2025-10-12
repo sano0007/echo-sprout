@@ -373,10 +373,6 @@ export default function ProjectReview() {
         toast.success(
           `Document ${isVerified ? 'verified' : 'unverified'} successfully`
         );
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
       } catch (error) {
         toast.error('Failed to update document verification status');
         console.error('Error verifying document:', error);
