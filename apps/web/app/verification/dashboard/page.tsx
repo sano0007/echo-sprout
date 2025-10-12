@@ -3,36 +3,39 @@
 import { api } from '@packages/backend';
 import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { 
-  BarChart3, 
-  Clock, 
-  CheckCircle, 
+import {
   AlertCircle,
-  TrendingUp,
-  FileText,
-  Users,
   Award,
-  Download
+  BarChart3,
+  CheckCircle,
+  Clock,
+  FileText,
+  TrendingUp,
 } from 'lucide-react';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
   ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
-  Legend,
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
 import RequestProgressReportModal from '@/components/monitoring/RequestProgressReportModal';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 
 // Register Chart.js components
 ChartJS.register(
@@ -48,7 +51,15 @@ ChartJS.register(
 );
 
 export default function VerificationDashboard() {
-  const [activeTab, setActiveTab] = useState<'pendingAcceptance' | 'accepted' | 'inProgress' | 'completed' | 'upgradeRequests' | 'progressReviews' | 'analytics'>('pendingAcceptance');
+  const [activeTab, setActiveTab] = useState<
+    | 'pendingAcceptance'
+    | 'accepted'
+    | 'inProgress'
+    | 'completed'
+    | 'upgradeRequests'
+    | 'progressReviews'
+    | 'analytics'
+  >('pendingAcceptance');
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
@@ -76,44 +87,59 @@ export default function VerificationDashboard() {
     paginationOpts: { numItems: 50, cursor: null },
   });
 
-  const progressUpdates = useQuery(api.progress_updates.getMyAssignedProgressUpdates, {
-    paginationOpts: { numItems: 50, cursor: null },
-  });
+  const progressUpdates = useQuery(
+    api.progress_updates.getMyAssignedProgressUpdates,
+    {
+      paginationOpts: { numItems: 50, cursor: null },
+    }
+  );
 
   const approveRequest = useMutation(api.users.approveRoleUpgradeRequest);
   const rejectRequest = useMutation(api.users.rejectRoleUpgradeRequest);
 
-  const approveProgress = useMutation(api.progress_updates.approveProgressUpdate);
+  const approveProgress = useMutation(
+    api.progress_updates.approveProgressUpdate
+  );
   const rejectProgress = useMutation(api.progress_updates.rejectProgressUpdate);
-  const requestRevision = useMutation(api.progress_updates.requestProgressRevision);
+  const requestRevision = useMutation(
+    api.progress_updates.requestProgressRevision
+  );
 
   // Process data before conditional returns to maintain hook order
   const allVerifications = myVerifications?.page || [];
-  const projects = useMemo(() => ({
-    pendingAcceptance: allVerifications.filter(
-      (v: any) => v.status === 'assigned'
-    ),
-    accepted: allVerifications.filter((v: any) => v.status === 'accepted'),
-    inProgress: allVerifications.filter((v: any) => v.status === 'in_progress'),
-    completed: allVerifications.filter((v: any) =>
-      ['completed', 'approved', 'rejected', 'revision_required'].includes(
-        v.status
-      )
-    ),
-  }), [allVerifications]);
+  const projects = useMemo(
+    () => ({
+      pendingAcceptance: allVerifications.filter(
+        (v: any) => v.status === 'assigned'
+      ),
+      accepted: allVerifications.filter((v: any) => v.status === 'accepted'),
+      inProgress: allVerifications.filter(
+        (v: any) => v.status === 'in_progress'
+      ),
+      completed: allVerifications.filter((v: any) =>
+        ['completed', 'approved', 'rejected', 'revision_required'].includes(
+          v.status
+        )
+      ),
+    }),
+    [allVerifications]
+  );
 
-  const stats = useMemo(() => ({
-    totalProjects: verifierStats?.totalVerifications || 0,
-    pendingAcceptance: acceptanceStats?.pendingAcceptance || 0,
-    acceptanceRate: acceptanceStats?.acceptanceRate || 0,
-    inProgress: verifierStats?.inProgressVerifications || 0,
-    completedThisMonth: verifierStats?.completedThisMonth || 0,
-    averageAcceptanceTime: acceptanceStats?.averageAcceptanceTimeHours || 0,
-    overdueVerifications: verifierStats?.overdueVerifications || 0,
-    averageScore: verifierStats?.averageScore
-      ? verifierStats.averageScore.toFixed(1)
-      : 'N/A',
-  }), [verifierStats, acceptanceStats]);
+  const stats = useMemo(
+    () => ({
+      totalProjects: verifierStats?.totalVerifications || 0,
+      pendingAcceptance: acceptanceStats?.pendingAcceptance || 0,
+      acceptanceRate: acceptanceStats?.acceptanceRate || 0,
+      inProgress: verifierStats?.inProgressVerifications || 0,
+      completedThisMonth: verifierStats?.completedThisMonth || 0,
+      averageAcceptanceTime: acceptanceStats?.averageAcceptanceTimeHours || 0,
+      overdueVerifications: verifierStats?.overdueVerifications || 0,
+      averageScore: verifierStats?.averageScore
+        ? verifierStats.averageScore.toFixed(1)
+        : 'N/A',
+    }),
+    [verifierStats, acceptanceStats]
+  );
 
   // Analytics Chart Data - all hooks must be called before any conditional returns
   const verificationsOverTimeData = useMemo(() => {
@@ -126,7 +152,7 @@ export default function VerificationDashboard() {
     });
 
     const completedByMonth: Record<string, number> = {};
-    last6Months.forEach(month => completedByMonth[month] = 0);
+    last6Months.forEach((month) => (completedByMonth[month] = 0));
 
     allVerifications.forEach((v: any) => {
       if (v.completedAt) {
@@ -139,15 +165,18 @@ export default function VerificationDashboard() {
     });
 
     return {
-      labels: last6Months.map(m => {
+      labels: last6Months.map((m) => {
         const [year = '2024', month = '1'] = m.split('-');
         const date = new Date(parseInt(year), parseInt(month) - 1);
-        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        return date.toLocaleDateString('en-US', {
+          month: 'short',
+          year: 'numeric',
+        });
       }),
       datasets: [
         {
           label: 'Verifications Completed',
-          data: last6Months.map(m => completedByMonth[m]),
+          data: last6Months.map((m) => completedByMonth[m]),
           borderColor: 'rgb(59, 130, 246)',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
           tension: 0.4,
@@ -160,10 +189,10 @@ export default function VerificationDashboard() {
     if (!allVerifications || allVerifications.length === 0) return null;
 
     const statusCounts = {
-      'Pending': projects.pendingAcceptance.length,
-      'Accepted': projects.accepted.length,
+      Pending: projects.pendingAcceptance.length,
+      Accepted: projects.accepted.length,
       'In Progress': projects.inProgress.length,
-      'Completed': projects.completed.length,
+      Completed: projects.completed.length,
     };
 
     return {
@@ -201,7 +230,9 @@ export default function VerificationDashboard() {
     if (completedWithScores.length === 0) return null;
 
     return {
-      labels: completedWithScores.map((_: any, i: number) => `Project ${i + 1}`),
+      labels: completedWithScores.map(
+        (_: any, i: number) => `Project ${i + 1}`
+      ),
       datasets: [
         {
           label: 'Quality Score',
@@ -214,21 +245,24 @@ export default function VerificationDashboard() {
     };
   }, [allVerifications]);
 
-  const chartOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: true,
-        position: 'top' as const,
+  const chartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top' as const,
+        },
       },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
       },
-    },
-  }), []);
+    }),
+    []
+  );
 
   // Handler functions (not hooks, can be after hooks)
   const handleApproveRequest = async (requestId: any, reviewNotes?: string) => {
@@ -240,7 +274,10 @@ export default function VerificationDashboard() {
     }
   };
 
-  const handleRejectRequest = async (requestId: any, rejectionReason: string) => {
+  const handleRejectRequest = async (
+    requestId: any,
+    rejectionReason: string
+  ) => {
     try {
       await rejectRequest({ requestId, rejectionReason });
       toast.success('Role upgrade request rejected');
@@ -297,7 +334,7 @@ export default function VerificationDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -311,7 +348,7 @@ export default function VerificationDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -325,7 +362,7 @@ export default function VerificationDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -339,7 +376,7 @@ export default function VerificationDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -353,7 +390,7 @@ export default function VerificationDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -367,7 +404,7 @@ export default function VerificationDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -381,7 +418,7 @@ export default function VerificationDashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -422,9 +459,7 @@ export default function VerificationDashboard() {
           <TabsTrigger value="progressReviews">
             Progress Reviews ({progressUpdates?.page?.length || 0})
           </TabsTrigger>
-          <TabsTrigger value="analytics">
-            Analytics
-          </TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pendingAcceptance">
@@ -513,7 +548,9 @@ export default function VerificationDashboard() {
 
         <TabsContent value="upgradeRequests">
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Role Upgrade Requests</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Role Upgrade Requests
+            </h2>
             {!upgradeRequests?.page || upgradeRequests.page.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <p>No role upgrade requests assigned to you.</p>
@@ -533,7 +570,9 @@ export default function VerificationDashboard() {
 
         <TabsContent value="progressReviews">
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Progress Update Reviews</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Progress Update Reviews
+            </h2>
             {!progressUpdates?.page || progressUpdates.page.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <p>No progress updates assigned for review.</p>
@@ -548,7 +587,9 @@ export default function VerificationDashboard() {
                       await approveProgress({ updateId, reviewNotes });
                       toast.success('Progress update approved successfully!');
                     } catch (error: any) {
-                      toast.error(error.message || 'Failed to approve progress update');
+                      toast.error(
+                        error.message || 'Failed to approve progress update'
+                      );
                     }
                   }}
                   onReject={async (updateId, rejectionReason) => {
@@ -556,7 +597,9 @@ export default function VerificationDashboard() {
                       await rejectProgress({ updateId, rejectionReason });
                       toast.success('Progress update rejected');
                     } catch (error: any) {
-                      toast.error(error.message || 'Failed to reject progress update');
+                      toast.error(
+                        error.message || 'Failed to reject progress update'
+                      );
                     }
                   }}
                   onRequestRevision={async (updateId, revisionNotes) => {
@@ -564,7 +607,9 @@ export default function VerificationDashboard() {
                       await requestRevision({ updateId, revisionNotes });
                       toast.success('Revision requested successfully');
                     } catch (error: any) {
-                      toast.error(error.message || 'Failed to request revision');
+                      toast.error(
+                        error.message || 'Failed to request revision'
+                      );
                     }
                   }}
                 />
@@ -587,7 +632,10 @@ export default function VerificationDashboard() {
                 <CardContent>
                   <div className="h-64">
                     {verificationsOverTimeData ? (
-                      <Line data={verificationsOverTimeData} options={chartOptions} />
+                      <Line
+                        data={verificationsOverTimeData}
+                        options={chartOptions}
+                      />
                     ) : (
                       <div className="h-full flex items-center justify-center bg-gray-50 rounded">
                         <p className="text-gray-500">
@@ -610,7 +658,10 @@ export default function VerificationDashboard() {
                 <CardContent>
                   <div className="h-64">
                     {verificationsByStatusData ? (
-                      <Bar data={verificationsByStatusData} options={chartOptions} />
+                      <Bar
+                        data={verificationsByStatusData}
+                        options={chartOptions}
+                      />
                     ) : (
                       <div className="h-full flex items-center justify-center bg-gray-50 rounded">
                         <p className="text-gray-500">
@@ -633,7 +684,10 @@ export default function VerificationDashboard() {
                 <CardContent>
                   <div className="h-64">
                     {qualityScoreTrendData ? (
-                      <Line data={qualityScoreTrendData} options={chartOptions} />
+                      <Line
+                        data={qualityScoreTrendData}
+                        options={chartOptions}
+                      />
                     ) : (
                       <div className="h-full flex items-center justify-center bg-gray-50 rounded">
                         <p className="text-gray-500">
@@ -656,28 +710,52 @@ export default function VerificationDashboard() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Total Verifications</span>
-                      <span className="text-lg font-bold text-blue-600">{stats.totalProjects}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Total Verifications
+                      </span>
+                      <span className="text-lg font-bold text-blue-600">
+                        {stats.totalProjects}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Completed This Month</span>
-                      <span className="text-lg font-bold text-green-600">{stats.completedThisMonth}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Completed This Month
+                      </span>
+                      <span className="text-lg font-bold text-green-600">
+                        {stats.completedThisMonth}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Acceptance Rate</span>
-                      <span className="text-lg font-bold text-teal-600">{stats.acceptanceRate}%</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Acceptance Rate
+                      </span>
+                      <span className="text-lg font-bold text-teal-600">
+                        {stats.acceptanceRate}%
+                      </span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Average Quality Score</span>
-                      <span className="text-lg font-bold text-purple-600">{stats.averageScore}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Average Quality Score
+                      </span>
+                      <span className="text-lg font-bold text-purple-600">
+                        {stats.averageScore}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Avg Acceptance Time</span>
-                      <span className="text-lg font-bold text-indigo-600">{stats.averageAcceptanceTime}h</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Avg Acceptance Time
+                      </span>
+                      <span className="text-lg font-bold text-indigo-600">
+                        {stats.averageAcceptanceTime}h
+                      </span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-700">Overdue Verifications</span>
-                      <span className="text-lg font-bold text-red-600">{stats.overdueVerifications}</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Overdue Verifications
+                      </span>
+                      <span className="text-lg font-bold text-red-600">
+                        {stats.overdueVerifications}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -845,11 +923,15 @@ function VerificationCard({
               </Link>
               {onRequestReport && (
                 <button
-                  onClick={() => onRequestReport({
-                    _id: verification.projectId,
-                    title: verification.projectTitle || `Project #${verification.projectId.slice(-6)}`,
-                    projectType: verification.projectType,
-                  })}
+                  onClick={() =>
+                    onRequestReport({
+                      _id: verification.projectId,
+                      title:
+                        verification.projectTitle ||
+                        `Project #${verification.projectId.slice(-6)}`,
+                      projectType: verification.projectType,
+                    })
+                  }
                   className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
                 >
                   Request Report
@@ -874,11 +956,15 @@ function VerificationCard({
               </Link>
               {onRequestReport && (
                 <button
-                  onClick={() => onRequestReport({
-                    _id: verification.projectId,
-                    title: verification.projectTitle || `Project #${verification.projectId.slice(-6)}`,
-                    projectType: verification.projectType,
-                  })}
+                  onClick={() =>
+                    onRequestReport({
+                      _id: verification.projectId,
+                      title:
+                        verification.projectTitle ||
+                        `Project #${verification.projectId.slice(-6)}`,
+                      projectType: verification.projectType,
+                    })
+                  }
                   className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
                 >
                   Request Report
@@ -897,11 +983,15 @@ function VerificationCard({
               </Link>
               {onRequestReport && (
                 <button
-                  onClick={() => onRequestReport({
-                    _id: verification.projectId,
-                    title: verification.projectTitle || `Project #${verification.projectId.slice(-6)}`,
-                    projectType: verification.projectType,
-                  })}
+                  onClick={() =>
+                    onRequestReport({
+                      _id: verification.projectId,
+                      title:
+                        verification.projectTitle ||
+                        `Project #${verification.projectId.slice(-6)}`,
+                      projectType: verification.projectType,
+                    })
+                  }
                   className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"
                 >
                   Request Progress Report
@@ -1020,7 +1110,8 @@ function UpgradeRequestCard({
       <div className="flex justify-between items-start">
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-gray-900">
-            {request.applicationData.firstName} {request.applicationData.lastName}
+            {request.applicationData.firstName}{' '}
+            {request.applicationData.lastName}
           </h3>
           <p className="text-sm text-gray-600 mt-1">
             {request.applicationData.email}
@@ -1075,7 +1166,8 @@ function UpgradeRequestCard({
             <div>
               <p className="font-medium text-gray-700">Location:</p>
               <p className="text-gray-600">
-                {request.applicationData.city}, {request.applicationData.country}
+                {request.applicationData.city},{' '}
+                {request.applicationData.country}
               </p>
             </div>
             <div>
@@ -1232,9 +1324,12 @@ function ProgressReviewCard({
     <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900">{update.title}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {update.title}
+          </h3>
           <p className="text-sm text-gray-600 mt-1">
-            Project: <span className="font-medium">{update.project?.title}</span>
+            Project:{' '}
+            <span className="font-medium">{update.project?.title}</span>
           </p>
           <p className="text-sm text-gray-600">
             Creator: {update.creator?.firstName} {update.creator?.lastName}
@@ -1245,7 +1340,9 @@ function ProgressReviewCard({
           </p>
         </div>
         <div className="flex flex-col gap-2 items-end">
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getUpdateTypeColor(update.updateType)}`}>
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-medium ${getUpdateTypeColor(update.updateType)}`}
+          >
             {update.updateType}
           </span>
           <span className="text-sm font-semibold text-blue-600">
@@ -1265,7 +1362,9 @@ function ProgressReviewCard({
         <div className="mt-4 space-y-4 border-t pt-4">
           <div>
             <p className="font-medium text-gray-900 mb-1">Description:</p>
-            <p className="text-gray-700 bg-gray-50 p-3 rounded">{update.description}</p>
+            <p className="text-gray-700 bg-gray-50 p-3 rounded">
+              {update.description}
+            </p>
           </div>
 
           {/* Photos */}
@@ -1279,7 +1378,11 @@ function ProgressReviewCard({
                     className="relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => setExpandedPhoto(url)}
                   >
-                    <img src={url} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
+                    <img
+                      src={url}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ))}
               </div>
@@ -1291,7 +1394,8 @@ function ProgressReviewCard({
             <div>
               <p className="font-medium text-gray-900 mb-1">Location:</p>
               <p className="text-gray-700 bg-gray-50 p-3 rounded">
-                {update.location.name} ({update.location.lat.toFixed(4)}, {update.location.long.toFixed(4)})
+                {update.location.name} ({update.location.lat.toFixed(4)},{' '}
+                {update.location.long.toFixed(4)})
               </p>
             </div>
           )}
@@ -1304,25 +1408,39 @@ function ProgressReviewCard({
                 {update.measurementData.treesPlanted && (
                   <div>
                     <p className="text-sm text-gray-600">Trees Planted</p>
-                    <p className="font-semibold text-gray-900">{update.measurementData.treesPlanted}</p>
+                    <p className="font-semibold text-gray-900">
+                      {update.measurementData.treesPlanted}
+                    </p>
                   </div>
                 )}
                 {update.measurementData.energyGenerated && (
                   <div>
-                    <p className="text-sm text-gray-600">Energy Generated (kWh)</p>
-                    <p className="font-semibold text-gray-900">{update.measurementData.energyGenerated}</p>
+                    <p className="text-sm text-gray-600">
+                      Energy Generated (kWh)
+                    </p>
+                    <p className="font-semibold text-gray-900">
+                      {update.measurementData.energyGenerated}
+                    </p>
                   </div>
                 )}
                 {update.measurementData.wasteProcessed && (
                   <div>
-                    <p className="text-sm text-gray-600">Waste Processed (kg)</p>
-                    <p className="font-semibold text-gray-900">{update.measurementData.wasteProcessed}</p>
+                    <p className="text-sm text-gray-600">
+                      Waste Processed (kg)
+                    </p>
+                    <p className="font-semibold text-gray-900">
+                      {update.measurementData.wasteProcessed}
+                    </p>
                   </div>
                 )}
                 {update.measurementData.carbonImpactToDate && (
                   <div>
-                    <p className="text-sm text-gray-600">Carbon Impact (tons CO₂)</p>
-                    <p className="font-semibold text-gray-900">{update.measurementData.carbonImpactToDate}</p>
+                    <p className="text-sm text-gray-600">
+                      Carbon Impact (tons CO₂)
+                    </p>
+                    <p className="font-semibold text-gray-900">
+                      {update.measurementData.carbonImpactToDate}
+                    </p>
                   </div>
                 )}
               </div>
@@ -1333,7 +1451,9 @@ function ProgressReviewCard({
           {update.challenges && (
             <div>
               <p className="font-medium text-gray-900 mb-1">Challenges:</p>
-              <p className="text-gray-700 bg-gray-50 p-3 rounded">{update.challenges}</p>
+              <p className="text-gray-700 bg-gray-50 p-3 rounded">
+                {update.challenges}
+              </p>
             </div>
           )}
 
@@ -1341,7 +1461,9 @@ function ProgressReviewCard({
           {update.nextSteps && (
             <div>
               <p className="font-medium text-gray-900 mb-1">Next Steps:</p>
-              <p className="text-gray-700 bg-gray-50 p-3 rounded">{update.nextSteps}</p>
+              <p className="text-gray-700 bg-gray-50 p-3 rounded">
+                {update.nextSteps}
+              </p>
             </div>
           )}
 
@@ -1390,7 +1512,8 @@ function ProgressReviewCard({
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-bold mb-4">Reject Progress Update</h3>
             <p className="text-gray-600 mb-4">
-              Please provide a reason for rejecting this progress update. The creator will receive your explanation.
+              Please provide a reason for rejecting this progress update. The
+              creator will receive your explanation.
             </p>
             <textarea
               value={rejectionReason}
@@ -1428,7 +1551,8 @@ function ProgressReviewCard({
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-bold mb-4">Request Revision</h3>
             <p className="text-gray-600 mb-4">
-              Please specify what needs to be revised. The creator will receive your notes.
+              Please specify what needs to be revised. The creator will receive
+              your notes.
             </p>
             <textarea
               value={revisionNotes}
@@ -1466,7 +1590,11 @@ function ProgressReviewCard({
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
           onClick={() => setExpandedPhoto(null)}
         >
-          <img src={expandedPhoto} alt="Expanded view" className="max-w-full max-h-full object-contain" />
+          <img
+            src={expandedPhoto}
+            alt="Expanded view"
+            className="max-w-full max-h-full object-contain"
+          />
           <button
             onClick={() => setExpandedPhoto(null)}
             className="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-70"

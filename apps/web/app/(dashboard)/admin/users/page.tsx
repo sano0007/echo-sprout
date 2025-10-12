@@ -17,7 +17,7 @@ export default function AdminUsersPage() {
   const [refreshing, setRefreshing] = useState(false);
 
   const userStats = useQuery(api.users.getUserStatsForAdmin);
-  
+
   // Admin mutations
   const toggleUserStatus = useMutation(api.users.adminToggleUserStatus);
   const deleteUser = useMutation(api.users.adminDeleteUser);

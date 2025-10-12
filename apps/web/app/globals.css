@@ -405,38 +405,38 @@ a {
 
 /* Force solid white backgrounds for all Radix UI components */
 @layer components {
-  /* Navbar glassmorphism dropdowns - exclude from white background overrides */
-  .navbar-glass-dropdown {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-  }
+    /* Navbar glassmorphism dropdowns - exclude from white background overrides */
+    .navbar-glass-dropdown {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+    }
 
   /* Dialog/Modal components */
-  [data-radix-dialog-content]:not(.navbar-glass-dropdown),
-  [role="dialog"]:not(.navbar-glass-dropdown),
-  .dialog-content:not(.navbar-glass-dropdown),
-  [data-state="open"][role="dialog"]:not(.navbar-glass-dropdown) {
+    [data-radix-dialog-content]:not(.navbar-glass-dropdown),
+    [role="dialog"]:not(.navbar-glass-dropdown),
+    .dialog-content:not(.navbar-glass-dropdown),
+    [data-state="open"][role="dialog"]:not(.navbar-glass-dropdown) {
     @apply bg-white !important;
     background-color: #ffffff !important;
     backdrop-filter: none !important;
   }
 
   /* Popover components */
-  [data-radix-popover-content]:not(.navbar-glass-dropdown),
-  [role="dialog"][data-radix-popover-content]:not(.navbar-glass-dropdown),
-  .popover-content:not(.navbar-glass-dropdown),
-  [data-state="open"][data-radix-popover-content]:not(.navbar-glass-dropdown) {
+    [data-radix-popover-content]:not(.navbar-glass-dropdown),
+    [role="dialog"][data-radix-popover-content]:not(.navbar-glass-dropdown),
+    .popover-content:not(.navbar-glass-dropdown),
+    [data-state="open"][data-radix-popover-content]:not(.navbar-glass-dropdown) {
     @apply bg-white border border-gray-200 shadow-lg !important;
     background-color: #ffffff !important;
     backdrop-filter: none !important;
   }
 
   /* Dropdown Menu components */
-  [data-radix-dropdown-menu-content]:not(.navbar-glass-dropdown),
-  [role="menu"]:not(.navbar-glass-dropdown),
-  .dropdown-content:not(.navbar-glass-dropdown),
-  [data-state="open"][role="menu"]:not(.navbar-glass-dropdown) {
+    [data-radix-dropdown-menu-content]:not(.navbar-glass-dropdown),
+    [role="menu"]:not(.navbar-glass-dropdown),
+    .dropdown-content:not(.navbar-glass-dropdown),
+    [data-state="open"][role="menu"]:not(.navbar-glass-dropdown) {
     @apply bg-white border border-gray-200 shadow-lg !important;
     background-color: #ffffff !important;
     backdrop-filter: none !important;

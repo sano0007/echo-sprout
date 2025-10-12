@@ -4,7 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, useClerk } from '@clerk/nextjs';
-import { getDashboardRoute, useCurrentUser, getUserFullName, getUserInitials } from "@/hooks";
+import {
+  getDashboardRoute,
+  getUserFullName,
+  getUserInitials,
+  useCurrentUser,
+} from '@/hooks';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export const NavBar = () => {
@@ -63,18 +68,18 @@ export const NavBar = () => {
             Marketplace
           </Link>
           <Link
-              href="/marketplace"
-              className={
-                'text-white/90 hover:text-white transition-colors font-medium'
-              }
+            href="/marketplace"
+            className={
+              'text-white/90 hover:text-white transition-colors font-medium'
+            }
           >
             Learning Hub
           </Link>
           <Link
-              href="/marketplace"
-              className={
-                'text-white/90 hover:text-white transition-colors font-medium'
-              }
+            href="/marketplace"
+            className={
+              'text-white/90 hover:text-white transition-colors font-medium'
+            }
           >
             Forum
           </Link>
@@ -139,11 +144,20 @@ export const NavBar = () => {
             <div className={'relative'} ref={userDropdownRef}>
               <button
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className={'flex items-center gap-2 hover:opacity-80 transition-opacity'}
+                className={
+                  'flex items-center gap-2 hover:opacity-80 transition-opacity'
+                }
               >
                 <Avatar className={'w-10 h-10 border-2 border-white/30'}>
-                  <AvatarImage src={currentUser?.profileImage} alt={getUserFullName(currentUser)} />
-                  <AvatarFallback className={'bg-white/20 text-white font-semibold backdrop-blur-sm'}>
+                  <AvatarImage
+                    src={currentUser?.profileImage}
+                    alt={getUserFullName(currentUser)}
+                  />
+                  <AvatarFallback
+                    className={
+                      'bg-white/20 text-white font-semibold backdrop-blur-sm'
+                    }
+                  >
                     {getUserInitials(currentUser)}
                   </AvatarFallback>
                 </Avatar>

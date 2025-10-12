@@ -2,7 +2,7 @@
 
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { getDashboardRoute, useCurrentUser } from '@/hooks';
 
@@ -225,19 +225,20 @@ export default function Navigation() {
                   {/* Mobile Dropdown */}
                   {activeDropdown === item.label && !item.href && (
                     <div className="pl-8 space-y-2">
-                      {item.dropdown && item.dropdown.map((dropdownItem) => (
-                        <Link
-                          key={dropdownItem.href}
-                          href={dropdownItem.href}
-                          className="block py-2 text-gray-600 hover:text-blue-600 transition-colors"
-                          onClick={() => {
-                            setIsMobileMenuOpen(false);
-                            setActiveDropdown(null);
-                          }}
-                        >
-                          {dropdownItem.label}
-                        </Link>
-                      ))}
+                      {item.dropdown &&
+                        item.dropdown.map((dropdownItem) => (
+                          <Link
+                            key={dropdownItem.href}
+                            href={dropdownItem.href}
+                            className="block py-2 text-gray-600 hover:text-blue-600 transition-colors"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              setActiveDropdown(null);
+                            }}
+                          >
+                            {dropdownItem.label}
+                          </Link>
+                        ))}
                     </div>
                   )}
                 </div>

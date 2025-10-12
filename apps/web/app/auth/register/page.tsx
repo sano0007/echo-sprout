@@ -27,7 +27,7 @@ export default function RegisterPage() {
 
   const currentUser = useQuery(api.users.getCurrentUser);
   const upgradeRequest = useQuery(api.users.getMyUpgradeRequest);
-  
+
   const [formData, setFormData] = useState<UserRegistrationData>({
     email: '',
     firstName: '',
@@ -45,7 +45,7 @@ export default function RegisterPage() {
     description: '',
     location: '',
   });
-  
+
   const [upgradeFormData, setUpgradeFormData] = useState({
     reasonForUpgrade: '',
     experienceDescription: '',
@@ -181,12 +181,15 @@ export default function RegisterPage() {
       setUpgradeLoading(true);
       const result = await submitRoleUpgradeRequest({
         reasonForUpgrade: upgradeFormData.reasonForUpgrade,
-        experienceDescription: upgradeFormData.experienceDescription || undefined,
+        experienceDescription:
+          upgradeFormData.experienceDescription || undefined,
       });
       setShowUpgradeSuccess(true);
       setTimeout(() => setShowUpgradeSuccess(false), 5000);
       console.log('Upgrade request submitted:', result.message);
-      alert('Upgrade request submitted successfully! A verifier will review your application.');
+      alert(
+        'Upgrade request submitted successfully! A verifier will review your application.'
+      );
     } catch (error: any) {
       console.error('Upgrade error:', error);
       alert(error.message || 'Upgrade request failed. Please try again.');
@@ -625,19 +628,28 @@ export default function RegisterPage() {
                 {currentUser?.role === 'credit_buyer' && (
                   <div className="border-t pt-6">
                     <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                      {upgradeRequest?.status === 'pending' || upgradeRequest?.status === 'under_review' ? (
+                      {upgradeRequest?.status === 'pending' ||
+                      upgradeRequest?.status === 'under_review' ? (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                           <p className="text-yellow-800 font-medium">
-                            Your upgrade request is {upgradeRequest.status === 'pending' ? 'pending assignment' : 'under review'}
+                            Your upgrade request is{' '}
+                            {upgradeRequest.status === 'pending'
+                              ? 'pending assignment'
+                              : 'under review'}
                           </p>
                           <p className="text-sm text-yellow-700 mt-1">
-                            Submitted on {new Date(upgradeRequest.createdAt).toLocaleDateString()}
+                            Submitted on{' '}
+                            {new Date(
+                              upgradeRequest.createdAt
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                       ) : upgradeRequest?.status === 'rejected' ? (
                         <div>
                           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                            <p className="text-red-800 font-medium">Previous request rejected</p>
+                            <p className="text-red-800 font-medium">
+                              Previous request rejected
+                            </p>
                             <p className="text-sm text-red-700 mt-1">
                               Reason: {upgradeRequest.rejectionReason}
                             </p>
@@ -652,10 +664,12 @@ export default function RegisterPage() {
                               </label>
                               <textarea
                                 value={upgradeFormData.reasonForUpgrade}
-                                onChange={(e) => setUpgradeFormData({
-                                  ...upgradeFormData,
-                                  reasonForUpgrade: e.target.value
-                                })}
+                                onChange={(e) =>
+                                  setUpgradeFormData({
+                                    ...upgradeFormData,
+                                    reasonForUpgrade: e.target.value,
+                                  })
+                                }
                                 className="w-full p-3 border rounded-lg"
                                 rows={4}
                                 placeholder="Explain your motivation and goals..."
@@ -667,10 +681,12 @@ export default function RegisterPage() {
                               </label>
                               <textarea
                                 value={upgradeFormData.experienceDescription}
-                                onChange={(e) => setUpgradeFormData({
-                                  ...upgradeFormData,
-                                  experienceDescription: e.target.value
-                                })}
+                                onChange={(e) =>
+                                  setUpgradeFormData({
+                                    ...upgradeFormData,
+                                    experienceDescription: e.target.value,
+                                  })
+                                }
                                 className="w-full p-3 border rounded-lg"
                                 rows={3}
                                 placeholder="Describe your experience with environmental projects..."
@@ -681,7 +697,9 @@ export default function RegisterPage() {
                               disabled={upgradeLoading}
                               className="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
                             >
-                              {upgradeLoading ? 'Submitting...' : 'Submit New Request'}
+                              {upgradeLoading
+                                ? 'Submitting...'
+                                : 'Submit New Request'}
                             </button>
                           </div>
                         </div>
@@ -693,7 +711,8 @@ export default function RegisterPage() {
                               Want to Create Carbon Credit Projects?
                             </h3>
                             <p className="text-green-700 mb-4">
-                              Apply to upgrade to a Project Creator account. Your application will be reviewed by a verifier.
+                              Apply to upgrade to a Project Creator account.
+                              Your application will be reviewed by a verifier.
                             </p>
                             <div className="space-y-4 mb-4">
                               <div>
@@ -702,10 +721,12 @@ export default function RegisterPage() {
                                 </label>
                                 <textarea
                                   value={upgradeFormData.reasonForUpgrade}
-                                  onChange={(e) => setUpgradeFormData({
-                                    ...upgradeFormData,
-                                    reasonForUpgrade: e.target.value
-                                  })}
+                                  onChange={(e) =>
+                                    setUpgradeFormData({
+                                      ...upgradeFormData,
+                                      reasonForUpgrade: e.target.value,
+                                    })
+                                  }
                                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
                                   rows={4}
                                   placeholder="Explain your motivation, goals, and why you want to create carbon credit projects..."
@@ -717,10 +738,12 @@ export default function RegisterPage() {
                                 </label>
                                 <textarea
                                   value={upgradeFormData.experienceDescription}
-                                  onChange={(e) => setUpgradeFormData({
-                                    ...upgradeFormData,
-                                    experienceDescription: e.target.value
-                                  })}
+                                  onChange={(e) =>
+                                    setUpgradeFormData({
+                                      ...upgradeFormData,
+                                      experienceDescription: e.target.value,
+                                    })
+                                  }
                                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
                                   rows={3}
                                   placeholder="Describe any relevant experience with environmental projects, carbon credits, or sustainability initiatives..."
@@ -732,11 +755,14 @@ export default function RegisterPage() {
                               disabled={upgradeLoading}
                               className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              {upgradeLoading ? 'Submitting...' : 'Apply for Project Creator Role'}
+                              {upgradeLoading
+                                ? 'Submitting...'
+                                : 'Apply for Project Creator Role'}
                             </button>
                             {showUpgradeSuccess && (
                               <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded text-green-800 text-sm">
-                                ✅ Upgrade request submitted! A verifier will review your application.
+                                ✅ Upgrade request submitted! A verifier will
+                                review your application.
                               </div>
                             )}
                           </div>

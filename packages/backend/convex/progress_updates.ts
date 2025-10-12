@@ -1,8 +1,8 @@
 import {
-  mutation,
-  query,
   internalMutation,
   internalQuery,
+  mutation,
+  query,
 } from './_generated/server';
 import { v } from 'convex/values';
 import { UserService } from '../services/user-service';
@@ -127,7 +127,10 @@ export const submitProgressUpdate = mutation({
       }
       // Check if it's old format (Cloudinary)
       else if ('cloudinary_public_id' in p && 'cloudinary_url' in p) {
-        if (typeof p.cloudinary_public_id === 'string' && typeof p.cloudinary_url === 'string') {
+        if (
+          typeof p.cloudinary_public_id === 'string' &&
+          typeof p.cloudinary_url === 'string'
+        ) {
           cloudinaryPhotos.push({
             cloudinary_public_id: p.cloudinary_public_id,
             cloudinary_url: p.cloudinary_url,
@@ -932,7 +935,10 @@ export const approveProgressUpdate = mutation({
 
     // Get project to update its progress
     const project = await ctx.db.get(update.projectId);
-    if (project && update.progressPercentage > (project.progressPercentage || 0)) {
+    if (
+      project &&
+      update.progressPercentage > (project.progressPercentage || 0)
+    ) {
       await ctx.db.patch(update.projectId, {
         progressPercentage: update.progressPercentage,
         lastProgressUpdate: Date.now(),

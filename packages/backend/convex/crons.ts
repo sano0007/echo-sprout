@@ -1,5 +1,4 @@
-import { cronJobs } from 'convex/server';
-import { internal } from './_generated/api';
+import {cronJobs} from 'convex/server';
 
 /**
  * MONITORING & TRACKING SYSTEM - CRON JOBS CONFIGURATION

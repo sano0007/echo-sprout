@@ -29,6 +29,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface LearningPath {
   id: string;
@@ -52,6 +63,7 @@ const LearningPathsTable = () => {
   const deleteLearningPath = useMutation(api.learn.deleteLearningPath);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleApprove = async (pathId: string) => {
     try {
@@ -64,24 +76,14 @@ const LearningPathsTable = () => {
     }
   };
 
-  const handleReject = async (pathId: string) => {
-    try {
-      await updateLearningPath({
-        id: pathId,
-        publish: false,
-      });
-    } catch (error) {
-      console.error('Failed to reject learning path:', error);
-    }
-  };
-
   const handleDelete = async (pathId: string) => {
-    if (confirm('Are you sure you want to delete this learning path?')) {
-      try {
-        await deleteLearningPath({ id: pathId });
-      } catch (error) {
-        console.error('Failed to delete learning path:', error);
-      }
+    try {
+      setDeletingId(pathId);
+      await deleteLearningPath({ id: pathId });
+    } catch (error) {
+      console.error('Failed to delete learning path:', error);
+    } finally {
+      setDeletingId((current) => (current === pathId ? null : current));
     }
   };
 
@@ -177,16 +179,38 @@ const LearningPathsTable = () => {
                         <Check className="w-4 h-4" />
                       </Button>
                     )}
-                    {path.isPublished && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
-                        onClick={() => handleReject(path.id)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 border-red-600 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Delete learning path
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action will permanently delete "{path.title}".
+                            You cannot undo this.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(path.id)}
+                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                            disabled={deletingId === path.id}
+                          >
+                            {deletingId === path.id ? 'Deleting...' : 'Delete'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     <Button
                       size="sm"
                       variant="outline"

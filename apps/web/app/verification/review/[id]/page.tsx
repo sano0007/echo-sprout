@@ -274,9 +274,7 @@ export default function ProjectReview() {
       const validationErrors = validateVerificationForm();
       if (validationErrors.length > 0) {
         setShowValidationErrors(true);
-        toast.error(
-          `Please complete all required fields before submitting`
-        );
+        toast.error(`Please complete all required fields before submitting`);
         return;
       }
 
@@ -1098,13 +1096,17 @@ export default function ProjectReview() {
                 {/* Verification Notes */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium mb-3 text-gray-700">
-                    Verification Notes <span className="text-gray-400 text-xs">(Required)</span>
+                    Verification Notes{' '}
+                    <span className="text-gray-400 text-xs">(Required)</span>
                   </label>
                   <textarea
                     value={verificationNotes}
                     onChange={(e) => {
                       setVerificationNotes(e.target.value);
-                      if (showValidationErrors && e.target.value.trim().length >= 20) {
+                      if (
+                        showValidationErrors &&
+                        e.target.value.trim().length >= 20
+                      ) {
                         setShowValidationErrors(false);
                       }
                     }}
@@ -1115,31 +1117,33 @@ export default function ProjectReview() {
                     }`}
                     placeholder="Provide detailed verification notes, observations, and recommendations (minimum 20 characters)..."
                   />
-                  {showValidationErrors && verificationNotes.trim().length < 20 && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
-                      <svg
-                        className="w-4 h-4 mr-1"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      {verificationNotes.trim().length === 0 
-                        ? 'Verification notes are required' 
-                        : `Please add at least ${20 - verificationNotes.trim().length} more characters`}
-                    </p>
-                  )}
+                  {showValidationErrors &&
+                    verificationNotes.trim().length < 20 && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-1"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {verificationNotes.trim().length === 0
+                          ? 'Verification notes are required'
+                          : `Please add at least ${20 - verificationNotes.trim().length} more characters`}
+                      </p>
+                    )}
                   <p className="text-gray-500 text-sm mt-1">
                     {verificationNotes.length} characters
-                    {verificationNotes.length > 0 && verificationNotes.length < 20 && (
-                      <span className="text-orange-500 ml-1">
-                        ({20 - verificationNotes.length} more needed)
-                      </span>
-                    )}
+                    {verificationNotes.length > 0 &&
+                      verificationNotes.length < 20 && (
+                        <span className="text-orange-500 ml-1">
+                          ({20 - verificationNotes.length} more needed)
+                        </span>
+                      )}
                     {verificationNotes.length >= 20 && (
                       <span className="text-green-500 ml-1">✓</span>
                     )}
@@ -1150,7 +1154,8 @@ export default function ProjectReview() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium mb-3 text-gray-700">
-                      Quality Score (1-10) <span className="text-gray-400 text-xs">(Required)</span>
+                      Quality Score (1-10){' '}
+                      <span className="text-gray-400 text-xs">(Required)</span>
                     </label>
                     <div className="relative">
                       <input
@@ -1169,7 +1174,8 @@ export default function ProjectReview() {
                           }
                         }}
                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 ${
-                          showValidationErrors && (qualityScore < 1 || qualityScore > 10)
+                          showValidationErrors &&
+                          (qualityScore < 1 || qualityScore > 10)
                             ? 'border-red-300'
                             : 'border-gray-300'
                         }`}
@@ -1188,22 +1194,23 @@ export default function ProjectReview() {
                         ></div>
                       </div>
                     </div>
-                    {showValidationErrors && (qualityScore < 1 || qualityScore > 10) && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center">
-                        <svg
-                          className="w-4 h-4 mr-1"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        Score must be between 1 and 10
-                      </p>
-                    )}
+                    {showValidationErrors &&
+                      (qualityScore < 1 || qualityScore > 10) && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                          <svg
+                            className="w-4 h-4 mr-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Score must be between 1 and 10
+                        </p>
+                      )}
                     <div className="mt-2 text-sm text-gray-600">
                       <div className="flex justify-between">
                         <span>1-3: Poor</span>
@@ -1232,7 +1239,8 @@ export default function ProjectReview() {
 
                   <div>
                     <label className="block text-sm font-medium mb-3 text-gray-700">
-                      Recommendation <span className="text-gray-400 text-xs">(Required)</span>
+                      Recommendation{' '}
+                      <span className="text-gray-400 text-xs">(Required)</span>
                     </label>
                     <select
                       value={recommendation}
@@ -1426,9 +1434,15 @@ export default function ProjectReview() {
                       ?.split('.')
                       .pop()
                       ?.toLowerCase();
-                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(
-                      fileExtension || ''
-                    );
+                    const isImage = [
+                      'jpg',
+                      'jpeg',
+                      'png',
+                      'gif',
+                      'webp',
+                      'bmp',
+                      'svg',
+                    ].includes(fileExtension || '');
 
                     return (
                       <>
@@ -1449,7 +1463,8 @@ export default function ProjectReview() {
                                     {selectedDoc.originalName}
                                   </p>
                                   <p className="text-xs text-gray-500 mt-1">
-                                    {selectedDoc.fileSizeFormatted} • {fileExtension?.toUpperCase()}
+                                    {selectedDoc.fileSizeFormatted} •{' '}
+                                    {fileExtension?.toUpperCase()}
                                   </p>
                                 </div>
                               </div>
@@ -1528,11 +1543,11 @@ export default function ProjectReview() {
                         Select a Document
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        Choose a document from the list above to view and
-                        review
+                        Choose a document from the list above to view and review
                       </p>
                       <div className="text-sm text-gray-500">
-                        Supports PDFs (with annotations) and images (JPG, PNG, GIF, WebP, etc.)
+                        Supports PDFs (with annotations) and images (JPG, PNG,
+                        GIF, WebP, etc.)
                       </div>
                     </div>
                   </div>

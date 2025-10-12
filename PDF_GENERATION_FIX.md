@@ -7,7 +7,8 @@
 
 ## Overview
 
-The PDF generation system for monitoring and tracking reports has been fixed and is now fully functional. This document explains the changes made, how the system works, and how to use it.
+The PDF generation system for monitoring and tracking reports has been fixed and is now fully functional. This document
+explains the changes made, how the system works, and how to use it.
 
 ---
 
@@ -24,13 +25,19 @@ The PDF generation system for monitoring and tracking reports has been fixed and
 
 ```typescript
 // BEFORE - Broken code:
-async function generateAnalyticsPDF(analyticsData: any, report: any): Promise<Uint8Array> {
+async function generateAnalyticsPDF(
+  analyticsData: any,
+  report: any,
+): Promise<Uint8Array> {
   const mockPdfContent = JSON.stringify(templateData);
   const encoder = new TextEncoder();
   return encoder.encode(mockPdfContent); // ❌ Just encoding JSON as text!
 }
 
-async function savePDFToStorage(pdfData: Uint8Array, report: any): Promise<string> {
+async function savePDFToStorage(
+  pdfData: Uint8Array,
+  report: any,
+): Promise<string> {
   return `/api/pdf-reports/${report._id}/download`; // ❌ Mock URL, not real storage!
 }
 ```
@@ -74,26 +81,26 @@ async function savePDFToStorage(pdfData: Uint8Array, report: any): Promise<strin
 ### New Components Created:
 
 1. **`server-pdf-generator.ts`** (NEW)
-   - Server-compatible PDF HTML generator
-   - Converts PDF template data to styled HTML
-   - Generates structured JSON for client-side rendering
-   - Proper formatting, tables, charts, metrics
+    - Server-compatible PDF HTML generator
+    - Converts PDF template data to styled HTML
+    - Generates structured JSON for client-side rendering
+    - Proper formatting, tables, charts, metrics
 
 2. **`storage_upload.ts`** (NEW)
-   - Convex Storage upload utilities
-   - Handles file upload with proper blob creation
-   - Returns storage IDs and public URLs
-   - Error handling and fallbacks
+    - Convex Storage upload utilities
+    - Handles file upload with proper blob creation
+    - Returns storage IDs and public URLs
+    - Error handling and fallbacks
 
 3. **`fixed_pdf_generation.ts`** (UPDATED)
-   - Real data integration with `monitoring_crud` APIs
-   - Proper error handling
-   - Actual storage upload
-   - Comprehensive reporting
+    - Real data integration with `monitoring_crud` APIs
+    - Proper error handling
+    - Actual storage upload
+    - Comprehensive reporting
 
 4. **`pdf_reports.ts`** (UPDATED)
-   - Now schedules the working action
-   - Changed from `api.pdf_reports.generatePDFReport` to `api.fixed_pdf_generation.generateWorkingPDFReport`
+    - Now schedules the working action
+    - Changed from `api.pdf_reports.generatePDFReport` to `api.fixed_pdf_generation.generateWorkingPDFReport`
 
 ---
 
@@ -104,15 +111,17 @@ async function savePDFToStorage(pdfData: Uint8Array, report: any): Promise<strin
 ```typescript
 // User creates a report request
 const reportId = await createPDFReportRequest({
-  templateType: 'monitoring', // or 'analytics'
-  reportType: 'system',       // or 'project', 'alerts', 'performance'
-  title: 'System Monitoring Report',
+  templateType: "monitoring", // or 'analytics'
+  reportType: "system", // or 'project', 'alerts', 'performance'
+  title: "System Monitoring Report",
   timeframe: {
     start: Date.now() - 30 * 24 * 60 * 60 * 1000, // 30 days ago
     end: Date.now(),
-    period: 'Last 30 Days'
+    period: "Last 30 Days",
   },
-  filters: { /* optional filters */ }
+  filters: {
+    /* optional filters */
+  },
 });
 ```
 
@@ -123,7 +132,10 @@ const reportId = await createPDFReportRequest({
 export const generateWorkingPDFReport = action({
   handler: async (ctx, { reportId }) => {
     // 1. Fetch report details
-    const report = await ctx.runQuery(internal.pdf_reports._getPDFReportInternal, { reportId });
+    const report = await ctx.runQuery(
+      internal.pdf_reports._getPDFReportInternal,
+      { reportId },
+    );
 
     // 2. Collect real data from monitoring APIs
     const reportData = await generateMonitoringReportData(ctx, report);
@@ -137,11 +149,11 @@ export const generateWorkingPDFReport = action({
     // 5. Update report status to completed
     await ctx.runMutation(api.pdf_reports.updatePDFReportStatus, {
       reportId,
-      status: 'completed',
+      status: "completed",
       fileUrl,
-      fileSize
+      fileSize,
     });
-  }
+  },
 });
 ```
 
@@ -312,52 +324,52 @@ function AnalyticsDashboard() {
 ### Monitoring Reports
 
 1. **System Monitoring Report** (`type: 'system'`)
-   - System health overview
-   - Performance metrics
-   - Active alerts
-   - Recommendations
+    - System health overview
+    - Performance metrics
+    - Active alerts
+    - Recommendations
 
 2. **Project Monitoring Report** (`type: 'project'`)
-   - Project portfolio status
-   - Progress details
-   - Verification status
-   - Action items
+    - Project portfolio status
+    - Progress details
+    - Verification status
+    - Action items
 
 3. **Alert Report** (`type: 'alerts'`)
-   - Alert summary
-   - Critical alerts
-   - Resolution status
-   - Preventive measures
+    - Alert summary
+    - Critical alerts
+    - Resolution status
+    - Preventive measures
 
 4. **Performance Report** (`type: 'performance'`)
-   - Performance overview
-   - System metrics
-   - Trends analysis
-   - Optimization recommendations
+    - Performance overview
+    - System metrics
+    - Trends analysis
+    - Optimization recommendations
 
 ### Analytics Reports
 
 1. **Comprehensive Report** (`type: 'comprehensive'`)
-   - Executive summary
-   - Platform performance
-   - Environmental impact
-   - Financial metrics
-   - User engagement
+    - Executive summary
+    - Platform performance
+    - Environmental impact
+    - Financial metrics
+    - User engagement
 
 2. **Platform Report** (`type: 'platform'`)
-   - Project statistics
-   - Performance trends
-   - Health indicators
+    - Project statistics
+    - Performance trends
+    - Health indicators
 
 3. **Environmental Report** (`type: 'environmental'`)
-   - Carbon offset achievements
-   - Reforestation impact
-   - Biodiversity metrics
+    - Carbon offset achievements
+    - Reforestation impact
+    - Biodiversity metrics
 
 4. **Financial Report** (`type: 'financial'`)
-   - Revenue analysis
-   - Carbon credit trading
-   - ROI metrics
+    - Revenue analysis
+    - Carbon credit trading
+    - ROI metrics
 
 ---
 
@@ -367,20 +379,20 @@ function AnalyticsDashboard() {
 
 ```typescript
 // Real API calls made by the system:
-api.monitoring_crud.getMonitoringStats()      // System statistics
-api.monitoring_crud.getProgressUpdates()      // Project progress
-api.monitoring_crud.getAlerts()               // System alerts
-api.monitoring_crud.getMilestones()           // Project milestones
+api.monitoring_crud.getMonitoringStats(); // System statistics
+api.monitoring_crud.getProgressUpdates(); // Project progress
+api.monitoring_crud.getAlerts(); // System alerts
+api.monitoring_crud.getMilestones(); // Project milestones
 ```
 
 ### Analytics Data
 
 ```typescript
 // Would use these APIs (when implemented):
-api.analytics.getDashboardAnalytics()         // Platform analytics
-api.analytics.getProjectMetrics()             // Project metrics
-api.analytics.getEnvironmentalImpact()        // Environmental data
-api.analytics.getFinancialMetrics()           // Financial data
+api.analytics.getDashboardAnalytics(); // Platform analytics
+api.analytics.getProjectMetrics(); // Project metrics
+api.analytics.getEnvironmentalImpact(); // Environmental data
+api.analytics.getFinancialMetrics(); // Financial data
 ```
 
 ---
@@ -419,8 +431,8 @@ apps/web/
 
 - Reports are stored in Convex Storage (`_storage` table)
 - Two versions uploaded per report:
-  - **HTML version**: Printable, styled report (primary)
-  - **JSON version**: Structured data for client-side PDF generation (backup)
+    - **HTML version**: Printable, styled report (primary)
+    - **JSON version**: Structured data for client-side PDF generation (backup)
 - Files automatically get public URLs via `storage.getUrl()`
 - URLs are time-limited and secure
 
@@ -432,6 +444,7 @@ reports/{sanitized_title}_{timestamp}.json
 ```
 
 Example:
+
 ```
 reports/system_monitoring_report_1728595200000.html
 reports/system_monitoring_report_1728595200000.json
@@ -459,14 +472,18 @@ pending → processing → completed
 ```typescript
 // Check failed reports
 const failedReports = await getPDFReports({
-  status: 'failed',
-  limit: 10
+  status: "failed",
+  limit: 10,
 });
 
 // Retry a failed report (manually)
-await ctx.scheduler.runAfter(0, api.fixed_pdf_generation.generateWorkingPDFReport, {
-  reportId: failedReport._id
-});
+await ctx.scheduler.runAfter(
+  0,
+  api.fixed_pdf_generation.generateWorkingPDFReport,
+  {
+    reportId: failedReport._id,
+  },
+);
 ```
 
 ---
@@ -476,34 +493,36 @@ await ctx.scheduler.runAfter(0, api.fixed_pdf_generation.generateWorkingPDFRepor
 ### Manual Test Flow
 
 1. **Start Convex Dev**:
+
    ```bash
    cd packages/backend
    npx convex dev
    ```
 
 2. **Request a Report** (from your frontend):
+
    ```typescript
    const reportId = await createReport({
-     templateType: 'monitoring',
-     reportType: 'system',
-     title: 'Test Report',
+     templateType: "monitoring",
+     reportType: "system",
+     title: "Test Report",
      timeframe: {
        start: Date.now() - 86400000,
        end: Date.now(),
-       period: 'Last 24 Hours'
-     }
+       period: "Last 24 Hours",
+     },
    });
    ```
 
 3. **Monitor Progress**:
-   - Check Convex dashboard logs
-   - Query report status: `getPDFReport({ reportId })`
-   - Watch for status updates (pending → processing → completed)
+    - Check Convex dashboard logs
+    - Query report status: `getPDFReport({ reportId })`
+    - Watch for status updates (pending → processing → completed)
 
 4. **Download Report**:
-   - When status = 'completed', use `fileUrl` to download
-   - HTML file will open in browser as styled report
-   - Can print to PDF from browser (Cmd/Ctrl + P)
+    - When status = 'completed', use `fileUrl` to download
+    - HTML file will open in browser as styled report
+    - Can print to PDF from browser (Cmd/Ctrl + P)
 
 ### Automated Testing
 
@@ -515,12 +534,17 @@ assert(testData.alerts.length >= 0);
 
 // Test PDF generation
 const pdfContent = await generateMonitoringPDFContent(testData, mockReport);
-assert(pdfContent.title === 'Test Report');
+assert(pdfContent.title === "Test Report");
 assert(pdfContent.content.sections.length > 0);
 
 // Test storage upload
-const uploadResult = await uploadPDFReport(ctx, pdfData, 'test-id', 'Test Report');
-assert(uploadResult.htmlUrl.startsWith('https://'));
+const uploadResult = await uploadPDFReport(
+  ctx,
+  pdfData,
+  "test-id",
+  "Test Report",
+);
+assert(uploadResult.htmlUrl.startsWith("https://"));
 ```
 
 ---
@@ -553,29 +577,29 @@ assert(uploadResult.htmlUrl.startsWith('https://'));
 ### Potential Improvements
 
 1. **Real PDF Binary Generation**
-   - Use Puppeteer/Playwright for HTML→PDF conversion
-   - Better formatting and print layout
-   - Include charts as images
+    - Use Puppeteer/Playwright for HTML→PDF conversion
+    - Better formatting and print layout
+    - Include charts as images
 
 2. **Advanced Data Visualization**
-   - Embed chart images in PDFs
-   - Interactive charts in HTML version
-   - Trend graphs and heatmaps
+    - Embed chart images in PDFs
+    - Interactive charts in HTML version
+    - Trend graphs and heatmaps
 
 3. **Scheduled Reports**
-   - Weekly/monthly automatic generation
-   - Email delivery integration
-   - Subscription management
+    - Weekly/monthly automatic generation
+    - Email delivery integration
+    - Subscription management
 
 4. **Custom Templates**
-   - User-defined report layouts
-   - Template marketplace
-   - Drag-and-drop report builder
+    - User-defined report layouts
+    - Template marketplace
+    - Drag-and-drop report builder
 
 5. **Multi-format Export**
-   - Excel/CSV export
-   - PowerPoint slides
-   - JSON API responses
+    - Excel/CSV export
+    - PowerPoint slides
+    - JSON API responses
 
 ---
 
@@ -584,21 +608,25 @@ assert(uploadResult.htmlUrl.startsWith('https://'));
 ### Common Issues
 
 **1. Report stuck in 'pending' status**
+
 - Check Convex logs for errors
 - Verify scheduler is working: `await ctx.scheduler.runAfter(...)`
 - Manually trigger action for debugging
 
 **2. Empty data in report**
+
 - Verify data APIs are working: `monitoring_crud.getMonitoringStats()`
 - Check date range filters
 - Ensure projects exist in database
 
 **3. Storage upload fails**
+
 - Check Convex Storage limits
 - Verify blob creation: `new Blob([content], { type: '...' })`
 - Check network connectivity
 
 **4. Download link doesn't work**
+
 - Ensure URL is from Convex Storage (starts with `https://`)
 - Check if storage ID is valid
 - Verify file hasn't expired
@@ -617,6 +645,7 @@ const reportId = await createPDFReportRequest({ ... });
 ```
 
 **Backend changes:**
+
 - Report scheduler now calls `fixed_pdf_generation.generateWorkingPDFReport`
 - Files are uploaded to Convex Storage automatically
 - Real data is collected from `monitoring_crud` APIs
@@ -640,9 +669,9 @@ const reportId = await createPDFReportRequest({ ... });
 
 ```typescript
 // Enable debug logging in fixed_pdf_generation.ts
-console.log('Generating report:', report.title);
-console.log('Data collected:', reportData);
-console.log('Upload result:', uploadResult);
+console.log("Generating report:", report.title);
+console.log("Data collected:", reportData);
+console.log("Upload result:", uploadResult);
 ```
 
 ### Metrics to Track
