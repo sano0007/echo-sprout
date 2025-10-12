@@ -117,28 +117,36 @@ export default function CreatorDashboard() {
   // Calculate dynamic stats from real data
   const creatorStats = useMemo(() => {
     const totalProjects = userProjects?.length || 0;
-    const activeProjects = userProjects?.filter((p: any) => p.status === 'approved')?.length || 0;
-    const completedProjects = userProjects?.filter((p: any) => p.status === 'completed')?.length || 0;
-    const totalCreditsGenerated = userProjects?.reduce(
-      (sum: number, p: any) => sum + (p.totalCarbonCredits || 0),
-      0
-    ) || 0;
-    const totalRevenue = userProjects?.reduce((sum: number, p: any) => sum + (p.budget || 0), 0) || 0;
-    const pendingReports = (pendingProgressSubmissions?.length || 0) + (pendingProgressRequests?.length || 0);
-    
+    const activeProjects =
+      userProjects?.filter((p: any) => p.status === 'approved')?.length || 0;
+    const completedProjects =
+      userProjects?.filter((p: any) => p.status === 'completed')?.length || 0;
+    const totalCreditsGenerated =
+      userProjects?.reduce(
+        (sum: number, p: any) => sum + (p.totalCarbonCredits || 0),
+        0
+      ) || 0;
+    const totalRevenue =
+      userProjects?.reduce((sum: number, p: any) => sum + (p.budget || 0), 0) ||
+      0;
+    const pendingReports =
+      (pendingProgressSubmissions?.length || 0) +
+      (pendingProgressRequests?.length || 0);
+
     // Count real upcoming milestones from projects
-    const upcomingMilestones = userProjects?.reduce((count: number, project: any) => {
-      let milestoneCount = 0;
-      if (project.milestone1?.date) {
-        const milestone1Date = new Date(project.milestone1.date);
-        if (milestone1Date > new Date()) milestoneCount++;
-      }
-      if (project.milestone2?.date) {
-        const milestone2Date = new Date(project.milestone2.date);
-        if (milestone2Date > new Date()) milestoneCount++;
-      }
-      return count + milestoneCount;
-    }, 0) || 0;
+    const upcomingMilestones =
+      userProjects?.reduce((count: number, project: any) => {
+        let milestoneCount = 0;
+        if (project.milestone1?.date) {
+          const milestone1Date = new Date(project.milestone1.date);
+          if (milestone1Date > new Date()) milestoneCount++;
+        }
+        if (project.milestone2?.date) {
+          const milestone2Date = new Date(project.milestone2.date);
+          if (milestone2Date > new Date()) milestoneCount++;
+        }
+        return count + milestoneCount;
+      }, 0) || 0;
 
     return {
       totalProjects,
@@ -155,7 +163,7 @@ export default function CreatorDashboard() {
   const projectBuyerCounts = useMemo(() => {
     if (!transactions || !Array.isArray(transactions)) return {};
     const counts: Record<string, Set<string>> = {};
-    
+
     transactions.forEach((transaction: any) => {
       if (transaction?.projectId && transaction?.buyerId) {
         const projectId = transaction.projectId;
@@ -165,7 +173,7 @@ export default function CreatorDashboard() {
         counts[projectId]!.add(transaction.buyerId);
       }
     });
-    
+
     return Object.fromEntries(
       Object.entries(counts).map(([id, set]) => [id, set.size])
     );
@@ -191,22 +199,28 @@ export default function CreatorDashboard() {
       buyers: projectBuyerCounts[project._id] || 0,
       location: project.location?.name || 'Location not specified',
       impact: {
-        treesPlanted: project.projectType === 'reforestation' ? project.areaSize * 100 : 0,
+        treesPlanted:
+          project.projectType === 'reforestation' ? project.areaSize * 100 : 0,
         co2Sequestered: project.estimatedCO2Reduction || 0,
-        energyGenerated: ['solar', 'wind', 'biogas'].includes(project.projectType) 
-          ? project.areaSize * 1000 
+        energyGenerated: ['solar', 'wind', 'biogas'].includes(
+          project.projectType
+        )
+          ? project.areaSize * 1000
           : 0,
         co2Avoided: project.estimatedCO2Reduction || 0,
-        wasteProcessed: project.projectType === 'waste_management' ? project.areaSize * 50 : 0,
+        wasteProcessed:
+          project.projectType === 'waste_management'
+            ? project.areaSize * 50
+            : 0,
       },
     })) || [];
 
   // Generate pending tasks based on active projects and real milestones
   const pendingTasks = useMemo(() => {
     if (!userProjects) return [];
-    
+
     const tasks: any[] = [];
-    
+
     userProjects
       .filter((p: any) => p.status === 'approved')
       .forEach((project: any) => {
@@ -219,12 +233,15 @@ export default function CreatorDashboard() {
               task: project.milestone1.name,
               project: project.title,
               dueDate: milestoneDate.toLocaleDateString(),
-              priority: milestoneDate.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 ? 'high' : 'medium',
+              priority:
+                milestoneDate.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000
+                  ? 'high'
+                  : 'medium',
               type: 'milestone',
             });
           }
         }
-        
+
         if (project.milestone2 && project.milestone2.date) {
           const milestoneDate = new Date(project.milestone2.date);
           if (milestoneDate > new Date()) {
@@ -233,26 +250,34 @@ export default function CreatorDashboard() {
               task: project.milestone2.name,
               project: project.title,
               dueDate: milestoneDate.toLocaleDateString(),
-              priority: milestoneDate.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000 ? 'high' : 'medium',
+              priority:
+                milestoneDate.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000
+                  ? 'high'
+                  : 'medium',
               type: 'milestone',
             });
           }
         }
-        
+
         // Add monthly report task
         tasks.push({
           id: `report-${project._id}`,
           task: 'Submit Monthly Progress Report',
           project: project.title,
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          dueDate: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+          ).toLocaleDateString(),
           priority: 'high',
           type: 'report',
         });
       });
-    
+
     return tasks.sort((a, b) => {
       const priorityOrder = { high: 0, medium: 1, low: 2 };
-      return priorityOrder[a.priority as keyof typeof priorityOrder] - priorityOrder[b.priority as keyof typeof priorityOrder];
+      return (
+        priorityOrder[a.priority as keyof typeof priorityOrder] -
+        priorityOrder[b.priority as keyof typeof priorityOrder]
+      );
     });
   }, [userProjects]);
 
@@ -267,9 +292,13 @@ export default function CreatorDashboard() {
       };
     }
 
-    const totalSubmitted = approvedProgressUpdates.length + pendingProgressSubmissions.length;
+    const totalSubmitted =
+      approvedProgressUpdates.length + pendingProgressSubmissions.length;
     const approvedCount = approvedProgressUpdates.length;
-    const verificationRate = totalSubmitted > 0 ? Math.round((approvedCount / totalSubmitted) * 100) : 0;
+    const verificationRate =
+      totalSubmitted > 0
+        ? Math.round((approvedCount / totalSubmitted) * 100)
+        : 0;
     const milestonesAchieved = approvedProgressUpdates.filter(
       (u: any) => u.updateType === 'milestone' || u.updateType === 'completion'
     ).length;
@@ -285,12 +314,14 @@ export default function CreatorDashboard() {
   // Generate recent activity from approved progress updates
   const recentActivity = useMemo(() => {
     if (!approvedProgressUpdates) return [];
-    
+
     return approvedProgressUpdates.slice(0, 5).map((update: any) => ({
       id: update._id,
       action: `Progress report approved`,
       project: update.project?.title || 'Unknown Project',
-      timestamp: new Date(update.reviewedAt || update.reportingDate).toLocaleDateString(),
+      timestamp: new Date(
+        update.reviewedAt || update.reportingDate
+      ).toLocaleDateString(),
       type: 'success',
     }));
   }, [approvedProgressUpdates]);
@@ -391,8 +422,15 @@ export default function CreatorDashboard() {
   };
 
   // Delete project handler
-  const handleDeleteProject = async (projectId: Id<'projects'>, projectTitle: string) => {
-    if (!confirm(`Are you sure you want to delete "${projectTitle}"? This action cannot be undone.`)) {
+  const handleDeleteProject = async (
+    projectId: Id<'projects'>,
+    projectTitle: string
+  ) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${projectTitle}"? This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
@@ -571,7 +609,9 @@ export default function CreatorDashboard() {
         },
       });
 
-      toast.success('PDF report generation started! You will be notified when it\'s ready.');
+      toast.success(
+        "PDF report generation started! You will be notified when it's ready."
+      );
       setShowPDFModal(false);
     } catch (error: any) {
       console.error('Error generating PDF:', error);
@@ -595,7 +635,8 @@ export default function CreatorDashboard() {
       (acc, project) => ({
         treesPlanted: acc.treesPlanted + (project.impact.treesPlanted || 0),
         co2Reduced: acc.co2Reduced + (project.impact.co2Sequestered || 0),
-        energyGenerated: acc.energyGenerated + (project.impact.energyGenerated || 0),
+        energyGenerated:
+          acc.energyGenerated + (project.impact.energyGenerated || 0),
       }),
       { treesPlanted: 0, co2Reduced: 0, energyGenerated: 0 }
     );
@@ -610,13 +651,17 @@ export default function CreatorDashboard() {
     projects.forEach((project) => {
       const date = new Date(project._creationTime || Date.now());
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + project.revenue;
+      monthlyRevenue[monthKey] =
+        (monthlyRevenue[monthKey] || 0) + project.revenue;
     });
 
     const sortedMonths = Object.keys(monthlyRevenue).sort();
     const labels = sortedMonths.map((month) => {
       const [year = '2024', monthNum = '1'] = month.split('-');
-      return new Date(parseInt(year), parseInt(monthNum) - 1).toLocaleDateString('en-US', {
+      return new Date(
+        parseInt(year),
+        parseInt(monthNum) - 1
+      ).toLocaleDateString('en-US', {
         month: 'short',
         year: 'numeric',
       });
@@ -643,7 +688,8 @@ export default function CreatorDashboard() {
 
     const creditsByType: Record<string, number> = {};
     projects.forEach((project) => {
-      creditsByType[project.type] = (creditsByType[project.type] || 0) + project.creditsGenerated;
+      creditsByType[project.type] =
+        (creditsByType[project.type] || 0) + project.creditsGenerated;
     });
 
     const projectTypeLabels: Record<string, string> = {
@@ -656,7 +702,9 @@ export default function CreatorDashboard() {
     };
 
     return {
-      labels: Object.keys(creditsByType).map((type) => projectTypeLabels[type] || String(type)),
+      labels: Object.keys(creditsByType).map(
+        (type) => projectTypeLabels[type] || String(type)
+      ),
       datasets: [
         {
           label: 'Carbon Credits',
@@ -732,7 +780,7 @@ export default function CreatorDashboard() {
             Manage your carbon credit projects and track performance
           </p>
         </div>
-        <Button 
+        <Button
           className="bg-green-600 hover:bg-green-700"
           onClick={handleCreateProject}
         >
@@ -858,14 +906,23 @@ export default function CreatorDashboard() {
 
         <TabsContent value="overview">
           {/* Overdue Progress Reports Alert */}
-          {pendingProgressRequests.filter((r: any) => r.status === 'overdue').length > 0 && (
+          {pendingProgressRequests.filter((r: any) => r.status === 'overdue')
+            .length > 0 && (
             <div className="mb-6 bg-red-50 border-2 border-red-200 p-4 rounded-lg flex gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h3 className="font-semibold text-red-900 mb-1">Overdue Progress Reports</h3>
+                <h3 className="font-semibold text-red-900 mb-1">
+                  Overdue Progress Reports
+                </h3>
                 <p className="text-sm text-red-800">
-                  You have {pendingProgressRequests.filter((r: any) => r.status === 'overdue').length} overdue progress reports. 
-                  Please submit them as soon as possible to keep your projects on track.
+                  You have{' '}
+                  {
+                    pendingProgressRequests.filter(
+                      (r: any) => r.status === 'overdue'
+                    ).length
+                  }{' '}
+                  overdue progress reports. Please submit them as soon as
+                  possible to keep your projects on track.
                 </p>
                 <Button
                   size="sm"
@@ -877,7 +934,7 @@ export default function CreatorDashboard() {
               </div>
             </div>
           )}
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Project Status Overview */}
             <Card className="lg:col-span-2">
@@ -892,17 +949,17 @@ export default function CreatorDashboard() {
                   <div className="text-center py-8">
                     <div className="text-gray-600">Loading projects...</div>
                   </div>
-                ) : projects.filter((p: any) => p.status === 'approved').length === 0 ? (
+                ) : projects.filter((p: any) => p.status === 'approved')
+                    .length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-gray-500 mb-4">
                       <Monitor className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                       <p className="text-lg font-medium">No Active Projects</p>
-                      <p className="text-sm">Create your first project to get started!</p>
+                      <p className="text-sm">
+                        Create your first project to get started!
+                      </p>
                     </div>
-                    <Button 
-                      className="mt-4"
-                      onClick={handleCreateProject}
-                    >
+                    <Button className="mt-4" onClick={handleCreateProject}>
                       <Plus className="w-4 h-4 mr-2" />
                       Create Project
                     </Button>
@@ -912,14 +969,19 @@ export default function CreatorDashboard() {
                     {projects
                       .filter((p: any) => p.status === 'approved')
                       .map((project: any) => (
-                        <div key={project.id} className="border rounded-lg p-4 hover:border-blue-300 transition-colors">
+                        <div
+                          key={project.id}
+                          className="border rounded-lg p-4 hover:border-blue-300 transition-colors"
+                        >
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
                               <span className="text-2xl">
                                 {getProjectTypeIcon(project.type)}
                               </span>
                               <div>
-                                <h3 className="font-semibold">{project.title}</h3>
+                                <h3 className="font-semibold">
+                                  {project.title}
+                                </h3>
                                 <p className="text-sm text-gray-600">
                                   {project.location}
                                 </p>
@@ -963,16 +1025,16 @@ export default function CreatorDashboard() {
                               </span>
                             </div>
                             <div className="flex gap-2">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleViewProject(project.id)}
                               >
                                 <Eye className="w-4 h-4 mr-1" />
                                 View
                               </Button>
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => handleEditProject(project.id)}
                               >
@@ -1010,28 +1072,42 @@ export default function CreatorDashboard() {
                   ) : (
                     <>
                       <div className="space-y-3">
-                        {pendingProgressSubmissions.slice(0, 3).map((submission: any) => (
-                          <div
-                            key={submission._id}
-                            className="flex items-center justify-between p-3 border rounded-lg"
-                          >
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">{submission.title}</p>
-                              <p className="text-xs text-gray-600">
-                                {submission.project?.title}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {new Date(submission.reportingDate).toLocaleDateString()}
-                              </p>
+                        {pendingProgressSubmissions
+                          .slice(0, 3)
+                          .map((submission: any) => (
+                            <div
+                              key={submission._id}
+                              className="flex items-center justify-between p-3 border rounded-lg"
+                            >
+                              <div className="flex-1">
+                                <p className="font-medium text-sm">
+                                  {submission.title}
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                  {submission.project?.title}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(
+                                    submission.reportingDate
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <Badge
+                                className={
+                                  submission.status === 'needs_revision'
+                                    ? 'bg-orange-100 text-orange-800'
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }
+                              >
+                                {submission.status === 'needs_revision'
+                                  ? 'Needs Revision'
+                                  : 'Pending'}
+                              </Badge>
                             </div>
-                            <Badge className={submission.status === 'needs_revision' ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800'}>
-                              {submission.status === 'needs_revision' ? 'Needs Revision' : 'Pending'}
-                            </Badge>
-                          </div>
-                        ))}
+                          ))}
                       </div>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full mt-4"
                         onClick={() => setActiveTab('tasks')}
                       >
@@ -1189,34 +1265,36 @@ export default function CreatorDashboard() {
                             Last updated: {project.lastUpdate}
                           </p>
                           <div className="flex gap-2">
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => handleViewProject(project.id)}
                               title="View project details"
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => handleEditProject(project.id)}
                               title="Edit project"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => openProgressModal(project)}
                               title="Submit progress update"
                             >
                               <Upload className="w-4 h-4" />
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="destructive"
-                              onClick={() => handleDeleteProject(project.id, project.title)}
+                              onClick={() =>
+                                handleDeleteProject(project.id, project.title)
+                              }
                               title="Delete project"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1312,7 +1390,9 @@ export default function CreatorDashboard() {
               <CardContent>
                 {!approvedProgressUpdates || !pendingProgressSubmissions ? (
                   <div className="text-center py-8">
-                    <div className="text-gray-600">Loading monitoring data...</div>
+                    <div className="text-gray-600">
+                      Loading monitoring data...
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -1352,68 +1432,81 @@ export default function CreatorDashboard() {
                     </div>
 
                     <div className="mt-6">
-                      <h4 className="font-semibold mb-3">Approved Progress Reports</h4>
+                      <h4 className="font-semibold mb-3">
+                        Approved Progress Reports
+                      </h4>
                       {approvedProgressUpdates.length === 0 ? (
                         <div className="text-center py-8 border rounded-lg">
                           <div className="text-gray-500">
-                            No approved progress reports yet. Submit your first progress update!
+                            No approved progress reports yet. Submit your first
+                            progress update!
                           </div>
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {approvedProgressUpdates.slice(0, 5).map((update: any) => {
-                            const getUpdateTypeLabel = (type: string) => {
-                              switch (type) {
-                                case 'milestone':
-                                  return 'Milestone';
-                                case 'measurement':
-                                  return 'Measurement';
-                                case 'photo':
-                                  return 'Photo Documentation';
-                                case 'issue':
-                                  return 'Issue Report';
-                                case 'completion':
-                                  return 'Completion';
-                                default:
-                                  return 'Progress Update';
-                              }
-                            };
+                          {approvedProgressUpdates
+                            .slice(0, 5)
+                            .map((update: any) => {
+                              const getUpdateTypeLabel = (type: string) => {
+                                switch (type) {
+                                  case 'milestone':
+                                    return 'Milestone';
+                                  case 'measurement':
+                                    return 'Measurement';
+                                  case 'photo':
+                                    return 'Photo Documentation';
+                                  case 'issue':
+                                    return 'Issue Report';
+                                  case 'completion':
+                                    return 'Completion';
+                                  default:
+                                    return 'Progress Update';
+                                }
+                              };
 
-                            return (
-                              <div
-                                key={update._id}
-                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                              >
-                                <div className="flex-1">
-                                  <p className="font-medium text-sm">{update.title}</p>
-                                  <p className="text-xs text-gray-600">
-                                    {update.project?.title} • {getUpdateTypeLabel(update.updateType)} • {' '}
-                                    {new Date(update.reportingDate).toLocaleDateString()}
-                                  </p>
-                                  {update.reviewNotes && (
-                                    <p className="text-xs text-gray-500 mt-1 italic">
-                                      Verifier notes: {update.reviewNotes}
+                              return (
+                                <div
+                                  key={update._id}
+                                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                                >
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm">
+                                      {update.title}
                                     </p>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <div className="text-right mr-2">
-                                    <div className="text-sm font-semibold text-blue-600">
-                                      {update.progressPercentage}%
-                                    </div>
-                                    <div className="text-xs text-gray-500">Progress</div>
+                                    <p className="text-xs text-gray-600">
+                                      {update.project?.title} •{' '}
+                                      {getUpdateTypeLabel(update.updateType)} •{' '}
+                                      {new Date(
+                                        update.reportingDate
+                                      ).toLocaleDateString()}
+                                    </p>
+                                    {update.reviewNotes && (
+                                      <p className="text-xs text-gray-500 mt-1 italic">
+                                        Verifier notes: {update.reviewNotes}
+                                      </p>
+                                    )}
                                   </div>
-                                  <Badge className="bg-green-100 text-green-800">
-                                    Approved
-                                  </Badge>
+                                  <div className="flex items-center gap-3">
+                                    <div className="text-right mr-2">
+                                      <div className="text-sm font-semibold text-blue-600">
+                                        {update.progressPercentage}%
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Progress
+                                      </div>
+                                    </div>
+                                    <Badge className="bg-green-100 text-green-800">
+                                      Approved
+                                    </Badge>
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
                           {approvedProgressUpdates.length > 5 && (
                             <div className="text-center py-2">
                               <p className="text-sm text-gray-500">
-                                Showing 5 of {approvedProgressUpdates.length} approved reports
+                                Showing 5 of {approvedProgressUpdates.length}{' '}
+                                approved reports
                               </p>
                             </div>
                           )}
@@ -1424,7 +1517,6 @@ export default function CreatorDashboard() {
                 )}
               </CardContent>
             </Card>
-
 
             <Card className="lg:col-span-2">
               <CardHeader>
@@ -1485,7 +1577,6 @@ export default function CreatorDashboard() {
                 </div>
               </CardContent>
             </Card>
-
           </div>
         </TabsContent>
 
@@ -1632,7 +1723,8 @@ export default function CreatorDashboard() {
                     <div className="text-center py-8">
                       <div className="text-gray-600">Loading...</div>
                     </div>
-                  ) : pendingProgressRequests.length === 0 && pendingProgressSubmissions.length === 0 ? (
+                  ) : pendingProgressRequests.length === 0 &&
+                    pendingProgressSubmissions.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="text-gray-600">
                         No pending items. All reports are up to date!
@@ -1643,43 +1735,62 @@ export default function CreatorDashboard() {
                       {/* REPORT REQUESTS (need to submit) */}
                       {pendingProgressRequests.map((request: any) => {
                         const isOverdue = request.status === 'overdue';
-                        
+
                         return (
                           <div
                             key={request._id}
                             className={`border-2 rounded-lg p-4 hover:shadow-md transition-shadow ${
-                              isOverdue ? 'border-red-300 bg-red-50' : 'border-yellow-300 bg-yellow-50'
+                              isOverdue
+                                ? 'border-red-300 bg-red-50'
+                                : 'border-yellow-300 bg-yellow-50'
                             }`}
                           >
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                <AlertCircle className={`w-4 h-4 ${isOverdue ? 'text-red-600' : 'text-yellow-600'}`} />
-                                <h3 className="font-medium text-sm">Progress Report Requested</h3>
+                                <AlertCircle
+                                  className={`w-4 h-4 ${isOverdue ? 'text-red-600' : 'text-yellow-600'}`}
+                                />
+                                <h3 className="font-medium text-sm">
+                                  Progress Report Requested
+                                </h3>
                               </div>
-                              <Badge className={isOverdue ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}>
+                              <Badge
+                                className={
+                                  isOverdue
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }
+                              >
                                 {isOverdue ? 'Overdue' : 'Pending'}
                               </Badge>
                             </div>
-                            
+
                             <p className="text-xs text-gray-700 font-medium mb-1">
                               Project: {request.project?.title}
                             </p>
                             <p className="text-xs text-gray-600 mb-2">
-                              Due: {new Date(request.dueDate).toLocaleDateString()}
+                              Due:{' '}
+                              {new Date(request.dueDate).toLocaleDateString()}
                             </p>
-                            
+
                             {request.requestNotes && (
                               <div className="mb-3 p-2 bg-white border border-gray-200 rounded text-xs">
                                 <p className="font-medium text-gray-900 mb-1">
                                   Request Notes:
                                 </p>
-                                <p className="text-gray-700">{request.requestNotes}</p>
+                                <p className="text-gray-700">
+                                  {request.requestNotes}
+                                </p>
                               </div>
                             )}
-                            
+
                             <Button
                               size="sm"
-                              className={isOverdue ? 'bg-red-600 hover:bg-red-700' : 'bg-yellow-600 hover:bg-yellow-700'}
+                              className={
+                                isOverdue
+                                  ? 'bg-red-600 hover:bg-red-700'
+                                  : 'bg-yellow-600 hover:bg-yellow-700'
+                              }
                               onClick={() => {
                                 const project = userProjects?.find(
                                   (p) => p._id === request.projectId
@@ -1750,26 +1861,35 @@ export default function CreatorDashboard() {
                               Project: {submission.project?.title}
                             </p>
                             <p className="text-xs text-gray-500 mb-3">
-                              Submitted: {new Date(submission.reportingDate).toLocaleDateString()}
+                              Submitted:{' '}
+                              {new Date(
+                                submission.reportingDate
+                              ).toLocaleDateString()}
                             </p>
 
-                            {submission.status === 'needs_revision' && submission.reviewNotes && (
-                              <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded text-xs">
-                                <p className="font-medium text-orange-900 mb-1">
-                                  Revision Notes:
-                                </p>
-                                <p className="text-orange-800">{submission.reviewNotes}</p>
-                              </div>
-                            )}
+                            {submission.status === 'needs_revision' &&
+                              submission.reviewNotes && (
+                                <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded text-xs">
+                                  <p className="font-medium text-orange-900 mb-1">
+                                    Revision Notes:
+                                  </p>
+                                  <p className="text-orange-800">
+                                    {submission.reviewNotes}
+                                  </p>
+                                </div>
+                              )}
 
-                            {submission.status === 'rejected' && submission.rejectionReason && (
-                              <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs">
-                                <p className="font-medium text-red-900 mb-1">
-                                  Rejection Reason:
-                                </p>
-                                <p className="text-red-800">{submission.rejectionReason}</p>
-                              </div>
-                            )}
+                            {submission.status === 'rejected' &&
+                              submission.rejectionReason && (
+                                <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-xs">
+                                  <p className="font-medium text-red-900 mb-1">
+                                    Rejection Reason:
+                                  </p>
+                                  <p className="text-red-800">
+                                    {submission.rejectionReason}
+                                  </p>
+                                </div>
+                              )}
 
                             <div className="flex gap-2">
                               {submission.status === 'needs_revision' && (
@@ -1781,7 +1901,9 @@ export default function CreatorDashboard() {
                                     );
                                     if (project) {
                                       // TODO: Open progress modal with existing data for resubmission
-                                      toast('Resubmission feature coming soon!');
+                                      toast(
+                                        'Resubmission feature coming soon!'
+                                      );
                                     }
                                   }}
                                   className="flex-1"
@@ -1810,7 +1932,8 @@ export default function CreatorDashboard() {
                 <div>
                   <CardTitle>Export Analytics Report</CardTitle>
                   <CardDescription>
-                    Generate a comprehensive PDF report of your dashboard analytics
+                    Generate a comprehensive PDF report of your dashboard
+                    analytics
                   </CardDescription>
                 </div>
                 <Button
@@ -1837,14 +1960,15 @@ export default function CreatorDashboard() {
                         <div>
                           <p className="font-medium text-sm">{report.title}</p>
                           <p className="text-xs text-gray-500">
-                            {new Date(report.requestedAt).toLocaleDateString()} •{' '}
+                            {new Date(report.requestedAt).toLocaleDateString()}{' '}
+                            •{' '}
                             <span
                               className={
                                 report.status === 'completed'
                                   ? 'text-green-600'
                                   : report.status === 'failed'
-                                  ? 'text-red-600'
-                                  : 'text-yellow-600'
+                                    ? 'text-red-600'
+                                    : 'text-yellow-600'
                               }
                             >
                               {report.status}
@@ -1995,7 +2119,6 @@ export default function CreatorDashboard() {
             </Card>
           </div>
         </TabsContent>
-
       </Tabs>
 
       {/* Progress Submission Modal */}
@@ -2046,7 +2169,8 @@ export default function CreatorDashboard() {
                 <div className="text-sm text-blue-800">
                   <p className="font-medium">Processing Time</p>
                   <p>
-                    Report generation typically takes 1-2 minutes. You'll be notified when it's ready for download.
+                    Report generation typically takes 1-2 minutes. You'll be
+                    notified when it's ready for download.
                   </p>
                 </div>
               </div>

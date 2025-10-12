@@ -4,7 +4,7 @@
  * Provides utilities for uploading files to Convex Storage from actions.
  */
 
-import { ActionCtx } from './_generated/server';
+import {ActionCtx} from './_generated/server';
 
 /**
  * Upload PDF content to Convex Storage
@@ -36,11 +36,13 @@ export async function uploadPDFToStorage(
 
     return {
       storageId,
-      url
+      url,
     };
   } catch (error) {
     console.error('Error uploading PDF to storage:', error);
-    throw new Error(`Failed to upload PDF to storage: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to upload PDF to storage: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -91,11 +93,13 @@ export async function uploadPDFReport(
       htmlUrl,
       jsonStorageId,
       jsonUrl,
-      totalSize: pdfData.size
+      totalSize: pdfData.size,
     };
   } catch (error) {
     console.error('Error uploading PDF report to storage:', error);
-    throw new Error(`Failed to upload PDF report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to upload PDF report: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -113,7 +117,9 @@ export async function deleteFromStorage(
     await ctx.storage.delete(storageId);
   } catch (error) {
     console.error('Error deleting from storage:', error);
-    throw new Error(`Failed to delete from storage: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to delete from storage: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -163,10 +169,12 @@ export async function uploadFile(
     return {
       storageId,
       url,
-      size: typeof content === 'string' ? content.length : content.length
+      size: typeof content === 'string' ? content.length : content.length,
     };
   } catch (error) {
     console.error('Error uploading file to storage:', error);
-    throw new Error(`Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }

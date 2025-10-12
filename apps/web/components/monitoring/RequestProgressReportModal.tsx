@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, AlertCircle, FileText } from 'lucide-react';
+import { AlertCircle, Calendar, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface RequestProgressReportModalProps {
@@ -56,7 +56,7 @@ export default function RequestProgressReportModal({
     setIsSubmitting(true);
     try {
       const dueDateTimestamp = new Date(dueDate).getTime();
-      
+
       await requestProgressReport({
         projectId: project._id,
         dueDate: dueDateTimestamp,
@@ -65,7 +65,7 @@ export default function RequestProgressReportModal({
 
       toast.success('Progress report requested successfully');
       onClose();
-      
+
       // Reset form
       const date = new Date();
       date.setDate(date.getDate() + 7);
@@ -124,9 +124,7 @@ export default function RequestProgressReportModal({
 
           {/* Request Notes */}
           <div className="space-y-2">
-            <Label htmlFor="requestNotes">
-              Request Notes (Optional)
-            </Label>
+            <Label htmlFor="requestNotes">Request Notes (Optional)</Label>
             <Textarea
               id="requestNotes"
               value={requestNotes}
@@ -136,7 +134,8 @@ export default function RequestProgressReportModal({
               className="w-full"
             />
             <p className="text-xs text-gray-500">
-              Provide context or specific metrics you'd like to see in the report
+              Provide context or specific metrics you'd like to see in the
+              report
             </p>
           </div>
 
@@ -158,7 +157,9 @@ export default function RequestProgressReportModal({
                       <p className="font-medium">{update.title}</p>
                       <p className="text-xs text-gray-600">
                         {update.progressPercentage}% complete •{' '}
-                        {new Date(update.submittedAt || update.reportingDate).toLocaleDateString()}
+                        {new Date(
+                          update.submittedAt || update.reportingDate
+                        ).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -173,26 +174,19 @@ export default function RequestProgressReportModal({
             <div className="text-sm text-orange-800">
               <p className="font-medium">Note:</p>
               <p>
-                The project creator will be notified and will see this request in
-                their dashboard. They will be able to submit a progress report to
-                fulfill this request.
+                The project creator will be notified and will see this request
+                in their dashboard. They will be able to submit a progress
+                report to fulfill this request.
               </p>
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="flex gap-3 justify-end">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !dueDate}
-            >
+            <Button onClick={handleSubmit} disabled={isSubmitting || !dueDate}>
               {isSubmitting ? 'Requesting...' : 'Request Progress Report'}
             </Button>
           </div>
@@ -201,4 +195,3 @@ export default function RequestProgressReportModal({
     </Dialog>
   );
 }
-

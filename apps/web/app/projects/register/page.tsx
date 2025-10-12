@@ -3,7 +3,8 @@
 import { api } from '@packages/backend';
 import { useAction, useMutation } from 'convex/react';
 import { useState } from 'react';
-import { Country, State, City } from 'country-state-city';
+import { City, Country, State } from 'country-state-city';
+import { toast } from 'react-toastify';
 
 import DocumentUpload from '../../../components/DocumentUpload';
 
@@ -107,7 +108,7 @@ export default function ProjectRegister() {
       'site_photographs',
     ],
   });
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createProject = useMutation(api.projects.createProject);
@@ -197,7 +198,9 @@ export default function ProjectRegister() {
   };
 
   const submitProject = async (data: ProjectFormData) => {
-    try {
+    setIsSubmitting(true);
+
+    const projectPromise = (async () => {
       // Create the project first
       const projectId = await createProject({
         title: data.title,
@@ -228,10 +231,6 @@ export default function ProjectRegister() {
       );
 
       if (allFiles.length > 0) {
-        alert(
-          `Project created successfully! Uploading ${allFiles.length} document${allFiles.length !== 1 ? 's' : ''}...`
-        );
-
         const uploadPromises = allFiles.map(
           async ({
             file,
@@ -240,49 +239,57 @@ export default function ProjectRegister() {
             file: File;
             documentType: DocumentType;
           }) => {
-            try {
-              // Step 1: Get upload URL
-              const uploadUrl = await generateUploadUrl();
-              console.log('Generated upload URL for', file.name);
+            // Step 1: Get upload URL
+            const uploadUrl = await generateUploadUrl();
+            console.log('Generated upload URL for', file.name);
 
-              // Step 2: Upload file to the URL
-              const response = await fetch(uploadUrl, {
-                method: 'POST',
-                body: file,
-                headers: {
-                  'Content-Type': file.type,
-                },
-              });
+            // Step 2: Upload file to the URL
+            const response = await fetch(uploadUrl, {
+              method: 'POST',
+              body: file,
+              headers: {
+                'Content-Type': file.type,
+              },
+            });
 
-              if (!response.ok) {
-                throw new Error(`Upload failed: ${response.statusText}`);
-              }
-
-              const { storageId } = await response.json();
-              console.log('File uploaded successfully, storage ID:', storageId);
-
-              // Step 3: Store document metadata in database with document type
-              await uploadProjectDocuments({
-                projectId: projectId,
-                fileName: file.name,
-                fileType: file.type,
-                storageId: storageId,
-                documentType: documentType,
-              });
-            } catch (error) {
-              console.error(`Failed to upload ${file.name}:`, error);
-              throw error;
+            if (!response.ok) {
+              throw new Error(`Upload failed: ${response.statusText}`);
             }
+
+            const { storageId } = await response.json();
+            console.log('File uploaded successfully, storage ID:', storageId);
+
+            // Step 3: Store document metadata in database with document type
+            await uploadProjectDocuments({
+              projectId: projectId,
+              fileName: file.name,
+              fileType: file.type,
+              storageId: storageId,
+              documentType: documentType,
+            });
           }
         );
 
         await Promise.all(uploadPromises);
-        alert(
-          `Successfully uploaded ${allFiles.length} document${allFiles.length !== 1 ? 's' : ''}!`
-        );
-      } else {
-        alert('Project created successfully!');
       }
+
+      return { projectId, filesCount: allFiles.length };
+    })();
+
+    try {
+      const allFiles = Object.values(documentFiles).flat();
+
+      await toast.promise(projectPromise, {
+        pending:
+          allFiles.length > 0
+            ? 'Creating project and uploading documents...'
+            : 'Creating project...',
+        success:
+          allFiles.length > 0
+            ? `Project created successfully! Uploaded ${allFiles.length} document${allFiles.length !== 1 ? 's' : ''}.`
+            : 'Project created successfully!',
+        error: 'Failed to create project. Please try again.',
+      });
 
       // Reset form state
       setDocumentFiles({
@@ -295,10 +302,14 @@ export default function ProjectRegister() {
       });
 
       // Redirect to project management after successful creation
-      window.location.href = '/projects/manage';
+      setTimeout(() => {
+        window.location.href = '/projects/manage';
+      }, 1500);
     } catch (error) {
       console.error('Error creating project:', error);
       setErrors({ submit: 'Failed to create project. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -511,11 +522,17 @@ export default function ProjectRegister() {
                       setSelectedState(stateCode);
                       setSelectedCity('');
 
-                      const state = State.getStateByCodeAndCountry(stateCode, selectedCountry);
+                      const state = State.getStateByCodeAndCountry(
+                        stateCode,
+                        selectedCountry
+                      );
                       const country = Country.getCountryByCode(selectedCountry);
                       handleInputChange('location', {
                         ...formData.location,
-                        name: state && country ? `${state.name}, ${country.name}` : country?.name || '',
+                        name:
+                          state && country
+                            ? `${state.name}, ${country.name}`
+                            : country?.name || '',
                       });
                     }}
                     disabled={!selectedCountry}
@@ -532,16 +549,17 @@ export default function ProjectRegister() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    City
-                  </label>
+                  <label className="block text-sm font-medium mb-2">City</label>
                   <select
                     value={selectedCity}
                     onChange={(e) => {
                       const cityName = e.target.value;
                       setSelectedCity(cityName);
 
-                      const state = State.getStateByCodeAndCountry(selectedState, selectedCountry);
+                      const state = State.getStateByCodeAndCountry(
+                        selectedState,
+                        selectedCountry
+                      );
                       const country = Country.getCountryByCode(selectedCountry);
 
                       let locationName = '';
@@ -563,11 +581,13 @@ export default function ProjectRegister() {
                   >
                     <option value="">Select City</option>
                     {selectedState &&
-                      City.getCitiesOfState(selectedCountry, selectedState).map((city) => (
-                        <option key={city.name} value={city.name}>
-                          {city.name}
-                        </option>
-                      ))}
+                      City.getCitiesOfState(selectedCountry, selectedState).map(
+                        (city) => (
+                          <option key={city.name} value={city.name}>
+                            {city.name}
+                          </option>
+                        )
+                      )}
                   </select>
                 </div>
               </div>
@@ -578,7 +598,9 @@ export default function ProjectRegister() {
 
               <div className="p-3 bg-gray-50 rounded border">
                 <p className="text-sm text-gray-600">Selected Location:</p>
-                <p className="font-medium">{formData.location.name || 'None selected'}</p>
+                <p className="font-medium">
+                  {formData.location.name || 'None selected'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
@@ -927,9 +949,14 @@ export default function ProjectRegister() {
         </button>
         <button
           onClick={currentStep === steps.length - 1 ? handleSubmit : handleNext}
-          className="px-6 py-2 bg-blue-600 text-white rounded"
+          disabled={isSubmitting}
+          className="px-6 py-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {currentStep === steps.length - 1 ? 'Submit' : 'Next'}
+          {currentStep === steps.length - 1
+            ? isSubmitting
+              ? 'Submitting...'
+              : 'Submit'
+            : 'Next'}
         </button>
       </div>
     </div>

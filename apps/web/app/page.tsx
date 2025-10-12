@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import {HeroSection} from "@/components/landing/HeroSection";
-import {HowItWorksSection} from "@/components/landing/HowItWorksSection";
-import {FAQSection} from "@/components/landing/FAQSection";
+import { HeroSection } from '@/components/landing/HeroSection';
+import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
+import { FAQSection } from '@/components/landing/FAQSection';
 
 export default function Home() {
   return (

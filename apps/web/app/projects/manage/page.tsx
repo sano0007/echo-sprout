@@ -1,7 +1,7 @@
 'use client';
 
 import { api, Id } from '@packages/backend';
-import { useMutation, useQuery, useAction } from 'convex/react';
+import { useAction, useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 
 export default function ManageProjects() {
@@ -111,8 +111,8 @@ export default function ManageProjects() {
         return 'bg-gray-100 text-gray-800';
       case 'rejected':
         return 'bg-red-100 text-red-800';
-      case 'active':
-        return 'bg-blue-100 text-blue-800';
+      // case 'active':
+      //   return 'bg-blue-100 text-blue-800';
       case 'completed':
         return 'bg-purple-100 text-purple-800';
       default:
@@ -147,8 +147,8 @@ export default function ManageProjects() {
         return 'Draft';
       case 'rejected':
         return 'Rejected';
-      case 'active':
-        return 'Active';
+      // case 'active':
+      //   return 'Active';
       case 'completed':
         return 'Completed';
       case 'suspended':
@@ -590,14 +590,14 @@ export default function ManageProjects() {
                         Submit for Verification
                       </button>
                     )}
-                    {project.verificationStatus === 'in_progress' && (
-                      <a
-                        href={`/verification/review/${project._id}`}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                      >
-                        View Verification
-                      </a>
-                    )}
+                    {/*{project.verificationStatus === 'in_progress' && (*/}
+                    {/*  <a*/}
+                    {/*    href={`/verification/review/${project._id}`}*/}
+                    {/*    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"*/}
+                    {/*  >*/}
+                    {/*    View Verification*/}
+                    {/*  </a>*/}
+                    {/*)}*/}
                     <button
                       onClick={() =>
                         handleDeleteProject(project._id as Id<'projects'>)
@@ -1909,8 +1909,6 @@ export default function ManageProjects() {
                     className={`px-4 py-2 rounded-full text-sm font-semibold ${
                       selectedProject.status === 'approved'
                         ? 'bg-green-500 text-white'
-                        : selectedProject.status === 'active'
-                          ? 'bg-blue-500 text-white'
                           : selectedProject.status === 'completed'
                             ? 'bg-purple-500 text-white'
                             : selectedProject.status === 'under_review'

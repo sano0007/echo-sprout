@@ -1,7 +1,6 @@
-import { v } from 'convex/values';
-import { action, internalAction, internalQuery } from './_generated/server';
-import { api } from './_generated/api';
-import { internal } from './_generated/api';
+import {v} from 'convex/values';
+import {action} from './_generated/server';
+import {api, internal} from './_generated/api';
 
 /**
  * FIXED PDF GENERATION SYSTEM
@@ -676,7 +675,11 @@ function generateMockAnalyticsData(report: any) {
   };
 }
 
-async function savePDFContent(ctx: any, pdfContent: any, report: any): Promise<string> {
+async function savePDFContent(
+  ctx: any,
+  pdfContent: any,
+  report: any
+): Promise<string> {
   // Import storage upload utilities
   const { generatePDFData } = await import('../lib/server-pdf-generator');
   const { uploadPDFReport } = await import('./storage_upload');

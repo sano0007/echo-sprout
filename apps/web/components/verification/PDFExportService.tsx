@@ -41,7 +41,7 @@ export class PDFExportService {
       // Generate canvas from HTML
       const canvas = await html2canvas(tempContainer, {
         useCORS: true,
-        allowTaint: true
+        allowTaint: true,
       });
 
       // Remove temporary container
@@ -97,7 +97,7 @@ export class PDFExportService {
       // Generate canvas from HTML
       const canvas = await html2canvas(tempContainer, {
         useCORS: true,
-        allowTaint: true
+        allowTaint: true,
       });
 
       // Remove temporary container

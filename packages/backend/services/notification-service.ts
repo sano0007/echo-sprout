@@ -415,7 +415,8 @@ export class NotificationService {
       recipientId: userId,
       type: 'role_upgrade_approved',
       title: 'Role Upgrade Approved',
-      message: 'Your project creator role upgrade has been approved! You can now create and manage carbon credit projects.',
+      message:
+        'Your project creator role upgrade has been approved! You can now create and manage carbon credit projects.',
       priority: 'high',
     });
   }
@@ -522,7 +523,7 @@ export class NotificationService {
   ) {
     const dueDateStr = new Date(dueDate).toLocaleDateString();
     const notesText = requestNotes ? ` Notes: ${requestNotes}` : '';
-    
+
     return await this.createNotification(ctx, {
       recipientId: creatorId,
       type: 'progress_report_requested',

@@ -3,11 +3,9 @@ import {
   Bell,
   BookOpen,
   Coins,
-  Home,
   LogOut,
   Monitor,
   Search,
-  Settings,
   User,
   Users,
 } from 'lucide-react';
