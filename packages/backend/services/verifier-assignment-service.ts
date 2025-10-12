@@ -1,7 +1,8 @@
-import type { MutationCtx, QueryCtx } from '../convex/_generated/server';
-import type { Id } from '../convex/_generated/dataModel';
-import { VerificationService } from './verification-service';
-import { PermissionsService } from './permissions-service';
+import type {MutationCtx, QueryCtx} from '../convex/_generated/server';
+import type {Id} from '../convex/_generated/dataModel';
+import {VerificationService} from './verification-service';
+import {PermissionsService} from './permissions-service';
+import {NotificationService} from './notification-service';
 
 export interface AssignmentCriteria {
   requireSpecialty?: boolean;
@@ -465,5 +466,163 @@ export class VerifierAssignmentService {
     else if (project.expectedCarbonCredits > 5000) urgency += 10;
 
     return Math.min(100, urgency);
+  }
+
+  // Auto-assign verifier to role upgrade request
+  public static async autoAssignUpgradeRequest(
+    ctx: MutationCtx,
+    requestId: Id<'roleUpgradeRequests'>,
+    criteria: Partial<AssignmentCriteria> = {}
+  ): Promise<boolean> {
+    // Get available verifiers
+    const verifiers = await ctx.db
+      .query('users')
+      .withIndex('by_role', (q) => q.eq('role', 'verifier'))
+      .filter((q) => q.eq(q.field('isActive'), true))
+      .collect();
+
+    if (verifiers.length === 0) {
+      return false;
+    }
+
+    // Calculate workload for each verifier
+    const verifierScores = await Promise.all(
+      verifiers.map(async (verifier) => {
+        const stats = await VerificationService.getVerifierStats(
+          ctx,
+          verifier._id
+        );
+        const workload =
+          stats.pendingVerifications + stats.inProgressVerifications;
+        return {
+          verifierId: verifier._id,
+          workload,
+          score: 100 - workload * 10, // Lower workload = higher score
+        };
+      })
+    );
+
+    // Filter by max workload
+    const maxWorkload = criteria.maxWorkload || 10;
+    const eligibleVerifiers = verifierScores.filter(
+      (v) => v.workload < maxWorkload
+    );
+
+    if (eligibleVerifiers.length === 0) {
+      return false;
+    }
+
+    // Sort by score and pick best verifier
+    eligibleVerifiers.sort((a, b) => b.score - a.score);
+    const selectedVerifier = eligibleVerifiers[0];
+
+    if (!selectedVerifier) {
+      return false;
+    }
+
+    // Assign verifier to request
+    await ctx.db.patch(requestId, {
+      verifierId: selectedVerifier.verifierId,
+      status: 'under_review',
+      assignedAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    // Send notification to verifier
+    const request = await ctx.db.get(requestId);
+    if (request) {
+      await NotificationService.notifyUpgradeRequestAssigned(
+        ctx,
+        selectedVerifier.verifierId,
+        requestId
+      );
+    }
+
+    return true;
+  }
+
+  /**
+   * Auto-assign a progress update to a verifier based on workload
+   */
+  public static async autoAssignProgressUpdate(
+    ctx: MutationCtx,
+    updateId: Id<'progressUpdates'>,
+    criteria: Partial<AssignmentCriteria> = {}
+  ): Promise<boolean> {
+    // Get all active verifiers
+    const verifiers = await ctx.db
+      .query('users')
+      .withIndex('by_role', (q) => q.eq('role', 'verifier'))
+      .filter((q) => q.eq(q.field('isActive'), true))
+      .collect();
+
+    if (verifiers.length === 0) {
+      return false;
+    }
+
+    // Calculate workload for each verifier (including progress updates)
+    const verifierScores = await Promise.all(
+      verifiers.map(async (verifier) => {
+        // Get verification workload
+        const stats = await VerificationService.getVerifierStats(
+          ctx,
+          verifier._id
+        );
+        const verificationWorkload =
+          stats.pendingVerifications + stats.inProgressVerifications;
+
+        // Get progress update workload
+        const pendingProgressUpdates = await ctx.db
+          .query('progressUpdates')
+          .withIndex('by_verifier', (q) =>
+            q.eq('assignedVerifierId', verifier._id)
+          )
+          .filter((q) => q.eq(q.field('status'), 'pending_review'))
+          .collect();
+
+        const progressWorkload = pendingProgressUpdates.length;
+        const totalWorkload = verificationWorkload + progressWorkload;
+
+        return {
+          verifierId: verifier._id,
+          workload: totalWorkload,
+          score: 100 - totalWorkload * 10, // Lower workload = higher score
+        };
+      })
+    );
+
+    // Filter by max workload
+    const maxWorkload = criteria.maxWorkload || 10;
+    const eligibleVerifiers = verifierScores.filter(
+      (v) => v.workload < maxWorkload
+    );
+
+    if (eligibleVerifiers.length === 0) {
+      return false;
+    }
+
+    // Sort by score and pick best verifier
+    eligibleVerifiers.sort((a, b) => b.score - a.score);
+    const selectedVerifier = eligibleVerifiers[0];
+
+    if (!selectedVerifier) {
+      return false;
+    }
+
+    // Assign verifier to progress update
+    await ctx.db.patch(updateId, {
+      assignedVerifierId: selectedVerifier.verifierId,
+      status: 'pending_review',
+      submittedAt: Date.now(),
+    });
+
+    // Send notification to verifier
+    await NotificationService.notifyProgressReviewAssigned(
+      ctx,
+      selectedVerifier.verifierId,
+      updateId
+    );
+
+    return true;
   }
 }

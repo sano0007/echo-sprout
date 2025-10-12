@@ -1500,6 +1500,171 @@ declare const _default: import('convex/server').SchemaDefinition<
       {},
       {}
     >;
+    roleUpgradeRequests: import('convex/server').TableDefinition<
+      import('convex/values').VObject<
+        {
+          verifierId?: import('convex/values').GenericId<'users'> | undefined;
+          assignedAt?: number | undefined;
+          rejectionReason?: string | undefined;
+          reviewedAt?: number | undefined;
+          reviewNotes?: string | undefined;
+          status: 'under_review' | 'approved' | 'rejected' | 'pending';
+          userId: import('convex/values').GenericId<'users'>;
+          requestedRole: 'project_creator';
+          currentRole: 'credit_buyer';
+          applicationData: {
+            organizationName?: string | undefined;
+            organizationType?: string | undefined;
+            experienceDescription?: string | undefined;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phoneNumber: string;
+            address: string;
+            city: string;
+            country: string;
+            reasonForUpgrade: string;
+          };
+          createdAt: number;
+          updatedAt: number;
+        },
+        {
+          userId: import('convex/values').VId<
+            import('convex/values').GenericId<'users'>,
+            'required'
+          >;
+          requestedRole: import('convex/values').VUnion<
+            'project_creator',
+            [import('convex/values').VLiteral<'project_creator', 'required'>],
+            'required',
+            never
+          >;
+          currentRole: import('convex/values').VUnion<
+            'credit_buyer',
+            [import('convex/values').VLiteral<'credit_buyer', 'required'>],
+            'required',
+            never
+          >;
+          status: import('convex/values').VUnion<
+            'under_review' | 'approved' | 'rejected' | 'pending',
+            [
+              import('convex/values').VLiteral<'pending', 'required'>,
+              import('convex/values').VLiteral<'under_review', 'required'>,
+              import('convex/values').VLiteral<'approved', 'required'>,
+              import('convex/values').VLiteral<'rejected', 'required'>,
+            ],
+            'required',
+            never
+          >;
+          applicationData: import('convex/values').VObject<
+            {
+              organizationName?: string | undefined;
+              organizationType?: string | undefined;
+              experienceDescription?: string | undefined;
+              email: string;
+              firstName: string;
+              lastName: string;
+              phoneNumber: string;
+              address: string;
+              city: string;
+              country: string;
+              reasonForUpgrade: string;
+            },
+            {
+              firstName: import('convex/values').VString<string, 'required'>;
+              lastName: import('convex/values').VString<string, 'required'>;
+              email: import('convex/values').VString<string, 'required'>;
+              organizationName: import('convex/values').VString<
+                string | undefined,
+                'optional'
+              >;
+              organizationType: import('convex/values').VString<
+                string | undefined,
+                'optional'
+              >;
+              phoneNumber: import('convex/values').VString<string, 'required'>;
+              address: import('convex/values').VString<string, 'required'>;
+              city: import('convex/values').VString<string, 'required'>;
+              country: import('convex/values').VString<string, 'required'>;
+              reasonForUpgrade: import('convex/values').VString<
+                string,
+                'required'
+              >;
+              experienceDescription: import('convex/values').VString<
+                string | undefined,
+                'optional'
+              >;
+            },
+            'required',
+            | 'email'
+            | 'firstName'
+            | 'lastName'
+            | 'organizationName'
+            | 'organizationType'
+            | 'phoneNumber'
+            | 'address'
+            | 'city'
+            | 'country'
+            | 'reasonForUpgrade'
+            | 'experienceDescription'
+          >;
+          verifierId: import('convex/values').VId<
+            import('convex/values').GenericId<'users'> | undefined,
+            'optional'
+          >;
+          assignedAt: import('convex/values').VFloat64<
+            number | undefined,
+            'optional'
+          >;
+          reviewedAt: import('convex/values').VFloat64<
+            number | undefined,
+            'optional'
+          >;
+          reviewNotes: import('convex/values').VString<
+            string | undefined,
+            'optional'
+          >;
+          rejectionReason: import('convex/values').VString<
+            string | undefined,
+            'optional'
+          >;
+          createdAt: import('convex/values').VFloat64<number, 'required'>;
+          updatedAt: import('convex/values').VFloat64<number, 'required'>;
+        },
+        'required',
+        | 'status'
+        | 'verifierId'
+        | 'assignedAt'
+        | 'rejectionReason'
+        | 'userId'
+        | 'requestedRole'
+        | 'currentRole'
+        | 'applicationData'
+        | 'reviewedAt'
+        | 'reviewNotes'
+        | 'createdAt'
+        | 'updatedAt'
+        | 'applicationData.email'
+        | 'applicationData.firstName'
+        | 'applicationData.lastName'
+        | 'applicationData.organizationName'
+        | 'applicationData.organizationType'
+        | 'applicationData.phoneNumber'
+        | 'applicationData.address'
+        | 'applicationData.city'
+        | 'applicationData.country'
+        | 'applicationData.reasonForUpgrade'
+        | 'applicationData.experienceDescription'
+      >,
+      {
+        by_user: ['userId', '_creationTime'];
+        by_status: ['status', '_creationTime'];
+        by_verifier: ['verifierId', '_creationTime'];
+        by_status_and_verifier: ['status', 'verifierId', '_creationTime'];
+      },
+      {},
+      {}
+    >;
     verificationMessages: import('convex/server').TableDefinition<
       import('convex/values').VObject<
         {
@@ -1783,10 +1948,10 @@ declare const _default: import('convex/server').SchemaDefinition<
       import('convex/values').VObject<
         {
           rejectionReason?: string | undefined;
-          images?: string[] | undefined;
-          reviewedBy?: import('convex/values').GenericId<'users'> | undefined;
           reviewedAt?: number | undefined;
           reviewNotes?: string | undefined;
+          images?: string[] | undefined;
+          reviewedBy?: import('convex/values').GenericId<'users'> | undefined;
           estimatedReadTime?: number | undefined;
           publishedAt?: number | undefined;
           title: string;
@@ -1900,14 +2065,14 @@ declare const _default: import('convex/server').SchemaDefinition<
         | 'status'
         | 'rejectionReason'
         | 'content'
+        | 'reviewedAt'
+        | 'reviewNotes'
         | 'contentType'
         | 'category'
         | 'tags'
         | 'images'
         | 'authorId'
         | 'reviewedBy'
-        | 'reviewedAt'
-        | 'reviewNotes'
         | 'estimatedReadTime'
         | 'difficultyLevel'
         | 'viewCount'
@@ -2234,8 +2399,8 @@ declare const _default: import('convex/server').SchemaDefinition<
         {
           completedAt?: number | undefined;
           completed: boolean;
-          pathId: import('convex/values').GenericId<'learningPaths'>;
           userId: import('convex/values').GenericId<'users'>;
+          pathId: import('convex/values').GenericId<'learningPaths'>;
           lessonId: import('convex/values').GenericId<'learningPathLessons'>;
           itemType: 'video' | 'pdf';
           itemIndex: number;
@@ -2272,8 +2437,8 @@ declare const _default: import('convex/server').SchemaDefinition<
         'required',
         | 'completed'
         | 'completedAt'
-        | 'pathId'
         | 'userId'
+        | 'pathId'
         | 'lessonId'
         | 'itemType'
         | 'itemIndex'
@@ -2683,9 +2848,9 @@ declare const _default: import('convex/server').SchemaDefinition<
           >;
         },
         'required',
+        | 'userId'
         | 'entityId'
         | 'entityType'
-        | 'userId'
         | 'action'
         | 'oldValues'
         | 'newValues'
@@ -3736,6 +3901,8 @@ declare const _default: import('convex/server').SchemaDefinition<
     escalationConfig: import('convex/server').TableDefinition<
       import('convex/values').VObject<
         {
+          createdAt: number;
+          updatedAt: number;
           createdBy: import('convex/values').GenericId<'users'>;
           severity: 'low' | 'high' | 'medium' | 'critical';
           alertType: string;
@@ -3753,8 +3920,6 @@ declare const _default: import('convex/server').SchemaDefinition<
             }[];
             maxEscalationLevel: number;
           };
-          createdAt: number;
-          updatedAt: number;
         },
         {
           alertType: import('convex/values').VString<string, 'required'>;
@@ -3860,12 +4025,12 @@ declare const _default: import('convex/server').SchemaDefinition<
           updatedAt: import('convex/values').VFloat64<number, 'required'>;
         },
         'required',
+        | 'createdAt'
+        | 'updatedAt'
         | 'createdBy'
         | 'severity'
         | 'alertType'
         | 'rules'
-        | 'createdAt'
-        | 'updatedAt'
         | 'rules.autoEscalationEnabled'
         | 'rules.escalationChain'
         | 'rules.maxEscalationLevel'
@@ -4537,7 +4702,13 @@ declare const _default: import('convex/server').SchemaDefinition<
             | 'pending_review'
             | 'needs_revision'
             | undefined;
+          assignedVerifierId?:
+            | import('convex/values').GenericId<'users'>
+            | undefined;
           verificationNotes?: string | undefined;
+          rejectionReason?: string | undefined;
+          reviewedAt?: number | undefined;
+          reviewNotes?: string | undefined;
           photos?:
             | {
                 cloudinary_public_id: string;
@@ -4780,6 +4951,22 @@ declare const _default: import('convex/server').SchemaDefinition<
             string | undefined,
             'optional'
           >;
+          assignedVerifierId: import('convex/values').VId<
+            import('convex/values').GenericId<'users'> | undefined,
+            'optional'
+          >;
+          reviewedAt: import('convex/values').VFloat64<
+            number | undefined,
+            'optional'
+          >;
+          reviewNotes: import('convex/values').VString<
+            string | undefined,
+            'optional'
+          >;
+          rejectionReason: import('convex/values').VString<
+            string | undefined,
+            'optional'
+          >;
           carbonImpactToDate: import('convex/values').VFloat64<
             number | undefined,
             'optional'
@@ -4803,12 +4990,16 @@ declare const _default: import('convex/server').SchemaDefinition<
         | 'description'
         | 'location'
         | 'status'
+        | 'assignedVerifierId'
         | 'progressPercentage'
         | 'location.name'
         | 'location.lat'
         | 'location.long'
         | 'projectId'
         | 'verificationNotes'
+        | 'rejectionReason'
+        | 'reviewedAt'
+        | 'reviewNotes'
         | 'photos'
         | 'verifiedBy'
         | 'verifiedAt'
@@ -4841,10 +5032,93 @@ declare const _default: import('convex/server').SchemaDefinition<
         by_project: ['projectId', '_creationTime'];
         by_submitter: ['submittedBy', '_creationTime'];
         by_reporter: ['reportedBy', '_creationTime'];
+        by_verifier: ['assignedVerifierId', '_creationTime'];
         by_status: ['status', '_creationTime'];
         by_project_status: ['projectId', 'status', '_creationTime'];
         by_submitted_at: ['submittedAt', '_creationTime'];
         by_reporting_date: ['reportingDate', '_creationTime'];
+      },
+      {},
+      {}
+    >;
+    progressReportRequests: import('convex/server').TableDefinition<
+      import('convex/values').VObject<
+        {
+          requestNotes?: string | undefined;
+          submittedUpdateId?:
+            | import('convex/values').GenericId<'progressUpdates'>
+            | undefined;
+          creatorId: import('convex/values').GenericId<'users'>;
+          status: 'submitted' | 'pending' | 'overdue' | 'cancelled';
+          projectId: import('convex/values').GenericId<'projects'>;
+          dueDate: number;
+          createdAt: number;
+          requestedBy: import('convex/values').GenericId<'users'>;
+          requestType: 'manual' | 'scheduled_monthly' | 'milestone_based';
+        },
+        {
+          projectId: import('convex/values').VId<
+            import('convex/values').GenericId<'projects'>,
+            'required'
+          >;
+          requestedBy: import('convex/values').VId<
+            import('convex/values').GenericId<'users'>,
+            'required'
+          >;
+          creatorId: import('convex/values').VId<
+            import('convex/values').GenericId<'users'>,
+            'required'
+          >;
+          requestType: import('convex/values').VUnion<
+            'manual' | 'scheduled_monthly' | 'milestone_based',
+            [
+              import('convex/values').VLiteral<'manual', 'required'>,
+              import('convex/values').VLiteral<'scheduled_monthly', 'required'>,
+              import('convex/values').VLiteral<'milestone_based', 'required'>,
+            ],
+            'required',
+            never
+          >;
+          status: import('convex/values').VUnion<
+            'submitted' | 'pending' | 'overdue' | 'cancelled',
+            [
+              import('convex/values').VLiteral<'pending', 'required'>,
+              import('convex/values').VLiteral<'submitted', 'required'>,
+              import('convex/values').VLiteral<'overdue', 'required'>,
+              import('convex/values').VLiteral<'cancelled', 'required'>,
+            ],
+            'required',
+            never
+          >;
+          dueDate: import('convex/values').VFloat64<number, 'required'>;
+          requestNotes: import('convex/values').VString<
+            string | undefined,
+            'optional'
+          >;
+          submittedUpdateId: import('convex/values').VId<
+            import('convex/values').GenericId<'progressUpdates'> | undefined,
+            'optional'
+          >;
+          createdAt: import('convex/values').VFloat64<number, 'required'>;
+        },
+        'required',
+        | 'creatorId'
+        | 'status'
+        | 'projectId'
+        | 'dueDate'
+        | 'createdAt'
+        | 'requestedBy'
+        | 'requestType'
+        | 'requestNotes'
+        | 'submittedUpdateId'
+      >,
+      {
+        by_creator: ['creatorId', '_creationTime'];
+        by_project: ['projectId', '_creationTime'];
+        by_status: ['status', '_creationTime'];
+        by_creator_status: ['creatorId', 'status', '_creationTime'];
+        by_project_status: ['projectId', 'status', '_creationTime'];
+        by_due_date: ['dueDate', '_creationTime'];
       },
       {},
       {}

@@ -11,6 +11,7 @@ import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
 import { Toaster } from '../components/ui/toaster';
 import ConvexClientProvider from '../providers/ConvexProviderWithClerk';
+import { NavBar } from '@/components/NavBar';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -42,6 +43,7 @@ export default function RootLayout({
           <ConvexClientProvider>
             <div className="min-h-screen flex flex-col">
               <Navigation />
+              <NavBar />
               <main className="flex-1">{children}</main>
               <Footer />
               <Toaster />

@@ -65,7 +65,7 @@ export function formatCurrency(amount: number, currency: Currency): string {
     case 'USD':
       return `$${roundedAmount.toLocaleString()}`;
     case 'INR':
-      return `₹${roundedAmount.toLocaleString('en-IN')}`;
+      return `$${roundedAmount.toLocaleString('en-IN')}`;
     case 'LKR':
       return `Rs. ${roundedAmount.toLocaleString()}`;
     default:
@@ -81,7 +81,7 @@ export function getCurrencySymbol(currency: Currency): string {
     case 'USD':
       return '$';
     case 'INR':
-      return '₹';
+      return '$';
     case 'LKR':
       return 'Rs.';
     default:

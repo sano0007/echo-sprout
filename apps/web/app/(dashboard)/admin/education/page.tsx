@@ -845,7 +845,6 @@ const EducationAnalytics = ({
         const canvas = await html2canvas(root, {
           useCORS: true,
           logging: false,
-          backgroundColor: '#ffffff',
           width: root.scrollWidth,
           height: root.scrollHeight,
         });
@@ -916,7 +915,6 @@ const EducationAnalytics = ({
           const canvas = await html2canvas(el, {
             useCORS: true,
             logging: false,
-            backgroundColor: '#ffffff',
             width: w,
             height: h,
           });

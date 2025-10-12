@@ -1,40 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { HeroSection } from '@/components/landing/HeroSection';
+import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
+import { FAQSection } from '@/components/landing/FAQSection';
 
 export default function Home() {
   return (
     <div>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-green-600 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Building a Sustainable Future
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-              The world&apos;s most transparent carbon credit marketplace
-              connecting project developers, verifiers, and buyers in the fight
-              against climate change.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/marketplace"
-                className="bg-white text-blue-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors"
-              >
-                Browse Credits
-              </Link>
-              <Link
-                href="/projects/register"
-                className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
-              >
-                Register Project
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      <HeroSection />
       {/* Stats Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -60,6 +34,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* How It Works Section */}
+      <HowItWorksSection />
 
       {/* Features Section */}
       <section className="py-20">
@@ -114,6 +91,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQSection />
 
       {/* CTA Section */}
       <section className="py-20 bg-gray-900 text-white">

@@ -12,6 +12,7 @@ import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
+<<<<<<< HEAD
 } from 'convex/server';
 import type * as alert_escalation from '../alert_escalation.js';
 import type * as alert_generation from '../alert_generation.js';
@@ -60,6 +61,12 @@ import type * as verifications from '../verifications.js';
 import type * as verifier_assignment from '../verifier_assignment.js';
 import type * as viva_demo_seed from '../viva_demo_seed.js';
 import type * as workflow from '../workflow.js';
+import type * as scheduled_tasks from '../scheduled_tasks.js';
+import type * as storage_upload from '../storage_upload.js';
+
+=======
+} from "convex/server";
+>>>>>>> origin/main
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -108,6 +115,8 @@ declare const fullApi: ApiFromModules<{
   projects: typeof projects;
   report_template_engine: typeof report_template_engine;
   run_seed: typeof run_seed;
+  scheduled_tasks: typeof scheduled_tasks;
+  storage_upload: typeof storage_upload;
   third_party_validation: typeof third_party_validation;
   transactions: typeof transactions;
   trend_analysis: typeof trend_analysis;

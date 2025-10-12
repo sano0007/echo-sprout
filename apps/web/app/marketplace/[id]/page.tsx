@@ -155,7 +155,7 @@ export default function ProjectDetail() {
                   <img
                     src={featuredImages[currentImageIndex]?.media.fileUrl}
                     alt={`${project.title} - Image ${currentImageIndex + 1}`}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.src =
                         'https://ntxgroupsa.com/wp-content/uploads/2019/11/project-placeholder.jpg';

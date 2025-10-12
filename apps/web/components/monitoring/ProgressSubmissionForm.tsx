@@ -9,6 +9,7 @@ interface ProgressSubmissionFormProps {
   projectType: string;
   onSubmit: (data: ProgressUpdateData) => void;
   onCancel?: () => void;
+  existingUpdate?: any; // For resubmitting after revision request
 }
 
 interface ProgressUpdateData {
@@ -37,20 +38,23 @@ export default function ProgressSubmissionForm({
   projectType,
   onSubmit,
   onCancel,
+  existingUpdate,
 }: ProgressSubmissionFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<ProgressUpdateData>({
-    title: '',
-    description: '',
-    progressPercentage: 0,
-    updateType: 'measurement',
-    measurementData: {},
+    title: existingUpdate?.title || '',
+    description: existingUpdate?.description || '',
+    progressPercentage: existingUpdate?.progressPercentage || 0,
+    updateType: existingUpdate?.updateType || 'measurement',
+    measurementData: existingUpdate?.measurementData || {},
     photos: [],
-    nextSteps: '',
-    challenges: '',
+    nextSteps: existingUpdate?.nextSteps || '',
+    challenges: existingUpdate?.challenges || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
+  const [previewPhotos, setPreviewPhotos] = useState<string[]>(
+    existingUpdate?.photoUrls || []
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateTypeOptions = [
@@ -110,7 +114,7 @@ export default function ProgressSubmissionForm({
     const newPhotos = [...formData.photos, ...files];
     setFormData((prev) => ({ ...prev, photos: newPhotos }));
 
-    // Create preview URLs
+    // Create preview URLs (for both images and PDFs)
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setPreviewPhotos((prev) => [...prev, ...newPreviews]);
   };
@@ -174,9 +178,50 @@ export default function ProgressSubmissionForm({
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
       <div className="bg-blue-600 text-white p-6">
-        <h2 className="text-2xl font-bold">Submit Progress Update</h2>
+        <h2 className="text-2xl font-bold">
+          {existingUpdate
+            ? 'Resubmit Progress Update'
+            : 'Submit Progress Update'}
+        </h2>
         <p className="text-blue-100 mt-1">Project ID: {projectId}</p>
       </div>
+
+      {/* Revision Notes Banner */}
+      {existingUpdate?.status === 'needs_revision' &&
+        existingUpdate?.reviewNotes && (
+          <div className="bg-orange-50 border-l-4 border-orange-500 p-4 mx-6 mt-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-orange-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-orange-800">
+                  Revision Required
+                </h3>
+                <div className="mt-2 text-sm text-orange-700">
+                  <p>
+                    <strong>Verifier's Notes:</strong>{' '}
+                    {existingUpdate.reviewNotes}
+                  </p>
+                  <p className="mt-2">
+                    Please address the feedback above and resubmit your progress
+                    update.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* Progress Steps */}
       <div className="bg-gray-50 px-6 py-4">
@@ -390,11 +435,11 @@ export default function ProgressSubmissionForm({
               >
                 <CloudUpload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-lg font-medium text-gray-700">
-                  Upload Photos
+                  Upload Documentation
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Drag and drop or click to select files (JPG, PNG, max 10MB
-                  each)
+                  Drag and drop or click to select files (Images: JPG, PNG |
+                  Documents: PDF, max 10MB each)
                 </p>
               </div>
 
@@ -402,30 +447,56 @@ export default function ProgressSubmissionForm({
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/*,application/pdf"
                 onChange={handlePhotoUpload}
                 className="hidden"
               />
 
               {previewPhotos.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  {previewPhotos.map((preview, index) => (
-                    <div key={index} className="relative group w-full h-32">
-                      <Image
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        fill
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                        className="object-cover rounded-lg"
-                      />
-                      <button
-                        onClick={() => removePhoto(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
+                  {previewPhotos.map((preview, index) => {
+                    const file = formData.photos[index];
+                    const isPDF = file?.type === 'application/pdf';
+
+                    return (
+                      <div key={index} className="relative group w-full h-32">
+                        {isPDF ? (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg border-2 border-gray-300">
+                            <div className="text-center">
+                              <svg
+                                className="w-12 h-12 mx-auto text-red-500"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              <p className="text-xs mt-1 text-gray-600 truncate px-2">
+                                {file?.name}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <Image
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            fill
+                            sizes="(max-width: 768px) 50vw, 25vw"
+                            className="object-cover rounded-lg"
+                          />
+                        )}
+                        <button
+                          onClick={() => removePhoto(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

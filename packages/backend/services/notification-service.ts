@@ -13,7 +13,16 @@ export type NotificationType =
   | 'deadline_overdue'
   | 'document_uploaded'
   | 'document_verified'
-  | 'quality_score_updated';
+  | 'quality_score_updated'
+  | 'upgrade_request_assigned'
+  | 'role_upgrade_approved'
+  | 'role_upgrade_rejected'
+  | 'progress_review_assigned'
+  | 'progress_approved'
+  | 'progress_rejected'
+  | 'progress_needs_revision'
+  | 'progress_report_requested'
+  | 'progress_report_overdue';
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
@@ -59,8 +68,6 @@ export class NotificationService {
       expiresAt: undefined,
       metadata: undefined,
       isRead: false,
-      isEmailSent: false,
-      isPushSent: false,
       isArchived: false,
       tags: undefined,
       batchId: undefined,
@@ -375,6 +382,170 @@ export class NotificationService {
       priority: 'normal',
       relatedEntityId: documentId,
       relatedEntityType: 'document',
+    });
+  }
+
+  // Role Upgrade Request Notifications
+  public static async notifyUpgradeRequestAssigned(
+    ctx: MutationCtx,
+    verifierId: Id<'users'>,
+    requestId: Id<'roleUpgradeRequests'>
+  ) {
+    const request = await ctx.db.get(requestId);
+    if (!request) return;
+
+    const applicant = await ctx.db.get(request.userId);
+    if (!applicant) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: verifierId,
+      type: 'upgrade_request_assigned',
+      title: 'New Role Upgrade Request Assigned',
+      message: `Review role upgrade request from ${applicant.firstName} ${applicant.lastName}`,
+      priority: 'normal',
+      relatedEntityId: requestId,
+    });
+  }
+
+  public static async notifyRoleUpgradeApproved(
+    ctx: MutationCtx,
+    userId: Id<'users'>
+  ) {
+    return await this.createNotification(ctx, {
+      recipientId: userId,
+      type: 'role_upgrade_approved',
+      title: 'Role Upgrade Approved',
+      message:
+        'Your project creator role upgrade has been approved! You can now create and manage carbon credit projects.',
+      priority: 'high',
+    });
+  }
+
+  public static async notifyRoleUpgradeRejected(
+    ctx: MutationCtx,
+    userId: Id<'users'>,
+    reason: string
+  ) {
+    return await this.createNotification(ctx, {
+      recipientId: userId,
+      type: 'role_upgrade_rejected',
+      title: 'Role Upgrade Request Rejected',
+      message: `Your upgrade request was rejected. Reason: ${reason}. You can submit a new request after addressing the issues.`,
+      priority: 'normal',
+    });
+  }
+
+  // Progress Update Review Notifications
+  public static async notifyProgressReviewAssigned(
+    ctx: MutationCtx,
+    verifierId: Id<'users'>,
+    updateId: Id<'progressUpdates'>
+  ) {
+    const update = await ctx.db.get(updateId);
+    if (!update) return;
+
+    const project = await ctx.db.get(update.projectId);
+    if (!project) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: verifierId,
+      type: 'progress_review_assigned',
+      title: 'New Progress Update Assigned for Review',
+      message: `Review progress update for project: ${project.title}`,
+      priority: 'normal',
+      relatedEntityId: updateId,
+    });
+  }
+
+  public static async notifyProgressApproved(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    updateId: Id<'progressUpdates'>
+  ) {
+    const update = await ctx.db.get(updateId);
+    if (!update) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_approved',
+      title: 'Progress Update Approved',
+      message: `Your progress update "${update.title}" has been approved by the verifier.`,
+      priority: 'normal',
+      relatedEntityId: updateId,
+    });
+  }
+
+  public static async notifyProgressRejected(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    updateId: Id<'progressUpdates'>,
+    reason: string
+  ) {
+    const update = await ctx.db.get(updateId);
+    if (!update) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_rejected',
+      title: 'Progress Update Rejected',
+      message: `Your progress update "${update.title}" was rejected. Reason: ${reason}`,
+      priority: 'high',
+      relatedEntityId: updateId,
+    });
+  }
+
+  public static async notifyProgressNeedsRevision(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    updateId: Id<'progressUpdates'>,
+    revisionNotes: string
+  ) {
+    const update = await ctx.db.get(updateId);
+    if (!update) return;
+
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_needs_revision',
+      title: 'Progress Update Needs Revision',
+      message: `Your progress update "${update.title}" needs revision. Notes: ${revisionNotes}`,
+      priority: 'normal',
+      relatedEntityId: updateId,
+    });
+  }
+
+  public static async notifyProgressReportRequested(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    projectTitle: string,
+    dueDate: number,
+    requestNotes: string | undefined,
+    requestedBy: string
+  ) {
+    const dueDateStr = new Date(dueDate).toLocaleDateString();
+    const notesText = requestNotes ? ` Notes: ${requestNotes}` : '';
+
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_report_requested',
+      title: 'Progress Report Requested',
+      message: `${requestedBy} has requested a progress report for "${projectTitle}". Due by ${dueDateStr}.${notesText}`,
+      priority: 'high',
+    });
+  }
+
+  public static async notifyProgressReportOverdue(
+    ctx: MutationCtx,
+    creatorId: Id<'users'>,
+    projectTitle: string,
+    requestId: Id<'progressReportRequests'>
+  ) {
+    return await this.createNotification(ctx, {
+      recipientId: creatorId,
+      type: 'progress_report_overdue',
+      title: 'Progress Report Overdue',
+      message: `Your progress report for "${projectTitle}" is overdue. Please submit it as soon as possible.`,
+      priority: 'urgent',
+      relatedEntityId: requestId,
     });
   }
 }

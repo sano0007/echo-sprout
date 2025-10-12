@@ -21,8 +21,13 @@ export default function RegisterPage() {
   const upgradeToProjectCreator = useMutation(
     api.users.upgradeToProjectCreator
   );
+  const submitRoleUpgradeRequest = useMutation(
+    api.users.submitRoleUpgradeRequest
+  );
 
   const currentUser = useQuery(api.users.getCurrentUser);
+  const upgradeRequest = useQuery(api.users.getMyUpgradeRequest);
+
   const [formData, setFormData] = useState<UserRegistrationData>({
     email: '',
     firstName: '',
@@ -39,6 +44,11 @@ export default function RegisterPage() {
     website: '',
     description: '',
     location: '',
+  });
+
+  const [upgradeFormData, setUpgradeFormData] = useState({
+    reasonForUpgrade: '',
+    experienceDescription: '',
   });
 
   useEffect(() => {
@@ -161,15 +171,28 @@ export default function RegisterPage() {
   };
 
   const handleUpgradeToCreator = async () => {
+    // Validate upgrade form data
+    if (!upgradeFormData.reasonForUpgrade.trim()) {
+      alert('Please provide a reason for becoming a Project Creator');
+      return;
+    }
+
     try {
       setUpgradeLoading(true);
-      const result = await upgradeToProjectCreator();
+      const result = await submitRoleUpgradeRequest({
+        reasonForUpgrade: upgradeFormData.reasonForUpgrade,
+        experienceDescription:
+          upgradeFormData.experienceDescription || undefined,
+      });
       setShowUpgradeSuccess(true);
       setTimeout(() => setShowUpgradeSuccess(false), 5000);
-      console.log('Upgrade successful:', result.message);
-    } catch (error) {
+      console.log('Upgrade request submitted:', result.message);
+      alert(
+        'Upgrade request submitted successfully! A verifier will review your application.'
+      );
+    } catch (error: any) {
       console.error('Upgrade error:', error);
-      alert('Upgrade failed. Please try again.');
+      alert(error.message || 'Upgrade request failed. Please try again.');
     } finally {
       setUpgradeLoading(false);
     }
@@ -602,38 +625,152 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Upgrade to Project Creator Section */}
-                {/*<div className="border-t pt-6">*/}
-                {/*  <div className="bg-green-50 border border-green-200 rounded-lg p-6">*/}
-                {/*    <div className="flex items-start">*/}
-                {/*      <span className="text-3xl mr-4">🌱</span>*/}
-                {/*      <div className="flex-1">*/}
-                {/*        <h3 className="text-lg font-semibold text-green-900 mb-2">*/}
-                {/*          Want to Create Carbon Credit Projects?*/}
-                {/*        </h3>*/}
-                {/*        <p className="text-green-700 mb-4">*/}
-                {/*          Upgrade to a Project Creator account to develop and*/}
-                {/*          manage your own carbon credit projects. You can*/}
-                {/*          upgrade anytime after registration.*/}
-                {/*        </p>*/}
-                {/*        <button*/}
-                {/*          onClick={handleUpgradeToCreator}*/}
-                {/*          disabled={upgradeLoading}*/}
-                {/*          className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"*/}
-                {/*        >*/}
-                {/*          {upgradeLoading*/}
-                {/*            ? 'Upgrading...'*/}
-                {/*            : 'Upgrade to Project Creator'}*/}
-                {/*        </button>*/}
-                {/*        {showUpgradeSuccess && (*/}
-                {/*          <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded text-green-800 text-sm">*/}
-                {/*            ✅ Upgrade request submitted! You'll receive an*/}
-                {/*            email with next steps.*/}
-                {/*          </div>*/}
-                {/*        )}*/}
-                {/*      </div>*/}
-                {/*    </div>*/}
-                {/*  </div>*/}
-                {/*</div>*/}
+                {currentUser?.role === 'credit_buyer' && (
+                  <div className="border-t pt-6">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                      {upgradeRequest?.status === 'pending' ||
+                      upgradeRequest?.status === 'under_review' ? (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                          <p className="text-yellow-800 font-medium">
+                            Your upgrade request is{' '}
+                            {upgradeRequest.status === 'pending'
+                              ? 'pending assignment'
+                              : 'under review'}
+                          </p>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            Submitted on{' '}
+                            {new Date(
+                              upgradeRequest.createdAt
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ) : upgradeRequest?.status === 'rejected' ? (
+                        <div>
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                            <p className="text-red-800 font-medium">
+                              Previous request rejected
+                            </p>
+                            <p className="text-sm text-red-700 mt-1">
+                              Reason: {upgradeRequest.rejectionReason}
+                            </p>
+                          </div>
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-green-900">
+                              Apply Again for Project Creator Role
+                            </h3>
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Why do you want to become a Project Creator? *
+                              </label>
+                              <textarea
+                                value={upgradeFormData.reasonForUpgrade}
+                                onChange={(e) =>
+                                  setUpgradeFormData({
+                                    ...upgradeFormData,
+                                    reasonForUpgrade: e.target.value,
+                                  })
+                                }
+                                className="w-full p-3 border rounded-lg"
+                                rows={4}
+                                placeholder="Explain your motivation and goals..."
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Relevant Experience (Optional)
+                              </label>
+                              <textarea
+                                value={upgradeFormData.experienceDescription}
+                                onChange={(e) =>
+                                  setUpgradeFormData({
+                                    ...upgradeFormData,
+                                    experienceDescription: e.target.value,
+                                  })
+                                }
+                                className="w-full p-3 border rounded-lg"
+                                rows={3}
+                                placeholder="Describe your experience with environmental projects..."
+                              />
+                            </div>
+                            <button
+                              onClick={handleUpgradeToCreator}
+                              disabled={upgradeLoading}
+                              className="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                            >
+                              {upgradeLoading
+                                ? 'Submitting...'
+                                : 'Submit New Request'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start">
+                          <span className="text-3xl mr-4">🌱</span>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-green-900 mb-2">
+                              Want to Create Carbon Credit Projects?
+                            </h3>
+                            <p className="text-green-700 mb-4">
+                              Apply to upgrade to a Project Creator account.
+                              Your application will be reviewed by a verifier.
+                            </p>
+                            <div className="space-y-4 mb-4">
+                              <div>
+                                <label className="block text-sm font-medium text-green-900 mb-2">
+                                  Why do you want to become a Project Creator? *
+                                </label>
+                                <textarea
+                                  value={upgradeFormData.reasonForUpgrade}
+                                  onChange={(e) =>
+                                    setUpgradeFormData({
+                                      ...upgradeFormData,
+                                      reasonForUpgrade: e.target.value,
+                                    })
+                                  }
+                                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                                  rows={4}
+                                  placeholder="Explain your motivation, goals, and why you want to create carbon credit projects..."
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-green-900 mb-2">
+                                  Relevant Experience (Optional)
+                                </label>
+                                <textarea
+                                  value={upgradeFormData.experienceDescription}
+                                  onChange={(e) =>
+                                    setUpgradeFormData({
+                                      ...upgradeFormData,
+                                      experienceDescription: e.target.value,
+                                    })
+                                  }
+                                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
+                                  rows={3}
+                                  placeholder="Describe any relevant experience with environmental projects, carbon credits, or sustainability initiatives..."
+                                />
+                              </div>
+                            </div>
+                            <button
+                              onClick={handleUpgradeToCreator}
+                              disabled={upgradeLoading}
+                              className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {upgradeLoading
+                                ? 'Submitting...'
+                                : 'Apply for Project Creator Role'}
+                            </button>
+                            {showUpgradeSuccess && (
+                              <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded text-green-800 text-sm">
+                                ✅ Upgrade request submitted! A verifier will
+                                review your application.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/*<div className="border-t pt-6">*/}
                 {/*  <label className="flex items-start">*/}

@@ -1,7 +1,6 @@
-import { v } from 'convex/values';
-import { action, internalAction, internalQuery } from './_generated/server';
-import { api } from './_generated/api';
-import { internal } from './_generated/api';
+import {v} from 'convex/values';
+import {action} from './_generated/server';
+import {api, internal} from './_generated/api';
 
 /**
  * FIXED PDF GENERATION SYSTEM
@@ -77,8 +76,8 @@ export const generateWorkingPDFReport = action({
         progress: 80,
       });
 
-      // Save PDF content (in a real implementation, this would be uploaded to storage)
-      const fileUrl = await savePDFContent(pdfContent, report);
+      // Save PDF content to Convex Storage
+      const fileUrl = await savePDFContent(ctx, pdfContent, report);
       const fileSize = JSON.stringify(pdfContent).length; // Approximate size
 
       // Update status to completed
@@ -559,14 +558,33 @@ function generateMockAnalyticsData(report: any) {
   };
 }
 
-async function savePDFContent(pdfContent: any, report: any): Promise<string> {
-  // In a real implementation, this would:
-  // 1. Convert the content to actual PDF using a server-side library
-  // 2. Upload to cloud storage (S3, Cloudinary, etc.)
-  // 3. Return the public URL
+async function savePDFContent(
+  ctx: any,
+  pdfContent: any,
+  report: any
+): Promise<string> {
+  // Import storage upload utilities
+  const { generatePDFData } = await import('../lib/server-pdf-generator');
+  const { uploadPDFReport } = await import('./storage_upload');
 
-  // For now, return a mock URL that includes the report data as a query parameter
-  // This allows the download to work with the content
-  const encodedContent = encodeURIComponent(JSON.stringify(pdfContent));
-  return `/api/pdf-reports/${report._id}/download?content=${encodedContent}`;
+  try {
+    // Generate PDF data (HTML + JSON)
+    const pdfData = await generatePDFData(pdfContent);
+
+    // Upload to Convex Storage
+    const uploadResult = await uploadPDFReport(
+      ctx,
+      pdfData,
+      report._id,
+      report.title
+    );
+
+    // Return the HTML URL (primary download link)
+    return uploadResult.htmlUrl;
+  } catch (error) {
+    console.error('Error saving PDF content:', error);
+    // Fallback to mock URL if upload fails
+    const encodedContent = encodeURIComponent(JSON.stringify(pdfContent));
+    return `/api/pdf-reports/${report._id}/download?content=${encodedContent}`;
+  }
 }

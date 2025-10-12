@@ -3,11 +3,9 @@ import {
   Bell,
   BookOpen,
   Coins,
-  Home,
   LogOut,
   Monitor,
   Search,
-  Settings,
   User,
   Users,
 } from 'lucide-react';
@@ -34,12 +32,6 @@ import {
 } from '@/components/ui/sidebar';
 
 const adminNavItems = [
-  {
-    title: 'Dashboard',
-    icon: Home,
-    url: '/admin/dashboard',
-    badge: null,
-  },
   {
     title: 'Analytics',
     icon: BarChart3,
@@ -68,12 +60,6 @@ const adminNavItems = [
     title: 'Monitoring System',
     icon: Monitor,
     url: '/admin/monitoring',
-    badge: null,
-  },
-  {
-    title: 'Settings',
-    icon: Settings,
-    url: '/admin/settings',
     badge: null,
   },
 ];
