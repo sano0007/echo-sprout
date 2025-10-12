@@ -1297,7 +1297,7 @@ export default function CreatorDashboard() {
                               }
                               title="Delete project"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4 text-red-600" />
                             </Button>
                           </div>
                         </div>
