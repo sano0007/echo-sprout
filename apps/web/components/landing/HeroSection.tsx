@@ -10,9 +10,7 @@ const spaceGrotesk = Space_Grotesk({
   weight: ['700'],
 });
 
-const heroImages = [
-  BgImage1,
-];
+const heroImages = [BgImage1];
 
 export const HeroSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);

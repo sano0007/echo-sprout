@@ -24,7 +24,7 @@ export const FAQSection = () => {
     {
       question: 'Who can register a carbon credit project?',
       answer:
-        'Anyone with an environmental project that reduces or removes greenhouse gas emissions can register. This includes reforestation projects, renewable energy initiatives, methane capture programs, and other qualifying environmental projects. You\'ll need detailed documentation of your project\'s expected impact.',
+        "Anyone with an environmental project that reduces or removes greenhouse gas emissions can register. This includes reforestation projects, renewable energy initiatives, methane capture programs, and other qualifying environmental projects. You'll need detailed documentation of your project's expected impact.",
     },
     {
       question: 'What fees does EcoSprout charge?',
@@ -49,7 +49,7 @@ export const FAQSection = () => {
     {
       question: 'How do I get started as a buyer?',
       answer:
-        'Simply create an account, browse our marketplace of verified projects, and select credits that align with your sustainability goals. You can filter by project type, location, certification standard, and price. Payment is secure, and you\'ll receive instant confirmation of your purchase.',
+        "Simply create an account, browse our marketplace of verified projects, and select credits that align with your sustainability goals. You can filter by project type, location, certification standard, and price. Payment is secure, and you'll receive instant confirmation of your purchase.",
     },
     {
       question: 'What support is available for project creators?',

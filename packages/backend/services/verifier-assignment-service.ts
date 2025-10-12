@@ -574,7 +574,9 @@ export class VerifierAssignmentService {
         // Get progress update workload
         const pendingProgressUpdates = await ctx.db
           .query('progressUpdates')
-          .withIndex('by_verifier', (q) => q.eq('assignedVerifierId', verifier._id))
+          .withIndex('by_verifier', (q) =>
+            q.eq('assignedVerifierId', verifier._id)
+          )
           .filter((q) => q.eq(q.field('status'), 'pending_review'))
           .collect();
 

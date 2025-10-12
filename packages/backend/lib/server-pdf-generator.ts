@@ -6,7 +6,7 @@
  * in a Node.js environment.
  */
 
-import type { PDFTemplateData, PDFSection } from './pdf-types';
+import type { PDFSection, PDFTemplateData } from './pdf-types';
 
 /**
  * Generate PDF content from template data
@@ -235,14 +235,16 @@ export class ServerPDFGenerator {
   private static renderSections(sections: PDFSection[]): string {
     return sections
       .sort((a, b) => a.order - b.order)
-      .map(section => `
+      .map(
+        (section) => `
         <div class="section">
           <h2 class="section-title">${this.escapeHtml(section.title)}</h2>
           <div class="section-content">
             ${this.renderSectionContent(section)}
           </div>
         </div>
-      `)
+      `
+      )
       .join('\n');
   }
 
@@ -281,20 +283,27 @@ export class ServerPDFGenerator {
   /**
    * Render table HTML
    */
-  private static renderTable(tableData: { headers: string[]; rows: string[][] }): string {
+  private static renderTable(tableData: {
+    headers: string[];
+    rows: string[][];
+  }): string {
     return `
       <table>
         <thead>
           <tr>
-            ${tableData.headers.map(header => `<th>${this.escapeHtml(header)}</th>`).join('')}
+            ${tableData.headers.map((header) => `<th>${this.escapeHtml(header)}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
-          ${tableData.rows.map(row => `
+          ${tableData.rows
+            .map(
+              (row) => `
             <tr>
-              ${row.map(cell => `<td>${this.escapeHtml(cell)}</td>`).join('')}
+              ${row.map((cell) => `<td>${this.escapeHtml(cell)}</td>`).join('')}
             </tr>
-          `).join('')}
+          `
+            )
+            .join('')}
         </tbody>
       </table>
     `;
@@ -310,7 +319,7 @@ export class ServerPDFGenerator {
       <div class="section">
         <h2 class="section-title">Key Metrics</h2>
         <div class="metrics-grid">
-          ${metrics.map(metric => this.renderMetricCard(metric)).join('\n')}
+          ${metrics.map((metric) => this.renderMetricCard(metric)).join('\n')}
         </div>
       </div>
     `;
@@ -320,23 +329,35 @@ export class ServerPDFGenerator {
    * Render metric card
    */
   private static renderMetricCard(metric: any): string {
-    const changeClass = metric.changeType === 'increase' ? 'positive' :
-                       metric.changeType === 'decrease' ? 'negative' : 'neutral';
+    const changeClass =
+      metric.changeType === 'increase'
+        ? 'positive'
+        : metric.changeType === 'decrease'
+          ? 'negative'
+          : 'neutral';
 
     return `
       <div class="metric-card">
         <div class="metric-title">${this.escapeHtml(metric.name)}</div>
         <div class="metric-value">${this.formatMetricValue(metric.value, metric.format, metric.unit)}</div>
-        ${metric.change !== undefined ? `
+        ${
+          metric.change !== undefined
+            ? `
           <div class="metric-change ${changeClass}">
             ${metric.change > 0 ? '+' : ''}${metric.change.toFixed(1)}%
           </div>
-        ` : ''}
-        ${metric.description ? `
+        `
+            : ''
+        }
+        ${
+          metric.description
+            ? `
           <div style="font-size: 11px; color: #64748b; margin-top: 5px;">
             ${this.escapeHtml(metric.description)}
           </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
     `;
   }
@@ -344,7 +365,11 @@ export class ServerPDFGenerator {
   /**
    * Format metric value
    */
-  private static formatMetricValue(value: any, format: string, unit: string): string {
+  private static formatMetricValue(
+    value: any,
+    format: string,
+    unit: string
+  ): string {
     if (typeof value === 'string') return this.escapeHtml(value);
 
     switch (format) {
@@ -378,9 +403,9 @@ export class ServerPDFGenerator {
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
-      "'": '&#039;'
+      "'": '&#039;',
     };
-    return String(text).replace(/[&<>"']/g, m => map[m] || m);
+    return String(text).replace(/[&<>"']/g, (m) => map[m] || m);
   }
 
   /**
@@ -388,16 +413,20 @@ export class ServerPDFGenerator {
    * This is the preferred approach since @react-pdf/renderer works better client-side
    */
   static generateStructuredData(data: PDFTemplateData): string {
-    return JSON.stringify({
-      version: '1.0',
-      type: 'pdf-template',
-      data: data,
-      metadata: {
-        generatedAt: data.generatedAt.toISOString(),
-        generator: 'ServerPDFGenerator',
-        format: 'EcoSprout PDF Template v1.0'
-      }
-    }, null, 2);
+    return JSON.stringify(
+      {
+        version: '1.0',
+        type: 'pdf-template',
+        data: data,
+        metadata: {
+          generatedAt: data.generatedAt.toISOString(),
+          generator: 'ServerPDFGenerator',
+          format: 'EcoSprout PDF Template v1.0',
+        },
+      },
+      null,
+      2
+    );
   }
 }
 
@@ -415,6 +444,6 @@ export async function generatePDFData(templateData: PDFTemplateData): Promise<{
   return {
     html,
     json,
-    size: html.length + json.length
+    size: html.length + json.length,
   };
 }
