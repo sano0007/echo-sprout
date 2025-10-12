@@ -12,61 +12,56 @@ import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
-<<<<<<< HEAD
-} from 'convex/server';
-import type * as alert_escalation from '../alert_escalation.js';
-import type * as alert_generation from '../alert_generation.js';
-import type * as alert_management from '../alert_management.js';
-import type * as analytics from '../analytics.js';
-import type * as analytics_dashboard_reports from '../analytics_dashboard_reports.js';
-import type * as analytics_engine from '../analytics_engine.js';
-import type * as automated_monitoring from '../automated_monitoring.js';
-import type * as buyer_dashboard from '../buyer_dashboard.js';
-import type * as buyer_impact_reports from '../buyer_impact_reports.js';
-import type * as credit_batch_management from '../credit_batch_management.js';
-import type * as credit_calculation from '../credit_calculation.js';
-import type * as crons from '../crons.js';
-import type * as documents from '../documents.js';
-import type * as files from '../files.js';
-import type * as fixed_pdf_generation from '../fixed_pdf_generation.js';
-import type * as forum from '../forum.js';
-import type * as http from '../http.js';
-import type * as impact_validation from '../impact_validation.js';
-import type * as learn from '../learn.js';
-import type * as marketplace from '../marketplace.js';
-import type * as monitoring from '../monitoring.js';
-import type * as monitoring_admin from '../monitoring_admin.js';
-import type * as monitoring_auth from '../monitoring_auth.js';
-import type * as monitoring_config from '../monitoring_config.js';
-import type * as monitoring_crud from '../monitoring_crud.js';
-import type * as monitoring_index from '../monitoring_index.js';
-import type * as monitoring_migration from '../monitoring_migration.js';
-import type * as monitoring_utils from '../monitoring_utils.js';
-import type * as notifications from '../notifications.js';
-import type * as pdf_reports from '../pdf_reports.js';
-import type * as permissions from '../permissions.js';
-import type * as progress_updates from '../progress_updates.js';
-import type * as progress_validation from '../progress_validation.js';
-import type * as project_progress_reports from '../project_progress_reports.js';
-import type * as project_validators from '../project_validators.js';
-import type * as projects from '../projects.js';
-import type * as report_template_engine from '../report_template_engine.js';
-import type * as run_seed from '../run_seed.js';
-import type * as third_party_validation from '../third_party_validation.js';
-import type * as transactions from '../transactions.js';
-import type * as trend_analysis from '../trend_analysis.js';
-import type * as users from '../users.js';
-import type * as verificationMessages from '../verificationMessages.js';
-import type * as verifications from '../verifications.js';
-import type * as verifier_assignment from '../verifier_assignment.js';
-import type * as viva_demo_seed from '../viva_demo_seed.js';
-import type * as workflow from '../workflow.js';
-import type * as scheduled_tasks from '../scheduled_tasks.js';
-import type * as storage_upload from '../storage_upload.js';
-
-=======
 } from "convex/server";
->>>>>>> origin/main
+import type * as alert_escalation from "../alert_escalation.js";
+import type * as alert_generation from "../alert_generation.js";
+import type * as alert_management from "../alert_management.js";
+import type * as analytics from "../analytics.js";
+import type * as analytics_dashboard_reports from "../analytics_dashboard_reports.js";
+import type * as analytics_engine from "../analytics_engine.js";
+import type * as automated_monitoring from "../automated_monitoring.js";
+import type * as buyer_dashboard from "../buyer_dashboard.js";
+import type * as buyer_impact_reports from "../buyer_impact_reports.js";
+import type * as credit_batch_management from "../credit_batch_management.js";
+import type * as credit_calculation from "../credit_calculation.js";
+import type * as crons from "../crons.js";
+import type * as documents from "../documents.js";
+import type * as files from "../files.js";
+import type * as fixed_pdf_generation from "../fixed_pdf_generation.js";
+import type * as forum from "../forum.js";
+import type * as http from "../http.js";
+import type * as impact_validation from "../impact_validation.js";
+import type * as learn from "../learn.js";
+import type * as marketplace from "../marketplace.js";
+import type * as monitoring from "../monitoring.js";
+import type * as monitoring_admin from "../monitoring_admin.js";
+import type * as monitoring_auth from "../monitoring_auth.js";
+import type * as monitoring_config from "../monitoring_config.js";
+import type * as monitoring_crud from "../monitoring_crud.js";
+import type * as monitoring_index from "../monitoring_index.js";
+import type * as monitoring_migration from "../monitoring_migration.js";
+import type * as monitoring_utils from "../monitoring_utils.js";
+import type * as notifications from "../notifications.js";
+import type * as pdf_reports from "../pdf_reports.js";
+import type * as permissions from "../permissions.js";
+import type * as progress_updates from "../progress_updates.js";
+import type * as progress_validation from "../progress_validation.js";
+import type * as project_progress_reports from "../project_progress_reports.js";
+import type * as project_validators from "../project_validators.js";
+import type * as projects from "../projects.js";
+import type * as report_template_engine from "../report_template_engine.js";
+import type * as run_seed from "../run_seed.js";
+import type * as scheduled_tasks from "../scheduled_tasks.js";
+import type * as storage_upload from "../storage_upload.js";
+import type * as third_party_validation from "../third_party_validation.js";
+import type * as transactions from "../transactions.js";
+import type * as trend_analysis from "../trend_analysis.js";
+import type * as users from "../users.js";
+import type * as verificationMessages from "../verificationMessages.js";
+import type * as verifications from "../verifications.js";
+import type * as verifier_assignment from "../verifier_assignment.js";
+import type * as viva_demo_seed from "../viva_demo_seed.js";
+import type * as workflow from "../workflow.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -129,9 +124,9 @@ declare const fullApi: ApiFromModules<{
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
-  FunctionReference<any, 'public'>
+  FunctionReference<any, "public">
 >;
 export declare const internal: FilterApi<
   typeof fullApi,
-  FunctionReference<any, 'internal'>
+  FunctionReference<any, "internal">
 >;
