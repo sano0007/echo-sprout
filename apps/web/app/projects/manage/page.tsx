@@ -590,14 +590,14 @@ export default function ManageProjects() {
                         Submit for Verification
                       </button>
                     )}
-                    {project.verificationStatus === 'in_progress' && (
-                      <a
-                        href={`/verification/review/${project._id}`}
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                      >
-                        View Verification
-                      </a>
-                    )}
+                    {/*{project.verificationStatus === 'in_progress' && (*/}
+                    {/*  <a*/}
+                    {/*    href={`/verification/review/${project._id}`}*/}
+                    {/*    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"*/}
+                    {/*  >*/}
+                    {/*    View Verification*/}
+                    {/*  </a>*/}
+                    {/*)}*/}
                     <button
                       onClick={() =>
                         handleDeleteProject(project._id as Id<'projects'>)
