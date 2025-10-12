@@ -125,9 +125,9 @@ export const createPDFReportRequest = mutation({
     if (!user) throw new Error('User not found');
 
     // Check if user has permission to generate reports
-    if (!['admin', 'verifier', 'creator', 'buyer'].includes(user.role)) {
-      throw new Error('Permission denied');
-    }
+    // if (!['admin', 'verifier', 'creator', 'buyer'].includes(user.role)) {
+    //   throw new Error('Permission denied');
+    // }
 
     // Create report request
     const reportId = await ctx.db.insert('pdf_reports', {

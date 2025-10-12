@@ -19,9 +19,7 @@ export default function Footer() {
       title: 'Platform',
       links: [
         { label: 'Browse Projects', href: '/marketplace' },
-        { label: 'Register Project', href: '/projects/register' },
-        { label: 'Verification', href: '/verification/dashboard' },
-        { label: 'Monitoring', href: '/monitoring/dashboard' },
+        { label: 'Register Project', href: '/projects/register' }
       ],
     },
     {
@@ -29,16 +27,11 @@ export default function Footer() {
       links: [
         { label: 'Learning Hub', href: '/learn' },
         { label: 'Forum', href: '/community/forum' },
-        { label: 'Success Stories', href: '/community/stories' },
-        { label: 'Events', href: '/community/events' },
       ],
     },
     {
       title: 'Resources',
       links: [
-        { label: 'Documentation', href: '/docs' },
-        { label: 'API Reference', href: '/api-docs' },
-        { label: 'Guidelines', href: '/guidelines' },
         { label: 'FAQs', href: '/faq' },
       ],
     },

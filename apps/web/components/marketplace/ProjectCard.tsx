@@ -42,7 +42,7 @@ export const MarketplaceProjectCard = ({
           alt={project.name}
           width={300}
           height={200}
-          className={`w-full h-48 bg-gray-200 ${featuredImages && featuredImages[0]?.media?.fileUrl ? 'object-contain' : 'object-cover'}`}
+          className={`w-full h-48 bg-gray-200 object-cover`}
         />
         <div className="p-6">
           <div className="flex justify-between items-start mb-2">

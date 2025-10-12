@@ -70,12 +70,6 @@ const adminNavItems = [
     url: '/admin/monitoring',
     badge: null,
   },
-  {
-    title: 'Settings',
-    icon: Settings,
-    url: '/admin/settings',
-    badge: null,
-  },
 ];
 
 interface AdminDashboardLayoutProps {

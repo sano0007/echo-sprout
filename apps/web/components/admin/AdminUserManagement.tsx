@@ -351,7 +351,7 @@ export default function AdminUserManagement() {
                           {user.creditsEarned} credits earned
                         </div>
                         <div className="text-xs text-green-600">
-                          ₹{user.totalRevenue.toLocaleString()} revenue
+                          ${user.totalRevenue.toLocaleString()} revenue
                         </div>
                       </div>
                     )}
@@ -361,7 +361,7 @@ export default function AdminUserManagement() {
                           {user.creditsPurchased || 0} credits bought
                         </div>
                         <div className="text-xs text-blue-600">
-                          ₹{(user.totalSpent || 0).toLocaleString()} spent
+                          ${(user.totalSpent || 0).toLocaleString()} spent
                         </div>
                       </div>
                     )}
@@ -371,7 +371,7 @@ export default function AdminUserManagement() {
                           {user.projectsVerified || 0} projects verified
                         </div>
                         <div className="text-xs text-green-600">
-                          ₹{(user.verificationFees || 0).toLocaleString()} fees
+                          ${(user.verificationFees || 0).toLocaleString()} fees
                           earned
                         </div>
                       </div>

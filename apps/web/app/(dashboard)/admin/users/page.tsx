@@ -1,9 +1,11 @@
 'use client';
 
 import { api } from '@packages/backend';
-import { useQuery } from 'convex/react';
+import type { Id } from '@packages/backend/convex/_generated/dataModel';
+import { useMutation, useQuery } from 'convex/react';
 import { Clock, RefreshCw, Users } from 'lucide-react';
 import React, { useState } from 'react';
+import { toast } from 'react-hot-toast';
 
 import { UserManagementTable } from '@/components/dashboard/admin/UserManagementTable';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +17,11 @@ export default function AdminUsersPage() {
   const [refreshing, setRefreshing] = useState(false);
 
   const userStats = useQuery(api.users.getUserStatsForAdmin);
+  
+  // Admin mutations
+  const toggleUserStatus = useMutation(api.users.adminToggleUserStatus);
+  const deleteUser = useMutation(api.users.adminDeleteUser);
+  const updateUserRole = useMutation(api.users.updateUserRole);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -22,12 +29,70 @@ export default function AdminUsersPage() {
     setRefreshing(false);
   };
 
-  const handleUserAction = (userId: string, action: string) => {
-    console.log(`User action: ${action} for user ${userId}`);
+  const handleUserAction = async (userId: string, action: string) => {
+    const userIdTyped = userId as Id<'users'>;
+
+    switch (action) {
+      case 'view':
+        // Open edit modal (to be implemented)
+        toast('Edit user feature coming soon!');
+        break;
+
+      case 'message':
+        // Open messaging modal (to be implemented)
+        toast('Messaging feature coming soon!');
+        break;
+
+      case 'activate':
+        try {
+          await toggleUserStatus({
+            userId: userIdTyped,
+            isActive: true,
+          });
+          toast.success('User activated successfully');
+        } catch (error: any) {
+          toast.error(error.message || 'Failed to activate user');
+        }
+        break;
+
+      case 'deactivate':
+        if (!confirm('Are you sure you want to deactivate this user?')) {
+          return;
+        }
+        try {
+          await toggleUserStatus({
+            userId: userIdTyped,
+            isActive: false,
+          });
+          toast.success('User deactivated successfully');
+        } catch (error: any) {
+          toast.error(error.message || 'Failed to deactivate user');
+        }
+        break;
+
+      case 'delete':
+        if (
+          !confirm(
+            'Are you sure you want to delete this user? This action will deactivate the user account.'
+          )
+        ) {
+          return;
+        }
+        try {
+          await deleteUser({ userId: userIdTyped });
+          toast.success('User deleted successfully');
+        } catch (error: any) {
+          toast.error(error.message || 'Failed to delete user');
+        }
+        break;
+
+      default:
+        console.log(`Unknown action: ${action} for user ${userId}`);
+    }
   };
 
   const handleExport = () => {
-    console.log('Exporting user data...');
+    toast('Export feature coming soon!');
   };
 
   const isLoading = userStats === undefined;
