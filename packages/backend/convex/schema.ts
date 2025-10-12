@@ -1242,6 +1242,7 @@ export default defineSchema({
       period: v.string(),
     }),
     filters: v.optional(v.any()),
+    analyticsData: v.optional(v.any()), // Analytics data including charts, metrics, and project details
     userInfo: v.object({
       userId: v.string(),
       name: v.string(),
