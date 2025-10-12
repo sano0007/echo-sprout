@@ -45,18 +45,7 @@ export default function Navigation() {
     },
     {
       label: 'Marketplace',
-      dropdown: [
-        {
-          label: 'Browse Projects',
-          href: '/marketplace',
-          description: 'Find and contribute to projects',
-        },
-        {
-          label: 'Buyer Dashboard',
-          href: '/buyer-dashboard',
-          description: 'Track your carbon offset impact',
-        },
-      ],
+      href: '/marketplace',
     },
     {
       label: 'Verification',
@@ -66,11 +55,6 @@ export default function Navigation() {
           href: '/verification/dashboard',
           description: 'Review and verify projects',
         },
-        // {
-        //   label: 'Review Projects',
-        //   href: '/verification/review/1',
-        //   description: 'Conduct project reviews',
-        // },
       ],
     },
     {
@@ -104,52 +88,66 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
-            {navigationItems.map((item) => (
-              <div
-                key={item.label}
-                className="relative"
-                onMouseEnter={() => setActiveDropdown(item.label)}
-                onMouseLeave={() => setActiveDropdown(null)}
-              >
-                <button className="px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors">
-                  {item.label}
-                  <svg
-                    className="inline ml-1 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+            {navigationItems.map((item) => {
+              if (item.href) {
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {/* Dropdown Menu */}
-                {activeDropdown === item.label && (
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50">
-                    {item.dropdown.map((dropdownItem) => (
-                      <Link
-                        key={dropdownItem.href}
-                        href={dropdownItem.href}
-                        className="block px-4 py-3 hover:bg-gray-50 transition-colors"
-                        onClick={() => setActiveDropdown(null)}
+                    {item.label}
+                  </Link>
+                );
+              } else {
+                return (
+                  <div
+                    key={item.label}
+                    className="relative"
+                    onMouseEnter={() => setActiveDropdown(item.label)}
+                    onMouseLeave={() => setActiveDropdown(null)}
+                  >
+                    <button className="px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors">
+                      {item.label}
+                      <svg
+                        className="inline ml-1 h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <div className="font-medium text-gray-900">
-                          {dropdownItem.label}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {dropdownItem.description}
-                        </div>
-                      </Link>
-                    ))}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {activeDropdown === item.label && !item.href && (
+                      <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50">
+                        {item.dropdown?.map((dropdownItem) => (
+                          <Link
+                            key={dropdownItem.href}
+                            href={dropdownItem.href}
+                            className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            <div className="font-medium text-gray-900">
+                              {dropdownItem.label}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {dropdownItem.description}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                );
+              }
+            })}
           </div>
 
           {/* User Authentication */}
@@ -243,9 +241,9 @@ export default function Navigation() {
                   </button>
 
                   {/* Mobile Dropdown */}
-                  {activeDropdown === item.label && (
+                  {activeDropdown === item.label && !item.href && (
                     <div className="pl-8 space-y-2">
-                      {item.dropdown.map((dropdownItem) => (
+                      {item.dropdown && item.dropdown.map((dropdownItem) => (
                         <Link
                           key={dropdownItem.href}
                           href={dropdownItem.href}
