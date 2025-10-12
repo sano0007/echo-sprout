@@ -11,17 +11,9 @@ type Slide = {
 
 const slides: Slide[] = [
   {
-    image: 'https://placehold.co/800x450?text=Step+1',
+    image: 'https://wary-armadillo-281.convex.cloud/api/storage/29eb0cee-6caa-4556-8f03-932384d9ca5d',
     details:
-      'Step 1: Placeholder details explaining the first action in the walkthrough.',
-  },
-  {
-    image: 'https://placehold.co/800x450?text=Step+2',
-    details: 'Step 2: More placeholder details to demonstrate navigation.',
-  },
-  {
-    image: 'https://placehold.co/800x450?text=Step+3',
-    details: 'Step 3: Final placeholder description to complete the demo.',
+      'Step 1: Go to the Project page from the nav bar.',
   },
 ];
 
