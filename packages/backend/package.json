@@ -10,7 +10,7 @@
   "dependencies": {
     "@clerk/backend": "^2.6.2",
     "@echo-sprout/types": "*",
-    "convex": "^1.25.4",
+    "convex": "^1.27.5",
     "convex-helpers": "^0.1.101",
     "svix": "^1.70.0"
   },

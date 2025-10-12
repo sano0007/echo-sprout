@@ -380,7 +380,7 @@ export class ServerPDFGenerator {
       '"': '&quot;',
       "'": '&#039;'
     };
-    return String(text).replace(/[&<>"']/g, m => map[m]);
+    return String(text).replace(/[&<>"']/g, m => map[m] || m);
   }
 
   /**

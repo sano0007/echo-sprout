@@ -3,6 +3,7 @@
 import { api } from '@packages/backend';
 import { useAction, useMutation } from 'convex/react';
 import { useState } from 'react';
+import { Country, State, City } from 'country-state-city';
 
 import DocumentUpload from '../../../components/DocumentUpload';
 
@@ -78,6 +79,11 @@ export default function ProjectRegister() {
     featured_images: [],
     site_images: [],
   });
+
+  // Location selection states
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     description: '',
@@ -466,35 +472,113 @@ export default function ProjectRegister() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Project Location
+                  Country
                 </label>
-                <input
-                  type="text"
-                  placeholder="Project Address"
-                  value={formData.location.name}
-                  onChange={(e) =>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => {
+                    const countryCode = e.target.value;
+                    setSelectedCountry(countryCode);
+                    setSelectedState('');
+                    setSelectedCity('');
+
+                    const country = Country.getCountryByCode(countryCode);
                     handleInputChange('location', {
                       ...formData.location,
-                      name: e.target.value,
-                    })
-                  }
+                      name: country?.name || '',
+                    });
+                  }}
                   className={`w-full p-3 border rounded ${errors.location ? 'border-red-500' : ''}`}
-                />
-                {errors.location && (
-                  <p className="text-red-500 text-sm mt-1">{errors.location}</p>
-                )}
+                >
+                  <option value="">Select Country</option>
+                  {Country.getAllCountries().map((country) => (
+                    <option key={country.isoCode} value={country.isoCode}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="City"
-                  className="p-3 border rounded"
-                />
-                <input
-                  type="text"
-                  placeholder="Country"
-                  className="p-3 border rounded"
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    State/Province
+                  </label>
+                  <select
+                    value={selectedState}
+                    onChange={(e) => {
+                      const stateCode = e.target.value;
+                      setSelectedState(stateCode);
+                      setSelectedCity('');
+
+                      const state = State.getStateByCodeAndCountry(stateCode, selectedCountry);
+                      const country = Country.getCountryByCode(selectedCountry);
+                      handleInputChange('location', {
+                        ...formData.location,
+                        name: state && country ? `${state.name}, ${country.name}` : country?.name || '',
+                      });
+                    }}
+                    disabled={!selectedCountry}
+                    className="w-full p-3 border rounded disabled:bg-gray-100"
+                  >
+                    <option value="">Select State/Province</option>
+                    {selectedCountry &&
+                      State.getStatesOfCountry(selectedCountry).map((state) => (
+                        <option key={state.isoCode} value={state.isoCode}>
+                          {state.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    City
+                  </label>
+                  <select
+                    value={selectedCity}
+                    onChange={(e) => {
+                      const cityName = e.target.value;
+                      setSelectedCity(cityName);
+
+                      const state = State.getStateByCodeAndCountry(selectedState, selectedCountry);
+                      const country = Country.getCountryByCode(selectedCountry);
+
+                      let locationName = '';
+                      if (cityName && state && country) {
+                        locationName = `${cityName}, ${state.name}, ${country.name}`;
+                      } else if (state && country) {
+                        locationName = `${state.name}, ${country.name}`;
+                      } else if (country) {
+                        locationName = country.name;
+                      }
+
+                      handleInputChange('location', {
+                        ...formData.location,
+                        name: locationName,
+                      });
+                    }}
+                    disabled={!selectedState}
+                    className="w-full p-3 border rounded disabled:bg-gray-100"
+                  >
+                    <option value="">Select City</option>
+                    {selectedState &&
+                      City.getCitiesOfState(selectedCountry, selectedState).map((city) => (
+                        <option key={city.name} value={city.name}>
+                          {city.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              {errors.location && (
+                <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+              )}
+
+              <div className="p-3 bg-gray-50 rounded border">
+                <p className="text-sm text-gray-600">Selected Location:</p>
+                <p className="font-medium">{formData.location.name || 'None selected'}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
@@ -557,7 +641,7 @@ export default function ProjectRegister() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Price per Credit (Rs.)
+                  Price per Credit ($)
                 </label>
                 <input
                   type="number"
