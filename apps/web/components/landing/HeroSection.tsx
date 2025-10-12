@@ -4,8 +4,6 @@ import Image from 'next/image';
 import { Space_Grotesk } from 'next/font/google';
 import { useEffect, useState } from 'react';
 import BgImage1 from '../../public/img/bg-img-1.jpg';
-import BgImage2 from '../../public/img/bg-img-2.jpg';
-import BgImage3 from '../../public/img/bg-img-3.jpg';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -14,8 +12,6 @@ const spaceGrotesk = Space_Grotesk({
 
 const heroImages = [
   BgImage1,
-  BgImage2,
-  BgImage3,
 ];
 
 export const HeroSection = () => {

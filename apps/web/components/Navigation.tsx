@@ -36,11 +36,6 @@ export default function Navigation() {
           href: '/projects/manage',
           description: 'Track your projects',
         },
-        {
-          label: 'Monitoring Dashboard',
-          href: '/monitoring/dashboard',
-          description: 'Monitor project progress',
-        },
       ],
     },
     {
