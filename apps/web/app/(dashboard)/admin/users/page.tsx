@@ -12,9 +12,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ClientTime } from '@/components/ui/client-time';
+import { useConfirmation } from '@/hooks/useConfirmation';
 
 export default function AdminUsersPage() {
   const [refreshing, setRefreshing] = useState(false);
+  const { showConfirmation, ConfirmationDialog } = useConfirmation();
 
   const userStats = useQuery(api.users.getUserStatsForAdmin);
 
@@ -55,10 +57,20 @@ export default function AdminUsersPage() {
         }
         break;
 
-      case 'deactivate':
-        if (!confirm('Are you sure you want to deactivate this user?')) {
+      case 'deactivate': {
+        const confirmed = await showConfirmation({
+          title: 'Deactivate User',
+          description:
+            'Are you sure you want to deactivate this user? They will not be able to access the platform until reactivated.',
+          confirmText: 'Deactivate',
+          cancelText: 'Cancel',
+          variant: 'warning',
+        });
+
+        if (!confirmed) {
           return;
         }
+
         try {
           await toggleUserStatus({
             userId: userIdTyped,
@@ -69,15 +81,22 @@ export default function AdminUsersPage() {
           toast.error(error.message || 'Failed to deactivate user');
         }
         break;
+      }
 
-      case 'delete':
-        if (
-          !confirm(
-            'Are you sure you want to delete this user? This action will deactivate the user account.'
-          )
-        ) {
+      case 'delete': {
+        const confirmed = await showConfirmation({
+          title: 'Delete User',
+          description:
+            'Are you sure you want to delete this user? This action will deactivate the user account permanently. This action cannot be undone.',
+          confirmText: 'Delete User',
+          cancelText: 'Cancel',
+          variant: 'destructive',
+        });
+
+        if (!confirmed) {
           return;
         }
+
         try {
           await deleteUser({ userId: userIdTyped });
           toast.success('User deleted successfully');
@@ -85,6 +104,7 @@ export default function AdminUsersPage() {
           toast.error(error.message || 'Failed to delete user');
         }
         break;
+      }
 
       default:
         console.log(`Unknown action: ${action} for user ${userId}`);
@@ -98,9 +118,11 @@ export default function AdminUsersPage() {
   const isLoading = userStats === undefined;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <>
+      <ConfirmationDialog />
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">
             User Management
@@ -285,6 +307,7 @@ export default function AdminUsersPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
