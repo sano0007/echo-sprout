@@ -63,7 +63,7 @@ export const NavBar = () => {
             Marketplace
           </Link>
           <Link
-              href="/marketplace"
+              href="/learn"
               className={
                 'text-white/90 hover:text-white transition-colors font-medium'
               }
@@ -71,7 +71,7 @@ export const NavBar = () => {
             Learning Hub
           </Link>
           <Link
-              href="/marketplace"
+              href="/community/forum"
               className={
                 'text-white/90 hover:text-white transition-colors font-medium'
               }
