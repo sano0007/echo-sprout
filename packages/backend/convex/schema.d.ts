@@ -1757,6 +1757,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         fileSize?: number | undefined;
         errorMessage?: string | undefined;
         filters?: any;
+        analyticsData?: any;
         title: string;
         status: "completed" | "pending" | "processing" | "failed";
         expiresAt: number;
@@ -1799,6 +1800,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             period: import("convex/values").VString<string, "required">;
         }, "required", "start" | "end" | "period">;
         filters: import("convex/values").VAny<any, "optional", string>;
+        analyticsData: import("convex/values").VAny<any, "optional", string>;
         userInfo: import("convex/values").VObject<{
             email: string;
             role: string;
@@ -1810,7 +1812,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
             email: import("convex/values").VString<string, "required">;
             role: import("convex/values").VString<string, "required">;
         }, "required", "email" | "role" | "name" | "userId">;
-    }, "required", "title" | "status" | "fileUrl" | "completedAt" | "fileSize" | "expiresAt" | "errorMessage" | "reportType" | "filters" | "timeframe" | `filters.${string}` | "templateType" | "progress" | "requestedBy" | "requestedAt" | "userInfo" | "timeframe.start" | "timeframe.end" | "timeframe.period" | "userInfo.email" | "userInfo.role" | "userInfo.name" | "userInfo.userId">, {
+    }, "required", "title" | "status" | "fileUrl" | "completedAt" | "fileSize" | "expiresAt" | "errorMessage" | "reportType" | "filters" | "timeframe" | `filters.${string}` | "templateType" | "progress" | "requestedBy" | "requestedAt" | "analyticsData" | "userInfo" | "timeframe.start" | "timeframe.end" | "timeframe.period" | `analyticsData.${string}` | "userInfo.email" | "userInfo.role" | "userInfo.name" | "userInfo.userId">, {
         by_user: ["requestedBy", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_template_type: ["templateType", "_creationTime"];
