@@ -37,11 +37,6 @@ export const FAQSection = () => {
         'The timeline varies based on market demand, credit pricing, and project type. Some credits sell within days, while others may take several weeks. Our transparent marketplace provides real-time analytics to help you price competitively and track buyer interest.',
     },
     {
-      question: 'Are the carbon credits blockchain-verified?',
-      answer:
-        'Yes, all transactions on EcoSprout are recorded on blockchain for complete transparency and immutability. This ensures that credits cannot be double-counted and provides a permanent, auditable record of ownership and transfer.',
-    },
-    {
       question: 'Can I track the environmental impact of my purchases?',
       answer:
         'Absolutely! Our monitoring dashboard provides real-time impact metrics including CO2 reduced, projects supported, and geographic distribution. You can generate detailed impact reports for stakeholder communication and ESG reporting.',
