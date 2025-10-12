@@ -1,8 +1,8 @@
-import type {MutationCtx, QueryCtx} from '../convex/_generated/server';
-import type {Id} from '../convex/_generated/dataModel';
-import {VerificationService} from './verification-service';
-import {PermissionsService} from './permissions-service';
-import {NotificationService} from './notification-service';
+import type { MutationCtx, QueryCtx } from '../convex/_generated/server';
+import type { Id } from '../convex/_generated/dataModel';
+import { VerificationService } from './verification-service';
+import { PermissionsService } from './permissions-service';
+import { NotificationService } from './notification-service';
 
 export interface AssignmentCriteria {
   requireSpecialty?: boolean;
