@@ -13,6 +13,8 @@ import {
   Clock,
   FileText,
   TrendingUp,
+  File,
+  Download,
 } from 'lucide-react';
 import {
   ArcElement,
@@ -1367,24 +1369,95 @@ function ProgressReviewCard({
             </p>
           </div>
 
-          {/* Photos */}
-          {update.photoUrls && update.photoUrls.length > 0 && (
+          {/* Photos and Documents */}
+          {((update.photoUrls && update.photoUrls.length > 0) || 
+            (update.photos && update.photos.length > 0)) && (
             <div>
-              <p className="font-medium text-gray-900 mb-2">Photos:</p>
+              <p className="font-medium text-gray-900 mb-2">Documentation:</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {update.photoUrls.map((url: string, index: number) => (
-                  <div
-                    key={index}
-                    className="relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => setExpandedPhoto(url)}
-                  >
-                    <img
-                      src={url}
-                      alt={`Photo ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+                {/* Handle new storage format (photoUrls) */}
+                {update.photoUrls && update.photoUrls
+                  .filter((url: string) => url && url.trim() !== '')
+                  .map((url: string, index: number) => {
+                    const isPDF = url.toLowerCase().endsWith('.pdf');
+                    
+                    if (isPDF) {
+                      return (
+                        <a
+                          key={index}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                        >
+                          <File className="w-8 h-8 text-blue-600 mb-2" />
+                          <p className="text-xs text-gray-600 text-center">Document {index + 1}</p>
+                          <p className="text-xs text-blue-600 mt-1">View PDF</p>
+                        </a>
+                      );
+                    }
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
+                        onClick={() => setExpandedPhoto(url)}
+                      >
+                        <img
+                          src={url}
+                          alt={`Photo ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                
+                {/* Handle old Cloudinary format (photos) */}
+                {update.photos && update.photos
+                  .filter((photo: any) => {
+                    const url = photo.cloudinary_url || photo.url;
+                    return url && url.trim() !== '';
+                  })
+                  .map((photo: any, index: number) => {
+                    const url = photo.cloudinary_url || photo.url;
+                    const isPDF = url.toLowerCase().endsWith('.pdf');
+                    
+                    if (isPDF) {
+                      return (
+                        <a
+                          key={`old-${index}`}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                        >
+                          <File className="w-8 h-8 text-blue-600 mb-2" />
+                          <p className="text-xs text-gray-600 text-center">Document {index + 1}</p>
+                          <p className="text-xs text-blue-600 mt-1">View PDF</p>
+                        </a>
+                      );
+                    }
+                    
+                    return (
+                      <div
+                        key={`old-${index}`}
+                        className="relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-gray-200"
+                        onClick={() => setExpandedPhoto(url)}
+                      >
+                        <img
+                          src={url}
+                          alt={`Photo ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           )}
