@@ -1458,10 +1458,17 @@ export const getBuyerProjectTracking = query({
       throw new Error('Not authorized to access this data');
     }
 
-    // Get all credit purchases by this user
+    // Get the user's Clerk ID from the Convex user ID
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const buyerClerkId = user.clerkId;
+
+    // Get all credit purchases by this user using Clerk ID
     const purchases = await ctx.db
       .query('transactions')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
+      .withIndex('by_buyer', (q) => q.eq('buyerId', buyerClerkId))
       .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
       .collect();
 
@@ -1599,10 +1606,17 @@ export const getDetailedProjectTracking = query({
       throw new Error('Not authorized to access this data');
     }
 
-    // Verify the user has purchased credits for this project
+    // Get the user's Clerk ID from the Convex user ID
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const buyerClerkId = user.clerkId;
+
+    // Verify the user has purchased credits for this project using Clerk ID
     const purchase = await ctx.db
       .query('transactions')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
+      .withIndex('by_buyer', (q) => q.eq('buyerId', buyerClerkId))
       .filter((q) =>
         q.and(
           q.eq(q.field('projectId'), projectId),
@@ -1748,10 +1762,17 @@ export const getBuyerPortfolioSummary = query({
       throw new Error('Not authorized to access this data');
     }
 
-    // Get all purchases by this buyer
+    // Get the user's Clerk ID from the Convex user ID
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const buyerClerkId = user.clerkId;
+
+    // Get all purchases by this buyer using Clerk ID
     const purchases = await ctx.db
       .query('transactions')
-      .withIndex('by_buyer', (q) => q.eq('buyerId', userId))
+      .withIndex('by_buyer', (q) => q.eq('buyerId', buyerClerkId))
       .filter((q) => q.eq(q.field('paymentStatus'), 'completed'))
       .collect();
 
