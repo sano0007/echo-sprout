@@ -62,22 +62,6 @@ export const NavBar = () => {
           >
             Marketplace
           </Link>
-          <Link
-            href="/about"
-            className={
-              'text-white/90 hover:text-white transition-colors font-medium'
-            }
-          >
-            About
-          </Link>
-          <Link
-            href="/contact"
-            className={
-              'text-white/90 hover:text-white transition-colors font-medium'
-            }
-          >
-            Contact
-          </Link>
           {/* Community Dropdown */}
           <div className={'relative'} ref={dropdownRef}>
             <button
