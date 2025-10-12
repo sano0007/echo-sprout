@@ -672,3 +672,106 @@ export const toggleUserStatus = mutation({
     });
   },
 });
+
+// ============= ADMIN USER MANAGEMENT ACTIONS =============
+
+export const adminToggleUserStatus = mutation({
+  args: {
+    userId: v.id('users'),
+    isActive: v.boolean(),
+  },
+  handler: async (ctx, { userId, isActive }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'admin') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    // Prevent deactivating self
+    if (userId === currentUser._id && !isActive) {
+      throw new Error('Cannot deactivate your own account');
+    }
+
+    await ctx.db.patch(userId, {
+      isActive,
+      lastLoginAt: new Date().toISOString(),
+    });
+
+    return { success: true, isActive };
+  },
+});
+
+export const adminDeleteUser = mutation({
+  args: {
+    userId: v.id('users'),
+  },
+  handler: async (ctx, { userId }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'admin') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    // Prevent deleting self
+    if (userId === currentUser._id) {
+      throw new Error('Cannot delete your own account');
+    }
+
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Soft delete by deactivating
+    // await ctx.db.patch(userId, {
+    //   isActive: false,
+    //   lastLoginAt: new Date().toISOString(),
+    // });
+
+    await ctx.db.delete(userId);
+
+    return { success: true };
+  },
+});
+
+export const adminUpdateUser = mutation({
+  args: {
+    userId: v.id('users'),
+    updates: v.object({
+      firstName: v.optional(v.string()),
+      lastName: v.optional(v.string()),
+      email: v.optional(v.string()),
+      phoneNumber: v.optional(v.string()),
+      address: v.optional(v.string()),
+      city: v.optional(v.string()),
+      country: v.optional(v.string()),
+      organizationName: v.optional(v.string()),
+      organizationType: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, { userId, updates }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'admin') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Validate and sanitize updates
+    const validatedUpdates: any = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'string') {
+          validatedUpdates[key] = value.trim();
+        } else {
+          validatedUpdates[key] = value;
+        }
+      }
+    });
+
+    await ctx.db.patch(userId, validatedUpdates);
+
+    return { success: true };
+  },
+});

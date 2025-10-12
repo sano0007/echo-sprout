@@ -3,12 +3,52 @@
 import { api } from '@packages/backend';
 import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
+import { 
+  BarChart3, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle,
+  TrendingUp,
+  FileText,
+  Users,
+  Award,
+  Download
+} from 'lucide-react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import RequestProgressReportModal from '@/components/monitoring/RequestProgressReportModal';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function VerificationDashboard() {
-  const [activeTab, setActiveTab] = useState<'pendingAcceptance' | 'accepted' | 'inProgress' | 'completed' | 'upgradeRequests' | 'progressReviews'>('pendingAcceptance');
+  const [activeTab, setActiveTab] = useState<'pendingAcceptance' | 'accepted' | 'inProgress' | 'completed' | 'upgradeRequests' | 'progressReviews' | 'analytics'>('pendingAcceptance');
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
@@ -47,6 +87,169 @@ export default function VerificationDashboard() {
   const rejectProgress = useMutation(api.progress_updates.rejectProgressUpdate);
   const requestRevision = useMutation(api.progress_updates.requestProgressRevision);
 
+  // Process data before conditional returns to maintain hook order
+  const allVerifications = myVerifications?.page || [];
+  const projects = useMemo(() => ({
+    pendingAcceptance: allVerifications.filter(
+      (v: any) => v.status === 'assigned'
+    ),
+    accepted: allVerifications.filter((v: any) => v.status === 'accepted'),
+    inProgress: allVerifications.filter((v: any) => v.status === 'in_progress'),
+    completed: allVerifications.filter((v: any) =>
+      ['completed', 'approved', 'rejected', 'revision_required'].includes(
+        v.status
+      )
+    ),
+  }), [allVerifications]);
+
+  const stats = useMemo(() => ({
+    totalProjects: verifierStats?.totalVerifications || 0,
+    pendingAcceptance: acceptanceStats?.pendingAcceptance || 0,
+    acceptanceRate: acceptanceStats?.acceptanceRate || 0,
+    inProgress: verifierStats?.inProgressVerifications || 0,
+    completedThisMonth: verifierStats?.completedThisMonth || 0,
+    averageAcceptanceTime: acceptanceStats?.averageAcceptanceTimeHours || 0,
+    overdueVerifications: verifierStats?.overdueVerifications || 0,
+    averageScore: verifierStats?.averageScore
+      ? verifierStats.averageScore.toFixed(1)
+      : 'N/A',
+  }), [verifierStats, acceptanceStats]);
+
+  // Analytics Chart Data - all hooks must be called before any conditional returns
+  const verificationsOverTimeData = useMemo(() => {
+    if (!allVerifications || allVerifications.length === 0) return null;
+
+    const last6Months = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date();
+      d.setMonth(d.getMonth() - (5 - i));
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    });
+
+    const completedByMonth: Record<string, number> = {};
+    last6Months.forEach(month => completedByMonth[month] = 0);
+
+    allVerifications.forEach((v: any) => {
+      if (v.completedAt) {
+        const date = new Date(v.completedAt);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (completedByMonth[monthKey] !== undefined) {
+          completedByMonth[monthKey]++;
+        }
+      }
+    });
+
+    return {
+      labels: last6Months.map(m => {
+        const [year = '2024', month = '1'] = m.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1);
+        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      }),
+      datasets: [
+        {
+          label: 'Verifications Completed',
+          data: last6Months.map(m => completedByMonth[m]),
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+        },
+      ],
+    };
+  }, [allVerifications]);
+
+  const verificationsByStatusData = useMemo(() => {
+    if (!allVerifications || allVerifications.length === 0) return null;
+
+    const statusCounts = {
+      'Pending': projects.pendingAcceptance.length,
+      'Accepted': projects.accepted.length,
+      'In Progress': projects.inProgress.length,
+      'Completed': projects.completed.length,
+    };
+
+    return {
+      labels: Object.keys(statusCounts),
+      datasets: [
+        {
+          label: 'Verifications',
+          data: Object.values(statusCounts),
+          backgroundColor: [
+            'rgba(249, 115, 22, 0.8)',
+            'rgba(14, 165, 233, 0.8)',
+            'rgba(234, 179, 8, 0.8)',
+            'rgba(34, 197, 94, 0.8)',
+          ],
+          borderColor: [
+            'rgb(249, 115, 22)',
+            'rgb(14, 165, 233)',
+            'rgb(234, 179, 8)',
+            'rgb(34, 197, 94)',
+          ],
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [allVerifications, projects]);
+
+  const qualityScoreTrendData = useMemo(() => {
+    if (!allVerifications || allVerifications.length === 0) return null;
+
+    const completedWithScores = allVerifications
+      .filter((v: any) => v.completedAt && v.qualityScore)
+      .sort((a: any, b: any) => a.completedAt - b.completedAt)
+      .slice(-10);
+
+    if (completedWithScores.length === 0) return null;
+
+    return {
+      labels: completedWithScores.map((_: any, i: number) => `Project ${i + 1}`),
+      datasets: [
+        {
+          label: 'Quality Score',
+          data: completedWithScores.map((v: any) => v.qualityScore),
+          borderColor: 'rgb(168, 85, 247)',
+          backgroundColor: 'rgba(168, 85, 247, 0.1)',
+          tension: 0.4,
+        },
+      ],
+    };
+  }, [allVerifications]);
+
+  const chartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top' as const,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  }), []);
+
+  // Handler functions (not hooks, can be after hooks)
+  const handleApproveRequest = async (requestId: any, reviewNotes?: string) => {
+    try {
+      await approveRequest({ requestId, reviewNotes });
+      toast.success('Role upgrade request approved successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to approve request');
+    }
+  };
+
+  const handleRejectRequest = async (requestId: any, rejectionReason: string) => {
+    try {
+      await rejectRequest({ requestId, rejectionReason });
+      toast.success('Role upgrade request rejected');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reject request');
+    }
+  };
+
+  // Early returns after all hooks
   if (!permissions || !verifierStats || !acceptanceStats || !myVerifications) {
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -75,304 +278,414 @@ export default function VerificationDashboard() {
     );
   }
 
-  const allVerifications = myVerifications.page || [];
-  const projects = {
-    pendingAcceptance: allVerifications.filter(
-      (v: any) => v.status === 'assigned'
-    ),
-    accepted: allVerifications.filter((v: any) => v.status === 'accepted'),
-    inProgress: allVerifications.filter((v: any) => v.status === 'in_progress'),
-    completed: allVerifications.filter((v: any) =>
-      ['completed', 'approved', 'rejected', 'revision_required'].includes(
-        v.status
-      )
-    ),
-  };
-
-  const stats = {
-    totalProjects: verifierStats.totalVerifications || 0,
-    pendingAcceptance: acceptanceStats.pendingAcceptance || 0,
-    acceptanceRate: acceptanceStats.acceptanceRate || 0,
-    inProgress: verifierStats.inProgressVerifications || 0,
-    completedThisMonth: verifierStats.completedThisMonth || 0,
-    averageAcceptanceTime: acceptanceStats.averageAcceptanceTimeHours || 0,
-    overdueVerifications: verifierStats.overdueVerifications || 0,
-    averageScore: verifierStats.averageScore
-      ? verifierStats.averageScore.toFixed(1)
-      : 'N/A',
-  };
-
-  const handleApproveRequest = async (requestId: any, reviewNotes?: string) => {
-    try {
-      await approveRequest({ requestId, reviewNotes });
-      toast.success('Role upgrade request approved successfully!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to approve request');
-    }
-  };
-
-  const handleRejectRequest = async (requestId: any, rejectionReason: string) => {
-    try {
-      await rejectRequest({ requestId, rejectionReason });
-      toast.success('Role upgrade request rejected');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to reject request');
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8">Verification Dashboard</h1>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <p className="text-2xl font-bold text-blue-600">
-            {stats.totalProjects}
-          </p>
-          <p className="text-sm text-gray-600">Total Projects</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <p className="text-2xl font-bold text-orange-600">
-            {stats.pendingAcceptance}
-          </p>
-          <p className="text-sm text-gray-600">Pending Acceptance</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <p className="text-2xl font-bold text-teal-600">
-            {stats.acceptanceRate}%
-          </p>
-          <p className="text-sm text-gray-600">Acceptance Rate</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <p className="text-2xl font-bold text-yellow-600">
-            {stats.inProgress}
-          </p>
-          <p className="text-sm text-gray-600">In Progress</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <p className="text-2xl font-bold text-green-600">
-            {stats.completedThisMonth}
-          </p>
-          <p className="text-sm text-gray-600">Completed This Month</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <p className="text-2xl font-bold text-indigo-600">
-            {stats.averageAcceptanceTime}h
-          </p>
-          <p className="text-sm text-gray-600">Avg Acceptance Time</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <p className="text-2xl font-bold text-red-600">
-            {stats.overdueVerifications}
-          </p>
-          <p className="text-sm text-gray-600">Overdue</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <p className="text-2xl font-bold text-purple-600">
-            {stats.averageScore}
-          </p>
-          <p className="text-sm text-gray-600">Avg Quality Score</p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <BarChart3 className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.totalProjects}
+                </p>
+                <p className="text-sm text-gray-600">Total Projects</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Clock className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.pendingAcceptance}
+                </p>
+                <p className="text-sm text-gray-600">Pending Acceptance</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-teal-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.acceptanceRate}%
+                </p>
+                <p className="text-sm text-gray-600">Acceptance Rate</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <FileText className="h-8 w-8 text-yellow-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.inProgress}
+                </p>
+                <p className="text-sm text-gray-600">In Progress</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.completedThisMonth}
+                </p>
+                <p className="text-sm text-gray-600">Completed This Month</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Clock className="h-8 w-8 text-indigo-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.averageAcceptanceTime}h
+                </p>
+                <p className="text-sm text-gray-600">Avg Acceptance Time</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <AlertCircle className="h-8 w-8 text-red-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.overdueVerifications}
+                </p>
+                <p className="text-sm text-gray-600">Overdue</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Award className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.averageScore}
+                </p>
+                <p className="text-sm text-gray-600">Avg Quality Score</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Project Queue Tabs */}
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="border-b">
-          <nav className="flex">
-            <button
-              onClick={() => setActiveTab('pendingAcceptance')}
-              className={`px-6 py-4 text-sm font-medium ${activeTab === 'pendingAcceptance' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
-            >
-              Pending Acceptance ({projects.pendingAcceptance.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('accepted')}
-              className={`px-6 py-4 text-sm font-medium ${activeTab === 'accepted' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
-            >
-              Accepted ({projects.accepted.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('inProgress')}
-              className={`px-6 py-4 text-sm font-medium ${activeTab === 'inProgress' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
-            >
-              In Progress ({projects.inProgress.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('completed')}
-              className={`px-6 py-4 text-sm font-medium ${activeTab === 'completed' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
-            >
-              Completed ({projects.completed.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('upgradeRequests')}
-              className={`px-6 py-4 text-sm font-medium ${activeTab === 'upgradeRequests' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
-            >
-              Role Upgrades ({upgradeRequests?.page?.length || 0})
-            </button>
-            <button
-              onClick={() => setActiveTab('progressReviews')}
-              className={`px-6 py-4 text-sm font-medium ${activeTab === 'progressReviews' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
-            >
-              Progress Reviews ({progressUpdates?.page?.length || 0})
-            </button>
-          </nav>
-        </div>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as any)}
+        className="space-y-6"
+      >
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="pendingAcceptance">
+            Pending Acceptance ({projects.pendingAcceptance.length})
+          </TabsTrigger>
+          <TabsTrigger value="accepted">
+            Accepted ({projects.accepted.length})
+          </TabsTrigger>
+          <TabsTrigger value="inProgress">
+            In Progress ({projects.inProgress.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            Completed ({projects.completed.length})
+          </TabsTrigger>
+          <TabsTrigger value="upgradeRequests">
+            Role Upgrades ({upgradeRequests?.page?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="progressReviews">
+            Progress Reviews ({progressUpdates?.page?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            Analytics
+          </TabsTrigger>
+        </TabsList>
 
-        <div className="p-6">
-          {/* Pending Acceptance Projects */}
-          {activeTab === 'pendingAcceptance' && (
-            <div className="space-y-4">
-              {projects.pendingAcceptance.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p>No verifications pending your acceptance.</p>
-                </div>
-              ) : (
-                projects.pendingAcceptance.map((verification: any) => (
-                  <VerificationCard
-                    key={verification._id}
-                    verification={verification}
-                    type="pendingAcceptance"
-                  />
-                ))
-              )}
-            </div>
-          )}
+        <TabsContent value="pendingAcceptance">
+          <div className="space-y-4">
+            {projects.pendingAcceptance.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No verifications pending your acceptance.</p>
+              </div>
+            ) : (
+              projects.pendingAcceptance.map((verification: any) => (
+                <VerificationCard
+                  key={verification._id}
+                  verification={verification}
+                  type="pendingAcceptance"
+                />
+              ))
+            )}
+          </div>
+        </TabsContent>
 
-          {/* Accepted Projects */}
-          {activeTab === 'accepted' && (
-            <div className="space-y-4">
-              {projects.accepted.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p>No accepted verifications yet.</p>
-                </div>
-              ) : (
-                projects.accepted.map((verification: any) => (
-                  <VerificationCard
-                    key={verification._id}
-                    verification={verification}
-                    type="accepted"
-                    onRequestReport={(project) => {
-                      setSelectedProject(project);
-                      setRequestModalOpen(true);
-                    }}
-                  />
-                ))
-              )}
-            </div>
-          )}
+        <TabsContent value="accepted">
+          <div className="space-y-4">
+            {projects.accepted.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No accepted verifications yet.</p>
+              </div>
+            ) : (
+              projects.accepted.map((verification: any) => (
+                <VerificationCard
+                  key={verification._id}
+                  verification={verification}
+                  type="accepted"
+                  onRequestReport={(project) => {
+                    setSelectedProject(project);
+                    setRequestModalOpen(true);
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </TabsContent>
 
-          {/* In Progress Projects */}
-          {activeTab === 'inProgress' && (
-            <div className="space-y-4">
-              {projects.inProgress.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p>No verifications currently in progress.</p>
-                </div>
-              ) : (
-                projects.inProgress.map((verification: any) => (
-                  <VerificationCard
-                    key={verification._id}
-                    verification={verification}
-                    type="inProgress"
-                    onRequestReport={(project) => {
-                      setSelectedProject(project);
-                      setRequestModalOpen(true);
-                    }}
-                  />
-                ))
-              )}
-            </div>
-          )}
+        <TabsContent value="inProgress">
+          <div className="space-y-4">
+            {projects.inProgress.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No verifications currently in progress.</p>
+              </div>
+            ) : (
+              projects.inProgress.map((verification: any) => (
+                <VerificationCard
+                  key={verification._id}
+                  verification={verification}
+                  type="inProgress"
+                  onRequestReport={(project) => {
+                    setSelectedProject(project);
+                    setRequestModalOpen(true);
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </TabsContent>
 
-          {/* Completed Projects */}
-          {activeTab === 'completed' && (
-            <div className="space-y-4">
-              {projects.completed.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p>No completed verifications yet.</p>
-                </div>
-              ) : (
-                projects.completed.map((verification: any) => (
-                  <VerificationCard
-                    key={verification._id}
-                    verification={verification}
-                    type="completed"
-                    onRequestReport={(project) => {
-                      setSelectedProject(project);
-                      setRequestModalOpen(true);
-                    }}
-                  />
-                ))
-              )}
-            </div>
-          )}
+        <TabsContent value="completed">
+          <div className="space-y-4">
+            {projects.completed.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No completed verifications yet.</p>
+              </div>
+            ) : (
+              projects.completed.map((verification: any) => (
+                <VerificationCard
+                  key={verification._id}
+                  verification={verification}
+                  type="completed"
+                  onRequestReport={(project) => {
+                    setSelectedProject(project);
+                    setRequestModalOpen(true);
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </TabsContent>
 
-          {/* Role Upgrade Requests */}
-          {activeTab === 'upgradeRequests' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Role Upgrade Requests</h2>
-              {!upgradeRequests?.page || upgradeRequests.page.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p>No role upgrade requests assigned to you.</p>
-                </div>
-              ) : (
-                upgradeRequests.page.map((request: any) => (
-                  <UpgradeRequestCard
-                    key={request._id}
-                    request={request}
-                    onApprove={handleApproveRequest}
-                    onReject={handleRejectRequest}
-                  />
-                ))
-              )}
-            </div>
-          )}
+        <TabsContent value="upgradeRequests">
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold mb-4">Role Upgrade Requests</h2>
+            {!upgradeRequests?.page || upgradeRequests.page.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No role upgrade requests assigned to you.</p>
+              </div>
+            ) : (
+              upgradeRequests.page.map((request: any) => (
+                <UpgradeRequestCard
+                  key={request._id}
+                  request={request}
+                  onApprove={handleApproveRequest}
+                  onReject={handleRejectRequest}
+                />
+              ))
+            )}
+          </div>
+        </TabsContent>
 
-          {/* Progress Reviews */}
-          {activeTab === 'progressReviews' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Progress Update Reviews</h2>
-              {!progressUpdates?.page || progressUpdates.page.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p>No progress updates assigned for review.</p>
-                </div>
-              ) : (
-                progressUpdates.page.map((update: any) => (
-                  <ProgressReviewCard
-                    key={update._id}
-                    update={update}
-                    onApprove={async (updateId, reviewNotes) => {
-                      try {
-                        await approveProgress({ updateId, reviewNotes });
-                        toast.success('Progress update approved successfully!');
-                      } catch (error: any) {
-                        toast.error(error.message || 'Failed to approve progress update');
-                      }
-                    }}
-                    onReject={async (updateId, rejectionReason) => {
-                      try {
-                        await rejectProgress({ updateId, rejectionReason });
-                        toast.success('Progress update rejected');
-                      } catch (error: any) {
-                        toast.error(error.message || 'Failed to reject progress update');
-                      }
-                    }}
-                    onRequestRevision={async (updateId, revisionNotes) => {
-                      try {
-                        await requestRevision({ updateId, revisionNotes });
-                        toast.success('Revision requested successfully');
-                      } catch (error: any) {
-                        toast.error(error.message || 'Failed to request revision');
-                      }
-                    }}
-                  />
-                ))
-              )}
+        <TabsContent value="progressReviews">
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold mb-4">Progress Update Reviews</h2>
+            {!progressUpdates?.page || progressUpdates.page.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No progress updates assigned for review.</p>
+              </div>
+            ) : (
+              progressUpdates.page.map((update: any) => (
+                <ProgressReviewCard
+                  key={update._id}
+                  update={update}
+                  onApprove={async (updateId, reviewNotes) => {
+                    try {
+                      await approveProgress({ updateId, reviewNotes });
+                      toast.success('Progress update approved successfully!');
+                    } catch (error: any) {
+                      toast.error(error.message || 'Failed to approve progress update');
+                    }
+                  }}
+                  onReject={async (updateId, rejectionReason) => {
+                    try {
+                      await rejectProgress({ updateId, rejectionReason });
+                      toast.success('Progress update rejected');
+                    } catch (error: any) {
+                      toast.error(error.message || 'Failed to reject progress update');
+                    }
+                  }}
+                  onRequestRevision={async (updateId, revisionNotes) => {
+                    try {
+                      await requestRevision({ updateId, revisionNotes });
+                      toast.success('Revision requested successfully');
+                    } catch (error: any) {
+                      toast.error(error.message || 'Failed to request revision');
+                    }
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Verifications Over Time */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Verifications Over Time</CardTitle>
+                  <CardDescription>
+                    Track your verification completion trend (Last 6 months)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    {verificationsOverTimeData ? (
+                      <Line data={verificationsOverTimeData} options={chartOptions} />
+                    ) : (
+                      <div className="h-full flex items-center justify-center bg-gray-50 rounded">
+                        <p className="text-gray-500">
+                          No verification data available yet
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Verifications by Status */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Verifications by Status</CardTitle>
+                  <CardDescription>
+                    Current distribution of verification status
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    {verificationsByStatusData ? (
+                      <Bar data={verificationsByStatusData} options={chartOptions} />
+                    ) : (
+                      <div className="h-full flex items-center justify-center bg-gray-50 rounded">
+                        <p className="text-gray-500">
+                          No status data available yet
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quality Score Trend */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quality Score Trend</CardTitle>
+                  <CardDescription>
+                    Quality scores of your last 10 completed verifications
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    {qualityScoreTrendData ? (
+                      <Line data={qualityScoreTrendData} options={chartOptions} />
+                    ) : (
+                      <div className="h-full flex items-center justify-center bg-gray-50 rounded">
+                        <p className="text-gray-500">
+                          No quality score data available yet
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Performance Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Performance Summary</CardTitle>
+                  <CardDescription>
+                    Your verification performance metrics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Total Verifications</span>
+                      <span className="text-lg font-bold text-blue-600">{stats.totalProjects}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Completed This Month</span>
+                      <span className="text-lg font-bold text-green-600">{stats.completedThisMonth}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Acceptance Rate</span>
+                      <span className="text-lg font-bold text-teal-600">{stats.acceptanceRate}%</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Average Quality Score</span>
+                      <span className="text-lg font-bold text-purple-600">{stats.averageScore}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Avg Acceptance Time</span>
+                      <span className="text-lg font-bold text-indigo-600">{stats.averageAcceptanceTime}h</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-700">Overdue Verifications</span>
+                      <span className="text-lg font-bold text-red-600">{stats.overdueVerifications}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Request Progress Report Modal */}
       {selectedProject && (
