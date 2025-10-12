@@ -110,6 +110,7 @@ export default function CreatorDashboard() {
   );
   const deleteProject = useMutation(api.projects.deleteProject);
   const createPDFReport = useMutation(api.pdf_reports.createPDFReportRequest);
+  const deletePDFReport = useMutation(api.pdf_reports.deletePDFReport);
   const pdfReports = useQuery(api.pdf_reports.getPDFReports, {
     limit: 10,
   });
@@ -618,6 +619,28 @@ export default function CreatorDashboard() {
       toast.error(error.message || 'Failed to generate PDF report');
     } finally {
       setIsGeneratingPDF(false);
+    }
+  };
+
+  // Delete PDF Report handler
+  const handleDeletePDFReport = async (
+    reportId: Id<'pdf_reports'>,
+    reportTitle: string
+  ) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${reportTitle}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deletePDFReport({ reportId });
+      toast.success('PDF report deleted successfully');
+    } catch (error) {
+      console.error('Error deleting PDF report:', error);
+      toast.error('Failed to delete PDF report');
     }
   };
 
@@ -1976,20 +1999,33 @@ export default function CreatorDashboard() {
                           </p>
                         </div>
                       </div>
-                      {report.status === 'completed' && report.fileUrl && (
-                        <a
-                          href={report.fileUrl}
-                          download
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      <div className="flex items-center gap-2">
+                        {report.status === 'completed' && report.fileUrl && (
+                          <a
+                            href={report.fileUrl}
+                            download
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          >
+                            Download
+                          </a>
+                        )}
+                        {report.status === 'processing' && (
+                          <span className="text-sm text-gray-500">
+                            {report.progress}%
+                          </span>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            handleDeletePDFReport(report._id, report.title)
+                          }
+                          title="Delete report"
+                          className="h-8 w-8 p-0 hover:bg-red-50"
                         >
-                          Download
-                        </a>
-                      )}
-                      {report.status === 'processing' && (
-                        <span className="text-sm text-gray-500">
-                          {report.progress}%
-                        </span>
-                      )}
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
