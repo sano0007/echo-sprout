@@ -116,7 +116,6 @@ export const submitProgressUpdate = mutation({
         continue;
       }
 
-      // Check if it's new format (Convex storage)
       if ('storageId' in p && 'fileUrl' in p) {
         if (typeof p.storageId === 'string' && typeof p.fileUrl === 'string') {
           photoStorageIds.push(p.storageId);
@@ -125,7 +124,7 @@ export const submitProgressUpdate = mutation({
           photoErrors.push(`Photo ${i + 1} has invalid storageId or fileUrl`);
         }
       }
-      // Check if it's old format (Cloudinary)
+
       else if ('cloudinary_public_id' in p && 'cloudinary_url' in p) {
         if (
           typeof p.cloudinary_public_id === 'string' &&
@@ -171,10 +170,8 @@ export const submitProgressUpdate = mutation({
       wasteProcessed: args.measurementData?.wasteProcessed,
     });
 
-    // Auto-assign to a verifier
     await VerifierAssignmentService.autoAssignProgressUpdate(ctx, updateId);
 
-    // Check if there's a pending request for this project and link it
     const pendingRequests = await ctx.db
       .query('progressReportRequests')
       .withIndex('by_project_status', (q) =>
@@ -191,9 +188,8 @@ export const submitProgressUpdate = mutation({
 
     const allPendingRequests = [...pendingRequests, ...overdueRequests];
 
-    // Link the submission to the most recent request
     if (allPendingRequests.length > 0) {
-      // Sort by creation date to get the most recent
+
       const mostRecentRequest = allPendingRequests.sort(
         (a, b) => b.createdAt - a.createdAt
       )[0];
