@@ -515,9 +515,7 @@ async function validateTimelineConsistency(
   return { warnings, penalties };
 }
 
-/**
- * Validate content quality and completeness
- */
+
 function validateContentQuality(updateData: any): {
   warnings: string[];
   penalties: number;
@@ -526,7 +524,6 @@ function validateContentQuality(updateData: any): {
   const warnings: string[] = [];
   let penalties = 0;
 
-  // Check for meaningful content
   if (updateData.description) {
     const wordCount = updateData.description.trim().split(/\s+/).length;
     if (wordCount < 20) {
@@ -536,7 +533,6 @@ function validateContentQuality(updateData: any): {
       penalties += 5;
     }
 
-    // Check for generic or low-quality content
     const genericPhrases = [
       'good progress',
       'everything is fine',
@@ -555,7 +551,6 @@ function validateContentQuality(updateData: any): {
     }
   }
 
-  // Check for location data
   if (!updateData.location) {
     warnings.push(
       'No location data provided - location verification helps build trust'
@@ -567,9 +562,7 @@ function validateContentQuality(updateData: any): {
   return { warnings, penalties, score };
 }
 
-/**
- * Get project-specific validation thresholds
- */
+
 function getProjectThresholds(projectType: string) {
   const thresholds: Record<
     string,
