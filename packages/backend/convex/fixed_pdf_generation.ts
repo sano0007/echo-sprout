@@ -324,7 +324,52 @@ function transformAlert(alert: any) {
 
 async function generateAnalyticsReportData(ctx: any, report: any) {
   try {
-    // Get real analytics data from the system
+    // Use analyticsData from the report if available (passed from frontend)
+    if (report.analyticsData) {
+      // Transform frontend analytics data to match AnalyticsData interface
+      const analyticsData = report.analyticsData;
+
+      // Transform metrics to match AnalyticsMetric interface
+      const transformedMetrics = (analyticsData.metrics || []).map((metric: any) => ({
+        id: metric.id,
+        name: metric.name,
+        value: metric.value,
+        previousValue: metric.previousValue || 0,
+        change: metric.change || 0,
+        changeType: metric.changeType || 'stable',
+        unit: metric.unit || '',
+        format: metric.format || 'number',
+        category: metric.category || 'platform',
+        description: metric.description || metric.name,
+      }));
+
+      // Transform charts to match AnalyticsChart interface
+      const transformedCharts = (analyticsData.charts || []).map((chart: any) => ({
+        id: chart.id,
+        title: chart.title,
+        type: chart.type || 'line',
+        data: chart.data || [],
+        category: chart.category || 'general',
+        timeframe: report.timeframe.period,
+      }));
+
+      // Generate insights from the metrics
+      const insights = generateInsightsFromMetrics(transformedMetrics, analyticsData);
+
+      return {
+        metrics: transformedMetrics,
+        charts: transformedCharts,
+        insights,
+        timeframe: {
+          start: new Date(report.timeframe.start),
+          end: new Date(report.timeframe.end),
+          period: report.timeframe.period,
+        },
+        filters: report.filters,
+      };
+    }
+
+    // Fallback to fetching data from the system if analyticsData is not provided
     const stats = await ctx.runQuery(
       api.monitoring_crud.getMonitoringStats,
       {}
@@ -349,6 +394,61 @@ async function generateAnalyticsReportData(ctx: any, report: any) {
     console.error('Error generating analytics report data:', error);
     return generateMockAnalyticsData(report);
   }
+}
+
+// Helper function to generate insights from metrics
+function generateInsightsFromMetrics(metrics: any[], analyticsData: any): any[] {
+  const insights = [];
+
+  // Platform insights
+  const totalProjects = metrics.find(m => m.id === 'total_projects')?.value || 0;
+  const activeProjects = metrics.find(m => m.id === 'active_projects')?.value || 0;
+  if (totalProjects > 0) {
+    insights.push({
+      type: 'positive',
+      title: 'Platform Growth',
+      description: `Platform is managing ${totalProjects.toLocaleString()} total projects with ${activeProjects.toLocaleString()} currently active.`,
+      metrics: ['total_projects', 'active_projects'],
+    });
+  }
+
+  // Financial insights
+  const totalRevenue = metrics.find(m => m.id === 'total_revenue')?.value || 0;
+  const totalCredits = metrics.find(m => m.id === 'total_credits')?.value || 0;
+  if (totalRevenue > 0) {
+    insights.push({
+      type: 'positive',
+      title: 'Financial Performance',
+      description: `Generated $${(totalRevenue / 1000).toFixed(1)}K in total revenue with ${totalCredits.toLocaleString()} carbon credits generated.`,
+      metrics: ['total_revenue', 'total_credits'],
+    });
+  }
+
+  // Environmental insights
+  const treesPlanted = metrics.find(m => m.id === 'trees_planted')?.value || 0;
+  const co2Reduced = metrics.find(m => m.id === 'co2_reduced')?.value || 0;
+  const energyGenerated = metrics.find(m => m.id === 'energy_generated')?.value || 0;
+  if (treesPlanted > 0 || co2Reduced > 0 || energyGenerated > 0) {
+    insights.push({
+      type: 'positive',
+      title: 'Environmental Impact',
+      description: `Achieved significant environmental impact: ${treesPlanted.toLocaleString()} trees planted, ${co2Reduced.toFixed(1)} tons CO₂ reduced, and ${energyGenerated.toLocaleString()} kWh clean energy generated.`,
+      metrics: ['trees_planted', 'co2_reduced', 'energy_generated'],
+    });
+  }
+
+  // Monitoring insights
+  if (analyticsData.monitoringStats) {
+    const { totalSubmitted, approvedCount, verificationRate, milestonesAchieved } = analyticsData.monitoringStats;
+    insights.push({
+      type: 'neutral',
+      title: 'Monitoring & Verification',
+      description: `Submitted ${totalSubmitted} monitoring reports with ${approvedCount} approved (${verificationRate}% verification rate). Achieved ${milestonesAchieved} project milestones.`,
+      metrics: ['monitoring_stats'],
+    });
+  }
+
+  return insights;
 }
 
 // PDF Content Generation Functions
@@ -431,34 +531,51 @@ async function generateMonitoringPDFContent(data: any, report: any) {
 }
 
 async function generateAnalyticsPDFContent(data: any, report: any) {
-  return {
-    title: report.title,
-    subtitle: `Analytics Report for ${data.timeframe.period}`,
-    generatedAt: new Date(),
-    userInfo: report.userInfo,
-    content: {
-      sections: [
-        {
-          title: 'Analytics Overview',
-          type: 'text',
-          order: 1,
-          data: 'This report provides comprehensive analytics insights for the specified time period.',
-        },
-        {
-          title: 'Key Insights',
-          type: 'list',
-          order: 2,
-          data: data.insights,
-        },
-      ],
-    },
-    branding: {
-      primaryColor: '#059669',
-      secondaryColor: '#047857',
-      companyName: 'EcoSprout',
-      footer: 'EcoSprout Analytics System • Generated Report',
-    },
-  };
+  // Import the AnalyticsPDFTemplates class
+  const { AnalyticsPDFTemplates } = await import('../lib/analytics-pdf-templates');
+
+  // Generate comprehensive report using the template class
+  const pdfTemplate = AnalyticsPDFTemplates.generateComprehensiveReport(
+    data,
+    report.userInfo
+  );
+
+  // Override title and subtitle with report-specific values
+  pdfTemplate.title = report.title;
+  pdfTemplate.subtitle = `Analytics Report for ${data.timeframe.period}`;
+
+  // Add projects information if available in analyticsData
+  if (report.analyticsData?.projects && report.analyticsData.projects.length > 0) {
+    const projectsSection = {
+      title: 'Project Details',
+      type: 'table' as const,
+      order: pdfTemplate.content.sections.length + 1,
+      data: {
+        headers: ['Project', 'Type', 'Status', 'Progress', 'Impact'],
+        rows: report.analyticsData.projects.map((project: any) => [
+          project.title,
+          project.projectType || 'N/A',
+          project.status,
+          `${project.progress || 0}%`,
+          project.impact || 'N/A',
+        ]),
+      },
+    };
+    pdfTemplate.content.sections.push(projectsSection);
+  }
+
+  // Add chart visualizations section if charts are available
+  if (data.charts && data.charts.length > 0) {
+    const chartsSection = {
+      title: 'Data Visualizations',
+      type: 'text' as const,
+      order: pdfTemplate.content.sections.length + 1,
+      data: `This report includes ${data.charts.length} data visualization${data.charts.length > 1 ? 's' : ''}: ${data.charts.map((c: any) => c.title).join(', ')}. Charts show trends and patterns across the selected time period.`,
+    };
+    pdfTemplate.content.sections.push(chartsSection);
+  }
+
+  return pdfTemplate;
 }
 
 // Helper functions

@@ -455,6 +455,133 @@ export default function CreatorDashboard() {
       const now = Date.now();
       const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
+      // Prepare chart data for PDF
+      const prepareChartData = () => {
+        const charts = [];
+
+        // Revenue chart data
+        if (revenueChartData && revenueChartData.datasets && revenueChartData.datasets[0]) {
+          const revenueDataset = revenueChartData.datasets[0];
+          if (revenueDataset.data) {
+            charts.push({
+              id: 'revenue_chart',
+              title: 'Revenue Analytics',
+              type: 'line',
+              data: revenueChartData.labels.map((label, index) => ({
+                label,
+                value: revenueDataset.data[index],
+                timestamp: new Date().toISOString(),
+              })),
+            });
+          }
+        }
+
+        // Credits by type chart data
+        if (creditsChartData && creditsChartData.datasets && creditsChartData.datasets[0]) {
+          const creditsDataset = creditsChartData.datasets[0];
+          if (creditsDataset.data) {
+            charts.push({
+              id: 'credits_chart',
+              title: 'Credits by Project Type',
+              type: 'bar',
+              data: creditsChartData.labels.map((label, index) => ({
+                label,
+                value: creditsDataset.data[index],
+                timestamp: new Date().toISOString(),
+              })),
+            });
+          }
+        }
+
+        return charts;
+      };
+
+      // Prepare metrics data
+      const prepareMetricsData = () => {
+        return [
+          {
+            id: 'total_projects',
+            name: 'Total Projects',
+            value: creatorStats.totalProjects,
+            unit: 'projects',
+            format: 'number',
+            category: 'platform',
+          },
+          {
+            id: 'active_projects',
+            name: 'Active Projects',
+            value: creatorStats.activeProjects,
+            unit: 'projects',
+            format: 'number',
+            category: 'platform',
+          },
+          {
+            id: 'completed_projects',
+            name: 'Completed Projects',
+            value: creatorStats.completedProjects,
+            unit: 'projects',
+            format: 'number',
+            category: 'platform',
+          },
+          {
+            id: 'total_credits',
+            name: 'Total Credits Generated',
+            value: creatorStats.totalCreditsGenerated,
+            unit: 'credits',
+            format: 'number',
+            category: 'financial',
+          },
+          {
+            id: 'total_revenue',
+            name: 'Total Revenue',
+            value: creatorStats.totalRevenue,
+            unit: 'USD',
+            format: 'currency',
+            category: 'financial',
+          },
+          {
+            id: 'trees_planted',
+            name: 'Trees Planted',
+            value: environmentalImpact.treesPlanted,
+            unit: 'trees',
+            format: 'number',
+            category: 'environmental',
+          },
+          {
+            id: 'co2_reduced',
+            name: 'CO₂ Reduced',
+            value: environmentalImpact.co2Reduced,
+            unit: 'tons',
+            format: 'number',
+            category: 'environmental',
+          },
+          {
+            id: 'energy_generated',
+            name: 'Clean Energy Generated',
+            value: environmentalImpact.energyGenerated,
+            unit: 'kWh',
+            format: 'number',
+            category: 'environmental',
+          },
+        ];
+      };
+
+      // Prepare project details
+      const prepareProjectsData = () => {
+        return projects.map((project) => ({
+          id: project.id,
+          title: project.title,
+          type: project.type,
+          status: project.status,
+          progress: project.progress,
+          revenue: project.revenue,
+          creditsGenerated: project.creditsGenerated,
+          location: project.location,
+          lastUpdate: project.lastUpdate,
+          impact: project.impact,
+        }));
+      };
+
       await createPDFReport({
         templateType: 'analytics',
         reportType: 'creator_dashboard',
@@ -468,6 +595,17 @@ export default function CreatorDashboard() {
           userId: currentUser._id,
           includeCharts: true,
           includeProjects: true,
+        },
+        analyticsData: {
+          metrics: prepareMetricsData(),
+          charts: prepareChartData(),
+          projects: prepareProjectsData(),
+          monitoringStats: {
+            totalSubmitted: monitoringStats.totalSubmitted,
+            approvedCount: monitoringStats.approvedCount,
+            verificationRate: monitoringStats.verificationRate,
+            milestonesAchieved: monitoringStats.milestonesAchieved,
+          },
         },
       });
 

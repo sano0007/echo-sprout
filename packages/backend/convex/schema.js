@@ -936,6 +936,7 @@ exports.default = (0, server_1.defineSchema)({
             period: values_1.v.string(),
         }),
         filters: values_1.v.optional(values_1.v.any()),
+        analyticsData: values_1.v.optional(values_1.v.any()), // Analytics data including charts, metrics, and project details
         userInfo: values_1.v.object({
             userId: values_1.v.string(),
             name: values_1.v.string(),

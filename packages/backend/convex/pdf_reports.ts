@@ -111,6 +111,7 @@ export const createPDFReportRequest = mutation({
       period: v.string(),
     }),
     filters: v.optional(v.any()),
+    analyticsData: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -140,6 +141,7 @@ export const createPDFReportRequest = mutation({
       expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
       timeframe: args.timeframe,
       filters: args.filters,
+      analyticsData: args.analyticsData,
       userInfo: {
         userId: identity.subject,
         name: user.name || user.email.split('@')[0] || 'Unknown User',
