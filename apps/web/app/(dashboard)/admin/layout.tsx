@@ -35,12 +35,6 @@ import {
 
 const adminNavItems = [
   {
-    title: 'Dashboard',
-    icon: Home,
-    url: '/admin/dashboard',
-    badge: null,
-  },
-  {
     title: 'Analytics',
     icon: BarChart3,
     url: '/admin/analytics',
