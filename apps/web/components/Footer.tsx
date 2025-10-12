@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
   const pathname = usePathname();
@@ -20,8 +20,6 @@ export default function Footer() {
       links: [
         { label: 'Browse Projects', href: '/marketplace' },
         { label: 'Register Project', href: '/projects/register' },
-        { label: 'Verification', href: '/verification/dashboard' },
-        { label: 'Monitoring', href: '/monitoring/dashboard' },
       ],
     },
     {
@@ -29,27 +27,11 @@ export default function Footer() {
       links: [
         { label: 'Learning Hub', href: '/learn' },
         { label: 'Forum', href: '/community/forum' },
-        { label: 'Success Stories', href: '/community/stories' },
-        { label: 'Events', href: '/community/events' },
       ],
     },
     {
       title: 'Resources',
-      links: [
-        { label: 'Documentation', href: '/docs' },
-        { label: 'API Reference', href: '/api-docs' },
-        { label: 'Guidelines', href: '/guidelines' },
-        { label: 'FAQs', href: '/faq' },
-      ],
-    },
-    {
-      title: 'Company',
-      links: [
-        { label: 'About Us', href: '/about' },
-        { label: 'Contact', href: '/contact' },
-        { label: 'Careers', href: '/careers' },
-        { label: 'Press', href: '/press' },
-      ],
+      links: [{ label: 'FAQs', href: '/faq' }],
     },
   ];
 
@@ -133,29 +115,6 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Newsletter Signup */}
-        <div className="py-8 border-t border-gray-800">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Stay Updated</h3>
-              <p className="text-gray-400">
-                Get the latest news about carbon markets, new projects, and
-                platform updates.
-              </p>
-            </div>
-            <div className="flex space-x-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <button className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Bottom Bar */}
         <div className="py-6 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
@@ -188,28 +147,6 @@ export default function Footer() {
               >
                 Accessibility
               </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Certifications & Trust Badges */}
-        <div className="py-6 border-t border-gray-800">
-          <div className="flex flex-wrap justify-center items-center space-x-8 space-y-4">
-            <div className="text-center">
-              <div className="text-2xl mb-1">🔒</div>
-              <div className="text-xs text-gray-400">SSL Secured</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl mb-1">✅</div>
-              <div className="text-xs text-gray-400">VCS Verified</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl mb-1">🏆</div>
-              <div className="text-xs text-gray-400">Gold Standard</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl mb-1">🌿</div>
-              <div className="text-xs text-gray-400">CCBS Certified</div>
             </div>
           </div>
         </div>

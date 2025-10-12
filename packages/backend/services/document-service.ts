@@ -17,8 +17,8 @@ export class DocumentService {
       fileSize: number;
       fileSizeFormatted: string;
       media: {
-        cloudinary_public_id: string;
-        cloudinary_url: string;
+        storageId: string;
+        fileUrl: string;
       };
       thumbnailUrl?: string;
       documentType: DocumentType;

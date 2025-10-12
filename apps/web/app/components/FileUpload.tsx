@@ -2,7 +2,7 @@
 
 import { api, Id } from '@packages/backend';
 import { useAction, useMutation } from 'convex/react';
-import { File, FileText, Image, Upload, X } from 'lucide-react';
+import { File, FileText, Image as ImageIcon, Upload, X } from 'lucide-react';
 import React, { useCallback, useRef, useState } from 'react';
 
 interface UploadedFile {
@@ -23,6 +23,13 @@ interface FileUploadProps {
   acceptedTypes?: string[];
   uploadMode?: 'immediate' | 'deferred';
   onFilesReady?: (files: UploadedFile[]) => void; // For deferred uploads
+  documentType?:
+    | 'project_proposal'
+    | 'environmental_impact'
+    | 'site_photographs'
+    | 'legal_permits'
+    | 'featured_images'
+    | 'site_images';
 }
 
 export default function FileUpload({
@@ -39,6 +46,7 @@ export default function FileUpload({
   ],
   uploadMode = 'immediate',
   onFilesReady,
+  documentType = 'project_proposal',
 }: FileUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -52,7 +60,7 @@ export default function FileUpload({
   console.log('Projects API:', api.projects);
 
   const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <Image className="w-6 h-6" />;
+    if (fileType.startsWith('image/')) return <ImageIcon className="w-6 h-6" />;
     if (fileType === 'application/pdf') return <FileText className="w-6 h-6" />;
     return <File className="w-6 h-6" />;
   };
@@ -222,6 +230,7 @@ export default function FileUpload({
           fileName: uploadedFile.file.name,
           fileType: uploadedFile.file.type,
           storageId: storageId,
+          documentType: documentType,
         });
 
         console.log('Document metadata stored:', result);

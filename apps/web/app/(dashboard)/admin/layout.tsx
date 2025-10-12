@@ -1,45 +1,37 @@
 import {
-    Activity,
-    BarChart3,
-    Bell,
-    HelpCircle,
-    Home,
-    LogOut,
-    Search,
-    Settings,
-    Shield,
-    User,
-    Users,
+  BarChart3,
+  Bell,
+  BookOpen,
+  Coins,
+  LogOut,
+  Monitor,
+  Search,
+  User,
+  Users,
 } from 'lucide-react';
 import React from 'react';
 
-import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
-import {Badge} from '@/components/ui/badge';
-import {Button} from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarGroup,
-    SidebarGroupContent,
-    SidebarGroupLabel,
-    SidebarHeader,
-    SidebarInset,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    SidebarProvider,
-    SidebarRail,
-    SidebarTrigger,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 
 const adminNavItems = [
-  {
-    title: 'Dashboard',
-    icon: Home,
-    url: '/admin/dashboard',
-    badge: null,
-  },
   {
     title: 'Analytics',
     icon: BarChart3,
@@ -50,30 +42,24 @@ const adminNavItems = [
     title: 'User Management',
     icon: Users,
     url: '/admin/users',
-    badge: '12',
-  },
-  {
-    title: 'System Health',
-    icon: Activity,
-    url: '/admin/system',
     badge: null,
   },
   {
-    title: 'Security',
-    icon: Shield,
-    url: '/admin/security',
+    title: 'Transactions',
+    icon: Coins,
+    url: '/admin/transactions',
     badge: null,
   },
   {
-    title: 'Support Center',
-    icon: HelpCircle,
-    url: '/admin/support',
-    badge: '3',
+    title: 'Education Hub',
+    icon: BookOpen,
+    url: '/admin/education',
+    badge: null,
   },
   {
-    title: 'Settings',
-    icon: Settings,
-    url: '/admin/settings',
+    title: 'Monitoring System',
+    icon: Monitor,
+    url: '/admin/monitoring',
     badge: null,
   },
 ];

@@ -3,8 +3,27 @@
 import { api } from '@packages/backend';
 import { useAction, useMutation } from 'convex/react';
 import { useState } from 'react';
+import { City, Country, State } from 'country-state-city';
+import { toast } from 'react-toastify';
 
-import FileUpload from '../../components/FileUpload';
+import DocumentUpload from '../../../components/DocumentUpload';
+
+// Document type union that matches backend expectations
+type DocumentType =
+  | 'project_proposal'
+  | 'environmental_impact'
+  | 'site_photographs'
+  | 'legal_permits'
+  | 'featured_images'
+  | 'site_images';
+
+// Interface for files with status from DocumentUpload component
+interface FileWithStatus {
+  file: File;
+  status: 'pending' | 'uploading' | 'completed' | 'error';
+  progress?: number;
+  description?: string;
+}
 
 interface ProjectFormData {
   title: string;
@@ -35,13 +54,37 @@ const steps = [
   'Basic Information',
   'Project Timeline',
   'Location & Details',
-  'Document Upload',
+  'Required Documents',
+  'Project Images',
   'Review & Submit',
 ];
 
+// Document files interface
+interface DocumentFiles {
+  project_proposal: File[];
+  environmental_impact: File[];
+  site_photographs: File[];
+  legal_permits: File[];
+  featured_images: File[];
+
+  site_images: File[];
+}
+
 export default function ProjectRegister() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [tempUploadedFiles, setTempUploadedFiles] = useState<File[]>([]);
+  const [documentFiles, setDocumentFiles] = useState<DocumentFiles>({
+    project_proposal: [],
+    environmental_impact: [],
+    site_photographs: [],
+    legal_permits: [],
+    featured_images: [],
+    site_images: [],
+  });
+
+  // Location selection states
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     description: '',
@@ -59,13 +102,13 @@ export default function ProjectRegister() {
     totalCarbonCredits: 0,
     pricePerCredit: 0,
     requiredDocuments: [
-      'project_plan',
-      'environmental_assessment',
-      'permits',
-      'photos',
+      'project_proposal',
+      'environmental_impact',
+      'legal_permits',
+      'site_photographs',
     ],
   });
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createProject = useMutation(api.projects.createProject);
@@ -155,7 +198,9 @@ export default function ProjectRegister() {
   };
 
   const submitProject = async (data: ProjectFormData) => {
-    try {
+    setIsSubmitting(true);
+
+    const projectPromise = (async () => {
       // Create the project first
       const projectId = await createProject({
         title: data.title,
@@ -170,16 +215,30 @@ export default function ProjectRegister() {
         totalCarbonCredits: data.totalCarbonCredits,
         pricePerCredit: data.pricePerCredit,
         requiredDocuments: data.requiredDocuments,
+        creditsAvailable: data.totalCarbonCredits,
+        creditsSold: 0,
+        submittedDocuments: [],
+        isDocumentationComplete: false,
       });
 
-      // Now upload the files if any exist
-      if (tempUploadedFiles.length > 0) {
-        alert(
-          `Project created successfully! Uploading ${tempUploadedFiles.length} document${tempUploadedFiles.length !== 1 ? 's' : ''}...`
-        );
+      // Now upload the documents if any exist
+      const allFiles = Object.entries(documentFiles).flatMap(
+        ([docType, files]) =>
+          files.map((file: File) => ({
+            file,
+            documentType: docType as DocumentType,
+          }))
+      );
 
-        const uploadPromises = tempUploadedFiles.map(async (file) => {
-          try {
+      if (allFiles.length > 0) {
+        const uploadPromises = allFiles.map(
+          async ({
+            file,
+            documentType,
+          }: {
+            file: File;
+            documentType: DocumentType;
+          }) => {
             // Step 1: Get upload URL
             const uploadUrl = await generateUploadUrl();
             console.log('Generated upload URL for', file.name);
@@ -200,35 +259,57 @@ export default function ProjectRegister() {
             const { storageId } = await response.json();
             console.log('File uploaded successfully, storage ID:', storageId);
 
-            // Step 3: Store document metadata in database
+            // Step 3: Store document metadata in database with document type
             await uploadProjectDocuments({
               projectId: projectId,
               fileName: file.name,
               fileType: file.type,
               storageId: storageId,
+              documentType: documentType,
             });
-          } catch (error) {
-            console.error(`Failed to upload ${file.name}:`, error);
-            throw error;
           }
-        });
+        );
 
         await Promise.all(uploadPromises);
-        alert(
-          `Successfully uploaded ${tempUploadedFiles.length} document${tempUploadedFiles.length !== 1 ? 's' : ''}!`
-        );
-      } else {
-        alert('Project created successfully!');
       }
 
+      return { projectId, filesCount: allFiles.length };
+    })();
+
+    try {
+      const allFiles = Object.values(documentFiles).flat();
+
+      await toast.promise(projectPromise, {
+        pending:
+          allFiles.length > 0
+            ? 'Creating project and uploading documents...'
+            : 'Creating project...',
+        success:
+          allFiles.length > 0
+            ? `Project created successfully! Uploaded ${allFiles.length} document${allFiles.length !== 1 ? 's' : ''}.`
+            : 'Project created successfully!',
+        error: 'Failed to create project. Please try again.',
+      });
+
       // Reset form state
-      setTempUploadedFiles([]);
+      setDocumentFiles({
+        project_proposal: [],
+        environmental_impact: [],
+        site_photographs: [],
+        legal_permits: [],
+        featured_images: [],
+        site_images: [],
+      });
 
       // Redirect to project management after successful creation
-      window.location.href = '/projects/manage';
+      setTimeout(() => {
+        window.location.href = '/projects/manage';
+      }, 1500);
     } catch (error) {
       console.error('Error creating project:', error);
       setErrors({ submit: 'Failed to create project. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -402,35 +483,124 @@ export default function ProjectRegister() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Project Location
+                  Country
                 </label>
-                <input
-                  type="text"
-                  placeholder="Project Address"
-                  value={formData.location.name}
-                  onChange={(e) =>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => {
+                    const countryCode = e.target.value;
+                    setSelectedCountry(countryCode);
+                    setSelectedState('');
+                    setSelectedCity('');
+
+                    const country = Country.getCountryByCode(countryCode);
                     handleInputChange('location', {
                       ...formData.location,
-                      name: e.target.value,
-                    })
-                  }
+                      name: country?.name || '',
+                    });
+                  }}
                   className={`w-full p-3 border rounded ${errors.location ? 'border-red-500' : ''}`}
-                />
-                {errors.location && (
-                  <p className="text-red-500 text-sm mt-1">{errors.location}</p>
-                )}
+                >
+                  <option value="">Select Country</option>
+                  {Country.getAllCountries().map((country) => (
+                    <option key={country.isoCode} value={country.isoCode}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="City"
-                  className="p-3 border rounded"
-                />
-                <input
-                  type="text"
-                  placeholder="Country"
-                  className="p-3 border rounded"
-                />
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    State/Province
+                  </label>
+                  <select
+                    value={selectedState}
+                    onChange={(e) => {
+                      const stateCode = e.target.value;
+                      setSelectedState(stateCode);
+                      setSelectedCity('');
+
+                      const state = State.getStateByCodeAndCountry(
+                        stateCode,
+                        selectedCountry
+                      );
+                      const country = Country.getCountryByCode(selectedCountry);
+                      handleInputChange('location', {
+                        ...formData.location,
+                        name:
+                          state && country
+                            ? `${state.name}, ${country.name}`
+                            : country?.name || '',
+                      });
+                    }}
+                    disabled={!selectedCountry}
+                    className="w-full p-3 border rounded disabled:bg-gray-100"
+                  >
+                    <option value="">Select State/Province</option>
+                    {selectedCountry &&
+                      State.getStatesOfCountry(selectedCountry).map((state) => (
+                        <option key={state.isoCode} value={state.isoCode}>
+                          {state.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">City</label>
+                  <select
+                    value={selectedCity}
+                    onChange={(e) => {
+                      const cityName = e.target.value;
+                      setSelectedCity(cityName);
+
+                      const state = State.getStateByCodeAndCountry(
+                        selectedState,
+                        selectedCountry
+                      );
+                      const country = Country.getCountryByCode(selectedCountry);
+
+                      let locationName = '';
+                      if (cityName && state && country) {
+                        locationName = `${cityName}, ${state.name}, ${country.name}`;
+                      } else if (state && country) {
+                        locationName = `${state.name}, ${country.name}`;
+                      } else if (country) {
+                        locationName = country.name;
+                      }
+
+                      handleInputChange('location', {
+                        ...formData.location,
+                        name: locationName,
+                      });
+                    }}
+                    disabled={!selectedState}
+                    className="w-full p-3 border rounded disabled:bg-gray-100"
+                  >
+                    <option value="">Select City</option>
+                    {selectedState &&
+                      City.getCitiesOfState(selectedCountry, selectedState).map(
+                        (city) => (
+                          <option key={city.name} value={city.name}>
+                            {city.name}
+                          </option>
+                        )
+                      )}
+                  </select>
+                </div>
+              </div>
+
+              {errors.location && (
+                <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+              )}
+
+              <div className="p-3 bg-gray-50 rounded border">
+                <p className="text-sm text-gray-600">Selected Location:</p>
+                <p className="font-medium">
+                  {formData.location.name || 'None selected'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
@@ -476,7 +646,7 @@ export default function ProjectRegister() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Project Budget (Rs.)
+                  Project Budget ($)
                 </label>
                 <input
                   type="number"
@@ -493,7 +663,7 @@ export default function ProjectRegister() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Price per Credit (Rs.)
+                  Price per Credit ($)
                 </label>
                 <input
                   type="number"
@@ -520,66 +690,249 @@ export default function ProjectRegister() {
 
         {currentStep === 3 && (
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Document Upload</h2>
-            <div className="space-y-4">
-              <FileUpload
-                projectId="" // Empty for deferred uploads
+            <h2 className="text-2xl font-semibold mb-6">Required Documents</h2>
+            <div className="space-y-8">
+              <DocumentUpload
+                documentType="project_proposal"
+                projectId=""
                 uploadMode="deferred"
-                onFilesReady={(
-                  files: Array<{ file: File; id: string; status: string }>
-                ) => {
-                  setTempUploadedFiles(
-                    files.map((f: { file: File }) => f.file)
-                  );
-                  console.log(
-                    'Files ready for upload after project creation:',
-                    files
-                  );
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    project_proposal: files.map((f: FileWithStatus) => f.file),
+                  }));
                 }}
-                maxFiles={10}
-                maxSizeMB={50}
-                acceptedTypes={[
-                  'application/pdf',
-                  'image/jpeg',
-                  'image/png',
-                  'application/msword',
-                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                ]}
               />
-              {tempUploadedFiles.length > 0 && (
-                <div className="text-sm text-green-600">
-                  ✓ {tempUploadedFiles.length} file
-                  {tempUploadedFiles.length !== 1 ? 's' : ''} ready to upload
-                </div>
-              )}
-              <div className="text-sm text-gray-600">
-                <p>Required documents:</p>
-                <ul className="list-disc ml-4">
-                  <li>Project proposal document</li>
-                  <li>Environmental impact assessment</li>
-                  <li>Site photographs</li>
-                  <li>Legal permits and certifications</li>
-                </ul>
-              </div>
+
+              <DocumentUpload
+                documentType="environmental_impact"
+                projectId=""
+                uploadMode="deferred"
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    environmental_impact: files.map(
+                      (f: FileWithStatus) => f.file
+                    ),
+                  }));
+                }}
+              />
+
+              <DocumentUpload
+                documentType="legal_permits"
+                projectId=""
+                uploadMode="deferred"
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    legal_permits: files.map((f: FileWithStatus) => f.file),
+                  }));
+                }}
+              />
             </div>
           </div>
         )}
 
         {currentStep === 4 && (
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Review & Submit</h2>
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded">
-                <h3 className="font-semibold">Project Summary</h3>
-                <p>Project Name: Sample Reforestation Project</p>
-                <p>Type: Reforestation</p>
-                <p>Location: Sample City, Sample Country</p>
-                <p>Expected Credits: 1000</p>
+            <h2 className="text-2xl font-semibold mb-6">Project Images</h2>
+            <div className="space-y-8">
+              <DocumentUpload
+                documentType="featured_images"
+                projectId=""
+                uploadMode="deferred"
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    featured_images: files.map((f: FileWithStatus) => f.file),
+                  }));
+                }}
+              />
+
+              <DocumentUpload
+                documentType="site_photographs"
+                projectId=""
+                uploadMode="deferred"
+                onFilesReady={(files: FileWithStatus[]) => {
+                  setDocumentFiles((prev) => ({
+                    ...prev,
+                    site_photographs: files.map((f: FileWithStatus) => f.file),
+                  }));
+                }}
+              />
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-2">
+                Image Guidelines
+              </h3>
+              <ul className="text-sm text-blue-800 space-y-1">
+                <li>
+                  • Featured images will be displayed prominently on your
+                  project listing
+                </li>
+                <li>
+                  • Site photographs help verifiers assess project authenticity
+                </li>
+                <li>• Use high-quality images (JPEG, PNG, or WebP format)</li>
+                <li>
+                  • Include diverse angles and perspectives of your project site
+                </li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 5 && (
+          <div>
+            <h2 className="text-2xl font-semibold mb-6">Review & Submit</h2>
+            <div className="space-y-6">
+              {/* Project Summary */}
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">Project Summary</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Project Name</p>
+                    <p className="font-medium">
+                      {formData.title || 'Not specified'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Project Type</p>
+                    <p className="font-medium capitalize">
+                      {formData.projectType?.replace('_', ' ') ||
+                        'Not specified'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="font-medium">
+                      {formData.location?.name || 'Not specified'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Expected Credits</p>
+                    <p className="font-medium">
+                      {formData.totalCarbonCredits?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Budget</p>
+                    <p className="font-medium">
+                      Rs. {formData.budget?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Price per Credit</p>
+                    <p className="font-medium">
+                      Rs. {formData.pricePerCredit || 0}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <label>I agree to the terms and conditions</label>
+
+              {/* Document Summary */}
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">
+                  Documents Summary
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex justify-between items-center">
+                    <span>Project Proposal</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.project_proposal.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {documentFiles.project_proposal.length > 0
+                        ? `${documentFiles.project_proposal.length} file(s)`
+                        : 'Required'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Environmental Impact</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.environmental_impact.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {documentFiles.environmental_impact.length > 0
+                        ? `${documentFiles.environmental_impact.length} file(s)`
+                        : 'Required'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Legal Permits</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.legal_permits.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {documentFiles.legal_permits.length > 0
+                        ? `${documentFiles.legal_permits.length} file(s)`
+                        : 'Required'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Featured Images</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.featured_images.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {documentFiles.featured_images.length > 0
+                        ? `${documentFiles.featured_images.length} image(s)`
+                        : 'Optional'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Site Photographs</span>
+                    <span
+                      className={`px-2 py-1 rounded text-sm ${
+                        documentFiles.site_photographs.length > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {documentFiles.site_photographs.length > 0
+                        ? `${documentFiles.site_photographs.length} image(s)`
+                        : 'Optional'}
+                    </span>
+                  </div>
+                </div>
               </div>
+
+              {/* Terms Agreement */}
+              <div className="flex items-center space-x-2">
+                <input type="checkbox" id="terms" className="rounded" />
+                <label htmlFor="terms" className="text-sm">
+                  I agree to the{' '}
+                  <a href="/terms" className="text-blue-600 underline">
+                    terms and conditions
+                  </a>{' '}
+                  and confirm that all information provided is accurate
+                </label>
+              </div>
+
+              {/* Validation Messages */}
+              {(documentFiles.project_proposal.length === 0 ||
+                documentFiles.environmental_impact.length === 0 ||
+                documentFiles.legal_permits.length === 0) && (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    ⚠️ Some required documents are missing. Please go back and
+                    upload all required documents before submitting.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -596,9 +949,14 @@ export default function ProjectRegister() {
         </button>
         <button
           onClick={currentStep === steps.length - 1 ? handleSubmit : handleNext}
-          className="px-6 py-2 bg-blue-600 text-white rounded"
+          disabled={isSubmitting}
+          className="px-6 py-2 bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {currentStep === steps.length - 1 ? 'Submit' : 'Next'}
+          {currentStep === steps.length - 1
+            ? isSubmitting
+              ? 'Submitting...'
+              : 'Submit'
+            : 'Next'}
         </button>
       </div>
     </div>

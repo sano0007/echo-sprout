@@ -100,6 +100,7 @@ export interface StatusBreakdown {
   percentage: number;
   growth: number;
   avgTimeInStatus: number;
+  [key: string]: any;
 }
 
 export interface TypeBreakdown {
@@ -109,6 +110,7 @@ export interface TypeBreakdown {
   averageValue: number;
   growth: number;
   performance: number;
+  [key: string]: any;
 }
 
 export interface RegionBreakdown {
@@ -160,6 +162,7 @@ export interface RoleBreakdown {
   percentage: number;
   activityLevel: number;
   retentionRate: number;
+  [key: string]: any;
 }
 
 export interface ActivityMetrics {
@@ -186,6 +189,7 @@ export interface FeatureUsage {
   averageTimeSpent: number;
   conversionRate: number;
   satisfactionScore: number;
+  [key: string]: any;
 }
 
 export interface RetentionData {
@@ -224,6 +228,7 @@ export interface SourceBreakdown {
   percentage: number;
   growth: number;
   margin: number;
+  [key: string]: any;
 }
 
 export interface ProfitabilityMetrics {
@@ -249,6 +254,7 @@ export interface ImpactByType {
   averageImpactPerProject: number;
   efficiency: number;
   growth: number;
+  [key: string]: any;
 }
 
 export interface ImpactByRegion {

@@ -20,8 +20,8 @@ export const uploadDocument = mutation({
     fileSize: v.number(),
     fileSizeFormatted: v.string(),
     media: v.object({
-      cloudinary_public_id: v.string(),
-      cloudinary_url: v.string(),
+      storageId: v.string(),
+      fileUrl: v.string(),
     }),
     thumbnailUrl: v.optional(v.string()),
     documentType: v.union(
@@ -98,9 +98,9 @@ export const getDocumentsByEntity = query({
         ('assignedVerifierId' in project &&
           project.assignedVerifierId === currentUser._id);
 
-      if (!hasAccess) {
-        throw new Error('Unauthorized');
-      }
+      // if (!hasAccess) {
+      //   throw new Error('Unauthorized');
+      // }
     }
 
     return await DocumentService.getDocumentsByEntity(

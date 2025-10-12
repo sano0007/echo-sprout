@@ -138,7 +138,9 @@ export const getMonitoringStats = internalQuery({
     // Get overdue progress reports (no update in 30+ days)
     const projectsWithRecentUpdates = await ctx.db
       .query('progressUpdates')
-      .withIndex('by_date', (q) => q.gte('reportingDate', thirtyDaysAgo))
+      .withIndex('by_reporting_date', (q) =>
+        q.gte('reportingDate', thirtyDaysAgo)
+      )
       .collect();
 
     const projectsWithRecentUpdatesSet = new Set(
@@ -664,7 +666,7 @@ export const detectProjectAnomalies = internalMutation({
     // Get all projects with recent activity
     const recentUpdates = await ctx.db
       .query('progressUpdates')
-      .withIndex('by_date', (q) =>
+      .withIndex('by_reporting_date', (q) =>
         q.gte('reportingDate', Date.now() - 7 * 24 * 60 * 60 * 1000)
       )
       .collect();

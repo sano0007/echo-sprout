@@ -568,27 +568,29 @@ export const getBuyerProjectTracking = query({
     const trackingData = [];
 
     for (const purchase of purchases) {
-      const project = await ctx.db.get(purchase.projectId);
+      const projectId = purchase.projectId;
+      if (!projectId) continue;
+      const project = await ctx.db.get(projectId);
       if (!project) continue;
 
       // Get recent progress updates for this project
       const recentUpdates = await ctx.db
         .query('progressUpdates')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .order('desc')
         .take(3);
 
       // Get project milestones
       const milestones = await ctx.db
         .query('projectMilestones')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .order('asc')
         .collect();
 
       // Get active alerts for this project
       const alerts = await ctx.db
         .query('systemAlerts')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .filter((q) => q.eq(q.field('isResolved'), false))
         .collect();
 
@@ -614,7 +616,7 @@ export const getBuyerProjectTracking = query({
         purchase.creditAmount * 1.5; // Fallback estimation
 
       trackingData.push({
-        projectId: purchase.projectId,
+        projectId: projectId,
         projectTitle: project.title,
         projectType: project.projectType,
         creatorName: 'Project Creator', // Will need to fetch from users table
@@ -640,7 +642,10 @@ export const getBuyerProjectTracking = query({
           title: update.title,
           description: update.description,
           date: update.reportingDate,
-          photos: update.photos?.map((p) => p.cloudinary_url) || [],
+          photos:
+            update.photoUrls ||
+            update.photos?.map((p) => p.cloudinary_url) ||
+            [],
           metrics: update.measurementData,
         })),
         impact: {
@@ -775,7 +780,8 @@ export const getDetailedProjectTracking = query({
         title: update.title,
         description: update.description,
         date: update.reportingDate,
-        photos: update.photos?.map((p) => p.cloudinary_url) || [],
+        photos:
+          update.photoUrls || update.photos?.map((p) => p.cloudinary_url) || [],
         metrics: update.measurementData,
       })),
       impact: {
@@ -838,13 +844,15 @@ export const getBuyerPortfolioSummary = query({
       totalCredits += purchase.creditAmount;
       totalInvestment += purchase.totalAmount;
 
-      const project = await ctx.db.get(purchase.projectId);
+      const projectId = purchase.projectId;
+      if (!projectId) continue;
+      const project = await ctx.db.get(projectId);
       if (!project) continue;
 
       // Get latest progress update for carbon impact
       const latestUpdate = await ctx.db
         .query('progressUpdates')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .order('desc')
         .first();
 
@@ -863,7 +871,7 @@ export const getBuyerPortfolioSummary = query({
       // Check for unresolved alerts
       const hasIssues = await ctx.db
         .query('systemAlerts')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .filter((q) => q.eq(q.field('isResolved'), false))
         .first();
 

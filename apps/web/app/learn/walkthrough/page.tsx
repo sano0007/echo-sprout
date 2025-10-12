@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 
 type Slide = {
@@ -32,20 +33,6 @@ export default function WalkthroughPage() {
 
   const current = slides[index];
 
-  if (!current) {
-    return (
-      <div className="max-w-3xl mx-auto p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Project Walkthrough</h1>
-          <Link href="/learn" className="text-blue-600 hover:underline">
-            Back to Learn
-          </Link>
-        </div>
-        <div className="text-center text-gray-500">No slides available</div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -57,15 +44,22 @@ export default function WalkthroughPage() {
 
       <div className="relative bg-white rounded-lg shadow-md p-4">
         <div className="flex justify-center">
-          <img
-            src={current.image}
-            alt={`Slide ${index + 1}`}
-            className="w-full max-h-[60vh] object-contain rounded border"
-          />
+          <div className="relative w-full h-[60vh]">
+            <Image
+              src={
+                current?.image ?? 'https://placehold.co/800x450?text=No+Image'
+              }
+              alt={`Slide ${index + 1}`}
+              fill
+              sizes="100vw"
+              className="object-contain rounded border"
+              priority
+            />
+          </div>
         </div>
 
         <div className="mt-4 border-t pt-3 text-gray-700">
-          {current.details}
+          {current?.details}
         </div>
 
         <button

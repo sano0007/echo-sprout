@@ -6,8 +6,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const Recharts = require('recharts') as typeof import('recharts');
+import * as Recharts from 'recharts';
 
 export default function LearnAnalyticsPage() {
   const learningPaths = useQuery(api.learn.listLearningPaths);
@@ -50,11 +49,11 @@ export default function LearnAnalyticsPage() {
 
   const handleGeneratePdf = async () => {
     try {
-      const element = document.getElementById('anal_id');
-      if (!element) return;
+      const root = document.getElementById('anal_id');
+      if (!root) return;
 
       // Temporarily hide controls during capture (preserve layout with visibility)
-      const toHide = element.querySelectorAll('[data-report-exclude]');
+      const toHide = root.querySelectorAll('[data-report-exclude]');
       const prevVisibility: string[] = [];
       toHide.forEach((el: Element, i) => {
         const style = (el as HTMLElement).style;
@@ -62,24 +61,6 @@ export default function LearnAnalyticsPage() {
         style.visibility = 'hidden';
       });
 
-      // Capture the analytics section at higher scale for better quality
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-      });
-
-      // Restore control visibility
-      toHide.forEach((el: Element, i) => {
-        (el as HTMLElement).style.visibility = prevVisibility[i] ?? '';
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-
-      // Create a landscape A4 PDF in points
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'pt',
@@ -87,45 +68,170 @@ export default function LearnAnalyticsPage() {
       });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 24; // page margin (pt)
+      const contentWidth = pageWidth - margin * 2;
+      const contentHeight = pageHeight - margin * 2;
+      const spacing = 12; // space between stacked blocks
 
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      // Add first page image
-      let heightLeft = imgHeight;
-      let position = 0;
-      pdf.addImage(
-        imgData,
-        'PNG',
-        0,
-        position,
-        imgWidth,
-        imgHeight,
-        undefined,
-        'FAST'
+      // Select only top-level report blocks (exclude nested ones)
+      const allBlocks = Array.from(
+        root.querySelectorAll('[data-report-block]')
+      ) as HTMLElement[];
+      const blocks = allBlocks.filter(
+        (el) => el.parentElement?.closest('[data-report-block]') === null
       );
-      heightLeft -= pageHeight;
 
-      // Use a small overlap between pages to reduce text being cut between pages
-      const overlap = 24; // points
+      // Temporarily un-truncate long titles for capture
+      const untruncateEls = root.querySelectorAll('[data-report-untruncate]');
+      const prevOverflow: string[] = [];
+      const prevTextOverflow: string[] = [];
+      const prevWhiteSpace: string[] = [];
+      untruncateEls.forEach((el: Element, i) => {
+        const style = (el as HTMLElement).style;
+        prevOverflow[i] = style.overflow;
+        prevTextOverflow[i] = style.textOverflow as string;
+        prevWhiteSpace[i] = style.whiteSpace as string;
+        style.overflow = 'visible';
+        style.textOverflow = 'clip';
+        style.whiteSpace = 'normal';
+      });
 
-      while (heightLeft > 0) {
-        pdf.addPage();
-        position = heightLeft - imgHeight + overlap; // shift up with small overlap
+      if (blocks.length === 0) {
+        // Fallback to whole-page capture (should be rare now)
+        const canvas = await html2canvas(root, {
+          useCORS: true,
+          logging: false,
+          width: root.scrollWidth,
+          height: root.scrollHeight,
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = contentWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        let heightLeft = imgHeight;
+        let position = margin;
         pdf.addImage(
           imgData,
           'PNG',
-          0,
+          margin,
           position,
           imgWidth,
           imgHeight,
           undefined,
           'FAST'
         );
-        heightLeft -= pageHeight - overlap;
+        heightLeft -= contentHeight;
+
+        const overlap = 24;
+        while (heightLeft > 0) {
+          pdf.addPage();
+          position = margin + (heightLeft - imgHeight + overlap);
+          pdf.addImage(
+            imgData,
+            'PNG',
+            margin,
+            position,
+            imgWidth,
+            imgHeight,
+            undefined,
+            'FAST'
+          );
+          heightLeft -= contentHeight - overlap;
+        }
+      } else {
+        // Capture each block individually and stack them without breaking inside a block
+        let y = margin;
+        for (let i = 0; i < blocks.length; i++) {
+          const el = blocks[i] as HTMLElement;
+          const isHeaderBlock = !!el.querySelector('h1');
+          const requiresBreakBefore = el.hasAttribute(
+            'data-report-break-before'
+          );
+
+          if (requiresBreakBefore && y !== margin) {
+            pdf.addPage();
+            y = margin;
+          }
+
+          // Add tiny padding to header to avoid top/bottom clipping during capture
+          let prevPaddingTop: string | undefined;
+          let prevPaddingBottom: string | undefined;
+          if (isHeaderBlock) {
+            prevPaddingTop = el.style.paddingTop;
+            prevPaddingBottom = el.style.paddingBottom;
+            el.style.paddingTop = '16px';
+            el.style.paddingBottom = '12px';
+          }
+
+          // Compute size AFTER padding adjustments
+          const w = el.scrollWidth || el.clientWidth;
+          const h = el.scrollHeight || el.clientHeight;
+
+          const canvas = await html2canvas(el, {
+            useCORS: true,
+            logging: false,
+            width: w,
+            height: h,
+          });
+
+          // Restore padding
+          if (isHeaderBlock) {
+            el.style.paddingTop = prevPaddingTop ?? '';
+            el.style.paddingBottom = prevPaddingBottom ?? '';
+          }
+          const imgData = canvas.toDataURL('image/png');
+          const naturalWidth = canvas.width;
+          const naturalHeight = canvas.height;
+
+          const renderWidth = contentWidth;
+          const renderHeight = (naturalHeight * renderWidth) / naturalWidth;
+
+          // If block taller than a page, scale it down to fit a single page to avoid slicing inside the block
+          const scaleFactor = Math.min(1, contentHeight / renderHeight);
+          const finalWidth = renderWidth * scaleFactor;
+          const finalHeight = renderHeight * scaleFactor;
+
+          // New page if this block doesn't fit on current page
+          if (y + finalHeight > pageHeight - margin) {
+            pdf.addPage();
+            y = margin;
+          }
+
+          pdf.addImage(
+            imgData,
+            'PNG',
+            margin,
+            y,
+            finalWidth,
+            finalHeight,
+            undefined,
+            'FAST'
+          );
+          y += finalHeight + spacing;
+
+          const requiresBreakAfter = el.hasAttribute('data-report-break-after');
+          if (requiresBreakAfter && i !== blocks.length - 1) {
+            pdf.addPage();
+            y = margin;
+          }
+        }
       }
 
-      pdf.save('learn-analytics-report.pdf');
+      // Restore un-truncation styles
+      untruncateEls.forEach((el: Element, i) => {
+        const style = (el as HTMLElement).style;
+        style.overflow = prevOverflow[i] ?? '';
+        style.textOverflow = prevTextOverflow[i] ?? ('' as any);
+        style.whiteSpace = prevWhiteSpace[i] ?? ('' as any);
+      });
+
+      // Restore control visibility
+      toHide.forEach((el: Element, i) => {
+        (el as HTMLElement).style.visibility = prevVisibility[i] ?? '';
+      });
+
+      pdf.save(`learn-analytics-report-${todayIso}.pdf`);
     } catch (err) {
       console.error('Error generating PDF', err);
     }
@@ -137,16 +243,12 @@ export default function LearnAnalyticsPage() {
       ref={reportTemplateRef as unknown as any}
       className="max-w-7xl mx-auto p-6 space-y-6"
     >
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div
+        className="flex items-center justify-between gap-4 flex-wrap"
+        data-report-block
+      >
         <h1 className="text-3xl font-bold">Education & Forum Analytics</h1>
         <div className={'flex justify-between items-center gap-4 flex-wrap'}>
-          <button
-            data-report-exclude
-            className={'px-4 py-2 bg-blue-500 text-white text-bold rounded-md'}
-            onClick={handleGeneratePdf}
-          >
-            Generate Report
-          </button>
           <Link
             data-report-exclude
             href="/learn"
@@ -157,7 +259,7 @@ export default function LearnAnalyticsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4" data-report-block>
         <Kpi
           title="Total Content"
           value={
@@ -216,7 +318,7 @@ export default function LearnAnalyticsPage() {
         </div>
       </Section>
 
-      <Section title="Top Content">
+      <Section title="Top Content" breakBefore>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white rounded-lg shadow p-4">
             <div className="font-medium mb-2">Top by Views</div>
@@ -240,7 +342,10 @@ export default function LearnAnalyticsPage() {
                 (topByViews as any[]).length > 0 ? (
                 (topByViews as any[]).slice(0, 5).map((r: any) => (
                   <li key={r.id} className="py-2">
-                    <div className="text-sm font-medium text-gray-900 truncate">
+                    <div
+                      className="text-sm font-medium text-gray-900 truncate"
+                      data-report-untruncate
+                    >
                       {r.title}
                     </div>
                     <div className="text-xs text-gray-500">{r.views} views</div>
@@ -273,7 +378,10 @@ export default function LearnAnalyticsPage() {
                 (topByEngagement as any[]).length > 0 ? (
                 (topByEngagement as any[]).slice(0, 5).map((r: any) => (
                   <li key={r.id} className="py-2">
-                    <div className="text-sm font-medium text-gray-900 truncate">
+                    <div
+                      className="text-sm font-medium text-gray-900 truncate"
+                      data-report-untruncate
+                    >
                       {r.title}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -302,7 +410,10 @@ export default function LearnAnalyticsPage() {
                   return filtered.length ? (
                     filtered.slice(0, 5).map((t: any) => (
                       <li key={t.id as any} className="py-2">
-                        <div className="text-sm font-medium text-gray-900 truncate">
+                        <div
+                          className="text-sm font-medium text-gray-900 truncate"
+                          data-report-untruncate
+                        >
                           {t.title}
                         </div>
                         <div className="text-xs text-gray-500">
@@ -337,7 +448,10 @@ export default function LearnAnalyticsPage() {
                 (contributors as any[]).length ? (
                   (contributors as any[]).slice(0, 5).map((c: any) => (
                     <li key={c.userId} className="py-2">
-                      <div className="text-sm font-medium text-gray-900 truncate">
+                      <div
+                        className="text-sm font-medium text-gray-900 truncate"
+                        data-report-untruncate
+                      >
                         {c.name}
                       </div>
                       <div className="text-xs text-gray-500">
@@ -382,12 +496,21 @@ function Kpi({ title, value }: { title: string; value: string | number }) {
 function Section({
   title,
   children,
+  breakBefore = false,
+  breakAfter = false,
 }: {
   title: string;
   children: React.ReactNode;
+  breakBefore?: boolean;
+  breakAfter?: boolean;
 }) {
   return (
-    <section className="space-y-3">
+    <section
+      className="space-y-3"
+      data-report-block
+      data-report-break-before={breakBefore ? '' : undefined}
+      data-report-break-after={breakAfter ? '' : undefined}
+    >
       <h2 className="text-xl font-semibold">{title}</h2>
       {children}
     </section>
@@ -404,12 +527,12 @@ function DateRangePicker({
   onChange: (f: string, t: string) => void;
 }) {
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <div className="font-medium mb-2">Date Range</div>
+    <div className=" rounded-lg shadow p-4" data-report-exclude>
+      <div className="font-medium  mb-2">Date Range</div>
       <div className="flex items-center gap-3">
         <input
           type="date"
-          className="border rounded px-2 py-1 text-sm"
+          className="border rounded bg-white px-2 py-1 text-sm dark:[color-scheme:dark]"
           value={from}
           max={to}
           onChange={(e) => onChange(e.target.value, to)}
@@ -417,7 +540,7 @@ function DateRangePicker({
         <span className="text-gray-500">to</span>
         <input
           type="date"
-          className="border rounded px-2 py-1 text-sm"
+          className="border rounded bg-white px-2 py-1 text-sm "
           value={to}
           min={from}
           max={new Date().toISOString().slice(0, 10)}

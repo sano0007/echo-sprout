@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
 import { api } from '@packages/backend';
 import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { RelativeTime } from '../forum/utils';
 
 type Post = {
   id: string | number;
@@ -21,47 +22,10 @@ type Post = {
   content?: string;
 };
 
-function RelativeTime({
-  timestamp,
-  fallback,
-}: {
-  timestamp?: number;
-  fallback?: string;
-}) {
-  const [now, setNow] = useState<number>(Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
-  }, []);
-  if (!timestamp) return <span>{fallback ?? 'just now'}</span>;
-  const diff = Math.max(0, now - timestamp);
-  if (diff < 60_000) return <span>just now</span>;
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60)
-    return (
-      <span>
-        {mins} min{mins === 1 ? '' : 's'} ago
-      </span>
-    );
-  const hours = Math.floor(mins / 60);
-  if (hours < 24)
-    return (
-      <span>
-        {hours} hour{hours === 1 ? '' : 's'} ago
-      </span>
-    );
-  const days = Math.floor(hours / 24);
-  return (
-    <span>
-      {days} day{days === 1 ? '' : 's'} ago
-    </span>
-  );
-}
-
 export default function MyTopicsPage() {
   const [myTopics, setMyTopics] = useState<Post[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | number | null>(null);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('general');
   const [tags, setTags] = useState('');
@@ -95,7 +59,7 @@ export default function MyTopicsPage() {
   }, [queryMine]);
 
   const openEdit = (post: Post) => {
-    setEditingId(typeof post.id === 'string' ? parseInt(post.id, 10) : post.id);
+    setEditingId(post.id);
     setTitle(post.title);
     setCategory(post.category);
     setTags(post.tags?.join(', ') || '');

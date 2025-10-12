@@ -499,10 +499,7 @@ export default function EnhancedAnnotationLayer({
                     10,
                   pageWidth * scale - 420
                 ),
-                top: Math.max(
-                  annotation.position.y * scale - 10,
-                  10
-                ),
+                top: Math.max(annotation.position.y * scale - 10, 10),
               }}
               onClick={(e) => e.stopPropagation()}
             >

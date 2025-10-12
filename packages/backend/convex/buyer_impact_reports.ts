@@ -602,18 +602,22 @@ export const getBuyerImpactTrends = query({
 async function verifyBuyerAccess(
   ctx: any,
   buyerId: string,
-  userId: string
+  clerkId: string
 ): Promise<boolean> {
-  // User can access their own reports
-  if (buyerId === userId) return true;
+  // Get the user record for the given buyerId
+  const buyerUser = await ctx.db.get(buyerId);
+  if (!buyerUser) return false;
 
-  // Check if user has admin/verifier role
-  const user = await ctx.db
+  // User can access their own reports if their Clerk ID matches
+  if (buyerUser.clerkId === clerkId) return true;
+
+  // Check if the authenticated user has admin/verifier role
+  const authUser = await ctx.db
     .query('users')
-    .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', userId))
+    .withIndex('by_clerk_id', (q: any) => q.eq('clerkId', clerkId))
     .first();
 
-  return user?.role === 'admin' || user?.role === 'verifier';
+  return authUser?.role === 'admin' || authUser?.role === 'verifier';
 }
 
 async function gatherBuyerReportData(ctx: any, args: any) {
@@ -1464,27 +1468,29 @@ export const getBuyerProjectTracking = query({
     const trackingData = [];
 
     for (const purchase of purchases) {
-      const project = await ctx.db.get(purchase.projectId);
+      const projectId = purchase.projectId;
+      if (!projectId) continue;
+      const project = await ctx.db.get(projectId);
       if (!project) continue;
 
       // Get recent progress updates for this project
       const recentUpdates = await ctx.db
         .query('progressUpdates')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .order('desc')
         .take(3);
 
       // Get project milestones
       const milestones = await ctx.db
         .query('projectMilestones')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .order('asc')
         .collect();
 
       // Get active alerts for this project
       const alerts = await ctx.db
         .query('systemAlerts')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .filter((q) => q.eq(q.field('isResolved'), false))
         .collect();
 
@@ -1536,7 +1542,10 @@ export const getBuyerProjectTracking = query({
           title: update.title,
           description: update.description,
           date: update.reportingDate || update._creationTime,
-          photos: update.photos?.map((p) => p.cloudinary_url) || [],
+          photos:
+            update.photoUrls ||
+            update.photos?.map((p) => p.cloudinary_url) ||
+            [],
           metrics: update.measurementData,
         })),
         impact: {
@@ -1682,7 +1691,8 @@ export const getDetailedProjectTracking = query({
         title: update.title,
         description: update.description,
         date: update.reportingDate || update._creationTime,
-        photos: update.photos?.map((p) => p.cloudinary_url) || [],
+        photos:
+          update.photoUrls || update.photos?.map((p) => p.cloudinary_url) || [],
         metrics: update.measurementData,
       })),
       impact: {
@@ -1756,13 +1766,15 @@ export const getBuyerPortfolioSummary = query({
       totalCredits += purchase.creditAmount;
       totalInvestment += purchase.totalAmount;
 
-      const project = await ctx.db.get(purchase.projectId);
+      const projectId = purchase.projectId;
+      if (!projectId) continue;
+      const project = await ctx.db.get(projectId);
       if (!project) continue;
 
       // Get latest progress update for carbon impact
       const latestUpdate = await ctx.db
         .query('progressUpdates')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .order('desc')
         .first();
 
@@ -1781,7 +1793,7 @@ export const getBuyerPortfolioSummary = query({
       // Check for unresolved alerts
       const hasIssues = await ctx.db
         .query('systemAlerts')
-        .withIndex('by_project', (q) => q.eq('projectId', purchase.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .filter((q) => q.eq(q.field('isResolved'), false))
         .first();
 

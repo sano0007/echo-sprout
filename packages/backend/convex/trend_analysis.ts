@@ -118,7 +118,7 @@ export const analyzeProjectTrend = mutation({
     // Get all progress updates for this project
     const progressUpdates = await ctx.db
       .query('progressUpdates')
-      .withIndex('by_project_date', (q) => q.eq('projectId', args.projectId))
+      .withIndex('by_project', (q) => q.eq('projectId', args.projectId))
       .order('asc')
       .collect();
 
@@ -722,7 +722,7 @@ function generateForecast(
 async function getLatestProjectMetrics(ctx: any, projectId: string) {
   const latestUpdate = await ctx.db
     .query('progressUpdates')
-    .withIndex('by_project_date', (q: any) => q.eq('projectId', projectId))
+    .withIndex('by_project', (q: any) => q.eq('projectId', projectId))
     .order('desc')
     .first();
 

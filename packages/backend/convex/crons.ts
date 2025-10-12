@@ -1,5 +1,4 @@
-import { cronJobs } from 'convex/server';
-// import { internal } from './_generated/api';
+import {cronJobs} from 'convex/server';
 
 /**
  * MONITORING & TRACKING SYSTEM - CRON JOBS CONFIGURATION
@@ -8,10 +7,46 @@ import { cronJobs } from 'convex/server';
  * - Enhanced daily project monitoring (6:00 AM UTC)
  * - Hourly urgent monitoring (every hour)
  * - Weekly report generation (Monday 8:00 AM UTC)
+ * - Progress report request automation
  * - Additional monitoring jobs for comprehensive coverage
  */
 
 const crons = cronJobs();
+
+// ============= PROGRESS REPORT REQUESTS =============
+
+// TODO: Enable these crons once Convex regenerates the API types
+// After running `convex dev`, uncomment these:
+
+// // Create monthly report requests - runs daily at 9:00 AM UTC
+// crons.daily(
+//   'Create Monthly Report Requests',
+//   {
+//     hourUTC: 9,
+//     minuteUTC: 0,
+//   },
+//   internal.scheduled_tasks.createMonthlyReportRequests
+// );
+
+// // Create milestone report requests - runs daily at 10:00 AM UTC
+// crons.daily(
+//   'Create Milestone Report Requests',
+//   {
+//     hourUTC: 10,
+//     minuteUTC: 0,
+//   },
+//   internal.scheduled_tasks.createMilestoneReportRequests
+// );
+
+// // Mark overdue report requests - runs daily at 12:00 PM UTC
+// crons.daily(
+//   'Mark Overdue Report Requests',
+//   {
+//     hourUTC: 12,
+//     minuteUTC: 0,
+//   },
+//   internal.scheduled_tasks.markOverdueReportRequests
+// );
 
 // Enhanced daily monitoring job - runs every day at 6:00 AM UTC
 // TODO: Enable when automated_monitoring module is available in generated API

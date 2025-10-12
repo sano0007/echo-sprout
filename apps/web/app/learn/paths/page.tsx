@@ -5,32 +5,30 @@ import { api } from '@packages/backend';
 import { useMutation } from 'convex/react';
 import { useState } from 'react';
 
-type FormState = {
-  title: string;
-  description: string;
-  objectives: string; // newline separated in UI
-  level: 'beginner' | 'intermediate' | 'advanced';
-  estimatedDuration: number; // minutes
-  tags: string; // comma separated in UI
-  visibility: 'public' | 'private' | 'unlisted';
-  coverImageUrl?: string;
-  publish: boolean;
-  lessons: Array<{
-    title: string;
-    description: string;
-    videoUrl: string;
-    pdfs: string; // comma separated
-  }>;
-};
+import { useToast } from '@/hooks/use-toast';
+import {
+  isValidHttpUrl,
+  validateLearningPathForm,
+  type FormState,
+} from './lib';
 
 export default function LearningPathsCreatePage() {
   const { isSignedIn } = useUser();
+  const { toast } = useToast();
   const createLearningPath = useMutation(api.learn.createLearningPath);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<null | {
-    type: 'success' | 'error';
-    text: string;
-  }>(null);
+  const [errors, setErrors] = useState<{
+    title?: string;
+    description?: string;
+    estimatedDuration?: string;
+    coverImageUrl?: string;
+    tags?: string;
+    lessons?: Array<{
+      title?: string;
+      videoUrl?: string;
+      pdfs?: string;
+    }>;
+  }>({});
   const [form, setForm] = useState<FormState>({
     title: '',
     description: '',
@@ -52,26 +50,21 @@ export default function LearningPathsCreatePage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSignedIn) {
-      setMessage({
-        type: 'error',
-        text: 'Please sign in to create a learning path.',
+      toast({
+        title: 'Sign-in required',
+        description: 'Please sign in to create a learning path.',
+        variant: 'destructive' as any,
       });
       return;
     }
-    if (!form.title.trim() || !form.description.trim()) {
-      setMessage({
-        type: 'error',
-        text: 'Title and description are required.',
-      });
-      return;
-    }
-    if (
-      !Number.isFinite(form.estimatedDuration) ||
-      form.estimatedDuration <= 0
-    ) {
-      setMessage({
-        type: 'error',
-        text: 'Estimated duration must be a positive number.',
+
+    const { fieldErrors, messages, hasErrors } = validateLearningPathForm(form);
+    setErrors(fieldErrors);
+    if (hasErrors) {
+      toast({
+        title: 'Please fix the highlighted errors',
+        description: messages[0],
+        variant: 'destructive' as any,
       });
       return;
     }
@@ -108,9 +101,9 @@ export default function LearningPathsCreatePage() {
         publish: form.publish,
         lessons: lessonsPayload,
       });
-      setMessage({
-        type: 'success',
-        text: 'Learning path created successfully.',
+      toast({
+        title: 'Success',
+        description: 'Learning path created successfully.',
       });
       setForm({
         title: '',
@@ -124,11 +117,15 @@ export default function LearningPathsCreatePage() {
         publish: false,
         lessons: [],
       });
+      setErrors({});
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to create learning path.' });
+      toast({
+        title: 'Error',
+        description: 'Failed to create learning path.',
+        variant: 'destructive' as any,
+      });
     } finally {
       setIsSubmitting(false);
-      setTimeout(() => setMessage(null), 3000);
     }
   };
 
@@ -139,16 +136,6 @@ export default function LearningPathsCreatePage() {
         Define the structure and details for a new learning path.
       </p>
 
-      {message && (
-        <div
-          className={`mb-4 rounded px-4 py-3 text-white ${
-            message.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
-
       <form
         onSubmit={onSubmit}
         className="space-y-6 bg-white rounded-lg border p-6"
@@ -156,24 +143,32 @@ export default function LearningPathsCreatePage() {
         <div>
           <label className="block text-sm font-medium mb-1">Title</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className={`w-full border rounded px-3 py-2 ${errors.title ? 'border-red-500' : ''}`}
+            aria-invalid={!!errors.title}
             value={form.title}
             onChange={(e) => update('title', e.target.value)}
             placeholder="e.g., Carbon Markets Fundamentals"
             required
           />
+          {errors.title && (
+            <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+          )}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Description</label>
           <textarea
-            className="w-full border rounded px-3 py-2"
+            className={`w-full border rounded px-3 py-2 ${errors.description ? 'border-red-500' : ''}`}
+            aria-invalid={!!errors.description}
             rows={4}
             value={form.description}
             onChange={(e) => update('description', e.target.value)}
             placeholder="Brief overview of what learners will achieve"
             required
           />
+          {errors.description && (
+            <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+          )}
         </div>
 
         <div>
@@ -210,12 +205,18 @@ export default function LearningPathsCreatePage() {
             <input
               type="number"
               min={1}
-              className="w-full border rounded px-3 py-2"
+              className={`w-full border rounded px-3 py-2 ${errors.estimatedDuration ? 'border-red-500' : ''}`}
+              aria-invalid={!!errors.estimatedDuration}
               value={form.estimatedDuration}
               onChange={(e) =>
                 update('estimatedDuration', Number(e.target.value))
               }
             />
+            {errors.estimatedDuration && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.estimatedDuration}
+              </p>
+            )}
           </div>
 
           <div>
@@ -236,22 +237,32 @@ export default function LearningPathsCreatePage() {
           <div>
             <label className="block text-sm font-medium mb-1">Tags</label>
             <input
-              className="w-full border rounded px-3 py-2"
+              className={`w-full border rounded px-3 py-2 ${errors.tags ? 'border-red-500' : ''}`}
+              aria-invalid={!!errors.tags}
               value={form.tags}
               onChange={(e) => update('tags', e.target.value)}
               placeholder="Comma-separated, e.g., Carbon, Markets, Policy"
             />
+            {errors.tags && (
+              <p className="mt-1 text-sm text-red-600">{errors.tags}</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
               Cover Image URL (optional)
             </label>
             <input
-              className="w-full border rounded px-3 py-2"
+              className={`w-full border rounded px-3 py-2 ${errors.coverImageUrl ? 'border-red-500' : ''}`}
+              aria-invalid={!!errors.coverImageUrl}
               value={form.coverImageUrl}
               onChange={(e) => update('coverImageUrl', e.target.value)}
               placeholder="https://..."
             />
+            {errors.coverImageUrl && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.coverImageUrl}
+              </p>
+            )}
           </div>
         </div>
 
@@ -307,7 +318,8 @@ export default function LearningPathsCreatePage() {
                       Title
                     </label>
                     <input
-                      className="w-full border rounded px-3 py-2"
+                      className={`w-full border rounded px-3 py-2 ${errors.lessons?.[idx]?.title ? 'border-red-500' : ''}`}
+                      aria-invalid={!!errors.lessons?.[idx]?.title}
                       value={lesson.title}
                       onChange={(e) =>
                         setForm((f) => ({
@@ -319,13 +331,19 @@ export default function LearningPathsCreatePage() {
                       }
                       placeholder="e.g., Introduction to Carbon Credits"
                     />
+                    {errors.lessons?.[idx]?.title && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.lessons[idx]?.title}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       Video URL (placeholder)
                     </label>
                     <input
-                      className="w-full border rounded px-3 py-2"
+                      className={`w-full border rounded px-3 py-2 ${errors.lessons?.[idx]?.videoUrl ? 'border-red-500' : ''}`}
+                      aria-invalid={!!errors.lessons?.[idx]?.videoUrl}
                       value={lesson.videoUrl}
                       onChange={(e) =>
                         setForm((f) => ({
@@ -337,6 +355,11 @@ export default function LearningPathsCreatePage() {
                       }
                       placeholder="https://..."
                     />
+                    {errors.lessons?.[idx]?.videoUrl && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.lessons[idx]?.videoUrl}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -365,7 +388,8 @@ export default function LearningPathsCreatePage() {
                     PDF URLs (comma separated, placeholders)
                   </label>
                   <input
-                    className="w-full border rounded px-3 py-2"
+                    className={`w-full border rounded px-3 py-2 ${errors.lessons?.[idx]?.pdfs ? 'border-red-500' : ''}`}
+                    aria-invalid={!!errors.lessons?.[idx]?.pdfs}
                     value={lesson.pdfs}
                     onChange={(e) =>
                       setForm((f) => ({
@@ -377,6 +401,11 @@ export default function LearningPathsCreatePage() {
                     }
                     placeholder="https://...intro.pdf, https://...guide.pdf"
                   />
+                  {errors.lessons?.[idx]?.pdfs && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.lessons[idx]?.pdfs}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

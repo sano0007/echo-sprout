@@ -82,6 +82,8 @@ export default defineSchema({
       lat: v.float64(),
       long: v.float64(),
       name: v.string(),
+      city: v.optional(v.string()),
+      country: v.optional(v.string()),
     }),
     areaSize: v.number(),
     estimatedCO2Reduction: v.number(),
@@ -89,6 +91,18 @@ export default defineSchema({
     startDate: v.string(),
     expectedCompletionDate: v.string(),
     actualCompletionDate: v.optional(v.string()),
+    milestone1: v.optional(
+      v.object({
+        name: v.string(),
+        date: v.string(),
+      })
+    ),
+    milestone2: v.optional(
+      v.object({
+        name: v.string(),
+        date: v.string(),
+      })
+    ),
     status: v.union(
       v.literal('draft'),
       v.literal('submitted'),
@@ -123,6 +137,24 @@ export default defineSchema({
     // Progress tracking
     progressPercentage: v.optional(v.number()), // 0-100
     lastProgressUpdate: v.optional(v.number()), // timestamp
+    // Legacy fields for backward compatibility
+    projectImages: v.optional(v.array(v.any())), // Legacy field for old projects
+    featuredImages: v.optional(
+      v.array(
+        v.object({
+          storageId: v.string(),
+          fileUrl: v.string(),
+        })
+      )
+    ),
+    siteImages: v.optional(
+      v.array(
+        v.object({
+          storageId: v.string(),
+          fileUrl: v.string(),
+        })
+      )
+    ),
   })
     .index('by_creator', ['creatorId'])
     .index('by_status', ['status'])
@@ -157,8 +189,8 @@ export default defineSchema({
     .index('by_reserved_by', ['reservedBy']),
 
   transactions: defineTable({
-    buyerId: v.id('users'),
-    projectId: v.id('projects'),
+    buyerId: v.string(), // Clerk ID for consistency with Stripe integration
+    projectId: v.optional(v.id('projects')),
     creditAmount: v.number(),
     unitPrice: v.number(),
     totalAmount: v.number(),
@@ -183,6 +215,14 @@ export default defineSchema({
     certificateUrl: v.optional(v.string()),
     impactDescription: v.string(),
     transactionReference: v.string(), // Unique transaction reference
+    refundDetails: v.optional(
+      v.object({
+        refundReason: v.string(),
+        refundAmount: v.number(),
+        adminNotes: v.string(),
+        processedAt: v.number(),
+      })
+    ),
   })
     .index('by_buyer', ['buyerId'])
     .index('by_project', ['projectId'])
@@ -324,6 +364,44 @@ export default defineSchema({
     .index('by_priority', ['priority'])
     .index('by_accepted', ['verifierId', 'acceptedAt']),
 
+  // ============= ROLE UPGRADE REQUESTS =============
+  roleUpgradeRequests: defineTable({
+    userId: v.id('users'),
+    requestedRole: v.union(v.literal('project_creator')),
+    currentRole: v.union(v.literal('credit_buyer')),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('under_review'),
+      v.literal('approved'),
+      v.literal('rejected')
+    ),
+    // Application data (from existing user fields)
+    applicationData: v.object({
+      firstName: v.string(),
+      lastName: v.string(),
+      email: v.string(),
+      organizationName: v.optional(v.string()),
+      organizationType: v.optional(v.string()),
+      phoneNumber: v.string(),
+      address: v.string(),
+      city: v.string(),
+      country: v.string(),
+      reasonForUpgrade: v.string(), // Why they want to become creator
+      experienceDescription: v.optional(v.string()),
+    }),
+    verifierId: v.optional(v.id('users')),
+    assignedAt: v.optional(v.float64()),
+    reviewedAt: v.optional(v.float64()),
+    reviewNotes: v.optional(v.string()),
+    rejectionReason: v.optional(v.string()),
+    createdAt: v.float64(),
+    updatedAt: v.float64(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_status', ['status'])
+    .index('by_verifier', ['verifierId'])
+    .index('by_status_and_verifier', ['status', 'verifierId']),
+
   verificationMessages: defineTable({
     verificationId: v.id('verifications'),
     senderId: v.id('users'),
@@ -356,7 +434,7 @@ export default defineSchema({
 
   // ============= DOCUMENT MANAGEMENT =============
   documents: defineTable({
-    entityId: v.string(), // ID of the associated entity (project, user profile, etc.)
+    entityId: v.optional(v.string()), // ID of the associated entity (project, user profile, etc.) - optional for legacy compatibility
     entityType: v.union(
       v.literal('project'),
       v.literal('verification'),
@@ -369,15 +447,24 @@ export default defineSchema({
     fileSize: v.number(),
     fileSizeFormatted: v.string(), // e.g. "2.5 MB"
     media: v.object({
-      cloudinary_public_id: v.string(),
-      cloudinary_url: v.string(),
+      storageId: v.optional(v.string()),
+      fileUrl: v.optional(v.string()),
+      cloudinary_public_id: v.optional(v.string()), // Legacy field
+      cloudinary_url: v.optional(v.string()), // Legacy field
     }),
     thumbnailUrl: v.optional(v.string()),
+    description: v.optional(v.string()), // Add description field
     documentType: v.union(
-      v.literal('project_plan'),
-      v.literal('environmental_assessment'),
-      v.literal('permits'),
-      v.literal('photos'),
+      v.literal('project_proposal'),
+      v.literal('environmental_impact'),
+      v.literal('site_photographs'),
+      v.literal('legal_permits'),
+      v.literal('featured_images'),
+      v.literal('site_images'),
+      v.literal('project_plan'), // Legacy
+      v.literal('environmental_assessment'), // Legacy
+      v.literal('permits'), // Legacy
+      v.literal('photos'), // Legacy
       v.literal('verification_report'),
       v.literal('identity_doc'),
       v.literal('technical_specs'),
@@ -396,57 +483,6 @@ export default defineSchema({
     .index('by_type', ['documentType'])
     .index('by_verification_status', ['isVerified'])
     .index('by_required', ['entityType', 'isRequired']),
-
-  // ============= PROGRESS TRACKING =============
-  progressUpdates: defineTable({
-    projectId: v.id('projects'),
-    reportedBy: v.id('users'),
-    updateType: v.union(
-      v.literal('milestone'),
-      v.literal('measurement'),
-      v.literal('photo'),
-      v.literal('issue'),
-      v.literal('completion')
-    ),
-    title: v.string(),
-    description: v.string(),
-    progressPercentage: v.number(), // 0-100
-    measurementData: v.optional(v.any()), // JSON data for specific measurements
-    location: v.optional(
-      v.object({
-        lat: v.float64(),
-        long: v.float64(),
-        name: v.string(),
-      })
-    ),
-    photos: v.array(
-      v.object({
-        cloudinary_public_id: v.string(),
-        cloudinary_url: v.string(),
-      })
-    ),
-    reportingDate: v.float64(),
-    // Impact tracking
-    carbonImpactToDate: v.optional(v.number()), // CO2 reduction achieved so far
-    treesPlanted: v.optional(v.number()),
-    energyGenerated: v.optional(v.number()),
-    wasteProcessed: v.optional(v.number()),
-    // Verification
-    isVerified: v.boolean(),
-    verifiedBy: v.optional(v.id('users')),
-    verifiedAt: v.optional(v.float64()),
-    verificationNotes: v.optional(v.string()),
-  })
-    .index('by_project', ['projectId'])
-    .index('by_reporter', ['reportedBy'])
-    .index('by_date', ['reportingDate'])
-    .index('by_type', ['updateType'])
-    .index('by_verification', ['isVerified'])
-    // Enhanced indexes for monitoring
-    .index('by_project_date', ['projectId', 'reportingDate'])
-    .index('by_project_type', ['projectId', 'updateType'])
-    .index('by_project_verified', ['projectId', 'isVerified'])
-    .index('by_date_type', ['reportingDate', 'updateType']),
 
   // ============= EDUCATIONAL CONTENT =============
   educationalContent: defineTable({
@@ -633,7 +669,7 @@ export default defineSchema({
   // ============= CERTIFICATES & REWARDS =============
   certificates: defineTable({
     transactionId: v.id('transactions'),
-    buyerId: v.id('users'),
+    buyerId: v.string(), // Clerk ID for consistency with transactions
     projectId: v.id('projects'),
     certificateNumber: v.string(), // Unique certificate number
     creditsAmount: v.number(),
@@ -1180,4 +1216,159 @@ export default defineSchema({
     .index('by_user', ['generatedBy'])
     .index('by_date', ['generatedAt'])
     .index('by_public', ['isPublic']),
+
+  // ============= PDF REPORT GENERATION =============
+  pdf_reports: defineTable({
+    templateType: v.union(v.literal('analytics'), v.literal('monitoring')),
+    reportType: v.string(), // 'comprehensive', 'platform', 'environmental', 'financial', 'system', 'project', 'alerts', 'performance'
+    title: v.string(),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('processing'),
+      v.literal('completed'),
+      v.literal('failed')
+    ),
+    progress: v.number(), // 0-100
+    requestedBy: v.string(), // Clerk user ID
+    requestedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+    fileUrl: v.optional(v.string()),
+    fileSize: v.optional(v.number()),
+    expiresAt: v.number(), // Auto-cleanup after expiration
+    timeframe: v.object({
+      start: v.number(),
+      end: v.number(),
+      period: v.string(),
+    }),
+    filters: v.optional(v.any()),
+    analyticsData: v.optional(v.any()), // Analytics data including charts, metrics, and project details
+    userInfo: v.object({
+      userId: v.string(),
+      name: v.string(),
+      email: v.string(),
+      role: v.string(),
+    }),
+  })
+    .index('by_user', ['requestedBy'])
+    .index('by_status', ['status'])
+    .index('by_template_type', ['templateType'])
+    .index('by_report_type', ['reportType'])
+    .index('by_requested_at', ['requestedAt'])
+    .index('by_expires_at', ['expiresAt'])
+    .index('by_user_status', ['requestedBy', 'status']),
+
+  // ============= PROGRESS UPDATES =============
+  progressUpdates: defineTable({
+    projectId: v.id('projects'),
+    // New format (Convex storage)
+    submittedBy: v.optional(v.id('users')),
+    // Old format (Cloudinary) - for backward compatibility
+    reportedBy: v.optional(v.id('users')),
+    updateType: v.union(
+      v.literal('milestone'),
+      v.literal('measurement'),
+      v.literal('photo'),
+      v.literal('issue'),
+      v.literal('completion')
+    ),
+    title: v.string(),
+    description: v.string(),
+    progressPercentage: v.float64(),
+    // New format (Convex storage)
+    photoStorageIds: v.optional(v.array(v.id('_storage'))),
+    photoUrls: v.optional(v.array(v.string())), // Cached URLs for quick access
+    // Old format (Cloudinary) - for backward compatibility
+    photos: v.optional(
+      v.array(
+        v.object({
+          cloudinary_public_id: v.string(),
+          cloudinary_url: v.string(),
+        })
+      )
+    ),
+    location: v.optional(
+      v.object({
+        lat: v.float64(),
+        long: v.float64(),
+        name: v.string(),
+      })
+    ),
+    measurementData: v.optional(
+      v.object({
+        treesPlanted: v.optional(v.number()),
+        survivalRate: v.optional(v.number()),
+        energyGenerated: v.optional(v.number()),
+        systemUptime: v.optional(v.number()),
+        gasProduced: v.optional(v.number()),
+        wasteProcessed: v.optional(v.number()),
+        recyclingRate: v.optional(v.number()),
+        areaRestored: v.optional(v.number()),
+        mangrovesPlanted: v.optional(v.number()),
+        carbonImpactToDate: v.optional(v.number()),
+      })
+    ),
+    nextSteps: v.optional(v.string()),
+    challenges: v.optional(v.string()),
+    submittedAt: v.optional(v.float64()),
+    reportingDate: v.float64(),
+    status: v.optional(
+      v.union(
+        v.literal('pending_review'),
+        v.literal('approved'),
+        v.literal('rejected'),
+        v.literal('needs_revision')
+      )
+    ),
+    isVerified: v.boolean(),
+    verifiedBy: v.optional(v.id('users')),
+    verifiedAt: v.optional(v.float64()),
+    verificationNotes: v.optional(v.string()),
+    // Verifier assignment fields
+    assignedVerifierId: v.optional(v.id('users')),
+    reviewedAt: v.optional(v.float64()),
+    reviewNotes: v.optional(v.string()),
+    rejectionReason: v.optional(v.string()),
+    // Legacy fields for backward compatibility
+    carbonImpactToDate: v.optional(v.float64()),
+    treesPlanted: v.optional(v.float64()),
+    energyGenerated: v.optional(v.float64()),
+    wasteProcessed: v.optional(v.float64()),
+  })
+    .index('by_project', ['projectId'])
+    .index('by_submitter', ['submittedBy'])
+    .index('by_reporter', ['reportedBy']) // Legacy index
+    .index('by_verifier', ['assignedVerifierId'])
+    .index('by_status', ['status'])
+    .index('by_project_status', ['projectId', 'status'])
+    .index('by_submitted_at', ['submittedAt'])
+    .index('by_reporting_date', ['reportingDate']),
+
+  // ============= PROGRESS REPORT REQUESTS =============
+  progressReportRequests: defineTable({
+    projectId: v.id('projects'),
+    requestedBy: v.id('users'), // verifier or system user ID
+    creatorId: v.id('users'),
+    requestType: v.union(
+      v.literal('manual'), // verifier requested
+      v.literal('scheduled_monthly'),
+      v.literal('milestone_based')
+    ),
+    status: v.union(
+      v.literal('pending'), // waiting for creator to submit
+      v.literal('submitted'), // creator submitted, links to progressUpdate
+      v.literal('overdue'), // past due date
+      v.literal('cancelled')
+    ),
+    dueDate: v.float64(),
+    requestNotes: v.optional(v.string()),
+    submittedUpdateId: v.optional(v.id('progressUpdates')),
+    createdAt: v.float64(),
+  })
+    .index('by_creator', ['creatorId'])
+    .index('by_project', ['projectId'])
+    .index('by_status', ['status'])
+    .index('by_creator_status', ['creatorId', 'status'])
+    .index('by_project_status', ['projectId', 'status'])
+    .index('by_due_date', ['dueDate']),
 });

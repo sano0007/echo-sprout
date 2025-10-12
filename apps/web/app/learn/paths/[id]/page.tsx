@@ -4,7 +4,9 @@ import { api } from '@packages/backend';
 import { useMutation, useQuery } from 'convex/react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { capitalizeLabel, extractFileName, resolveYouTubeEmbed } from './lib';
 
 export default function LearningPathDetailsPage() {
   const params = useParams();
@@ -55,8 +57,8 @@ export default function LearningPathDetailsPage() {
       }
       setVideoChecked(v);
       setPdfChecked(p);
-    } catch {
-      // Silently ignore progress loading errors
+    } catch (_e) {
+      void _e;
     }
   }, [progress]);
 
@@ -69,18 +71,22 @@ export default function LearningPathDetailsPage() {
         recordedRef.current = true;
         // Record exactly once for this entry (view + course start), then strip the query param
         recordEntry({ source: 'learn', pathId: String(id) } as any)
-          .catch(() => {})
+          .catch((_e: unknown) => {
+            void _e;
+          })
           .finally(() => {
             try {
               router.replace(`/learn/paths/${id}`);
-            } catch {
-              // Silently ignore navigation errors
+            } catch (_e) {
+              void _e;
             }
           });
-        recordStart({ pathId: String(id) } as any).catch(() => {});
+        recordStart({ pathId: String(id) } as any).catch((_e: unknown) => {
+          void _e;
+        });
       }
-    } catch {
-      // Silently ignore entry recording errors
+    } catch (_e) {
+      void _e;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -112,44 +118,9 @@ export default function LearningPathDetailsPage() {
     );
   }
 
-  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-  const getYouTubeEmbed = (url: string): string | null => {
-    if (!url) return null;
-    try {
-      const u = new URL(url);
-      // youtu.be/<id>
-      if (u.hostname === 'youtu.be') {
-        const id = u.pathname.replace('/', '').trim();
-        return id ? `https://www.youtube.com/embed/${id}` : null;
-      }
-      // www.youtube.com or youtube.com
-      if (u.hostname.includes('youtube.com')) {
-        // /watch?v=<id>
-        const v = u.searchParams.get('v');
-        if (v) return `https://www.youtube.com/embed/${v}`;
-        // /embed/<id>
-        if (u.pathname.startsWith('/embed/')) return url;
-        // /shorts/<id>
-        if (u.pathname.startsWith('/shorts/')) {
-          const id = u.pathname.split('/')[2];
-          return id ? `https://www.youtube.com/embed/${id}` : null;
-        }
-      }
-    } catch (_) {
-      // ignore parse errors
-    }
-    return null;
-  };
-
-  const getFileName = (url: string): string => {
-    try {
-      const u = new URL(url);
-      const last = u.pathname.split('/').filter(Boolean).pop();
-      return last || url;
-    } catch {
-      return url;
-    }
-  };
+  const cap = capitalizeLabel;
+  const getYouTubeEmbed = resolveYouTubeEmbed;
+  const getFileName = extractFileName;
 
   // No progress functionality in this state
 
@@ -254,11 +225,15 @@ export default function LearningPathDetailsPage() {
       </div>
 
       {data.coverImageUrl && (
-        <img
-          src={data.coverImageUrl}
-          alt="Cover"
-          className="w-full max-h-64 object-cover rounded mb-6"
-        />
+        <div className="relative w-full h-64 mb-6">
+          <Image
+            src={data.coverImageUrl}
+            alt={data.title}
+            fill
+            sizes="100vw"
+            className="object-cover rounded"
+          />
+        </div>
       )}
 
       {editingPath && (
@@ -445,7 +420,7 @@ export default function LearningPathDetailsPage() {
         <div className="bg-white border rounded p-5 mb-6">
           <h2 className="text-xl font-semibold mb-2">Objectives</h2>
           <ul className="list-disc pl-5 text-gray-700">
-            {data.objectives.map((o, i) => (
+            {data.objectives.map((o: any, i: number) => (
               <li key={i}>{o}</li>
             ))}
           </ul>
@@ -454,7 +429,7 @@ export default function LearningPathDetailsPage() {
 
       {Array.isArray(data.tags) && data.tags.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
-          {data.tags.map((t) => (
+          {data.tags.map((t: any) => (
             <span
               key={t}
               className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm"
@@ -474,7 +449,7 @@ export default function LearningPathDetailsPage() {
           </p>
         ) : (
           <ol className="space-y-4 list-decimal pl-6">
-            {lessons.map((L) => (
+            {lessons.map((L: any) => (
               <li key={String(L.id)}>
                 <div className="flex items-start justify-between">
                   <div className="w-full">
@@ -532,8 +507,8 @@ export default function LearningPathDetailsPage() {
                                 itemIndex: 0,
                                 completed: next,
                               } as any);
-                            } catch {
-                              // Silently ignore video progress update errors
+                            } catch (_e) {
+                              void _e;
                             }
                           }}
                         />
@@ -605,7 +580,7 @@ export default function LearningPathDetailsPage() {
                       </div>
                       {L.pdfUrls && L.pdfUrls.length > 0 ? (
                         <div className="space-y-6">
-                          {L.pdfUrls.map((u, i) => {
+                          {L.pdfUrls.map((u: any, i: number) => {
                             const name = getFileName(u) || `PDF ${i + 1}`;
                             const isPdf = u.toLowerCase().includes('.pdf');
                             const key = `p:${String(L.id)}:${i}`;
@@ -630,8 +605,8 @@ export default function LearningPathDetailsPage() {
                                           itemIndex: i,
                                           completed: next,
                                         } as any);
-                                      } catch {
-                                        // Silently ignore PDF progress update errors
+                                      } catch (_e) {
+                                        void _e;
                                       }
                                     }}
                                   />

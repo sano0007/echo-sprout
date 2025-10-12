@@ -4,6 +4,8 @@ import { v, Validator } from 'convex/values';
 import { UserService } from '../services/user-service';
 import { getAll } from 'convex-helpers/server/relationships';
 import { paginationOptsValidator } from 'convex/server';
+import { VerifierAssignmentService } from '../services/verifier-assignment-service';
+import { NotificationService } from '../services/notification-service';
 
 export const createUser = internalMutation({
   args: { data: v.any() as Validator<UserJSON> },
@@ -337,6 +339,207 @@ export const upgradeToProjectCreator = mutation({
   },
 });
 
+// ============= ROLE UPGRADE REQUEST SYSTEM =============
+
+export const submitRoleUpgradeRequest = mutation({
+  args: {
+    reasonForUpgrade: v.string(),
+    experienceDescription: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error('User not found');
+    }
+
+    if (currentUser.role !== 'credit_buyer') {
+      throw new Error('Only credit buyers can apply for project creator role');
+    }
+
+    // Check for existing pending request
+    const existingRequest = await ctx.db
+      .query('roleUpgradeRequests')
+      .withIndex('by_user', (q) => q.eq('userId', currentUser._id))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field('status'), 'pending'),
+          q.eq(q.field('status'), 'under_review')
+        )
+      )
+      .first();
+
+    if (existingRequest) {
+      throw new Error('You already have a pending upgrade request');
+    }
+
+    // Create upgrade request with user data
+    const requestId = await ctx.db.insert('roleUpgradeRequests', {
+      userId: currentUser._id,
+      requestedRole: 'project_creator',
+      currentRole: 'credit_buyer',
+      status: 'pending',
+      applicationData: {
+        firstName: currentUser.firstName,
+        lastName: currentUser.lastName,
+        email: currentUser.email,
+        organizationName: currentUser.organizationName,
+        organizationType: currentUser.organizationType,
+        phoneNumber: currentUser.phoneNumber,
+        address: currentUser.address,
+        city: currentUser.city,
+        country: currentUser.country,
+        reasonForUpgrade: args.reasonForUpgrade,
+        experienceDescription: args.experienceDescription,
+      },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    // Auto-assign to available verifier (similar to project verification)
+    await VerifierAssignmentService.autoAssignUpgradeRequest(ctx, requestId, {
+      maxWorkload: 8,
+    });
+
+    return {
+      success: true,
+      requestId,
+      message: 'Upgrade request submitted successfully',
+    };
+  },
+});
+
+export const getMyUpgradeRequest = query({
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser) return null;
+
+    const request = await ctx.db
+      .query('roleUpgradeRequests')
+      .withIndex('by_user', (q) => q.eq('userId', currentUser._id))
+      .order('desc')
+      .first();
+
+    return request;
+  },
+});
+
+export const getPendingUpgradeRequests = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || !['admin', 'verifier'].includes(currentUser.role)) {
+      throw new Error('Unauthorized');
+    }
+
+    return await ctx.db
+      .query('roleUpgradeRequests')
+      .withIndex('by_status', (q) => q.eq('status', 'pending'))
+      .order('desc')
+      .paginate(args.paginationOpts);
+  },
+});
+
+export const getMyAssignedUpgradeRequests = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'verifier') {
+      throw new Error('Unauthorized');
+    }
+
+    return await ctx.db
+      .query('roleUpgradeRequests')
+      .withIndex('by_status_and_verifier', (q) =>
+        q.eq('status', 'under_review').eq('verifierId', currentUser._id)
+      )
+      .order('desc')
+      .paginate(args.paginationOpts);
+  },
+});
+
+export const approveRoleUpgradeRequest = mutation({
+  args: {
+    requestId: v.id('roleUpgradeRequests'),
+    reviewNotes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'verifier') {
+      throw new Error('Unauthorized: Verifier access required');
+    }
+
+    const request = await ctx.db.get(args.requestId);
+    if (!request) {
+      throw new Error('Request not found');
+    }
+
+    if (request.verifierId !== currentUser._id) {
+      throw new Error('You are not assigned to this request');
+    }
+
+    // Update request status
+    await ctx.db.patch(args.requestId, {
+      status: 'approved',
+      reviewedAt: Date.now(),
+      reviewNotes: args.reviewNotes,
+      updatedAt: Date.now(),
+    });
+
+    // Upgrade user role
+    await ctx.db.patch(request.userId, {
+      role: 'project_creator',
+    });
+
+    // Send notification to user
+    await NotificationService.notifyRoleUpgradeApproved(ctx, request.userId);
+
+    return { success: true, message: 'Request approved and user upgraded' };
+  },
+});
+
+export const rejectRoleUpgradeRequest = mutation({
+  args: {
+    requestId: v.id('roleUpgradeRequests'),
+    rejectionReason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'verifier') {
+      throw new Error('Unauthorized: Verifier access required');
+    }
+
+    const request = await ctx.db.get(args.requestId);
+    if (!request) {
+      throw new Error('Request not found');
+    }
+
+    if (request.verifierId !== currentUser._id) {
+      throw new Error('You are not assigned to this request');
+    }
+
+    await ctx.db.patch(args.requestId, {
+      status: 'rejected',
+      reviewedAt: Date.now(),
+      rejectionReason: args.rejectionReason,
+      updatedAt: Date.now(),
+    });
+
+    // Send notification to user
+    await NotificationService.notifyRoleUpgradeRejected(
+      ctx,
+      request.userId,
+      args.rejectionReason
+    );
+
+    return { success: true, message: 'Request rejected' };
+  },
+});
+
 // ============= ADMIN QUERIES =============
 
 export const getAllUsersForAdmin = query({
@@ -467,5 +670,108 @@ export const toggleUserStatus = mutation({
       isActive,
       lastLoginAt: new Date().toISOString(),
     });
+  },
+});
+
+// ============= ADMIN USER MANAGEMENT ACTIONS =============
+
+export const adminToggleUserStatus = mutation({
+  args: {
+    userId: v.id('users'),
+    isActive: v.boolean(),
+  },
+  handler: async (ctx, { userId, isActive }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'admin') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    // Prevent deactivating self
+    if (userId === currentUser._id && !isActive) {
+      throw new Error('Cannot deactivate your own account');
+    }
+
+    await ctx.db.patch(userId, {
+      isActive,
+      lastLoginAt: new Date().toISOString(),
+    });
+
+    return { success: true, isActive };
+  },
+});
+
+export const adminDeleteUser = mutation({
+  args: {
+    userId: v.id('users'),
+  },
+  handler: async (ctx, { userId }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'admin') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    // Prevent deleting self
+    if (userId === currentUser._id) {
+      throw new Error('Cannot delete your own account');
+    }
+
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Soft delete by deactivating
+    // await ctx.db.patch(userId, {
+    //   isActive: false,
+    //   lastLoginAt: new Date().toISOString(),
+    // });
+
+    await ctx.db.delete(userId);
+
+    return { success: true };
+  },
+});
+
+export const adminUpdateUser = mutation({
+  args: {
+    userId: v.id('users'),
+    updates: v.object({
+      firstName: v.optional(v.string()),
+      lastName: v.optional(v.string()),
+      email: v.optional(v.string()),
+      phoneNumber: v.optional(v.string()),
+      address: v.optional(v.string()),
+      city: v.optional(v.string()),
+      country: v.optional(v.string()),
+      organizationName: v.optional(v.string()),
+      organizationType: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, { userId, updates }) => {
+    const currentUser = await UserService.getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== 'admin') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Validate and sanitize updates
+    const validatedUpdates: any = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'string') {
+          validatedUpdates[key] = value.trim();
+        } else {
+          validatedUpdates[key] = value;
+        }
+      }
+    });
+
+    await ctx.db.patch(userId, validatedUpdates);
+
+    return { success: true };
   },
 });

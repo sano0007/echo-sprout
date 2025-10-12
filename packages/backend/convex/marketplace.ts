@@ -1,5 +1,6 @@
 import { query } from './_generated/server';
 import { v } from 'convex/values';
+import { ConvexError } from 'convex/values';
 import { MarketplaceService } from '../services/marketplace-service';
 
 export const getMarketplaceProjects = query({
@@ -13,14 +14,14 @@ export const getMarketplaceProjects = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const result = await MarketplaceService.getMarketplaceProjects({
-      priceRange: args.priceRange || '',
-      location: args.location || '',
-      projectType: args.projectType || '',
-      sortBy: args.sortBy || 'newest',
-      searchQuery: args.searchQuery || '',
-      page: args.page || 1,
-      limit: args.limit || 6,
+    const result = await MarketplaceService.getMarketplaceProjects(ctx.db, {
+      priceRange: args.priceRange,
+      location: args.location,
+      projectType: args.projectType,
+      sortBy: args.sortBy,
+      searchQuery: args.searchQuery,
+      page: args.page,
+      limit: args.limit,
     });
 
     return {
@@ -32,5 +33,20 @@ export const getMarketplaceProjects = query({
       hasNextPage: result.hasNextPage,
       hasPrevPage: result.hasPrevPage,
     };
+  },
+});
+
+export const getProjectById = query({
+  args: {
+    projectId: v.id('projects'),
+  },
+  handler: async (ctx, args) => {
+    try {
+      return await MarketplaceService.getProjectById(ctx.db, args.projectId);
+    } catch (error) {
+      throw new ConvexError(
+        error instanceof Error ? error.message : 'Unknown error'
+      );
+    }
   },
 });

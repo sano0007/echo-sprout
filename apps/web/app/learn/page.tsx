@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useUser } from '@clerk/nextjs';
 import { api } from '@packages/backend';
@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { previewLearnText } from './lib';
 
 export default function LearnHub() {
   const router = useRouter();
@@ -98,6 +99,7 @@ export default function LearnHub() {
   const blogPosts = useQuery(api.learn.listBlog);
   const guidesData = useQuery(api.learn.listGuides);
   const learningPaths = useQuery(api.learn.listLearningPaths);
+  const currentUser = useQuery(api.users.getCurrentUser, {});
   const createBlog = useMutation(api.learn.createBlog);
   const recordLearnEnter = useMutation(api.learn.recordLearnPageEnter);
   const { isSignedIn } = useUser();
@@ -115,12 +117,7 @@ export default function LearnHub() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const previewText = (s: string) => {
-    if (!s) return '';
-    const text = s.replace(/\s+/g, ' ').trim();
-    const max = 50;
-    return text.length > max ? text.slice(0, max).trimEnd() + '.....' : text;
-  };
+  const isAdminUser = currentUser?.role === 'admin';
 
   const today = useMemo(() => {
     const d = new Date();
@@ -136,8 +133,8 @@ export default function LearnHub() {
     enteredRef.current = true;
     try {
       recordLearnEnter({} as any).catch(() => {});
-    } catch {
-      // Silently ignore learn entry recording errors
+    } catch (_e) {
+      void _e;
     }
   }, [recordLearnEnter]);
 
@@ -151,6 +148,14 @@ export default function LearnHub() {
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleWriteArticleClick = () => {
+    if (!isSignedIn) {
+      alert('Please sign in to write an article.');
+      return;
+    }
+    openModal();
   };
 
   const handleChange = (
@@ -204,7 +209,7 @@ export default function LearnHub() {
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
   const modulesList = (learningPaths ?? []).length
-    ? (learningPaths ?? []).map((p) => ({
+    ? (learningPaths ?? []).map((p: any) => ({
         id: String(p.id),
         title: p.title,
         description: p.description,
@@ -217,7 +222,7 @@ export default function LearnHub() {
 
   // Batch fetch persisted progress for all real Convex paths
   const realPathIds = Array.isArray(learningPaths)
-    ? (learningPaths as any[]).map((p) => String(p.id))
+    ? (learningPaths as any[]).map((p: any) => String(p.id))
     : [];
   const progressMap = useQuery(api.learn.progressForPaths, {
     pathIds: realPathIds,
@@ -234,21 +239,6 @@ export default function LearnHub() {
               impact
             </p>
           </div>
-          {isSignedIn ? (
-            <Link
-              href="/learn/analytics"
-              className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-            >
-              Analytics
-            </Link>
-          ) : (
-            <Link
-              href="/sign-in?redirect_url=%2Flearn%2Fanalytics"
-              className="inline-flex items-center bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-            >
-              Sign in to Generate Report
-            </Link>
-          )}
         </div>
       </div>
 
@@ -292,20 +282,22 @@ export default function LearnHub() {
               </div>
 
               {/* Create Learning Path CTA (no analytics counting here) */}
-              <div className="flex justify-end">
-                <Link
-                  href="/learn/paths"
-                  className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Create Learning Path
-                </Link>
-              </div>
+              {isAdminUser && (
+                <div className="flex justify-end">
+                  <Link
+                    href="/learn/paths"
+                    className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Create Learning Path
+                  </Link>
+                </div>
+              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {modulesList.map((module) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                {modulesList.map((module: any) => (
                   <div
                     key={module.id}
-                    className="border rounded-lg p-6 hover:shadow-lg transition-shadow"
+                    className="border rounded-lg p-6 hover:shadow-lg transition-shadow h-full flex flex-col"
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
@@ -397,7 +389,7 @@ export default function LearnHub() {
                               : 'Continue Course';
                         return (
                           <button
-                            className="block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                            className="mt-auto block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
                             onClick={() => {
                               if (!isSignedIn) {
                                 alert('Please sign in to start the course.');
@@ -414,7 +406,7 @@ export default function LearnHub() {
                       })()
                     ) : (
                       <button
-                        className="w-full bg-blue-600 text-white py-2 px-4 rounded opacity-50 cursor-not-allowed"
+                        className="mt-auto w-full bg-blue-600 text-white py-2 px-4 rounded opacity-50 cursor-not-allowed"
                         title="Create a Learning Path to view details"
                       >
                         Start Course
@@ -439,14 +431,16 @@ export default function LearnHub() {
               </div>
 
               {/* Create Guide CTA */}
-              <div className="flex justify-end">
-                <Link
-                  href="/learn/guides/create"
-                  className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Create Guide
-                </Link>
-              </div>
+              {isAdminUser && (
+                <div className="flex justify-end">
+                  <Link
+                    href="/learn/guides/create"
+                    className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Create Guide
+                  </Link>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {(guidesData && guidesData.length ? guidesData : guides).map(
@@ -530,14 +524,14 @@ export default function LearnHub() {
                 </div>
                 <button
                   className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                  onClick={openModal}
+                  onClick={handleWriteArticleClick}
                 >
                   Write Article
                 </button>
               </div>
 
               <div className="space-y-6">
-                {(blogPosts ?? []).map((post) => (
+                {(blogPosts ?? []).map((post: any) => (
                   <article
                     key={String(post.id)}
                     className="border rounded-lg p-6 hover:shadow-lg transition-shadow"
@@ -565,7 +559,7 @@ export default function LearnHub() {
                     </div>
 
                     <p className="text-gray-600 mb-4 break-words">
-                      {previewText(post.content)}
+                      {previewLearnText(post.content)}
                     </p>
 
                     <div className="flex justify-between items-center">

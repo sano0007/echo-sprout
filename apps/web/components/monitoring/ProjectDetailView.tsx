@@ -13,7 +13,7 @@ import {
   FlaskConical,
   Globe,
   Heart,
-  Image,
+  Image as ImageIcon,
   MapPin,
   Share,
   Star,
@@ -21,6 +21,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 interface ProjectDetailData {
   id: string;
@@ -217,7 +218,7 @@ export default function ProjectDetailView({
     { key: 'impact', label: 'Impact', icon: Globe },
     { key: 'verification', label: 'Verification', icon: CheckCircle },
     { key: 'financials', label: 'Financials', icon: DollarSign },
-    { key: 'documents', label: 'Documents', icon: Image },
+    { key: 'documents', label: 'Documents', icon: ImageIcon },
   ];
 
   useEffect(() => {
@@ -232,10 +233,16 @@ export default function ProjectDetailView({
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="relative h-64 bg-gradient-to-r from-green-600 to-blue-600">
           {project.documentation.photos.length > 0 && (
-            <img
-              src={project.documentation.photos[0]}
+            <Image
+              src={
+                project.documentation.photos[0] ??
+                'https://placehold.co/1200x400'
+              }
               alt={project.title}
-              className="w-full h-full object-cover"
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
             />
           )}
           <div className="absolute inset-0 bg-black bg-opacity-40" />
@@ -1041,13 +1048,15 @@ export default function ProjectDetailView({
                   {project.documentation.photos.map((photo, index) => (
                     <div
                       key={index}
-                      className="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-75 transition-opacity"
+                      className="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-75 transition-opacity relative"
                       onClick={() => setSelectedPhoto(photo)}
                     >
-                      <img
+                      <Image
                         src={photo}
                         alt={`Project photo ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        className="object-cover"
                       />
                     </div>
                   ))}
@@ -1184,30 +1193,15 @@ export default function ProjectDetailView({
       {/* Photo Modal */}
       {selectedPhoto && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="relative max-w-4xl max-h-full">
-            <img
-              src={selectedPhoto}
+          <div className="relative w-full max-w-4xl h-[80vh]">
+            <Image
+              src={selectedPhoto ?? ''}
               alt="Project photo"
-              className="max-w-full max-h-full object-contain"
+              fill
+              sizes="100vw"
+              className="object-contain"
+              priority
             />
-            <button
-              onClick={() => setSelectedPhoto(null)}
-              className="absolute top-4 right-4 text-white hover:text-gray-300"
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
           </div>
         </div>
       )}

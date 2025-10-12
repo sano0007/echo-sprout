@@ -129,17 +129,36 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     projects: import("convex/server").TableDefinition<import("convex/values").VObject<{
         actualCompletionDate?: string | undefined;
+        milestone1?: {
+            name: string;
+            date: string;
+        } | undefined;
+        milestone2?: {
+            name: string;
+            date: string;
+        } | undefined;
         assignedVerifierId?: import("convex/values").GenericId<"users"> | undefined;
         verificationStartedAt?: number | undefined;
         verificationCompletedAt?: number | undefined;
         qualityScore?: number | undefined;
         progressPercentage?: number | undefined;
         lastProgressUpdate?: number | undefined;
+        projectImages?: any[] | undefined;
+        featuredImages?: {
+            storageId: string;
+            fileUrl: string;
+        }[] | undefined;
+        siteImages?: {
+            storageId: string;
+            fileUrl: string;
+        }[] | undefined;
         creatorId: import("convex/values").GenericId<"users">;
         title: string;
         description: string;
         projectType: "reforestation" | "solar" | "wind" | "biogas" | "waste_management" | "mangrove_restoration";
         location: {
+            city?: string | undefined;
+            country?: string | undefined;
             name: string;
             lat: number;
             long: number;
@@ -149,8 +168,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         budget: number;
         startDate: string;
         expectedCompletionDate: string;
-        status: "rejected" | "draft" | "submitted" | "under_review" | "approved" | "active" | "completed" | "suspended";
-        verificationStatus: "pending" | "in_progress" | "verified" | "rejected" | "revision_required";
+        status: "draft" | "submitted" | "under_review" | "approved" | "rejected" | "active" | "completed" | "suspended";
+        verificationStatus: "rejected" | "pending" | "in_progress" | "verified" | "revision_required";
         totalCarbonCredits: number;
         pricePerCredit: number;
         creditsAvailable: number;
@@ -164,6 +183,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         description: import("convex/values").VString<string, "required">;
         projectType: import("convex/values").VUnion<"reforestation" | "solar" | "wind" | "biogas" | "waste_management" | "mangrove_restoration", [import("convex/values").VLiteral<"reforestation", "required">, import("convex/values").VLiteral<"solar", "required">, import("convex/values").VLiteral<"wind", "required">, import("convex/values").VLiteral<"biogas", "required">, import("convex/values").VLiteral<"waste_management", "required">, import("convex/values").VLiteral<"mangrove_restoration", "required">], "required", never>;
         location: import("convex/values").VObject<{
+            city?: string | undefined;
+            country?: string | undefined;
             name: string;
             lat: number;
             long: number;
@@ -171,15 +192,31 @@ declare const _default: import("convex/server").SchemaDefinition<{
             lat: import("convex/values").VFloat64<number, "required">;
             long: import("convex/values").VFloat64<number, "required">;
             name: import("convex/values").VString<string, "required">;
-        }, "required", "name" | "lat" | "long">;
+            city: import("convex/values").VString<string | undefined, "optional">;
+            country: import("convex/values").VString<string | undefined, "optional">;
+        }, "required", "city" | "country" | "name" | "lat" | "long">;
         areaSize: import("convex/values").VFloat64<number, "required">;
         estimatedCO2Reduction: import("convex/values").VFloat64<number, "required">;
         budget: import("convex/values").VFloat64<number, "required">;
         startDate: import("convex/values").VString<string, "required">;
         expectedCompletionDate: import("convex/values").VString<string, "required">;
         actualCompletionDate: import("convex/values").VString<string | undefined, "optional">;
-        status: import("convex/values").VUnion<"rejected" | "draft" | "submitted" | "under_review" | "approved" | "active" | "completed" | "suspended", [import("convex/values").VLiteral<"draft", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"active", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"suspended", "required">], "required", never>;
-        verificationStatus: import("convex/values").VUnion<"pending" | "in_progress" | "verified" | "rejected" | "revision_required", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"verified", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
+        milestone1: import("convex/values").VObject<{
+            name: string;
+            date: string;
+        } | undefined, {
+            name: import("convex/values").VString<string, "required">;
+            date: import("convex/values").VString<string, "required">;
+        }, "optional", "name" | "date">;
+        milestone2: import("convex/values").VObject<{
+            name: string;
+            date: string;
+        } | undefined, {
+            name: import("convex/values").VString<string, "required">;
+            date: import("convex/values").VString<string, "required">;
+        }, "optional", "name" | "date">;
+        status: import("convex/values").VUnion<"draft" | "submitted" | "under_review" | "approved" | "rejected" | "active" | "completed" | "suspended", [import("convex/values").VLiteral<"draft", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"active", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"suspended", "required">], "required", never>;
+        verificationStatus: import("convex/values").VUnion<"rejected" | "pending" | "in_progress" | "verified" | "revision_required", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"verified", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
         totalCarbonCredits: import("convex/values").VFloat64<number, "required">;
         pricePerCredit: import("convex/values").VFloat64<number, "required">;
         creditsAvailable: import("convex/values").VFloat64<number, "required">;
@@ -193,7 +230,28 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isDocumentationComplete: import("convex/values").VBoolean<boolean, "required">;
         progressPercentage: import("convex/values").VFloat64<number | undefined, "optional">;
         lastProgressUpdate: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "creatorId" | "title" | "description" | "projectType" | "location" | "areaSize" | "estimatedCO2Reduction" | "budget" | "startDate" | "expectedCompletionDate" | "actualCompletionDate" | "status" | "verificationStatus" | "totalCarbonCredits" | "pricePerCredit" | "creditsAvailable" | "creditsSold" | "assignedVerifierId" | "verificationStartedAt" | "verificationCompletedAt" | "qualityScore" | "requiredDocuments" | "submittedDocuments" | "isDocumentationComplete" | "progressPercentage" | "lastProgressUpdate" | "location.name" | "location.lat" | "location.long">, {
+        projectImages: import("convex/values").VArray<any[] | undefined, import("convex/values").VAny<any, "required", string>, "optional">;
+        featuredImages: import("convex/values").VArray<{
+            storageId: string;
+            fileUrl: string;
+        }[] | undefined, import("convex/values").VObject<{
+            storageId: string;
+            fileUrl: string;
+        }, {
+            storageId: import("convex/values").VString<string, "required">;
+            fileUrl: import("convex/values").VString<string, "required">;
+        }, "required", "storageId" | "fileUrl">, "optional">;
+        siteImages: import("convex/values").VArray<{
+            storageId: string;
+            fileUrl: string;
+        }[] | undefined, import("convex/values").VObject<{
+            storageId: string;
+            fileUrl: string;
+        }, {
+            storageId: import("convex/values").VString<string, "required">;
+            fileUrl: import("convex/values").VString<string, "required">;
+        }, "required", "storageId" | "fileUrl">, "optional">;
+    }, "required", "creatorId" | "title" | "description" | "projectType" | "location" | "areaSize" | "estimatedCO2Reduction" | "budget" | "startDate" | "expectedCompletionDate" | "actualCompletionDate" | "milestone1" | "milestone2" | "status" | "verificationStatus" | "totalCarbonCredits" | "pricePerCredit" | "creditsAvailable" | "creditsSold" | "assignedVerifierId" | "verificationStartedAt" | "verificationCompletedAt" | "qualityScore" | "requiredDocuments" | "submittedDocuments" | "isDocumentationComplete" | "progressPercentage" | "lastProgressUpdate" | "projectImages" | "featuredImages" | "siteImages" | "location.city" | "location.country" | "location.name" | "location.lat" | "location.long" | "milestone1.name" | "milestone1.date" | "milestone2.name" | "milestone2.date">, {
         by_creator: ["creatorId", "_creationTime"];
         by_status: ["status", "_creationTime"];
         by_type: ["projectType", "_creationTime"];
@@ -230,34 +288,51 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_reserved_by: ["reservedBy", "_creationTime"];
     }, {}, {}>;
     transactions: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        projectId?: import("convex/values").GenericId<"projects"> | undefined;
         stripePaymentIntentId?: string | undefined;
         stripeSessionId?: string | undefined;
         certificateUrl?: string | undefined;
-        projectId: import("convex/values").GenericId<"projects">;
+        refundDetails?: {
+            refundReason: string;
+            refundAmount: number;
+            adminNotes: string;
+            processedAt: number;
+        } | undefined;
         creditAmount: number;
-        buyerId: import("convex/values").GenericId<"users">;
+        buyerId: string;
         unitPrice: number;
         totalAmount: number;
         platformFee: number;
         netAmount: number;
-        paymentStatus: "pending" | "completed" | "processing" | "failed" | "refunded" | "expired";
+        paymentStatus: "completed" | "pending" | "processing" | "failed" | "refunded" | "expired";
         impactDescription: string;
         transactionReference: string;
     }, {
-        buyerId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
+        buyerId: import("convex/values").VString<string, "required">;
+        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects"> | undefined, "optional">;
         creditAmount: import("convex/values").VFloat64<number, "required">;
         unitPrice: import("convex/values").VFloat64<number, "required">;
         totalAmount: import("convex/values").VFloat64<number, "required">;
         platformFee: import("convex/values").VFloat64<number, "required">;
         netAmount: import("convex/values").VFloat64<number, "required">;
-        paymentStatus: import("convex/values").VUnion<"pending" | "completed" | "processing" | "failed" | "refunded" | "expired", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"processing", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"failed", "required">, import("convex/values").VLiteral<"refunded", "required">, import("convex/values").VLiteral<"expired", "required">], "required", never>;
+        paymentStatus: import("convex/values").VUnion<"completed" | "pending" | "processing" | "failed" | "refunded" | "expired", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"processing", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"failed", "required">, import("convex/values").VLiteral<"refunded", "required">, import("convex/values").VLiteral<"expired", "required">], "required", never>;
         stripePaymentIntentId: import("convex/values").VString<string | undefined, "optional">;
         stripeSessionId: import("convex/values").VString<string | undefined, "optional">;
         certificateUrl: import("convex/values").VString<string | undefined, "optional">;
         impactDescription: import("convex/values").VString<string, "required">;
         transactionReference: import("convex/values").VString<string, "required">;
-    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "platformFee" | "netAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "impactDescription" | "transactionReference">, {
+        refundDetails: import("convex/values").VObject<{
+            refundReason: string;
+            refundAmount: number;
+            adminNotes: string;
+            processedAt: number;
+        } | undefined, {
+            refundReason: import("convex/values").VString<string, "required">;
+            refundAmount: import("convex/values").VFloat64<number, "required">;
+            adminNotes: import("convex/values").VString<string, "required">;
+            processedAt: import("convex/values").VFloat64<number, "required">;
+        }, "optional", "refundReason" | "refundAmount" | "adminNotes" | "processedAt">;
+    }, "required", "projectId" | "creditAmount" | "buyerId" | "unitPrice" | "totalAmount" | "platformFee" | "netAmount" | "paymentStatus" | "stripePaymentIntentId" | "stripeSessionId" | "certificateUrl" | "impactDescription" | "transactionReference" | "refundDetails" | "refundDetails.refundReason" | "refundDetails.refundAmount" | "refundDetails.adminNotes" | "refundDetails.processedAt">, {
         by_buyer: ["buyerId", "_creationTime"];
         by_project: ["projectId", "_creationTime"];
         by_payment_status: ["paymentStatus", "_creationTime"];
@@ -337,7 +412,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         overallScore?: number | undefined;
         confidenceLevel?: "low" | "high" | "medium" | undefined;
         recommendationJustification?: string | undefined;
-        status: "in_progress" | "rejected" | "revision_required" | "approved" | "completed" | "assigned" | "accepted";
+        status: "approved" | "rejected" | "completed" | "in_progress" | "revision_required" | "assigned" | "accepted";
         projectId: import("convex/values").GenericId<"projects">;
         verifierId: import("convex/values").GenericId<"users">;
         assignedAt: number;
@@ -347,7 +422,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {
         projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
         verifierId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        status: import("convex/values").VUnion<"in_progress" | "rejected" | "revision_required" | "approved" | "completed" | "assigned" | "accepted", [import("convex/values").VLiteral<"assigned", "required">, import("convex/values").VLiteral<"accepted", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
+        status: import("convex/values").VUnion<"approved" | "rejected" | "completed" | "in_progress" | "revision_required" | "assigned" | "accepted", [import("convex/values").VLiteral<"assigned", "required">, import("convex/values").VLiteral<"accepted", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"revision_required", "required">], "required", never>;
         assignedAt: import("convex/values").VFloat64<number, "required">;
         acceptedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         startedAt: import("convex/values").VFloat64<number | undefined, "optional">;
@@ -531,6 +606,74 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_priority: ["priority", "_creationTime"];
         by_accepted: ["verifierId", "acceptedAt", "_creationTime"];
     }, {}, {}>;
+    roleUpgradeRequests: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        verifierId?: import("convex/values").GenericId<"users"> | undefined;
+        assignedAt?: number | undefined;
+        rejectionReason?: string | undefined;
+        reviewedAt?: number | undefined;
+        reviewNotes?: string | undefined;
+        status: "under_review" | "approved" | "rejected" | "pending";
+        userId: import("convex/values").GenericId<"users">;
+        requestedRole: "project_creator";
+        currentRole: "credit_buyer";
+        applicationData: {
+            organizationName?: string | undefined;
+            organizationType?: string | undefined;
+            experienceDescription?: string | undefined;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phoneNumber: string;
+            address: string;
+            city: string;
+            country: string;
+            reasonForUpgrade: string;
+        };
+        createdAt: number;
+        updatedAt: number;
+    }, {
+        userId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
+        requestedRole: import("convex/values").VUnion<"project_creator", [import("convex/values").VLiteral<"project_creator", "required">], "required", never>;
+        currentRole: import("convex/values").VUnion<"credit_buyer", [import("convex/values").VLiteral<"credit_buyer", "required">], "required", never>;
+        status: import("convex/values").VUnion<"under_review" | "approved" | "rejected" | "pending", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">], "required", never>;
+        applicationData: import("convex/values").VObject<{
+            organizationName?: string | undefined;
+            organizationType?: string | undefined;
+            experienceDescription?: string | undefined;
+            email: string;
+            firstName: string;
+            lastName: string;
+            phoneNumber: string;
+            address: string;
+            city: string;
+            country: string;
+            reasonForUpgrade: string;
+        }, {
+            firstName: import("convex/values").VString<string, "required">;
+            lastName: import("convex/values").VString<string, "required">;
+            email: import("convex/values").VString<string, "required">;
+            organizationName: import("convex/values").VString<string | undefined, "optional">;
+            organizationType: import("convex/values").VString<string | undefined, "optional">;
+            phoneNumber: import("convex/values").VString<string, "required">;
+            address: import("convex/values").VString<string, "required">;
+            city: import("convex/values").VString<string, "required">;
+            country: import("convex/values").VString<string, "required">;
+            reasonForUpgrade: import("convex/values").VString<string, "required">;
+            experienceDescription: import("convex/values").VString<string | undefined, "optional">;
+        }, "required", "email" | "firstName" | "lastName" | "organizationName" | "organizationType" | "phoneNumber" | "address" | "city" | "country" | "reasonForUpgrade" | "experienceDescription">;
+        verifierId: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
+        assignedAt: import("convex/values").VFloat64<number | undefined, "optional">;
+        reviewedAt: import("convex/values").VFloat64<number | undefined, "optional">;
+        reviewNotes: import("convex/values").VString<string | undefined, "optional">;
+        rejectionReason: import("convex/values").VString<string | undefined, "optional">;
+        createdAt: import("convex/values").VFloat64<number, "required">;
+        updatedAt: import("convex/values").VFloat64<number, "required">;
+    }, "required", "status" | "verifierId" | "assignedAt" | "rejectionReason" | "userId" | "requestedRole" | "currentRole" | "applicationData" | "reviewedAt" | "reviewNotes" | "createdAt" | "updatedAt" | "applicationData.email" | "applicationData.firstName" | "applicationData.lastName" | "applicationData.organizationName" | "applicationData.organizationType" | "applicationData.phoneNumber" | "applicationData.address" | "applicationData.city" | "applicationData.country" | "applicationData.reasonForUpgrade" | "applicationData.experienceDescription">, {
+        by_user: ["userId", "_creationTime"];
+        by_status: ["status", "_creationTime"];
+        by_verifier: ["verifierId", "_creationTime"];
+        by_status_and_verifier: ["status", "verifierId", "_creationTime"];
+    }, {}, {}>;
     verificationMessages: import("convex/server").TableDefinition<import("convex/values").VObject<{
         attachments?: string[] | undefined;
         readAt?: number | undefined;
@@ -561,11 +704,12 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_unread: ["recipientId", "isRead", "_creationTime"];
     }, {}, {}>;
     documents: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        description?: string | undefined;
+        entityId?: string | undefined;
         thumbnailUrl?: string | undefined;
         verifiedBy?: import("convex/values").GenericId<"users"> | undefined;
         verifiedAt?: number | undefined;
         isVerified: boolean;
-        entityId: string;
         entityType: "project" | "verification" | "user_profile" | "educational_content";
         fileName: string;
         originalName: string;
@@ -573,14 +717,16 @@ declare const _default: import("convex/server").SchemaDefinition<{
         fileSize: number;
         fileSizeFormatted: string;
         media: {
-            cloudinary_public_id: string;
-            cloudinary_url: string;
+            storageId?: string | undefined;
+            fileUrl?: string | undefined;
+            cloudinary_public_id?: string | undefined;
+            cloudinary_url?: string | undefined;
         };
-        documentType: "project_plan" | "environmental_assessment" | "permits" | "photos" | "verification_report" | "identity_doc" | "technical_specs" | "budget_breakdown" | "timeline" | "other";
+        documentType: "project_proposal" | "environmental_impact" | "site_photographs" | "legal_permits" | "featured_images" | "site_images" | "project_plan" | "environmental_assessment" | "permits" | "photos" | "verification_report" | "identity_doc" | "technical_specs" | "budget_breakdown" | "timeline" | "other";
         uploadedBy: import("convex/values").GenericId<"users">;
         isRequired: boolean;
     }, {
-        entityId: import("convex/values").VString<string, "required">;
+        entityId: import("convex/values").VString<string | undefined, "optional">;
         entityType: import("convex/values").VUnion<"project" | "verification" | "user_profile" | "educational_content", [import("convex/values").VLiteral<"project", "required">, import("convex/values").VLiteral<"verification", "required">, import("convex/values").VLiteral<"user_profile", "required">, import("convex/values").VLiteral<"educational_content", "required">], "required", never>;
         fileName: import("convex/values").VString<string, "required">;
         originalName: import("convex/values").VString<string, "required">;
@@ -588,109 +734,41 @@ declare const _default: import("convex/server").SchemaDefinition<{
         fileSize: import("convex/values").VFloat64<number, "required">;
         fileSizeFormatted: import("convex/values").VString<string, "required">;
         media: import("convex/values").VObject<{
-            cloudinary_public_id: string;
-            cloudinary_url: string;
+            storageId?: string | undefined;
+            fileUrl?: string | undefined;
+            cloudinary_public_id?: string | undefined;
+            cloudinary_url?: string | undefined;
         }, {
-            cloudinary_public_id: import("convex/values").VString<string, "required">;
-            cloudinary_url: import("convex/values").VString<string, "required">;
-        }, "required", "cloudinary_public_id" | "cloudinary_url">;
+            storageId: import("convex/values").VString<string | undefined, "optional">;
+            fileUrl: import("convex/values").VString<string | undefined, "optional">;
+            cloudinary_public_id: import("convex/values").VString<string | undefined, "optional">;
+            cloudinary_url: import("convex/values").VString<string | undefined, "optional">;
+        }, "required", "storageId" | "fileUrl" | "cloudinary_public_id" | "cloudinary_url">;
         thumbnailUrl: import("convex/values").VString<string | undefined, "optional">;
-        documentType: import("convex/values").VUnion<"project_plan" | "environmental_assessment" | "permits" | "photos" | "verification_report" | "identity_doc" | "technical_specs" | "budget_breakdown" | "timeline" | "other", [import("convex/values").VLiteral<"project_plan", "required">, import("convex/values").VLiteral<"environmental_assessment", "required">, import("convex/values").VLiteral<"permits", "required">, import("convex/values").VLiteral<"photos", "required">, import("convex/values").VLiteral<"verification_report", "required">, import("convex/values").VLiteral<"identity_doc", "required">, import("convex/values").VLiteral<"technical_specs", "required">, import("convex/values").VLiteral<"budget_breakdown", "required">, import("convex/values").VLiteral<"timeline", "required">, import("convex/values").VLiteral<"other", "required">], "required", never>;
+        description: import("convex/values").VString<string | undefined, "optional">;
+        documentType: import("convex/values").VUnion<"project_proposal" | "environmental_impact" | "site_photographs" | "legal_permits" | "featured_images" | "site_images" | "project_plan" | "environmental_assessment" | "permits" | "photos" | "verification_report" | "identity_doc" | "technical_specs" | "budget_breakdown" | "timeline" | "other", [import("convex/values").VLiteral<"project_proposal", "required">, import("convex/values").VLiteral<"environmental_impact", "required">, import("convex/values").VLiteral<"site_photographs", "required">, import("convex/values").VLiteral<"legal_permits", "required">, import("convex/values").VLiteral<"featured_images", "required">, import("convex/values").VLiteral<"site_images", "required">, import("convex/values").VLiteral<"project_plan", "required">, import("convex/values").VLiteral<"environmental_assessment", "required">, import("convex/values").VLiteral<"permits", "required">, import("convex/values").VLiteral<"photos", "required">, import("convex/values").VLiteral<"verification_report", "required">, import("convex/values").VLiteral<"identity_doc", "required">, import("convex/values").VLiteral<"technical_specs", "required">, import("convex/values").VLiteral<"budget_breakdown", "required">, import("convex/values").VLiteral<"timeline", "required">, import("convex/values").VLiteral<"other", "required">], "required", never>;
         uploadedBy: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
         isRequired: import("convex/values").VBoolean<boolean, "required">;
         isVerified: import("convex/values").VBoolean<boolean, "required">;
         verifiedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
         verifiedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "isVerified" | "entityId" | "entityType" | "fileName" | "originalName" | "fileType" | "fileSize" | "fileSizeFormatted" | "media" | "thumbnailUrl" | "documentType" | "uploadedBy" | "isRequired" | "verifiedBy" | "verifiedAt" | "media.cloudinary_public_id" | "media.cloudinary_url">, {
+    }, "required", "isVerified" | "description" | "entityId" | "entityType" | "fileName" | "originalName" | "fileType" | "fileSize" | "fileSizeFormatted" | "media" | "thumbnailUrl" | "documentType" | "uploadedBy" | "isRequired" | "verifiedBy" | "verifiedAt" | "media.storageId" | "media.fileUrl" | "media.cloudinary_public_id" | "media.cloudinary_url">, {
         by_entity: ["entityId", "entityType", "_creationTime"];
         by_uploader: ["uploadedBy", "_creationTime"];
         by_type: ["documentType", "_creationTime"];
         by_verification_status: ["isVerified", "_creationTime"];
         by_required: ["entityType", "isRequired", "_creationTime"];
     }, {}, {}>;
-    progressUpdates: import("convex/server").TableDefinition<import("convex/values").VObject<{
-        location?: {
-            name: string;
-            lat: number;
-            long: number;
-        } | undefined;
-        verificationNotes?: string | undefined;
-        verifiedBy?: import("convex/values").GenericId<"users"> | undefined;
-        verifiedAt?: number | undefined;
-        measurementData?: any;
-        carbonImpactToDate?: number | undefined;
-        treesPlanted?: number | undefined;
-        energyGenerated?: number | undefined;
-        wasteProcessed?: number | undefined;
-        isVerified: boolean;
-        title: string;
-        description: string;
-        progressPercentage: number;
-        projectId: import("convex/values").GenericId<"projects">;
-        photos: {
-            cloudinary_public_id: string;
-            cloudinary_url: string;
-        }[];
-        reportedBy: import("convex/values").GenericId<"users">;
-        updateType: "milestone" | "measurement" | "photo" | "issue" | "completion";
-        reportingDate: number;
-    }, {
-        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
-        reportedBy: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        updateType: import("convex/values").VUnion<"milestone" | "measurement" | "photo" | "issue" | "completion", [import("convex/values").VLiteral<"milestone", "required">, import("convex/values").VLiteral<"measurement", "required">, import("convex/values").VLiteral<"photo", "required">, import("convex/values").VLiteral<"issue", "required">, import("convex/values").VLiteral<"completion", "required">], "required", never>;
-        title: import("convex/values").VString<string, "required">;
-        description: import("convex/values").VString<string, "required">;
-        progressPercentage: import("convex/values").VFloat64<number, "required">;
-        measurementData: import("convex/values").VAny<any, "optional", string>;
-        location: import("convex/values").VObject<{
-            name: string;
-            lat: number;
-            long: number;
-        } | undefined, {
-            lat: import("convex/values").VFloat64<number, "required">;
-            long: import("convex/values").VFloat64<number, "required">;
-            name: import("convex/values").VString<string, "required">;
-        }, "optional", "name" | "lat" | "long">;
-        photos: import("convex/values").VArray<{
-            cloudinary_public_id: string;
-            cloudinary_url: string;
-        }[], import("convex/values").VObject<{
-            cloudinary_public_id: string;
-            cloudinary_url: string;
-        }, {
-            cloudinary_public_id: import("convex/values").VString<string, "required">;
-            cloudinary_url: import("convex/values").VString<string, "required">;
-        }, "required", "cloudinary_public_id" | "cloudinary_url">, "required">;
-        reportingDate: import("convex/values").VFloat64<number, "required">;
-        carbonImpactToDate: import("convex/values").VFloat64<number | undefined, "optional">;
-        treesPlanted: import("convex/values").VFloat64<number | undefined, "optional">;
-        energyGenerated: import("convex/values").VFloat64<number | undefined, "optional">;
-        wasteProcessed: import("convex/values").VFloat64<number | undefined, "optional">;
-        isVerified: import("convex/values").VBoolean<boolean, "required">;
-        verifiedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
-        verifiedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-        verificationNotes: import("convex/values").VString<string | undefined, "optional">;
-    }, "required", "isVerified" | "title" | "description" | "location" | "progressPercentage" | "location.name" | "location.lat" | "location.long" | "projectId" | "verificationNotes" | "photos" | "verifiedBy" | "verifiedAt" | "reportedBy" | "updateType" | "measurementData" | "reportingDate" | "carbonImpactToDate" | "treesPlanted" | "energyGenerated" | "wasteProcessed" | `measurementData.${string}`>, {
-        by_project: ["projectId", "_creationTime"];
-        by_reporter: ["reportedBy", "_creationTime"];
-        by_date: ["reportingDate", "_creationTime"];
-        by_type: ["updateType", "_creationTime"];
-        by_verification: ["isVerified", "_creationTime"];
-        by_project_date: ["projectId", "reportingDate", "_creationTime"];
-        by_project_type: ["projectId", "updateType", "_creationTime"];
-        by_project_verified: ["projectId", "isVerified", "_creationTime"];
-        by_date_type: ["reportingDate", "updateType", "_creationTime"];
-    }, {}, {}>;
     educationalContent: import("convex/server").TableDefinition<import("convex/values").VObject<{
         rejectionReason?: string | undefined;
-        images?: string[] | undefined;
-        reviewedBy?: import("convex/values").GenericId<"users"> | undefined;
         reviewedAt?: number | undefined;
         reviewNotes?: string | undefined;
+        images?: string[] | undefined;
+        reviewedBy?: import("convex/values").GenericId<"users"> | undefined;
         estimatedReadTime?: number | undefined;
         publishedAt?: number | undefined;
         title: string;
-        status: "rejected" | "draft" | "submitted" | "under_review" | "approved" | "published";
+        status: "draft" | "submitted" | "under_review" | "approved" | "rejected" | "published";
         content: string;
         contentType: "article" | "video" | "case_study";
         category: string;
@@ -710,7 +788,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         tags: import("convex/values").VArray<string[], import("convex/values").VString<string, "required">, "required">;
         images: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
         authorId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
-        status: import("convex/values").VUnion<"rejected" | "draft" | "submitted" | "under_review" | "approved" | "published", [import("convex/values").VLiteral<"draft", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"published", "required">], "required", never>;
+        status: import("convex/values").VUnion<"draft" | "submitted" | "under_review" | "approved" | "rejected" | "published", [import("convex/values").VLiteral<"draft", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"under_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"published", "required">], "required", never>;
         reviewedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
         reviewedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         reviewNotes: import("convex/values").VString<string | undefined, "optional">;
@@ -723,7 +801,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isPublished: import("convex/values").VBoolean<boolean, "required">;
         publishedAt: import("convex/values").VFloat64<number | undefined, "optional">;
         lastUpdatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "title" | "status" | "rejectionReason" | "content" | "contentType" | "category" | "tags" | "images" | "authorId" | "reviewedBy" | "reviewedAt" | "reviewNotes" | "estimatedReadTime" | "difficultyLevel" | "viewCount" | "likeCount" | "shareCount" | "isPublished" | "publishedAt" | "lastUpdatedAt">, {
+    }, "required", "title" | "status" | "rejectionReason" | "content" | "reviewedAt" | "reviewNotes" | "contentType" | "category" | "tags" | "images" | "authorId" | "reviewedBy" | "estimatedReadTime" | "difficultyLevel" | "viewCount" | "likeCount" | "shareCount" | "isPublished" | "publishedAt" | "lastUpdatedAt">, {
         by_author: ["authorId", "_creationTime"];
         by_category: ["category", "_creationTime"];
         by_status: ["status", "_creationTime"];
@@ -853,8 +931,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
     learningProgress: import("convex/server").TableDefinition<import("convex/values").VObject<{
         completedAt?: number | undefined;
         completed: boolean;
-        pathId: import("convex/values").GenericId<"learningPaths">;
         userId: import("convex/values").GenericId<"users">;
+        pathId: import("convex/values").GenericId<"learningPaths">;
         lessonId: import("convex/values").GenericId<"learningPathLessons">;
         itemType: "video" | "pdf";
         itemIndex: number;
@@ -866,7 +944,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         itemIndex: import("convex/values").VFloat64<number, "required">;
         completed: import("convex/values").VBoolean<boolean, "required">;
         completedAt: import("convex/values").VFloat64<number | undefined, "optional">;
-    }, "required", "completed" | "completedAt" | "pathId" | "userId" | "lessonId" | "itemType" | "itemIndex">, {
+    }, "required", "completed" | "completedAt" | "userId" | "pathId" | "lessonId" | "itemType" | "itemIndex">, {
         by_user_path: ["userId", "pathId", "_creationTime"];
         by_user_lesson: ["userId", "lessonId", "_creationTime"];
         by_user: ["userId", "_creationTime"];
@@ -887,7 +965,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     certificates: import("convex/server").TableDefinition<import("convex/values").VObject<{
         projectId: import("convex/values").GenericId<"projects">;
-        buyerId: import("convex/values").GenericId<"users">;
+        buyerId: string;
         certificateUrl: string;
         impactDescription: string;
         transactionId: import("convex/values").GenericId<"transactions">;
@@ -898,7 +976,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         isValid: boolean;
     }, {
         transactionId: import("convex/values").VId<import("convex/values").GenericId<"transactions">, "required">;
-        buyerId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
+        buyerId: import("convex/values").VString<string, "required">;
         projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
         certificateNumber: import("convex/values").VString<string, "required">;
         creditsAmount: import("convex/values").VFloat64<number, "required">;
@@ -1031,7 +1109,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         newValues: import("convex/values").VAny<any, "optional", string>;
         metadata: import("convex/values").VAny<any, "optional", string>;
         severity: import("convex/values").VUnion<"info" | "warning" | "error" | "critical" | undefined, [import("convex/values").VLiteral<"info", "required">, import("convex/values").VLiteral<"warning", "required">, import("convex/values").VLiteral<"error", "required">, import("convex/values").VLiteral<"critical", "required">], "optional", never>;
-    }, "required", "entityId" | "entityType" | "userId" | "action" | "oldValues" | "newValues" | "metadata" | "severity" | `oldValues.${string}` | `newValues.${string}` | `metadata.${string}`>, {}, {}, {}>;
+    }, "required", "userId" | "entityId" | "entityType" | "action" | "oldValues" | "newValues" | "metadata" | "severity" | `oldValues.${string}` | `newValues.${string}` | `metadata.${string}`>, {}, {}, {}>;
     verificationAuditLogs: import("convex/server").TableDefinition<import("convex/values").VObject<{
         ipAddress?: string | undefined;
         userAgent?: string | undefined;
@@ -1260,9 +1338,9 @@ declare const _default: import("convex/server").SchemaDefinition<{
         projectId?: import("convex/values").GenericId<"projects"> | undefined;
         category?: string | undefined;
         metadata?: any;
+        date: number;
         value: number;
         metric: string;
-        date: number;
     }, {
         metric: import("convex/values").VString<string, "required">;
         value: import("convex/values").VFloat64<number, "required">;
@@ -1270,7 +1348,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         metadata: import("convex/values").VAny<any, "optional", string>;
         projectId: import("convex/values").VId<import("convex/values").GenericId<"projects"> | undefined, "optional">;
         category: import("convex/values").VString<string | undefined, "optional">;
-    }, "required", "projectId" | "category" | "value" | "metadata" | `metadata.${string}` | "metric" | "date">, {
+    }, "required", "date" | "projectId" | "category" | "value" | "metadata" | `metadata.${string}` | "metric">, {
         by_metric: ["metric", "_creationTime"];
         by_date: ["date", "_creationTime"];
         by_metric_date: ["metric", "date", "_creationTime"];
@@ -1285,20 +1363,20 @@ declare const _default: import("convex/server").SchemaDefinition<{
         impactOnTimeline?: string | undefined;
         title: string;
         description: string;
-        status: "pending" | "in_progress" | "completed" | "delayed" | "skipped";
+        status: "completed" | "pending" | "in_progress" | "delayed" | "skipped";
         projectId: import("convex/values").GenericId<"projects">;
         isRequired: boolean;
         order: number;
-        milestoneType: "verification" | "completion" | "setup" | "progress_25" | "progress_50" | "progress_75" | "impact_first";
+        milestoneType: "verification" | "setup" | "progress_25" | "progress_50" | "progress_75" | "impact_first" | "completion";
         plannedDate: number;
     }, {
         projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
-        milestoneType: import("convex/values").VUnion<"verification" | "completion" | "setup" | "progress_25" | "progress_50" | "progress_75" | "impact_first", [import("convex/values").VLiteral<"setup", "required">, import("convex/values").VLiteral<"progress_25", "required">, import("convex/values").VLiteral<"progress_50", "required">, import("convex/values").VLiteral<"progress_75", "required">, import("convex/values").VLiteral<"impact_first", "required">, import("convex/values").VLiteral<"verification", "required">, import("convex/values").VLiteral<"completion", "required">], "required", never>;
+        milestoneType: import("convex/values").VUnion<"verification" | "setup" | "progress_25" | "progress_50" | "progress_75" | "impact_first" | "completion", [import("convex/values").VLiteral<"setup", "required">, import("convex/values").VLiteral<"progress_25", "required">, import("convex/values").VLiteral<"progress_50", "required">, import("convex/values").VLiteral<"progress_75", "required">, import("convex/values").VLiteral<"impact_first", "required">, import("convex/values").VLiteral<"verification", "required">, import("convex/values").VLiteral<"completion", "required">], "required", never>;
         title: import("convex/values").VString<string, "required">;
         description: import("convex/values").VString<string, "required">;
         plannedDate: import("convex/values").VFloat64<number, "required">;
         actualDate: import("convex/values").VFloat64<number | undefined, "optional">;
-        status: import("convex/values").VUnion<"pending" | "in_progress" | "completed" | "delayed" | "skipped", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"delayed", "required">, import("convex/values").VLiteral<"skipped", "required">], "required", never>;
+        status: import("convex/values").VUnion<"completed" | "pending" | "in_progress" | "delayed" | "skipped", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"in_progress", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"delayed", "required">, import("convex/values").VLiteral<"skipped", "required">], "required", never>;
         delayReason: import("convex/values").VString<string | undefined, "optional">;
         impactOnTimeline: import("convex/values").VString<string | undefined, "optional">;
         order: import("convex/values").VFloat64<number, "required">;
@@ -1414,6 +1492,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_active: ["isActive", "_creationTime"];
     }, {}, {}>;
     escalationConfig: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        createdAt: number;
+        updatedAt: number;
         createdBy: import("convex/values").GenericId<"users">;
         severity: "low" | "high" | "medium" | "critical";
         alertType: string;
@@ -1429,8 +1509,6 @@ declare const _default: import("convex/server").SchemaDefinition<{
             }[];
             maxEscalationLevel: number;
         };
-        createdAt: number;
-        updatedAt: number;
     }, {
         alertType: import("convex/values").VString<string, "required">;
         severity: import("convex/values").VUnion<"low" | "high" | "medium" | "critical", [import("convex/values").VLiteral<"low", "required">, import("convex/values").VLiteral<"medium", "required">, import("convex/values").VLiteral<"high", "required">, import("convex/values").VLiteral<"critical", "required">], "required", never>;
@@ -1470,7 +1548,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         createdBy: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
         createdAt: import("convex/values").VFloat64<number, "required">;
         updatedAt: import("convex/values").VFloat64<number, "required">;
-    }, "required", "createdBy" | "severity" | "alertType" | "rules" | "createdAt" | "updatedAt" | "rules.autoEscalationEnabled" | "rules.escalationChain" | "rules.maxEscalationLevel" | "rules.businessHoursOnly" | "rules.cooldownPeriod">, {
+    }, "required", "createdAt" | "updatedAt" | "createdBy" | "severity" | "alertType" | "rules" | "rules.autoEscalationEnabled" | "rules.escalationChain" | "rules.maxEscalationLevel" | "rules.businessHoursOnly" | "rules.cooldownPeriod">, {
         by_type_severity: ["alertType", "severity", "_creationTime"];
         by_created_by: ["createdBy", "_creationTime"];
     }, {}, {}>;
@@ -1546,8 +1624,8 @@ declare const _default: import("convex/server").SchemaDefinition<{
     }, {}, {}>;
     analyticsSnapshots: import("convex/server").TableDefinition<import("convex/values").VObject<{
         type: "daily" | "weekly" | "monthly" | "quarterly";
-        timestamp: number;
         date: number;
+        timestamp: number;
         projectData: any;
         userData: any;
         transactionData: any;
@@ -1560,7 +1638,7 @@ declare const _default: import("convex/server").SchemaDefinition<{
         transactionData: import("convex/values").VAny<any, "required", string>;
         impactData: import("convex/values").VAny<any, "required", string>;
         timestamp: import("convex/values").VFloat64<number, "required">;
-    }, "required", "type" | "timestamp" | "date" | "projectData" | "userData" | "transactionData" | "impactData" | `projectData.${string}` | `userData.${string}` | `transactionData.${string}` | `impactData.${string}`>, {
+    }, "required", "type" | "date" | "timestamp" | "projectData" | "userData" | "transactionData" | "impactData" | `projectData.${string}` | `userData.${string}` | `transactionData.${string}` | `impactData.${string}`>, {
         by_date: ["date", "_creationTime"];
         by_type: ["type", "_creationTime"];
         by_timestamp: ["timestamp", "_creationTime"];
@@ -1672,6 +1750,231 @@ declare const _default: import("convex/server").SchemaDefinition<{
         by_user: ["generatedBy", "_creationTime"];
         by_date: ["generatedAt", "_creationTime"];
         by_public: ["isPublic", "_creationTime"];
+    }, {}, {}>;
+    pdf_reports: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        fileUrl?: string | undefined;
+        completedAt?: number | undefined;
+        fileSize?: number | undefined;
+        errorMessage?: string | undefined;
+        filters?: any;
+        analyticsData?: any;
+        title: string;
+        status: "completed" | "pending" | "processing" | "failed";
+        expiresAt: number;
+        reportType: string;
+        timeframe: {
+            start: number;
+            end: number;
+            period: string;
+        };
+        templateType: "analytics" | "monitoring";
+        progress: number;
+        requestedBy: string;
+        requestedAt: number;
+        userInfo: {
+            email: string;
+            role: string;
+            name: string;
+            userId: string;
+        };
+    }, {
+        templateType: import("convex/values").VUnion<"analytics" | "monitoring", [import("convex/values").VLiteral<"analytics", "required">, import("convex/values").VLiteral<"monitoring", "required">], "required", never>;
+        reportType: import("convex/values").VString<string, "required">;
+        title: import("convex/values").VString<string, "required">;
+        status: import("convex/values").VUnion<"completed" | "pending" | "processing" | "failed", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"processing", "required">, import("convex/values").VLiteral<"completed", "required">, import("convex/values").VLiteral<"failed", "required">], "required", never>;
+        progress: import("convex/values").VFloat64<number, "required">;
+        requestedBy: import("convex/values").VString<string, "required">;
+        requestedAt: import("convex/values").VFloat64<number, "required">;
+        completedAt: import("convex/values").VFloat64<number | undefined, "optional">;
+        errorMessage: import("convex/values").VString<string | undefined, "optional">;
+        fileUrl: import("convex/values").VString<string | undefined, "optional">;
+        fileSize: import("convex/values").VFloat64<number | undefined, "optional">;
+        expiresAt: import("convex/values").VFloat64<number, "required">;
+        timeframe: import("convex/values").VObject<{
+            start: number;
+            end: number;
+            period: string;
+        }, {
+            start: import("convex/values").VFloat64<number, "required">;
+            end: import("convex/values").VFloat64<number, "required">;
+            period: import("convex/values").VString<string, "required">;
+        }, "required", "start" | "end" | "period">;
+        filters: import("convex/values").VAny<any, "optional", string>;
+        analyticsData: import("convex/values").VAny<any, "optional", string>;
+        userInfo: import("convex/values").VObject<{
+            email: string;
+            role: string;
+            name: string;
+            userId: string;
+        }, {
+            userId: import("convex/values").VString<string, "required">;
+            name: import("convex/values").VString<string, "required">;
+            email: import("convex/values").VString<string, "required">;
+            role: import("convex/values").VString<string, "required">;
+        }, "required", "email" | "role" | "name" | "userId">;
+    }, "required", "title" | "status" | "fileUrl" | "completedAt" | "fileSize" | "expiresAt" | "errorMessage" | "reportType" | "filters" | "timeframe" | `filters.${string}` | "templateType" | "progress" | "requestedBy" | "requestedAt" | "analyticsData" | "userInfo" | "timeframe.start" | "timeframe.end" | "timeframe.period" | `analyticsData.${string}` | "userInfo.email" | "userInfo.role" | "userInfo.name" | "userInfo.userId">, {
+        by_user: ["requestedBy", "_creationTime"];
+        by_status: ["status", "_creationTime"];
+        by_template_type: ["templateType", "_creationTime"];
+        by_report_type: ["reportType", "_creationTime"];
+        by_requested_at: ["requestedAt", "_creationTime"];
+        by_expires_at: ["expiresAt", "_creationTime"];
+        by_user_status: ["requestedBy", "status", "_creationTime"];
+    }, {}, {}>;
+    progressUpdates: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        location?: {
+            name: string;
+            lat: number;
+            long: number;
+        } | undefined;
+        status?: "approved" | "rejected" | "pending_review" | "needs_revision" | undefined;
+        assignedVerifierId?: import("convex/values").GenericId<"users"> | undefined;
+        verificationNotes?: string | undefined;
+        rejectionReason?: string | undefined;
+        reviewedAt?: number | undefined;
+        reviewNotes?: string | undefined;
+        photos?: {
+            cloudinary_public_id: string;
+            cloudinary_url: string;
+        }[] | undefined;
+        verifiedBy?: import("convex/values").GenericId<"users"> | undefined;
+        verifiedAt?: number | undefined;
+        submittedBy?: import("convex/values").GenericId<"users"> | undefined;
+        reportedBy?: import("convex/values").GenericId<"users"> | undefined;
+        photoStorageIds?: import("convex/values").GenericId<"_storage">[] | undefined;
+        photoUrls?: string[] | undefined;
+        measurementData?: {
+            treesPlanted?: number | undefined;
+            survivalRate?: number | undefined;
+            energyGenerated?: number | undefined;
+            systemUptime?: number | undefined;
+            gasProduced?: number | undefined;
+            wasteProcessed?: number | undefined;
+            recyclingRate?: number | undefined;
+            areaRestored?: number | undefined;
+            mangrovesPlanted?: number | undefined;
+            carbonImpactToDate?: number | undefined;
+        } | undefined;
+        treesPlanted?: number | undefined;
+        energyGenerated?: number | undefined;
+        wasteProcessed?: number | undefined;
+        carbonImpactToDate?: number | undefined;
+        nextSteps?: string | undefined;
+        challenges?: string | undefined;
+        submittedAt?: number | undefined;
+        isVerified: boolean;
+        title: string;
+        description: string;
+        progressPercentage: number;
+        projectId: import("convex/values").GenericId<"projects">;
+        updateType: "completion" | "milestone" | "measurement" | "photo" | "issue";
+        reportingDate: number;
+    }, {
+        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
+        submittedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
+        reportedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
+        updateType: import("convex/values").VUnion<"completion" | "milestone" | "measurement" | "photo" | "issue", [import("convex/values").VLiteral<"milestone", "required">, import("convex/values").VLiteral<"measurement", "required">, import("convex/values").VLiteral<"photo", "required">, import("convex/values").VLiteral<"issue", "required">, import("convex/values").VLiteral<"completion", "required">], "required", never>;
+        title: import("convex/values").VString<string, "required">;
+        description: import("convex/values").VString<string, "required">;
+        progressPercentage: import("convex/values").VFloat64<number, "required">;
+        photoStorageIds: import("convex/values").VArray<import("convex/values").GenericId<"_storage">[] | undefined, import("convex/values").VId<import("convex/values").GenericId<"_storage">, "required">, "optional">;
+        photoUrls: import("convex/values").VArray<string[] | undefined, import("convex/values").VString<string, "required">, "optional">;
+        photos: import("convex/values").VArray<{
+            cloudinary_public_id: string;
+            cloudinary_url: string;
+        }[] | undefined, import("convex/values").VObject<{
+            cloudinary_public_id: string;
+            cloudinary_url: string;
+        }, {
+            cloudinary_public_id: import("convex/values").VString<string, "required">;
+            cloudinary_url: import("convex/values").VString<string, "required">;
+        }, "required", "cloudinary_public_id" | "cloudinary_url">, "optional">;
+        location: import("convex/values").VObject<{
+            name: string;
+            lat: number;
+            long: number;
+        } | undefined, {
+            lat: import("convex/values").VFloat64<number, "required">;
+            long: import("convex/values").VFloat64<number, "required">;
+            name: import("convex/values").VString<string, "required">;
+        }, "optional", "name" | "lat" | "long">;
+        measurementData: import("convex/values").VObject<{
+            treesPlanted?: number | undefined;
+            survivalRate?: number | undefined;
+            energyGenerated?: number | undefined;
+            systemUptime?: number | undefined;
+            gasProduced?: number | undefined;
+            wasteProcessed?: number | undefined;
+            recyclingRate?: number | undefined;
+            areaRestored?: number | undefined;
+            mangrovesPlanted?: number | undefined;
+            carbonImpactToDate?: number | undefined;
+        } | undefined, {
+            treesPlanted: import("convex/values").VFloat64<number | undefined, "optional">;
+            survivalRate: import("convex/values").VFloat64<number | undefined, "optional">;
+            energyGenerated: import("convex/values").VFloat64<number | undefined, "optional">;
+            systemUptime: import("convex/values").VFloat64<number | undefined, "optional">;
+            gasProduced: import("convex/values").VFloat64<number | undefined, "optional">;
+            wasteProcessed: import("convex/values").VFloat64<number | undefined, "optional">;
+            recyclingRate: import("convex/values").VFloat64<number | undefined, "optional">;
+            areaRestored: import("convex/values").VFloat64<number | undefined, "optional">;
+            mangrovesPlanted: import("convex/values").VFloat64<number | undefined, "optional">;
+            carbonImpactToDate: import("convex/values").VFloat64<number | undefined, "optional">;
+        }, "optional", "treesPlanted" | "survivalRate" | "energyGenerated" | "systemUptime" | "gasProduced" | "wasteProcessed" | "recyclingRate" | "areaRestored" | "mangrovesPlanted" | "carbonImpactToDate">;
+        nextSteps: import("convex/values").VString<string | undefined, "optional">;
+        challenges: import("convex/values").VString<string | undefined, "optional">;
+        submittedAt: import("convex/values").VFloat64<number | undefined, "optional">;
+        reportingDate: import("convex/values").VFloat64<number, "required">;
+        status: import("convex/values").VUnion<"approved" | "rejected" | "pending_review" | "needs_revision" | undefined, [import("convex/values").VLiteral<"pending_review", "required">, import("convex/values").VLiteral<"approved", "required">, import("convex/values").VLiteral<"rejected", "required">, import("convex/values").VLiteral<"needs_revision", "required">], "optional", never>;
+        isVerified: import("convex/values").VBoolean<boolean, "required">;
+        verifiedBy: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
+        verifiedAt: import("convex/values").VFloat64<number | undefined, "optional">;
+        verificationNotes: import("convex/values").VString<string | undefined, "optional">;
+        assignedVerifierId: import("convex/values").VId<import("convex/values").GenericId<"users"> | undefined, "optional">;
+        reviewedAt: import("convex/values").VFloat64<number | undefined, "optional">;
+        reviewNotes: import("convex/values").VString<string | undefined, "optional">;
+        rejectionReason: import("convex/values").VString<string | undefined, "optional">;
+        carbonImpactToDate: import("convex/values").VFloat64<number | undefined, "optional">;
+        treesPlanted: import("convex/values").VFloat64<number | undefined, "optional">;
+        energyGenerated: import("convex/values").VFloat64<number | undefined, "optional">;
+        wasteProcessed: import("convex/values").VFloat64<number | undefined, "optional">;
+    }, "required", "isVerified" | "title" | "description" | "location" | "status" | "assignedVerifierId" | "progressPercentage" | "location.name" | "location.lat" | "location.long" | "projectId" | "verificationNotes" | "rejectionReason" | "reviewedAt" | "reviewNotes" | "photos" | "verifiedBy" | "verifiedAt" | "submittedBy" | "reportedBy" | "updateType" | "photoStorageIds" | "photoUrls" | "measurementData" | "treesPlanted" | "energyGenerated" | "wasteProcessed" | "carbonImpactToDate" | "nextSteps" | "challenges" | "submittedAt" | "reportingDate" | "measurementData.treesPlanted" | "measurementData.survivalRate" | "measurementData.energyGenerated" | "measurementData.systemUptime" | "measurementData.gasProduced" | "measurementData.wasteProcessed" | "measurementData.recyclingRate" | "measurementData.areaRestored" | "measurementData.mangrovesPlanted" | "measurementData.carbonImpactToDate">, {
+        by_project: ["projectId", "_creationTime"];
+        by_submitter: ["submittedBy", "_creationTime"];
+        by_reporter: ["reportedBy", "_creationTime"];
+        by_verifier: ["assignedVerifierId", "_creationTime"];
+        by_status: ["status", "_creationTime"];
+        by_project_status: ["projectId", "status", "_creationTime"];
+        by_submitted_at: ["submittedAt", "_creationTime"];
+        by_reporting_date: ["reportingDate", "_creationTime"];
+    }, {}, {}>;
+    progressReportRequests: import("convex/server").TableDefinition<import("convex/values").VObject<{
+        requestNotes?: string | undefined;
+        submittedUpdateId?: import("convex/values").GenericId<"progressUpdates"> | undefined;
+        creatorId: import("convex/values").GenericId<"users">;
+        status: "submitted" | "pending" | "overdue" | "cancelled";
+        projectId: import("convex/values").GenericId<"projects">;
+        dueDate: number;
+        createdAt: number;
+        requestedBy: import("convex/values").GenericId<"users">;
+        requestType: "manual" | "scheduled_monthly" | "milestone_based";
+    }, {
+        projectId: import("convex/values").VId<import("convex/values").GenericId<"projects">, "required">;
+        requestedBy: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
+        creatorId: import("convex/values").VId<import("convex/values").GenericId<"users">, "required">;
+        requestType: import("convex/values").VUnion<"manual" | "scheduled_monthly" | "milestone_based", [import("convex/values").VLiteral<"manual", "required">, import("convex/values").VLiteral<"scheduled_monthly", "required">, import("convex/values").VLiteral<"milestone_based", "required">], "required", never>;
+        status: import("convex/values").VUnion<"submitted" | "pending" | "overdue" | "cancelled", [import("convex/values").VLiteral<"pending", "required">, import("convex/values").VLiteral<"submitted", "required">, import("convex/values").VLiteral<"overdue", "required">, import("convex/values").VLiteral<"cancelled", "required">], "required", never>;
+        dueDate: import("convex/values").VFloat64<number, "required">;
+        requestNotes: import("convex/values").VString<string | undefined, "optional">;
+        submittedUpdateId: import("convex/values").VId<import("convex/values").GenericId<"progressUpdates"> | undefined, "optional">;
+        createdAt: import("convex/values").VFloat64<number, "required">;
+    }, "required", "creatorId" | "status" | "projectId" | "dueDate" | "createdAt" | "requestedBy" | "requestType" | "requestNotes" | "submittedUpdateId">, {
+        by_creator: ["creatorId", "_creationTime"];
+        by_project: ["projectId", "_creationTime"];
+        by_status: ["status", "_creationTime"];
+        by_creator_status: ["creatorId", "status", "_creationTime"];
+        by_project_status: ["projectId", "status", "_creationTime"];
+        by_due_date: ["dueDate", "_creationTime"];
     }, {}, {}>;
 }, true>;
 export default _default;

@@ -215,6 +215,13 @@ a {
   }
 }
 
+::-webkit-calendar-picker-indicator {
+    filter: invert(1)
+    brightness(50%)
+    sepia(100%)
+    saturate(10000%)
+    hue-rotate(180deg)
+}
 
 
 @layer base {
@@ -382,4 +389,164 @@ a {
   .enhanced-table-row {
     @apply border-cloud-gray hover:bg-whisper-gray transition-colors duration-150;
   }
+
+    input{
+        background-color: white !important;
+    }
+
+    textarea{
+            background-color: white !important;
+    }
+
+    select{
+            background-color: white !important;
+    }
+}
+
+/* Force solid white backgrounds for all Radix UI components */
+@layer components {
+    /* Navbar glassmorphism dropdowns - exclude from white background overrides */
+    .navbar-glass-dropdown {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+    }
+
+  /* Dialog/Modal components */
+    [data-radix-dialog-content]:not(.navbar-glass-dropdown),
+    [role="dialog"]:not(.navbar-glass-dropdown),
+    .dialog-content:not(.navbar-glass-dropdown),
+    [data-state="open"][role="dialog"]:not(.navbar-glass-dropdown) {
+    @apply bg-white !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Popover components */
+    [data-radix-popover-content]:not(.navbar-glass-dropdown),
+    [role="dialog"][data-radix-popover-content]:not(.navbar-glass-dropdown),
+    .popover-content:not(.navbar-glass-dropdown),
+    [data-state="open"][data-radix-popover-content]:not(.navbar-glass-dropdown) {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Dropdown Menu components */
+    [data-radix-dropdown-menu-content]:not(.navbar-glass-dropdown),
+    [role="menu"]:not(.navbar-glass-dropdown),
+    .dropdown-content:not(.navbar-glass-dropdown),
+    [data-state="open"][role="menu"]:not(.navbar-glass-dropdown) {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Select components */
+  [data-radix-select-content],
+  [role="listbox"],
+  .select-content,
+  [data-state="open"][role="listbox"] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Tooltip components */
+  [data-radix-tooltip-content],
+  [role="tooltip"],
+  .tooltip-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Context Menu components */
+  [data-radix-context-menu-content],
+  [role="menu"][data-radix-context-menu-content],
+  .context-menu-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Menubar components */
+  [data-radix-menubar-content],
+  .menubar-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Navigation Menu components */
+  [data-radix-navigation-menu-content],
+  .navigation-menu-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Hover Card components */
+  [data-radix-hover-card-content],
+  .hover-card-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Sheet/Drawer components */
+  [data-radix-dialog-content][data-sheet],
+  .sheet-content {
+    @apply bg-white !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Command components */
+  [cmdk-root],
+  .command-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Calendar components */
+  [data-radix-calendar-content],
+  .calendar-content {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Toast components */
+  [data-radix-toast-root],
+  .toast-content,
+  [data-state="open"][data-radix-toast-root] {
+    @apply bg-white border border-gray-200 shadow-lg !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Alert Dialog components */
+  [data-radix-alert-dialog-content],
+  [role="alertdialog"],
+  .alert-dialog-content {
+    @apply bg-white !important;
+    background-color: #ffffff !important;
+    backdrop-filter: none !important;
+  }
+}
+
+
+
+input{
+    background-color: white !important;
+}
+
+select {
+    background-color: white !important;
+}
+
+textarea {
+    background-color: white !important;
 }

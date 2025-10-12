@@ -1,6 +1,7 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { UserService } from '../services/user-service';
+import type { Id } from './_generated/dataModel';
 
 export const listBlog = query({
   args: {},
@@ -343,14 +344,47 @@ export const listLearningPaths = query({
       .order('desc')
       .collect();
 
-    return items.map((d) => ({
-      id: d._id,
-      title: d.title,
-      description: d.description,
-      level: d.level,
-      estimatedDuration: d.estimatedDuration,
-      moduleCount: d.moduleCount,
-    }));
+    const uniqueCreatorIds = Array.from(
+      new Set(items.map((d) => d.createdBy as Id<'users'>))
+    );
+    const creatorEntries = await Promise.all(
+      uniqueCreatorIds.map(async (id) => {
+        const user = await ctx.db.get(id);
+        return [id, user] as const;
+      })
+    );
+    const creatorMap = new Map<(typeof uniqueCreatorIds)[number], any>();
+    for (const [id, user] of creatorEntries) {
+      if (user) creatorMap.set(id, user);
+    }
+
+    return items.map((d) => {
+      const creator = creatorMap.get(d.createdBy);
+      const fullName = creator
+        ? ([
+            `${(creator.firstName ?? '').trim()} ${(creator.lastName ?? '').trim()}`.trim(),
+            creator.displayName,
+            creator.email,
+            creator.clerkEmail,
+          ].find(
+            (value) => typeof value === 'string' && value.trim().length > 0
+          ) ?? 'Unknown')
+        : 'Unknown';
+      return {
+        id: d._id,
+        title: d.title,
+        description: d.description,
+        level: d.level,
+        estimatedDuration: d.estimatedDuration,
+        moduleCount: d.moduleCount,
+        status: d.status,
+        isPublished: d.isPublished,
+        createdByName: fullName,
+        enrollmentCount: d.enrollmentCount,
+        publishedAt: d.publishedAt,
+        lastUpdatedAt: d.lastUpdatedAt,
+      };
+    });
   },
 });
 
@@ -789,7 +823,7 @@ export const deleteLesson = mutation({
   },
 });
 
-// ============ SIMPLE ANALYTICS: LEARN PATH ENTRY VIEWS ============
+//SIMPLE ANALYTICS: LEARN PATH ENTRY VIEWS
 export const recordPathsEntry = mutation({
   args: { source: v.optional(v.string()), pathId: v.optional(v.string()) },
   async handler(ctx, { source, pathId }) {
@@ -819,7 +853,7 @@ export const totalPathsEntries = query({
   },
 });
 
-// Unique-user engagement metrics
+// Unique-user engagement counting
 export const recordLearnPageEnter = mutation({
   args: {},
   async handler(ctx) {
@@ -915,11 +949,10 @@ export const pathsByViews = query({
     const result: { id: string; title: string; views: number }[] = [];
     for (const [pid, views] of counts) {
       const normalized = await ctx.db.normalizeId('learningPaths', pid);
-      let title = 'Unknown';
-      if (normalized) {
-        const doc = await ctx.db.get(normalized);
-        if (doc) title = doc.title;
-      }
+      if (!normalized) continue; // Skip deleted/non-existent paths
+      const doc = await ctx.db.get(normalized);
+      if (!doc) continue; // Skip if the path no longer exists
+      const title = doc.title;
       result.push({ id: pid, title, views });
     }
 
@@ -1016,12 +1049,11 @@ export const pathsByEngagement = query({
       const pct = denom === 0 ? 0 : Math.round((progressedCount / denom) * 100);
 
       // Fetch title
-      let title = 'Unknown';
       const normalized = await ctx.db.normalizeId('learningPaths', pid);
-      if (normalized) {
-        const doc = await ctx.db.get(normalized);
-        if (doc) title = doc.title;
-      }
+      if (!normalized) continue; // Skip deleted/non-existent paths
+      const doc = await ctx.db.get(normalized);
+      if (!doc) continue; // Skip if the path no longer exists
+      const title = doc.title;
 
       result.push({
         id: pid,

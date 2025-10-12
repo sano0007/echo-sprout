@@ -1,6 +1,5 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
-import { CloudinaryService } from '../services/cloudinary-service';
 import type {
   ProgressValidationResult,
   ImpactValidationResult,
@@ -74,15 +73,24 @@ export const validateCompleteProgressUpdate = query({
 
     // 4. Photo validation
     if (validatePhotos && updateData.photos) {
-      const photoValidation = CloudinaryService.validatePhotoUpload(
-        updateData.photos,
-        project.projectType
-      );
-      errors.push(...photoValidation.errors);
-      warnings.push(...photoValidation.warnings);
-      qualityScore -=
-        photoValidation.errors.length * 10 +
-        photoValidation.warnings.length * 2;
+      const photos = (updateData.photos || []) as Array<{
+        storageId?: string;
+        fileUrl?: string;
+        bytes?: number;
+      }>;
+      const photoErrors: string[] = [];
+      const photoWarnings: string[] = [];
+      photos.forEach((p, idx) => {
+        if (!p || !p.storageId || !p.fileUrl) {
+          photoErrors.push(`Photo ${idx + 1} missing storageId or fileUrl`);
+        }
+        if (typeof p.bytes === 'number' && p.bytes > 10 * 1024 * 1024) {
+          photoWarnings.push(`Photo ${idx + 1} exceeds recommended 10MB size`);
+        }
+      });
+      errors.push(...photoErrors);
+      warnings.push(...photoWarnings);
+      qualityScore -= photoErrors.length * 10 + photoWarnings.length * 2;
     }
 
     // 5. Timeline validation
@@ -761,6 +769,51 @@ function analyzeMetricConsistency(
 /**
  * Generate actionable recommendations based on validation results
  */
+function getProjectPhotoRequirements(projectType: string) {
+  const requirements: Record<
+    string,
+    { minimumCount: number; description: string }
+  > = {
+    reforestation: {
+      minimumCount: 5,
+      description:
+        'Include before/during/after shots, close-ups of planted trees, and overview of the area',
+    },
+    solar: {
+      minimumCount: 4,
+      description:
+        'Show installation progress, panel arrays, inverter systems, and monitoring equipment',
+    },
+    wind: {
+      minimumCount: 4,
+      description:
+        'Document turbine installation, foundations, grid connections, and control systems',
+    },
+    biogas: {
+      minimumCount: 4,
+      description:
+        'Show digester construction, gas collection system, waste input, and output infrastructure',
+    },
+    waste_management: {
+      minimumCount: 5,
+      description:
+        'Document facility setup, sorting processes, processing equipment, output, and machinery',
+    },
+    mangrove_restoration: {
+      minimumCount: 6,
+      description:
+        'Include site before restoration, planting activities, seedling growth, ecosystem development, and aerial views',
+    },
+  };
+  return (
+    requirements[projectType] || {
+      minimumCount: 3,
+      description:
+        'Include before, during, and after photos of project activities',
+    }
+  );
+}
+
 function generateRecommendations(
   errors: string[],
   warnings: string[],
@@ -782,8 +835,7 @@ function generateRecommendations(
   }
 
   if (!updateData.photos || updateData.photos.length === 0) {
-    const photoReqs =
-      CloudinaryService.getProjectPhotoRequirements(projectType);
+    const photoReqs = getProjectPhotoRequirements(projectType);
     recommendations.push(
       `Add ${photoReqs.minimumCount} photos: ${photoReqs.description}`
     );

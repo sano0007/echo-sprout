@@ -45,6 +45,7 @@ export default function ProjectReview() {
   const [generatedCertificate, setGeneratedCertificate] =
     useState<VerificationCertificate | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   const handleDocumentSelect = useCallback((doc: any) => {
     setSelectedDocumentId(doc._id);
@@ -272,9 +273,8 @@ export default function ProjectReview() {
 
       const validationErrors = validateVerificationForm();
       if (validationErrors.length > 0) {
-        toast.error(
-          `Please fix the following issues:\n\n${validationErrors.join('\n')}`
-        );
+        setShowValidationErrors(true);
+        toast.error(`Please complete all required fields before submitting`);
         return;
       }
 
@@ -371,10 +371,6 @@ export default function ProjectReview() {
         toast.success(
           `Document ${isVerified ? 'verified' : 'unverified'} successfully`
         );
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
       } catch (error) {
         toast.error('Failed to update document verification status');
         console.error('Error verifying document:', error);
@@ -821,17 +817,8 @@ export default function ProjectReview() {
             <>
               <button
                 onClick={() => handleCompleteVerification('approved')}
-                disabled={!isFormValid}
-                className={`px-4 py-2 rounded font-medium transition-all duration-200 flex items-center gap-2 ${
-                  isFormValid
-                    ? 'bg-green-600 text-white hover:bg-green-700 hover:shadow-lg'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-                title={
-                  !isFormValid
-                    ? 'Please complete all required fields'
-                    : 'Approve this project'
-                }
+                className="bg-green-600 text-white px-4 py-2 rounded font-medium transition-all duration-200 flex items-center gap-2 hover:bg-green-700 hover:shadow-lg"
+                title="Approve this project"
               >
                 <svg
                   className="w-4 h-4"
@@ -848,17 +835,8 @@ export default function ProjectReview() {
               </button>
               <button
                 onClick={() => handleCompleteVerification('rejected')}
-                disabled={!isFormValid}
-                className={`px-4 py-2 rounded font-medium transition-all duration-200 flex items-center gap-2 ${
-                  isFormValid
-                    ? 'bg-red-600 text-white hover:bg-red-700 hover:shadow-lg'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-                title={
-                  !isFormValid
-                    ? 'Please complete all required fields'
-                    : 'Reject this project'
-                }
+                className="bg-red-600 text-white px-4 py-2 rounded font-medium transition-all duration-200 flex items-center gap-2 hover:bg-red-700 hover:shadow-lg"
+                title="Reject this project"
               >
                 <svg
                   className="w-4 h-4"
@@ -875,17 +853,8 @@ export default function ProjectReview() {
               </button>
               <button
                 onClick={() => handleCompleteVerification('revision_required')}
-                disabled={!isFormValid}
-                className={`px-4 py-2 rounded font-medium transition-all duration-200 flex items-center gap-2 ${
-                  isFormValid
-                    ? 'bg-yellow-600 text-white hover:bg-yellow-700 hover:shadow-lg'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-                title={
-                  !isFormValid
-                    ? 'Please complete all required fields'
-                    : 'Request revisions for this project'
-                }
+                className="bg-yellow-600 text-white px-4 py-2 rounded font-medium transition-all duration-200 flex items-center gap-2 hover:bg-yellow-700 hover:shadow-lg"
+                title="Request revisions for this project"
               >
                 <svg
                   className="w-4 h-4"
@@ -900,22 +869,6 @@ export default function ProjectReview() {
                 </svg>
                 Request Revision
               </button>
-              {!isFormValid && (
-                <div className="flex items-center text-sm text-red-600 bg-red-50 px-3 py-2 rounded">
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Complete verification assessment first
-                </div>
-              )}
             </>
           )}
         </div>
@@ -1143,39 +1096,57 @@ export default function ProjectReview() {
                 {/* Verification Notes */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium mb-3 text-gray-700">
-                    Verification Notes *
-                    <span className="text-red-500 ml-1">Required</span>
+                    Verification Notes{' '}
+                    <span className="text-gray-400 text-xs">(Required)</span>
                   </label>
                   <textarea
                     value={verificationNotes}
-                    onChange={(e) => setVerificationNotes(e.target.value)}
+                    onChange={(e) => {
+                      setVerificationNotes(e.target.value);
+                      if (
+                        showValidationErrors &&
+                        e.target.value.trim().length >= 20
+                      ) {
+                        setShowValidationErrors(false);
+                      }
+                    }}
                     className={`w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 ${
-                      !verificationNotes.trim()
-                        ? 'border-red-300 bg-red-50'
+                      showValidationErrors && !verificationNotes.trim()
+                        ? 'border-red-300'
                         : 'border-gray-300'
                     }`}
-                    placeholder="Provide detailed verification notes, observations, and recommendations..."
-                    required
+                    placeholder="Provide detailed verification notes, observations, and recommendations (minimum 20 characters)..."
                   />
-                  {!verificationNotes.trim() && (
-                    <p className="text-red-500 text-sm mt-1 flex items-center">
-                      <svg
-                        className="w-4 h-4 mr-1"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Verification notes are required
-                    </p>
-                  )}
+                  {showValidationErrors &&
+                    verificationNotes.trim().length < 20 && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-1"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {verificationNotes.trim().length === 0
+                          ? 'Verification notes are required'
+                          : `Please add at least ${20 - verificationNotes.trim().length} more characters`}
+                      </p>
+                    )}
                   <p className="text-gray-500 text-sm mt-1">
-                    Character count: {verificationNotes.length} (minimum 50
-                    characters recommended)
+                    {verificationNotes.length} characters
+                    {verificationNotes.length > 0 &&
+                      verificationNotes.length < 20 && (
+                        <span className="text-orange-500 ml-1">
+                          ({20 - verificationNotes.length} more needed)
+                        </span>
+                      )}
+                    {verificationNotes.length >= 20 && (
+                      <span className="text-green-500 ml-1">✓</span>
+                    )}
                   </p>
                 </div>
 
@@ -1183,8 +1154,8 @@ export default function ProjectReview() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium mb-3 text-gray-700">
-                      Quality Score (1-10) *
-                      <span className="text-red-500 ml-1">Required</span>
+                      Quality Score (1-10){' '}
+                      <span className="text-gray-400 text-xs">(Required)</span>
                     </label>
                     <div className="relative">
                       <input
@@ -1193,15 +1164,21 @@ export default function ProjectReview() {
                         max="10"
                         step="0.1"
                         value={qualityScore}
-                        onChange={(e) =>
-                          setQualityScore(Number(e.target.value))
-                        }
+                        onChange={(e) => {
+                          setQualityScore(Number(e.target.value));
+                          if (showValidationErrors) {
+                            const val = Number(e.target.value);
+                            if (val >= 1 && val <= 10) {
+                              setShowValidationErrors(false);
+                            }
+                          }
+                        }}
                         className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 ${
-                          qualityScore < 1 || qualityScore > 10
-                            ? 'border-red-300 bg-red-50'
+                          showValidationErrors &&
+                          (qualityScore < 1 || qualityScore > 10)
+                            ? 'border-red-300'
                             : 'border-gray-300'
                         }`}
-                        required
                       />
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                         <div
@@ -1217,22 +1194,23 @@ export default function ProjectReview() {
                         ></div>
                       </div>
                     </div>
-                    {(qualityScore < 1 || qualityScore > 10) && (
-                      <p className="text-red-500 text-sm mt-1 flex items-center">
-                        <svg
-                          className="w-4 h-4 mr-1"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        Score must be between 1 and 10
-                      </p>
-                    )}
+                    {showValidationErrors &&
+                      (qualityScore < 1 || qualityScore > 10) && (
+                        <p className="text-red-500 text-sm mt-1 flex items-center">
+                          <svg
+                            className="w-4 h-4 mr-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Score must be between 1 and 10
+                        </p>
+                      )}
                     <div className="mt-2 text-sm text-gray-600">
                       <div className="flex justify-between">
                         <span>1-3: Poor</span>
@@ -1261,8 +1239,8 @@ export default function ProjectReview() {
 
                   <div>
                     <label className="block text-sm font-medium mb-3 text-gray-700">
-                      Recommendation *
-                      <span className="text-red-500 ml-1">Required</span>
+                      Recommendation{' '}
+                      <span className="text-gray-400 text-xs">(Required)</span>
                     </label>
                     <select
                       value={recommendation}
@@ -1336,89 +1314,6 @@ export default function ProjectReview() {
                           Project will be rejected and marked as failed
                         </p>
                       )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Validation Summary */}
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-                  <h4 className="font-medium text-gray-900 mb-2">
-                    Validation Status
-                  </h4>
-                  <div className="space-y-1">
-                    <div
-                      className={`flex items-center text-sm ${verificationNotes.trim() ? 'text-green-600' : 'text-red-600'}`}
-                    >
-                      {verificationNotes.trim() ? (
-                        <svg
-                          className="w-4 h-4 mr-2"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-4 h-4 mr-2"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
-                      Verification notes provided
-                    </div>
-                    <div
-                      className={`flex items-center text-sm ${qualityScore >= 1 && qualityScore <= 10 ? 'text-green-600' : 'text-red-600'}`}
-                    >
-                      {qualityScore >= 1 && qualityScore <= 10 ? (
-                        <svg
-                          className="w-4 h-4 mr-2"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-4 h-4 mr-2"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
-                      Valid quality score (1-10)
-                    </div>
-                    <div className="flex items-center text-sm text-green-600">
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Recommendation selected
                     </div>
                   </div>
                 </div>
@@ -1534,28 +1429,67 @@ export default function ProjectReview() {
                     );
                     if (!selectedDoc) return null;
 
+                    // Determine if document is an image based on file extension or mime type
+                    const fileExtension = selectedDoc.originalName
+                      ?.split('.')
+                      .pop()
+                      ?.toLowerCase();
+                    const isImage = [
+                      'jpg',
+                      'jpeg',
+                      'png',
+                      'gif',
+                      'webp',
+                      'bmp',
+                      'svg',
+                    ].includes(fileExtension || '');
+
                     return (
                       <>
-                        {/* PDF Viewer */}
+                        {/* Document Viewer (PDF or Image) */}
                         <div className="flex-1">
-                          <PDFViewerWrapper
-                            url={selectedDoc.media.cloudinary_url}
-                            fileName={selectedDoc.originalName}
-                            annotations={
-                              documentAnnotations[selectedDoc._id] || []
-                            }
-                            onAnnotationChange={(annotations) =>
-                              handleAnnotationChange(
-                                selectedDoc._id,
-                                annotations
-                              )
-                            }
-                            readOnly={verification.status !== 'in_progress'}
-                          />
+                          {isImage ? (
+                            // Image Viewer
+                            <div className="h-full bg-gray-100 overflow-auto flex items-center justify-center p-4">
+                              <div className="max-w-full max-h-full">
+                                <img
+                                  src={selectedDoc.media.fileUrl || ''}
+                                  alt={selectedDoc.originalName}
+                                  className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                                  style={{ maxHeight: '550px' }}
+                                />
+                                <div className="mt-4 text-center">
+                                  <p className="text-sm text-gray-600 font-medium">
+                                    {selectedDoc.originalName}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {selectedDoc.fileSizeFormatted} •{' '}
+                                    {fileExtension?.toUpperCase()}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            // PDF Viewer
+                            <PDFViewerWrapper
+                              url={selectedDoc.media.fileUrl || ''}
+                              fileName={selectedDoc.originalName}
+                              annotations={
+                                documentAnnotations[selectedDoc._id] || []
+                              }
+                              onAnnotationChange={(annotations) =>
+                                handleAnnotationChange(
+                                  selectedDoc._id,
+                                  annotations
+                                )
+                              }
+                              readOnly={verification.status !== 'in_progress'}
+                            />
+                          )}
                         </div>
 
-                        {/* Collaborative Annotations Panel */}
-                        {verification.status === 'in_progress' && (
+                        {/* Collaborative Annotations Panel (PDF only) */}
+                        {!isImage && verification.status === 'in_progress' && (
                           <CollaborativeAnnotations
                             annotations={
                               documentAnnotations[selectedDoc._id] || []
@@ -1609,12 +1543,11 @@ export default function ProjectReview() {
                         Select a Document
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        Choose a document from the list above to view and
-                        annotate
+                        Choose a document from the list above to view and review
                       </p>
                       <div className="text-sm text-gray-500">
-                        Enhanced PDF viewer with text highlighting, annotations,
-                        and collaborative review features
+                        Supports PDFs (with annotations) and images (JPG, PNG,
+                        GIF, WebP, etc.)
                       </div>
                     </div>
                   </div>
