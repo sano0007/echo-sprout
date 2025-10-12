@@ -36,26 +36,11 @@ export default function Navigation() {
           href: '/projects/manage',
           description: 'Track your projects',
         },
-        {
-          label: 'Monitoring Dashboard',
-          href: '/monitoring/dashboard',
-          description: 'Monitor project progress',
-        },
       ],
     },
     {
       label: 'Marketplace',
       href: '/marketplace',
-    },
-    {
-      label: 'Verification',
-      dropdown: [
-        {
-          label: 'Verification Dashboard',
-          href: '/verification/dashboard',
-          description: 'Review and verify projects',
-        },
-      ],
     },
     {
       label: 'Community',
@@ -80,9 +65,6 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">ES</span>
-            </div>
             <span className="text-xl font-bold text-gray-800">EcoSprout</span>
           </Link>
 
