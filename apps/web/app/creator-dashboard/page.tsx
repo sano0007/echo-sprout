@@ -110,6 +110,8 @@ export default function CreatorDashboard() {
   );
   const deleteProject = useMutation(api.projects.deleteProject);
   const createPDFReport = useMutation(api.pdf_reports.createPDFReportRequest);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+  const saveFile = useMutation(api.files.saveFile);
   const pdfReports = useQuery(api.pdf_reports.getPDFReports, {
     limit: 10,
   });
@@ -373,16 +375,56 @@ export default function CreatorDashboard() {
     try {
       if (!selectedProject) return;
 
+      // Upload files to Convex storage
+      const uploadedPhotos = [];
+      if (data.photos && data.photos.length > 0) {
+        toast('Uploading files...');
+        
+        for (const photo of data.photos) {
+          try {
+            // Generate upload URL using Convex mutation
+            const uploadUrl = await generateUploadUrl();
+            
+            // Upload file
+            const uploadResponse = await fetch(uploadUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': photo.type },
+              body: photo,
+            });
+            
+            if (!uploadResponse.ok) {
+              throw new Error('Failed to upload file');
+            }
+            
+            const { storageId } = await uploadResponse.json();
+            
+            // Save file metadata
+            const fileUrl = await saveFile({
+              storageId,
+              filename: photo.name,
+              contentType: photo.type,
+            });
+            
+            uploadedPhotos.push({
+              storageId,
+              fileUrl,
+            });
+          } catch (error) {
+            console.error('Error uploading file:', error);
+            toast.error(`Failed to upload ${photo.name}`);
+          }
+        }
+      }
+
+      toast('Submitting progress update...');
+      
       await submitProgressUpdate({
         projectId: selectedProject._id,
         updateType: data.updateType,
         title: data.title,
         description: data.description,
         progressPercentage: data.progressPercentage,
-        photos: (data.photos || []).map((_photo: File) => ({
-          cloudinary_public_id: '', // Would be handled by file upload service
-          cloudinary_url: '',
-        })),
+        photos: uploadedPhotos,
         location: data.location
           ? {
               lat: data.location?.latitude || 0,
@@ -394,12 +436,12 @@ export default function CreatorDashboard() {
         reportingDate: Date.now(),
       });
 
+      toast.success('Progress update submitted successfully!');
       setShowProgressModal(false);
       setSelectedProject(null);
-      // Show success message - could add toast notification here
     } catch (error) {
       console.error('Error submitting progress:', error);
-      // Show error message - could add toast notification here
+      toast.error('Failed to submit progress update');
     }
   };
 
